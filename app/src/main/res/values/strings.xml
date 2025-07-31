@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ToastMasters</string>
+    
+    <!-- Bottom Navigation -->
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_leaderboard">Leaderboard</string>
+    <string name="title_meetings">Meetings</string>
+    <string name="title_reports">Reports</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_upcoming">Upcoming</string>
+</resources>

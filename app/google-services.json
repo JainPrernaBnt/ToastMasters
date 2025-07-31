@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "406693895526",
+    "firebase_url": "https://toastmasters-42508-default-rtdb.firebaseio.com",
+    "project_id": "toastmasters-42508",
+    "storage_bucket": "toastmasters-42508.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:406693895526:android:c15328785a81b48d8abca7",
+        "android_client_info": {
+          "package_name": "com.bntsoft.toastmasters"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8G0M2AVJ7irLERp_rvV3--L_Msc9MRiU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
