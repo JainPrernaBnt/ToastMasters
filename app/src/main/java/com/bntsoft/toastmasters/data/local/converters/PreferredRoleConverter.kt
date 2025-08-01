@@ -1,8 +1,8 @@
-package com.bntsoft.toastmasters.data.local
+package com.bntsoft.toastmasters.data.local.converters
 
 import androidx.room.TypeConverter
 
-class Converters {
+class PreferredRoleConverter {
 
     @TypeConverter
     fun fromStringList(list: List<String>): String {
@@ -13,4 +13,5 @@ class Converters {
     fun toStringList(data: String): List<String> {
         return if (data.isEmpty()) emptyList() else data.split(",")
     }
+
 }

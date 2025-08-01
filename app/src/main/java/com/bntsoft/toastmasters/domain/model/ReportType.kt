@@ -1,0 +1,13 @@
+package com.bntsoft.toastmasters.domain.model
+
+enum class ReportType {
+    MEETING_SUMMARY,
+    ROLE_ASSIGNED,
+    USER_WISE,
+    MEMBERS_ROLE_FREQUENCY,
+    NON_PARTICIPATING_MEMBERS,
+    TOP_ACTIVE_MEMBERS,
+    BACKOUT_MEMBERS,
+    AVERAGE_PARTICIPATION,
+    MEMBERSHIP_STATUS
+}

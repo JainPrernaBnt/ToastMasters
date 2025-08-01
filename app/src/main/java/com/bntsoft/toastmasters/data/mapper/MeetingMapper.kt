@@ -11,11 +11,16 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
             meetingID = entity.meetingID,
             title = entity.title,
             date = entity.date,
-            time = entity.time,
             venue = entity.venue,
             theme = entity.theme,
             preferredRoles = entity.preferredRoles,
-            createdAt = entity.createdAt
+            createdAt = entity.createdAt,
+            isRecurring = entity.isRecurring,
+            recurringDayOfWeek = entity.recurringDayOfWeek,
+            recurringStartTime = entity.recurringStartTime,
+            recurringEndTime = entity.recurringEndTime,
+            startTime = entity.startTime,
+            endTime = entity.endTime
         )
     }
 
@@ -24,11 +29,16 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
             meetingID = dto.meetingID,
             title = dto.title,
             date = dto.date,
-            time = dto.time,
             venue = dto.venue,
             theme = dto.theme,
             preferredRoles = dto.preferredRoles,
-            createdAt = dto.createdAt
+            createdAt = dto.createdAt,
+            isRecurring = dto.isRecurring,
+            recurringDayOfWeek = dto.recurringDayOfWeek,
+            recurringStartTime = dto.recurringStartTime,
+            recurringEndTime = dto.recurringEndTime,
+            startTime = dto.startTime,
+            endTime = dto.endTime
         )
     }
 

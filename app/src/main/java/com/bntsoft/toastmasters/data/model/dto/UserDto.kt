@@ -6,13 +6,16 @@ data class UserDto(
     val name: String,
     val email: String,
     val number: Int,
+    val password: String,
     val address: String,
     val level: Int,
     val gender: String,
-    val isApproved: Boolean,
+    val isApproved: Boolean = false,
+    val hasVpPermission: Boolean = false,
     val clubId: Int,
     val toastmastersId: Int,
     val mentor: String,
     val mentorAssignedBy: String?,
-    val mentorAssignedDate: Long?
+    val mentorAssignedDate: Long?,
+    val createdAt: Long = System.currentTimeMillis()
 )

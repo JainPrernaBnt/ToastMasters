@@ -21,7 +21,10 @@ class UserMapper @Inject constructor() : Mapper<UserDto, UserEntity> {
             toastmastersId = entity.toastmastersId,
             mentor = entity.mentor,
             mentorAssignedBy = entity.mentorAssignedBy,
-            mentorAssignedDate = entity.mentorAssignedDate
+            mentorAssignedDate = entity.mentorAssignedDate,
+            password = entity.password,
+            hasVpPermission = entity.hasVpPermission,
+            createdAt = entity.createdAt
         )
     }
 
@@ -40,7 +43,10 @@ class UserMapper @Inject constructor() : Mapper<UserDto, UserEntity> {
             toastmastersId = dto.toastmastersId,
             mentor = dto.mentor,
             mentorAssignedBy = dto.mentorAssignedBy,
-            mentorAssignedDate = dto.mentorAssignedDate
+            mentorAssignedDate = dto.mentorAssignedDate,
+            password = dto.password,
+            hasVpPermission = dto.hasVpPermission,
+            createdAt = dto.createdAt
         )
     }
 
