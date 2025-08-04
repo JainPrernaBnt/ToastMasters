@@ -8,4 +8,47 @@
     <string name="title_reports">Reports</string>
     <string name="title_settings">Settings</string>
     <string name="title_upcoming">Upcoming</string>
+
+    <!-- Create Meeting Fragment -->
+    <string name="meeting_title">Meeting Title</string>
+    <string name="meeting_date">Meeting Date</string>
+    <string name="start_time">Start Time</string>
+    <string name="end_time">End Time</string>
+    <string name="venue">Venue</string>
+    <string name="theme">Theme</string>
+    <string name="preferred_roles">Preferred Roles</string>
+    <string name="toastmaster">Toastmaster</string>
+    <string name="table_topics_master">Table Topics Master</string>
+    <string name="general_evaluator">General Evaluator</string>
+    <string name="speaker">Speaker</string>
+    <string name="evaluator">Evaluator</string>
+    <string name="ah_counter">Ah-Counter</string>
+    <string name="grammarian">Grammarian</string>
+    <string name="timer">Timer</string>
+    <string name="add_another_meeting">Add Another Meeting</string>
+    <string name="create_meetings">Create Meeting(s)</string>
+    <string name="meeting_form_helper_text">Select the roles you need to fill for this meeting. You can assign members to these roles later.</string>
+    
+    <!-- Meeting Form -->
+    <string name="meeting_details">Meeting Details</string>
+    <string name="remove">Remove</string>
+    <string name="meeting_created">%1$d meeting(s) created</string>
+    
+    <!-- Icons -->
+    <string name="ic_title">Title icon</string>
+    <string name="ic_calendar">Calendar icon</string>
+    <string name="ic_time">Time icon</string>
+    <string name="ic_location">Location icon</string>
+    <string name="ic_theme">Theme icon</string>
+    <string name="ic_delete">Delete icon</string>
+    <string name="ic_check">Check icon</string>
+    <string name="ic_person">Person icon</string>
+    <string name="ic_add">Add icon</string>
+    
+    <!-- Role Management -->
+    <string name="add_role">Add Role</string>
+    <string name="role_name">Role Name</string>
+    <string name="add_custom_role">Add Custom Role</string>
+    <string name="remove_role">Remove</string>
+    <string name="select_roles">Select or Add Roles</string>
 </resources>
