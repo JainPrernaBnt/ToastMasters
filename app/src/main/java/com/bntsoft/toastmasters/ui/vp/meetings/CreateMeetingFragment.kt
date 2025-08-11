@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.ui.meetings
+package com.bntsoft.toastmasters.ui.vp.meetings
 
 import android.os.Bundle
 import android.view.LayoutInflater

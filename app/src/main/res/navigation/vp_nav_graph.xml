@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/vp_nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.bntsoft.toastmasters.ui.vp.dashboard.DashboardFragment"
+        android:label="DashboardFragment"
+        tools:layout="@layout/fragment_dashboard" />
+
+    <fragment
+        android:id="@+id/createMeetingFragment"
+        android:name="com.bntsoft.toastmasters.ui.vp.meetings.CreateMeetingFragment"
+        android:label="CreateMeetingFragment" />
+
+    <fragment
+        android:id="@+id/assignRolesFragment"
+        android:name="com.bntsoft.toastmasters.ui.vp.roles.AssignRolesFragment"
+        android:label="fragment_assign_roles"
+        tools:layout="@layout/fragment_assign_roles" />
+
+    <fragment
+        android:id="@+id/educationFragment"
+        android:name="com.bntsoft.toastmasters.ui.vp.dashboard.DashboardFragment"
+        android:label="EducationFragment"
+        tools:layout="@layout/fragment_dashboard" />
+
+    <fragment
+        android:id="@+id/leaderboardFragment"
+        android:name="com.bntsoft.toastmasters.ui.common.leaderboard.LeaderboardFragment"
+        android:label="LeaderboardFragment"
+        tools:layout="@layout/fragment_leaderboard" />
+
+    <fragment
+        android:id="@+id/reportsFragment"
+        android:name="com.bntsoft.toastmasters.ui.vp.reports.ReportsFragment"
+        android:label="ReportsFragment"
+        tools:layout="@layout/fragment_reports" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.bntsoft.toastmasters.ui.common.settings.SettingsFragment"
+        android:label="SettingsFragment"
+        tools:layout="@layout/fragment_settings" />
+</navigation>

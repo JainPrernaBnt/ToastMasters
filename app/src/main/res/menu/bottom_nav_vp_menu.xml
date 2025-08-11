@@ -1,27 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/dashboardFragment"
         android:icon="@drawable/ic_dashboard"
         android:title="@string/title_dashboard" />
 
     <item
-        android:id="@+id/navigation_leaderboard"
-        android:icon="@drawable/ic_leaderboard"
-        android:title="@string/title_leaderboard" />
-
-    <item
-        android:id="@+id/navigation_meetings"
+        android:id="@+id/createMeetingFragment"
         android:icon="@drawable/ic_add_circle"
         android:title="@string/title_meetings" />
+        
+    <item
+        android:id="@+id/assignRolesFragment"
+        android:icon="@drawable/ic_person"
+        android:title="@string/title_assign_roles" />
 
     <item
-        android:id="@+id/navigation_reports"
-        android:icon="@drawable/ic_assessment"
-        android:title="@string/title_reports" />
-
-    <item
-        android:id="@+id/navigation_settings"
-        android:icon="@drawable/ic_settings"
-        android:title="@string/title_settings" />
+        android:id="@+id/leaderboardFragment"
+        android:icon="@drawable/ic_leaderboard"
+        android:title="@string/title_leaderboard" />
 </menu>
