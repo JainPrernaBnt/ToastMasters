@@ -9,34 +9,50 @@
         android:id="@+id/dashboardFragment"
         android:name="com.bntsoft.toastmasters.ui.vp.dashboard.DashboardFragment"
         android:label="DashboardFragment"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_dashboard">
+        <action
+            android:id="@+id/action_dashboardFragment_to_createMeetingFragment"
+            app:destination="@id/createMeetingFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_assignRolesFragment"
+            app:destination="@id/assignRolesFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/createMeetingFragment"
-        android:name="com.bntsoft.toastmasters.ui.vp.meetings.CreateMeetingFragment"
-        android:label="CreateMeetingFragment" />
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.meetings.CreateMeetingFragment"
+        android:label="CreateMeetingFragment">
+        <action
+            android:id="@+id/action_createMeetingFragment_to_dashboardFragment"
+            app:destination="@id/dashboardFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/assignRolesFragment"
-        android:name="com.bntsoft.toastmasters.ui.vp.roles.AssignRolesFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.roles.AssignRolesFragment"
         android:label="fragment_assign_roles"
-        tools:layout="@layout/fragment_assign_roles" />
-
-    <fragment
-        android:id="@+id/educationFragment"
-        android:name="com.bntsoft.toastmasters.ui.vp.dashboard.DashboardFragment"
-        android:label="EducationFragment"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_assign_roles">
+        <action
+            android:id="@+id/action_assignRolesFragment_to_dashboardFragment"
+            app:destination="@id/dashboardFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/leaderboardFragment"
         android:name="com.bntsoft.toastmasters.ui.common.leaderboard.LeaderboardFragment"
         android:label="LeaderboardFragment"
-        tools:layout="@layout/fragment_leaderboard" />
+        tools:layout="@layout/fragment_leaderboard">
+        <action
+            android:id="@+id/action_leaderboardFragment_to_dashboardFragment"
+            app:destination="@id/dashboardFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/reportsFragment"
-        android:name="com.bntsoft.toastmasters.ui.vp.reports.ReportsFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.reports.ReportsFragment"
         android:label="ReportsFragment"
         tools:layout="@layout/fragment_reports" />
 

@@ -1,24 +1,26 @@
-package com.bntsoft.toastmasters.ui.members.dashboard
+package com.bntsoft.toastmasters.presentation.ui.common.settings
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.bntsoft.toastmasters.R
-import com.bntsoft.toastmasters.databinding.FragmentMemberDashboardBinding
 import com.bntsoft.toastmasters.databinding.FragmentSettingsBinding
 
-class MemberDashboardFragment : Fragment() {
-    private var _binding: FragmentMemberDashboardBinding? = null
+class SettingsFragment : Fragment() {
+    private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        _binding = FragmentMemberDashboardBinding.inflate(inflater, container, false)
+    ): View {
+        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

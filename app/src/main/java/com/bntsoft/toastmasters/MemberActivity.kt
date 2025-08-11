@@ -13,4 +13,6 @@ class MemberActivity : BaseActivity() {
         setContentView(binding.root)
 
     }
+
+
 }

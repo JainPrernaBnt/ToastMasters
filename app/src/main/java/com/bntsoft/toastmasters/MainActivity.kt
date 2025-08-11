@@ -1,41 +1,52 @@
 package com.bntsoft.toastmasters
 
+import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import androidx.activity.viewModels
+import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.databinding.ActivityMainBinding
+import com.bntsoft.toastmasters.presentation.viewmodel.MainViewModel
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : BaseActivity() {
+
     private lateinit var binding: ActivityMainBinding
+    
+    @Inject
+    lateinit var preferenceManager: PreferenceManager
+    
+    private val viewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setSupportActionBar(findViewById(R.id.toolbar))
+        
+        // Check if user is already logged in
+        checkUserRoleAndNavigate()
     }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.status_bar_menu, menu)
-        return true
+    
+    private fun checkUserRoleAndNavigate() {
+        navigateToRoleBasedScreen(UserRole.VP_EDUCATION)
     }
+    
+    private fun navigateToRoleBasedScreen(role: UserRole) {
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle status bar item clicks
-        return when (item.itemId) {
-            R.id.action_reports -> {
-                // TODO
-                true
+        val intent = when (role) {
+            UserRole.VP_EDUCATION -> {
+                Intent(this, VpMainActivity::class.java)
             }
-
-            R.id.action_settings -> {
-                // TODO
-                true
+            else -> {
+                Intent(this, MainActivity::class.java).apply {
+                    putExtra("SHOW_ERROR", "Unsupported role: $role")
+                }
             }
-
-            else -> super.onOptionsItemSelected(item)
         }
+        
+        startActivity(intent)
+        finish()
     }
-
 }

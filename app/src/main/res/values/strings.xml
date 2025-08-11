@@ -69,4 +69,5 @@
     <string name="clear_all">Clear All</string>
     <string name="settings">Settings\n</string>
     <string name="leaderboard">Leaderboard</string>
+    <string name="create_meeting">Create Meeting</string>
 </resources>

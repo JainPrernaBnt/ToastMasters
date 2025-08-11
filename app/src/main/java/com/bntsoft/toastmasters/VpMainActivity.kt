@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.navigation.fragment.NavHostFragment
@@ -16,18 +17,50 @@ class VpMainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityVpMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
 
         setupNavigation()
     }
 
     private fun setupNavigation() {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        try {
+            // Find the NavHostFragment
+            val navHostFragment = supportFragmentManager
+                .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
+                ?: throw IllegalStateException("NavHostFragment not found")
 
-        // Setup bottom navigation with navigation controller
-        binding.bottomNavView.setupWithNavController(navController)
+            // Get the NavController
+            val navController = navHostFragment.navController
+            
+            // Set up the navigation graph programmatically to ensure it's properly initialized
+            val navGraph = navController.navInflater.inflate(R.navigation.vp_nav_graph)
+            navGraph.setStartDestination(R.id.dashboardFragment)
+            navController.graph = navGraph
+            
+            // Set up the bottom navigation with NavController
+            binding.bottomNavView.setupWithNavController(navController)
+            
+            // Add navigation listener for debugging
+            navController.addOnDestinationChangedListener { _, destination, _ ->
+                Log.d("VpMainActivity", "Navigated to: ${destination.label} (ID: ${destination.id})")
+                
+                // Update the action bar title
+                supportActionBar?.title = when (destination.id) {
+                    R.id.dashboardFragment -> getString(R.string.title_dashboard)
+                    R.id.createMeetingFragment -> getString(R.string.title_meetings)
+                    R.id.assignRolesFragment -> getString(R.string.title_assign_roles)
+                    R.id.leaderboardFragment -> getString(R.string.title_leaderboard)
+                    else -> getString(R.string.app_name)
+                }
+            }
+            
+            // Log initial navigation state
+            Log.d("VpMainActivity", "Navigation setup complete. Current destination: ${navController.currentDestination?.label}")
+            
+        } catch (e: Exception) {
+            Log.e("VpMainActivity", "Error setting up navigation", e)
+            // Show error to user
+            android.widget.Toast.makeText(this, "Navigation error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
