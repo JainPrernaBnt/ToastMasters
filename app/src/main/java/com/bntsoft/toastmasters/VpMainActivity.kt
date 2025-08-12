@@ -1,12 +1,14 @@
 package com.bntsoft.toastmasters
 
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.bntsoft.toastmasters.databinding.ActivityVpMainBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -17,7 +19,7 @@ class VpMainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityVpMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         // Set up the toolbar
         setSupportActionBar(binding.toolbar)
         supportActionBar?.title = getString(R.string.title_dashboard)
@@ -34,19 +36,18 @@ class VpMainActivity : BaseActivity() {
 
             // Get the NavController
             val navController = navHostFragment.navController
-            
+
             // Set up the navigation graph programmatically to ensure it's properly initialized
             val navGraph = navController.navInflater.inflate(R.navigation.vp_nav_graph)
             navGraph.setStartDestination(R.id.dashboardFragment)
             navController.graph = navGraph
-            
+
             // Set up the bottom navigation with NavController
             binding.bottomNavView.setupWithNavController(navController)
-            
+
             // Add navigation listener for debugging and title updates
             navController.addOnDestinationChangedListener { _, destination, _ ->
-                Log.d("VpMainActivity", "Navigated to: ${destination.label} (ID: ${destination.id})")
-                
+
                 // Update the action bar title
                 supportActionBar?.title = when (destination.id) {
                     R.id.dashboardFragment -> getString(R.string.title_dashboard)
@@ -58,14 +59,9 @@ class VpMainActivity : BaseActivity() {
                     else -> getString(R.string.app_name)
                 }
             }
-            
-            // Log initial navigation state
-            Log.d("VpMainActivity", "Navigation setup complete. Current destination: ${navController.currentDestination?.label}")
-            
+
         } catch (e: Exception) {
-            Log.e("VpMainActivity", "Error setting up navigation", e)
-            // Show error to user
-            android.widget.Toast.makeText(this, "Navigation error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Navigation error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -75,23 +71,24 @@ class VpMainActivity : BaseActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle status bar item clicks
         return when (item.itemId) {
             R.id.action_reports -> {
-                // Navigate to ReportsFragment
                 val navHostFragment = supportFragmentManager
                     .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
                 val navController = navHostFragment.navController
                 navController.navigate(R.id.reportsFragment)
+                val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
+                bottomNav.visibility = View.GONE
                 true
             }
 
             R.id.action_settings -> {
-                // Navigate to SettingsFragment
                 val navHostFragment = supportFragmentManager
                     .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
                 val navController = navHostFragment.navController
                 navController.navigate(R.id.settingsFragment)
+                val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
+                bottomNav.visibility = View.GONE
                 true
             }
 
