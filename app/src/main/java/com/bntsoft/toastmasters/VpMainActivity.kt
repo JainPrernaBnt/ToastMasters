@@ -17,6 +17,10 @@ class VpMainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityVpMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Set up the toolbar
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.title = getString(R.string.title_dashboard)
 
         setupNavigation()
     }
@@ -39,7 +43,7 @@ class VpMainActivity : BaseActivity() {
             // Set up the bottom navigation with NavController
             binding.bottomNavView.setupWithNavController(navController)
             
-            // Add navigation listener for debugging
+            // Add navigation listener for debugging and title updates
             navController.addOnDestinationChangedListener { _, destination, _ ->
                 Log.d("VpMainActivity", "Navigated to: ${destination.label} (ID: ${destination.id})")
                 
@@ -49,6 +53,8 @@ class VpMainActivity : BaseActivity() {
                     R.id.createMeetingFragment -> getString(R.string.title_meetings)
                     R.id.assignRolesFragment -> getString(R.string.title_assign_roles)
                     R.id.leaderboardFragment -> getString(R.string.title_leaderboard)
+                    R.id.reportsFragment -> getString(R.string.title_reports)
+                    R.id.settingsFragment -> getString(R.string.title_settings)
                     else -> getString(R.string.app_name)
                 }
             }

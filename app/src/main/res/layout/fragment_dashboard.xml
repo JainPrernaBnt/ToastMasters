@@ -2,47 +2,451 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@drawable/gradient_background">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:title="@string/title_dashboard"
-            app:titleTextColor="@color/white" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        android:layout_margin="16dp"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="@color/white"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/outline_variant">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <!-- Dashboard content will go here -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_event"
+                    android:layout_marginEnd="12dp"
+                    app:tint="@color/purple_500" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/title_dashboard"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/on_surface" />
+
+            </LinearLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Dashboard Content"
-                android:textAlignment="center"
-                android:textSize="18sp"
-                android:layout_marginTop="24dp"/>
+                android:text="@string/vp_dashboard_description"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface_medium"
+                android:lineSpacingExtra="2dp" />
 
         </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="120dp"
+        android:padding="16dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Recent Meeting Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardRecentMeeting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <!-- Meeting Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_event"
+                            android:layout_marginEnd="12dp"
+                            app:tint="@color/purple_500" />
+
+                        <TextView
+                            android:id="@+id/tvRecentMeetingTitle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Weekly ToastMasters Meeting"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:id="@+id/tvRecentMeetingDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Aug 15, 2024"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:background="@drawable/bg_date_chip"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="4dp" />
+
+                    </LinearLayout>
+
+                    <!-- Meeting Details -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_time"
+                                android:layout_marginEnd="8dp"
+                                app:tint="@color/on_surface_medium" />
+
+                            <TextView
+                                android:id="@+id/tvRecentMeetingTime"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="5:30 PM - 7:30 PM"
+                                android:textSize="14sp"
+                                android:textColor="@color/on_surface_medium" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:src="@drawable/ic_location"
+                                android:layout_marginEnd="8dp"
+                                app:tint="@color/on_surface_medium" />
+
+                            <TextView
+                                android:id="@+id/tvRecentMeetingVenue"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Community Center, Room 101"
+                                android:textSize="14sp"
+                                android:textColor="@color/on_surface_medium" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Availability Summary -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_availability_card"
+                            android:padding="12dp"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:id="@+id/tvAvailableCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="12"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/success" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/available"
+                                android:textSize="12sp"
+                                android:textColor="@color/on_surface_medium" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_availability_card"
+                            android:padding="12dp"
+                            android:layout_marginEnd="8dp">
+
+                            <TextView
+                                android:id="@+id/tvNotAvailableCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="3"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/error" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/not_available"
+                                android:textSize="12sp"
+                                android:textColor="@color/on_surface_medium" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:background="@drawable/bg_availability_card"
+                            android:padding="12dp">
+
+                            <TextView
+                                android:id="@+id/tvNotConfirmedCount"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="5"
+                                android:textSize="24sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/on_surface_medium" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/not_confirmed"
+                                android:textSize="12sp"
+                                android:textColor="@color/on_surface_medium" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Click to view details hint -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/click_to_view_member_details"
+                            android:textSize="12sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:textStyle="italic" />
+
+                        <ImageView
+                            android:id="@+id/ivExpandIcon"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_expand_more"
+                            app:tint="@color/on_surface_medium" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Available Members with Preferred Roles (Hidden by default) -->
+            <LinearLayout
+                android:id="@+id/layoutAvailableMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardElevation="4dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/outline_variant">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/available_members_preferred_roles"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface"
+                            android:layout_marginBottom="16dp" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvAvailableMembers"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:listitem="@layout/item_available_member" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <!-- Members Not Responded (Hidden by default) -->
+            <LinearLayout
+                android:id="@+id/layoutNotRespondedMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardElevation="4dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/outline_variant">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/members_not_responded"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface"
+                            android:layout_marginBottom="16dp" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvNotRespondedMembers"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:listitem="@layout/item_not_responded_member" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <!-- Not Confirmed Members (Hidden by default) -->
+            <LinearLayout
+                android:id="@+id/layoutNotConfirmedMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardElevation="4dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/outline_variant">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/not_confirmed_members"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface"
+                            android:layout_marginBottom="16dp" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvNotConfirmedMembers"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            tools:listitem="@layout/item_not_confirmed_member" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
     </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

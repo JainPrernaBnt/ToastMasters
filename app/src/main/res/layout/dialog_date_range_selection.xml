@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/white">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="20dp">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_calendar"
+            android:layout_marginEnd="12dp"
+            app:tint="@color/purple_500" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/select_date_range"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface" />
+
+    </LinearLayout>
+
+    <!-- Report Type Display -->
+    <TextView
+        android:id="@+id/tvReportType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Meeting Summary Report"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/purple_500"
+        android:layout_marginBottom="20dp" />
+
+    <!-- From Date Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/from_date"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxCornerRadiusTopStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusBottomEnd="8dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etFromDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Select start date"
+            android:inputType="none"
+            android:focusable="false"
+            android:clickable="true" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- To Date Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/to_date"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="8dp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxCornerRadiusTopStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusBottomEnd="8dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etToDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Select end date"
+            android:inputType="none"
+            android:focusable="false"
+            android:clickable="true" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel"
+            android:textSize="14sp"
+            android:textColor="@color/on_surface_medium"
+            android:layout_marginEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGenerateReport"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/generate_report"
+            android:textSize="14sp"
+            app:cornerRadius="8dp"
+            android:backgroundTint="@color/purple_500"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+
+</LinearLayout>

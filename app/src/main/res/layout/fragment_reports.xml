@@ -1,28 +1,648 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/background"
-    android:padding="16dp">
+    android:background="@drawable/gradient_background">
 
-    <TextView
+    <!-- Header Section -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Reports"
-        android:textAlignment="center"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="16dp"/>
+        android:layout_margin="16dp"
+        app:cardElevation="8dp"
+        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="@color/white"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/outline_variant">
 
-    <TextView
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_assessment"
+                    android:layout_marginEnd="12dp"
+                    app:tint="@color/purple_500" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/title_reports"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/on_surface" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Generate detailed reports and analytics for your ToastMasters club"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface_medium"
+                android:lineSpacingExtra="2dp" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Reports List -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Reports Content"
-        android:textAlignment="center"
-        android:textSize="18sp"
-        android:layout_marginTop="16dp"/>
+        android:layout_height="match_parent"
+        android:layout_marginTop="120dp"
+        android:padding="16dp"
+        android:clipToPadding="false">
 
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Meeting Summary Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardMeetingSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_assessment"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/purple_500" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Meeting Summary"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Overview of all meetings with attendance and participation"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Role Assigned Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardRoleAssigned"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/purple_500" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Role Assigned"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Detailed breakdown of roles assigned to members"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- User Wise Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardUserWise"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/purple_500" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="User Wise"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Individual member performance and participation"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Members Role Frequency Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardMembersRoleFrequency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_leaderboard"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/purple_500" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Members Role Frequency"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="How often members take on different roles"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Non Participating Members Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardNonParticipatingMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/error" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Non Participating Members"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Members who haven't participated recently"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Top Active Members Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardTopActiveMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_leaderboard"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/success" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Top Active Members"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Most active and engaged members"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Backout Members Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardBackoutMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/error" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Backout Members"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Members who frequently cancel their commitments"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Average Participation Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardAverageParticipation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_assessment"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/purple_500" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Average Participation"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Overall participation statistics and trends"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Membership Status Report -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardMembershipStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline_variant"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_person"
+                        android:layout_marginEnd="16dp"
+                        app:tint="@color/purple_500" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Membership Status"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/on_surface" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Current membership status and renewal information"
+                            android:textSize="14sp"
+                            android:textColor="@color/on_surface_medium"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_add"
+                        app:tint="@color/on_surface_medium" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
