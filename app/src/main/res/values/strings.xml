@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">ToastMasters</string>
+    <string name="app_tagline">Empowering Leaders Through Public Speaking</string>
+    <string name="title_sign_up">Sign Up</string>
+    <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 
     <!-- Bottom Navigation -->
     <string name="title_dashboard">Dashboard</string>
@@ -43,9 +46,76 @@
     <string name="ic_location">Location icon</string>
     <string name="ic_theme">Theme icon</string>
     <string name="ic_delete">Delete icon</string>
+    
+    <!-- Auth Flow -->
+    <string name="action_login_to_main_navigation">action_login_to_main_navigation</string>
+    <string name="action_login_to_signUpFragment">action_login_to_signUpFragment</string>
+    <string name="signup_success_pending_approval">Your account is pending approval from the VP Education.</string>
+    <string name="signup_success_approved">Your account has been created successfully!</string>
+    <string name="forgot_password_title">Forgot Password</string>
+    <string name="forgot_password_message">Enter your email address and we\'ll send you a link to reset your password.</string>
+    <string name="send_reset_link">SEND RESET LINK</string>
+    <string name="reset_password_email_sent">Password reset email sent. Please check your inbox.</string>
+    <string name="error_generic">An error occurred. Please try again.</string>
+    <string name="error_name_too_short">Name must be at least 3 characters long</string>
+    <string name="error_invalid_email">Please enter a valid email address</string>
+    <string name="error_invalid_phone">Please enter a valid phone number</string>
+    <string name="error_address_too_short">Address must be at least 5 characters long</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="error_invalid_toastmasters_id">Invalid Toastmasters ID</string>
+    <string name="error_invalid_club_id">Invalid Club ID</string>
+    <string name="error_password_too_short">Password must be at least 6 characters long</string>
+    <string name="error_passwords_dont_match">Passwords don\'t match</string>
+    <string name="error_select_mentor">Please select a mentor</string>
+    
+    <!-- Member Approval -->
+    <string name="approve_member_title">Approve Member</string>
+    <string name="approve_member_message">Are you sure you want to approve this member?</string>
+    <string name="reject_member_title">Reject Member</string>
+    <string name="reject_member_message">Are you sure you want to reject this member?</string>
+    <string name="approve_all_title">Approve All Members</string>
+    <string name="approve_all_message">Are you sure you want to approve all pending members?</string>
+    <string name="filter_all">All Members</string>
+    <string name="filter_new_members">New Members</string>
+    <string name="filter_pending_approval">Pending Approval</string>
+    <string name="filter_members">Filter Members</string>
+
+    <!-- Sign Up Screen -->
+    <string name="has_mentor">Do you have a mentor?</string>
+    <string name="hint_select_mentor">Select Mentor</string>
+    <string name="already_have_account">Already have an account? </string>
+    
+    <!-- Member Approval -->
+    <string name="approve">Approve</string>
+    <string name="not_provided">Not provided</string>
+
+    <string name="mentor_assigned_placeholder">Mentor assigned</string>
+    <string name="reject">Reject</string>
+    <string name="no_response">No Response</string>
+    
+    <!-- Member Roles -->
+    <string name="preferred_roles_label">Preferred Roles</string>
+    <string name="preferred">Preferred</string>
+    <string name="assign_role">Assign Role</string>
+    <string name="select_role">Select Role</string>
+    <string name="assign_backup">Assign Backup</string>
+    
+    <!-- Meetings -->
+    <string name="recurring_meeting">Recurring Meeting</string>
     <string name="ic_check">Check icon</string>
     <string name="ic_person">Person icon</string>
     <string name="ic_add">Add icon</string>
+    <string name="ic_arrow_back">Back</string>
+    <string name="ic_phone">Phone icon</string>
+    <string name="ic_calendar_today">Calendar today icon</string>
+    <string name="ic_check_circle">Check circle icon</string>
+    <string name="ic_cancel">Cancel icon</string>
+    <string name="ic_people">People icon</string>
+    <string name="ic_mentor">Mentor icon</string>
+    <string name="ic_edit">Edit icon</string>
+    <string name="ic_repeat">Repeat icon</string>
+    <string name="ic_email">Email icon</string>
+    <string name="ic_work">Work icon</string>
 
     <!-- Role Management -->
     <string name="add_role">Add Role</string>
@@ -53,67 +123,182 @@
     <string name="add_custom_role">Add Custom Role</string>
     <string name="remove_role">Remove</string>
     <string name="select_roles">Select or Add Roles</string>
-    <string name="available_members">Available Memebers</string>
+    <string name="available_members">Available Members</string>
     <string name="save">Save</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="member_avatar">Member Avatar</string>
-    <string name="preferred">Preferred</string>
     <string name="recent_roles">Recent Roles</string>
-    <string name="assign_role">Assign Role</string>
-    <string name="select_role">Select Role</string>
-    <string name="assign_backup">Assign Backup\n</string>
     <string name="select_backup_member">Select Backup Member</string>
     <string name="assigned_roles">Assigned Roles</string>
     <string name="auto_assign">Auto Assign\n</string>
     <string name="clear_all">Clear All</string>
     <string name="settings">Settings\n</string>
     <string name="leaderboard">Leaderboard</string>
-    
+
+    <!-- Availability -->
+    <string name="available">Available</string>
+    <string name="not_available">Not Available</string>
+
     <!-- Upcoming Meetings -->
     <string name="title_upcoming_meetings">Upcoming Meetings</string>
     <string name="upcoming_meetings_description">View upcoming meetings and mark your availability</string>
     <string name="no_upcoming_meetings">No Upcoming Meetings</string>
     <string name="no_upcoming_meetings_description">Check back later for new meetings</string>
-    <string name="your_availability">Your Availability</string>
-    <string name="available">Available</string>
-    <string name="not_available">Not Available</string>
-    <string name="not_confirmed">Not Confirmed</string>
-    <string name="save_availability">Save</string>
     <string name="meeting_theme_prefix">Theme: </string>
     <string name="create_meeting">Create Meeting</string>
+
+    <!-- Meeting Types -->
+    <string name="meeting_type_regular">Regular Meeting</string>
+    <string name="meeting_type_contest">Contest</string>
+    <string name="meeting_type_special">Special Event</string>
+
+    <!-- Member Info -->
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="address">Address</string>
+    <string name="level">Level</string>
+    <string name="gender">Gender</string>
+    <string name="joined_date">Joined: %s</string>
+    <string name="password">Password</string>
+    <string name="toastmasters_id">Toastmasters Unique ID</string>
+    <string name="club_id">Club Unique ID</string>
+    <string name="role">Role</string>
+    <string name="vp_education">VP Education (Admin)</string>
+    <string name="member">Member</string>
+    <string name="mentor_name">Mentor Name</string>
+    <string name="mentor_not_assigned">Mentor Not Assigned</string>
+    <string name="approve_member">Approve Member</string>
+    <string name="reject_member">Reject Member</string>
+    <string name="assign_mentor">Assign Mentor</string>
+
+    <!-- General -->
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="loading">Loading...</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
     
-    <!-- Reports -->
-    <string name="reports_description">Generate detailed reports and analytics for your ToastMasters club</string>
-    <string name="meeting_summary">Meeting Summary</string>
-    <string name="meeting_summary_description">Overview of all meetings with attendance and participation</string>
-    <string name="role_assigned">Role Assigned</string>
-    <string name="role_assigned_description">Detailed breakdown of roles assigned to members</string>
-    <string name="user_wise">User Wise</string>
-    <string name="user_wise_description">Individual member performance and participation</string>
-    <string name="members_role_frequency">Members Role Frequency</string>
-    <string name="members_role_frequency_description">How often members take on different roles</string>
-    <string name="non_participating_members">Non Participating Members</string>
-    <string name="non_participating_members_description">Members who haven\'t participated recently</string>
-    <string name="top_active_members">Top Active Members</string>
-    <string name="top_active_members_description">Most active and engaged members</string>
-    <string name="backout_members">Backout Members</string>
-    <string name="backout_members_description">Members who frequently cancel their commitments</string>
-    <string name="average_participation">Average Participation</string>
-    <string name="average_participation_description">Overall participation statistics and trends</string>
-    <string name="membership_status">Membership Status</string>
-    <string name="membership_status_description">Current membership status and renewal information</string>
+    <!-- Missing strings -->
     <string name="select_date_range">Select Date Range</string>
     <string name="from_date">From Date</string>
     <string name="to_date">To Date</string>
     <string name="generate_report">Generate Report</string>
-    <string name="cancel">Cancel</string>
+    <string name="forgot_password_dialog_message">Enter your email to receive a password reset link</string>
+    <string name="hint_email">Email</string>
+    <string name="your_availability">Your Availability</string>
+    <string name="not_confirmed">Not Confirmed</string>
+    <string name="no_roles_available">No roles available</string>
     
-    <!-- VP Dashboard -->
-    <string name="vp_dashboard_description">Monitor recent meetings and member participation</string>
-    <string name="available_members_preferred_roles">Available Members &amp; Preferred Roles</string>
+    <!-- Notification -->
+    <string name="confirm_delete_notification_title">Delete Notification</string>
+    <string name="confirm_delete_notification_message">Are you sure you want to delete this notification?</string>
+    <string name="confirm_delete_all_title">Delete All Notifications</string>
+    <string name="confirm_delete_all_notifications_message">Are you sure you want to delete all notifications? This action cannot be undone.</string>
+    <string name="retry">RETRY</string>
+    <string name="additional_notes_optional">Additional Notes (Optional)</string>
+    <string name="click_to_view_member_details">Click to view member details</string>
+    <string name="available_members_preferred_roles">Available Members (Preferred Roles)</string>
     <string name="members_not_responded">Members Not Responded</string>
     <string name="not_confirmed_members">Not Confirmed Members</string>
-    <string name="preferred_roles_label">Preferred Roles:</string>
-    <string name="no_response">No Response</string>
-    <string name="click_to_view_member_details">Click to view member details</string>
+    
+    <!-- More missing strings -->
+    <string name="title_edit_meeting">Edit Meeting</string>
+    <string name="agenda">Agenda</string>
+    <string name="title_login">Login</string>
+    <string name="hint_email_or_phone">Email or Phone</string>
+    <string name="hint_password">Password</string>
+    <string name="action_forgot_password">Forgot Password?</string>
+    <string name="action_login">Login</string>
+    <string name="or">OR</string>
+    <string name="action_sign_up">Sign Up</string>
+    <string name="meetings">Meetings</string>
+    <string name="upcoming">Upcoming</string>
+    <string name="past">Past</string>
+    <string name="add_meeting">Add Meeting</string>
+    <string name="title_pending_approvals">Pending Approvals</string>
+    <string name="approve_all">Approve All</string>
+    
+    <!-- Additional missing strings -->
+    <string name="no_pending_approvals">No pending approvals</string>
+    <string name="hint_full_name">Full Name</string>
+    <string name="hint_phone">Phone Number</string>
+    <string name="hint_address">Address</string>
+    <string name="hint_gender">Gender</string>
+    <string name="hint_joined_date">Joined Date</string>
+    <string name="hint_toastmasters_id">Toastmasters ID</string>
+    <string name="hint_club_id">Club ID</string>
+    <string name="hint_confirm_password">Confirm Password</string>
+    <string name="title_mentor_assignment">Mentor Assignment</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_delete">Delete</string>
+    <string name="search">Search</string>
+    <string name="filter">Filter</string>
+    <string name="sort">Sort</string>
+    <string name="save_availability">Save Availability</string>
+    <string name="saving_changes">Saving changes…</string>
+    <string name="confirm_submission">Confirm Submission</string>
+    <string name="are_you_sure_you_want_to_submit">Are you sure you want to submit your response?</string>
+    <string name="discard_changes">Discard Changes</string>
+    <string name="are_you_sure_you_want_to_discard_changes">Are you sure you want to discard your changes?</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep Editing</string>
+    <string name="submit">Submit</string>
+
+    <string name="error_title">Something went wrong</string>
+    <string name="error_message">Please try again later</string>
+    <string name="loading_meetings">Loading meetings…</string>
+
+    <string name="empty_meetings_title">No Meetings Found</string>
+    <string name="empty_meetings_message">There are no meetings scheduled yet.</string>
+    <string name="empty_responses_title">No Responses Yet</string>
+    <string name="empty_responses_message">No members have responded to this meeting yet.</string>
+    <string name="empty_roles_title">No Roles Assigned</string>
+    <string name="empty_roles_message">No roles have been assigned for this meeting.</string>
+    <string name="empty_search_title">No Results Found</string>
+    <string name="empty_search_message">Try adjusting your search or filter criteria.</string>
+
+    <!-- Notification Screen -->
+    <string name="title_notifications">Notifications</string>
+    <string name="no_notifications">No notifications yet</string>
+    <string name="mark_all_as_read">Mark all as read</string>
+    <string name="delete_all_notifications">Delete all notifications</string>
+    <string name="delete_notification">Delete notification</string>
+    <string name="notification_icon">Notification icon</string>
+
+    <!-- Notification Messages -->
+    <string name="notification_member_approved_title">Membership Approved</string>
+    <string name="notification_member_approved_message">Your membership has been approved. Welcome to the club!</string>
+
+    <string name="notification_mentor_assigned_title">Mentor Assigned</string>
+    <string name="notification_mentor_assigned_message">%1$s has been assigned as your mentor.</string>
+
+    <string name="notification_meeting_created_title">New Meeting Scheduled</string>
+    <string name="notification_meeting_created_message">A new meeting has been scheduled for %1$s at %2$s</string>
+
+    <string name="notification_meeting_reminder_title">Meeting Reminder</string>
+    <string name="notification_meeting_reminder_message">Your meeting starts in %1$d minutes</string>
+
+    <!-- Actions -->
+    <string name="refresh">Refresh</string>
+    <string name="delete">Delete</string>
+    <string name="delete_all">Delete All</string>
+
+
+    <!-- Confirmation Messages -->
+    <string name="confirm_delete_notification">Are you sure you want to delete this notification?</string>
+    <string name="confirm_delete_all_notifications">Are you sure you want to delete all notifications?</string>
+
+    <!-- Error Messages -->
+    <string name="error_loading_notifications">Failed to load notifications. Pull to refresh.</string>
+    <string name="error_marking_notifications_read">Failed to mark notifications as read</string>
+    <string name="error_deleting_notifications">Failed to delete notifications</string>
+
+    <!-- Notification Channels -->
+    <string name="notification_channel_default">General</string>
+    <string name="notification_channel_default_description">General notifications</string>
+    <string name="notification_channel_important">Important</string>
+    <string name="notification_channel_important_description">Important notifications that require your attention</string>
 </resources>

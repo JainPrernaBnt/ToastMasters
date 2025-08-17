@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardView"
+    style="@style/Widget.Material3.CardView.Elevated"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/space_small"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutline"
+    app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/space_medium">
+
+        <!-- Member Avatar -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/avatarImageView"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="@dimen/space_medium"
+            android:contentDescription="@string/member_avatar"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/CircleImageView"
+            app:srcCompat="@drawable/ic_person"
+            app:tint="?attr/colorOnSurfaceVariant"
+            tools:src="@drawable/ic_person" />
+
+        <!-- Member Name -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/nameTextView"
+            style="@style/TextAppearance.Material3.TitleMedium"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/space_small"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?android:attr/textColorPrimary"
+            app:layout_constraintEnd_toStartOf="@+id/approveButton"
+            app:layout_constraintStart_toEndOf="@id/avatarImageView"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="John Doe" />
+
+        <!-- Member Email -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/emailTextView"
+            style="@style/TextAppearance.Material3.BodyMedium"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xxsmall"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?android:attr/textColorSecondary"
+            app:layout_constraintEnd_toEndOf="@id/nameTextView"
+            app:layout_constraintStart_toStartOf="@id/nameTextView"
+            app:layout_constraintTop_toBottomOf="@id/nameTextView"
+            tools:text="john.doe@example.com" />
+
+        <!-- Member Phone -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/phoneTextView"
+            style="@style/TextAppearance.Material3.BodyMedium"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xxsmall"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="?android:attr/textColorSecondary"
+            app:drawableStartCompat="@drawable/ic_phone"
+            app:drawableTint="?attr/colorOnSurfaceVariant"
+            app:drawablePadding="4dp"
+            app:layout_constraintEnd_toEndOf="@id/nameTextView"
+            app:layout_constraintStart_toStartOf="@id/nameTextView"
+            app:layout_constraintTop_toBottomOf="@id/emailTextView"
+            tools:text="+1 (555) 123-4567" />
+
+        <!-- Joined Date -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/joinedDateTextView"
+            style="@style/TextAppearance.Material3.BodySmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xsmall"
+            android:drawablePadding="4dp"
+            android:textColor="?android:attr/textColorTertiary"
+            app:drawableStartCompat="@drawable/ic_calendar_today"
+            app:drawableTint="?attr/colorOnSurfaceVariant"
+            app:layout_constraintStart_toStartOf="@id/nameTextView"
+            app:layout_constraintTop_toBottomOf="@id/phoneTextView"
+            tools:text="Joined: 2 days ago" />
+
+        <!-- Approve Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/approveButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_small"
+            android:minWidth="0dp"
+            android:paddingHorizontal="@dimen/space_small"
+            android:text="@string/approve"
+            android:textColor="?attr/colorPrimary"
+            app:icon="@drawable/ic_check_circle"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="?attr/colorPrimaryContainer"
+            tools:ignore="ContentDescription" />
+
+        <!-- Reject Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/rejectButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_small"
+            android:minWidth="0dp"
+            android:paddingHorizontal="@dimen/space_small"
+            android:text="@string/reject"
+            android:textColor="?attr/colorError"
+            app:icon="@drawable/ic_cancel"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="?attr/colorError"
+            app:layout_constraintBottom_toBottomOf="@id/approveButton"
+            app:layout_constraintEnd_toStartOf="@id/approveButton"
+            app:layout_constraintTop_toTopOf="@id/approveButton"
+            app:rippleColor="?attr/colorErrorContainer"
+            tools:ignore="ContentDescription" />
+
+        <!-- Assign Mentor Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/assignMentorButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_small"
+            android:minWidth="0dp"
+            android:paddingHorizontal="@dimen/space_small"
+            android:text="@string/assign_mentor"
+            android:textColor="?attr/colorPrimary"
+            app:icon="@drawable/ic_people"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="?attr/colorPrimary"
+            app:layout_constraintEnd_toEndOf="@id/nameTextView"
+            app:layout_constraintStart_toStartOf="@id/nameTextView"
+            app:layout_constraintTop_toBottomOf="@id/joinedDateTextView"
+            app:rippleColor="?attr/colorPrimaryContainer"
+            tools:visibility="visible" />
+
+        <!-- Current Mentor (Visible when assigned) -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/mentorChip"
+            style="@style/Widget.Material3.Chip.Assist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_small"
+            android:checkable="false"
+            android:clickable="false"
+            android:focusable="false"
+            app:chipBackgroundColor="?attr/colorSecondaryContainer"
+            app:chipIcon="@drawable/ic_mentor"
+            app:chipIconTint="?attr/colorOnSecondaryContainer"
+            app:chipStrokeWidth="0dp"
+            app:chipTextColor="?attr/colorOnSecondaryContainer"
+            app:closeIcon="@drawable/ic_edit"
+            app:closeIconTint="?attr/colorOnSecondaryContainer"
+            app:layout_constraintStart_toStartOf="@id/nameTextView"
+            app:layout_constraintTop_toBottomOf="@id/joinedDateTextView"
+            tools:text="Mentor: Jane Smith"
+            tools:visibility="gone" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

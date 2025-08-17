@@ -22,7 +22,8 @@ import com.bntsoft.toastmasters.data.local.entity.Winners
         MeetingRoles::class, MeetingRolesBackout::class, AgendaMaster::class,
         AgendaItems::class, ClubOfficers::class, Guest::class, Winners::class,
         ReportRequests::class],
-    version = 1
+    version = 1,
+    exportSchema = true
 )
 @TypeConverters(PreferredRoleConverter::class, ReportTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base application theme for Material 3 -->
+    <style name="Theme.ToastMasters.Material3" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+
+        <!-- Buttons -->
+        <item name="materialButtonOutlinedStyle">@style/Widget.Material3.Button.OutlinedButton</item>
+        <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
+
+        <!-- Progress Indicator -->
+        <item name="circularProgressIndicatorStyle">@style/Widget.ToastMasters.CircularProgressIndicator</item>
+
+        <!-- Extended FAB Style -->
+        <item name="extendedFloatingActionButtonStyle">@style/Widget.ToastMasters.ExtendedFAB</item>
+    </style>
+
+    <!-- Custom Extended FAB -->
+    <style name="Widget.ToastMasters.ExtendedFAB" parent="Widget.Material3.ExtendedFloatingActionButton">
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="iconTint">?attr/colorOnPrimary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="rippleColor">?attr/colorOnPrimary</item>
+        <item name="elevation">6dp</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">80dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+    </style>
+
+    <!-- Custom Circular Progress Indicator -->
+    <style name="Widget.ToastMasters.CircularProgressIndicator" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="android:indeterminate">true</item>
+        <item name="indicatorColor">?attr/colorPrimary</item>
+        <item name="trackColor">?attr/colorPrimaryContainer</item>
+        <item name="trackThickness">4dp</item>
+        <item name="indicatorSize">48dp</item>
+    </style>
+
+</resources>

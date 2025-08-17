@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material3 Progress Indicator Attributes -->
+    <declare-styleable name="CircularProgressIndicator">
+        <attr name="indeterminate" format="boolean" />
+        <attr name="indicatorColor" format="color" />
+        <attr name="trackColor" format="color" />
+        <attr name="trackThickness" format="dimension" />
+        <attr name="trackCornerRadius" format="dimension" />
+        <attr name="indicatorSize" format="dimension" />
+    </declare-styleable>
+    
+    <!-- Material3 Extended FAB Attributes -->
+    <declare-styleable name="ExtendedFloatingActionButton">
+        <attr name="backgroundTint" format="color" />
+        <attr name="iconTint" format="color" />
+        <attr name="android:textColor" />
+        <attr name="rippleColor" format="color" />
+        <attr name="elevation" format="dimension" />
+        <attr name="cornerRadius" format="dimension" />
+        <attr name="android:minHeight" />
+        <attr name="android:minWidth" />
+        <attr name="android:paddingStart" />
+        <attr name="android:paddingEnd" />
+    </declare-styleable>
+    
+    <!-- Material3 Chip Attributes -->
+    <declare-styleable name="Chip">
+        <attr name="chipTextColor" format="color" />
+        <attr name="android:textAppearance" />
+        <attr name="android:drawablePadding" />
+    </declare-styleable>
+    
+    <!-- Empty State View Attributes -->
+    <declare-styleable name="EmptyStateView">
+        <attr name="emptyIcon" format="reference" />
+        <attr name="emptyText" format="string" />
+        <attr name="emptyActionText" format="string" />
+    </declare-styleable>
+    
+    <!-- Common Attributes -->
+    <attr name="drawablePadding" format="dimension" />
+</resources>
