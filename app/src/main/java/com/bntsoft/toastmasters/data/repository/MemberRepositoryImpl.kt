@@ -1,8 +1,11 @@
 package com.bntsoft.toastmasters.data.repository
 
 import com.bntsoft.toastmasters.data.remote.FirestoreService
+import com.bntsoft.toastmasters.data.model.NotificationData
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
+import com.bntsoft.toastmasters.domain.repository.NotificationRepository
+import com.bntsoft.toastmasters.utils.NotificationHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -12,7 +15,8 @@ import javax.inject.Singleton
 
 @Singleton
 class MemberRepositoryImpl @Inject constructor(
-    private val firestoreService: FirestoreService
+    private val firestoreService: FirestoreService,
+    private val notificationRepository: NotificationRepository
 ) : MemberRepository {
 
     override fun getPendingApprovals(): Flow<List<User>> {
@@ -24,11 +28,36 @@ class MemberRepositoryImpl @Inject constructor(
     }
 
     override suspend fun approveMember(userId: String, mentorIds: List<String>, isNewMember: Boolean): Boolean {
-        return firestoreService.approveMember(userId, mentorIds, isNewMember)
+        val ok = firestoreService.approveMember(userId, mentorIds, isNewMember)
+        if (ok) {
+            val notification = NotificationData(
+                title = "Membership approved",
+                message = "Your account has been approved. You can now sign in and use the app.",
+                type = NotificationHelper.TYPE_MEMBER_APPROVAL,
+                data = mapOf(NotificationHelper.EXTRA_USER_ID to userId)
+            )
+            try { notificationRepository.sendNotificationToUser(userId, notification) } catch (_: Exception) {}
+        }
+        return ok
     }
 
     override suspend fun rejectMember(userId: String, reason: String?): Boolean {
-        return firestoreService.rejectMember(userId, reason)
+        val ok = firestoreService.rejectMember(userId, reason)
+        if (ok) {
+            val msg = if (!reason.isNullOrBlank()) {
+                "Your account has been rejected. Reason: $reason"
+            } else {
+                "Your account has been rejected. Please contact club officers."
+            }
+            val notification = NotificationData(
+                title = "Membership rejected",
+                message = msg,
+                type = NotificationHelper.TYPE_MEMBER_APPROVAL,
+                data = mapOf(NotificationHelper.EXTRA_USER_ID to userId)
+            )
+            try { notificationRepository.sendNotificationToUser(userId, notification) } catch (_: Exception) {}
+        }
+        return ok
     }
 
     override fun getAllMembers(includePending: Boolean): Flow<List<User>> = flow {

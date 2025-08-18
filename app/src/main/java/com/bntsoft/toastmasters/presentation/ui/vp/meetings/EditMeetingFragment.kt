@@ -24,6 +24,11 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @AndroidEntryPoint
 class EditMeetingFragment : Fragment() {
@@ -34,6 +39,9 @@ class EditMeetingFragment : Fragment() {
     private val viewModel: EditMeetingViewModel by viewModels()
     private var meetingId: String = 0.toString()
     private var meeting: Meeting? = null
+
+    // Editable preferred roles for this screen
+    private val preferredRoles: MutableList<String> = mutableListOf()
 
     private val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
     private val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
@@ -52,10 +60,10 @@ class EditMeetingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get meeting ID from arguments
-        meetingId = (arguments?.getInt(ARG_MEETING_ID) ?: 0).toString()
+        // Get meeting ID from nav arguments (string id from Firestore)
+        meetingId = arguments?.getString("meeting_id") ?: (arguments?.getInt(ARG_MEETING_ID)
+            ?: 0).toString()
 
-        setupToolbar()
         setupClickListeners()
         observeViewModel()
 
@@ -63,33 +71,7 @@ class EditMeetingFragment : Fragment() {
         viewModel.loadMeeting(meetingId)
     }
 
-    private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            if (isFormEdited()) {
-                showDiscardChangesDialog()
-            } else {
-                findNavController().navigateUp()
-            }
-        }
-
-        binding.toolbar.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.action_save -> {
-                    if (validateForm()) {
-                        updateMeeting()
-                    }
-                    true
-                }
-
-                R.id.action_delete -> {
-                    showDeleteConfirmationDialog()
-                    true
-                }
-
-                else -> false
-            }
-        }
-    }
+    // Toolbar removed; Save handled by bottom button
 
     private fun setupClickListeners() {
         // Date Picker
@@ -101,32 +83,67 @@ class EditMeetingFragment : Fragment() {
             showDatePicker()
         }
 
-        // Time Pickers
+        // Time pickers
+        binding.startTimeInputLayout.setEndIconOnClickListener {
+            showTimePicker(isStartTime = true)
+        }
+        binding.endTimeInputLayout.setEndIconOnClickListener {
+            showTimePicker(isStartTime = false)
+        }
         binding.startTimeEditText.setOnClickListener {
             showTimePicker(isStartTime = true)
         }
-
         binding.endTimeEditText.setOnClickListener {
             showTimePicker(isStartTime = false)
         }
 
-        // Start Time Picker
-        binding.startTimeInputLayout.setEndIconOnClickListener {
-            showTimePicker(true)
+        // Save button
+        binding.btnSave.setOnClickListener {
+            if (validateForm()) {
+                updateMeeting()
+            }
         }
 
-        binding.startTimeEditText.setOnClickListener {
-            showTimePicker(true)
-        }
+        // Add role button
+        binding.btnAddRole.setOnClickListener {
+            val role = binding.roleEditText.text?.toString()?.trim().orEmpty()
+            if (role.isEmpty()) {
+                binding.roleInputLayout.error = getString(R.string.error_required)
+                return@setOnClickListener
+            }
+            binding.roleInputLayout.error = null
 
-        // End Time Picker
-        binding.endTimeInputLayout.setEndIconOnClickListener {
-            showTimePicker(false)
+            // Avoid duplicates (case-insensitive)
+            val exists = preferredRoles.any { it.equals(role, ignoreCase = true) }
+            if (!exists) {
+                preferredRoles.add(role)
+                addRoleChip(role)
+            } else {
+                binding.roleInputLayout.error = getString(R.string.error_duplicate)
+            }
+            binding.roleEditText.setText("")
         }
+    }
 
-        binding.endTimeEditText.setOnClickListener {
-            showTimePicker(false)
+    private fun renderPreferredRoleChips() {
+        binding.roleChipGroup.removeAllViews()
+        preferredRoles.forEach { addRoleChip(it) }
+    }
+
+    private fun addRoleChip(role: String) {
+        val chip = com.google.android.material.chip.Chip(requireContext()).apply {
+            text = role
+            isCheckable = false
+            isClickable = true
+            isCloseIconVisible = true
+            setOnCloseIconClickListener {
+                // Remove role and chip
+                val index = preferredRoles.indexOfFirst { it.equals(role, ignoreCase = true) }
+                if (index >= 0) preferredRoles.removeAt(index)
+                binding.roleChipGroup.removeView(this)
+            }
         }
+        binding.roleChipGroup.addView(chip)
     }
 
     private fun observeViewModel() {
@@ -166,39 +183,31 @@ class EditMeetingFragment : Fragment() {
 
     private fun populateForm(meeting: Meeting) {
         with(binding) {
-            // Set meeting title
-
-            // Set meeting date and time
-            val date = Date(meeting.dateTime.toEpochSecond(java.time.ZoneOffset.UTC) * 1000)
-            dateEditText.setText(dateFormat.format(date))
-            startTimeEditText.setText(timeFormat.format(date))
-
-            // Set end time if available
-            meeting.endDateTime?.let { endDateTime ->
-                val endDate = Date(endDateTime.toEpochSecond(java.time.ZoneOffset.UTC) * 1000)
-                endTimeEditText.setText(timeFormat.format(endDate))
-            }
-
             // Set location
             venueEditText.setText(meeting.location)
 
-            // Set agenda if available
-            if (meeting.theme.isNotBlank()) {
-                agendaEditText.setText(meeting.theme)
-            }
+            // Set meeting date (only date)
+            val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+            val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
+            dateEditText.setText(dateFormatter.format(meeting.dateTime.toLocalDate()))
+
+            // Set theme
+            themeEditText.setText(meeting.theme)
+
+            // Set times (no timezone conversion)
+            startTimeEditText.setText(timeFormatter.format(meeting.dateTime.toLocalTime()))
+            val endDt = meeting.endDateTime
+            endTimeEditText.setText(endDt?.let { timeFormatter.format(it.toLocalTime()) } ?: "")
+
+            // Populate preferred roles chips (editable)
+            preferredRoles.clear()
+            preferredRoles.addAll(meeting.preferredRoles)
+            renderPreferredRoleChips()
         }
     }
 
     private fun validateForm(): Boolean {
         var isValid = true
-
-        // Validate title
-        if (binding.titleEditText.text.isNullOrBlank()) {
-            binding.titleInputLayout.error = "Title is required"
-            isValid = false
-        } else {
-            binding.titleInputLayout.error = null
-        }
 
         // Validate date
         if (binding.dateEditText.text.isNullOrBlank()) {
@@ -208,17 +217,15 @@ class EditMeetingFragment : Fragment() {
             binding.dateInputLayout.error = null
         }
 
-        // Validate time
+        // Validate times
         if (binding.startTimeEditText.text.isNullOrBlank()) {
-            binding.startTimeInputLayout.error = "Start time is required"
+            binding.startTimeInputLayout.error = getString(R.string.error_required)
             isValid = false
         } else {
             binding.startTimeInputLayout.error = null
         }
-
-        // Validate end time
         if (binding.endTimeEditText.text.isNullOrBlank()) {
-            binding.endTimeInputLayout.error = "End time is required"
+            binding.endTimeInputLayout.error = getString(R.string.error_required)
             isValid = false
         } else {
             binding.endTimeInputLayout.error = null
@@ -232,43 +239,66 @@ class EditMeetingFragment : Fragment() {
 
         with(binding) {
             return venueEditText.text?.toString() != currentMeeting.location ||
-                    agendaEditText.text?.toString() != currentMeeting.theme
+                    themeEditText.text?.toString() != currentMeeting.theme ||
+                    // Compare date text
+                    run {
+                        val currentDate =
+                            Date(currentMeeting.dateTime.toEpochSecond(java.time.ZoneOffset.UTC) * 1000)
+                        dateEditText.text?.toString() != dateFormat.format(currentDate)
+                    }
         }
     }
 
     private fun updateMeeting() {
         if (!validateForm()) return
-        val date = binding.dateEditText.text.toString().trim()
-        val startTime = binding.startTimeEditText.text.toString().trim()
-        val endTime = binding.endTimeEditText.text.toString().trim()
+        val dateOnly = binding.dateEditText.text.toString().trim()
         val venue = binding.venueEditText.text.toString().trim()
-        val theme = binding.agendaEditText.text.toString().trim()
-        val isRecurring = false // Removed recurring switch from UI
+        val theme = binding.themeEditText.text.toString().trim()
+        val isRecurring = false
 
         try {
-            val dateTime = "$date $startTime"
-            val endDateTime = "$date $endTime"
+            val current = meeting ?: throw IllegalStateException("Meeting not loaded")
 
-            val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy h:mm a", Locale.getDefault())
-            val startDate = dateFormat.parse(dateTime)
-            val endDate = dateFormat.parse(endDateTime)
+            // Parse using java.time to avoid timezone shifts
+            val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+            val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
 
-            val meeting = Meeting(
-                id = (meeting?.id ?: 0).toString(),
-                dateTime = startDate?.toInstant()?.atZone(java.time.ZoneId.systemDefault())
-                    ?.toLocalDateTime()
-                    ?: throw IllegalStateException("Invalid start date"),
-                endDateTime = endDate?.toInstant()?.atZone(java.time.ZoneId.systemDefault())
-                    ?.toLocalDateTime(),
+            val pickedLocalDate: LocalDate = LocalDate.parse(dateOnly, dateFormatter)
+            val startLocalTime: LocalTime = LocalTime.parse(
+                binding.startTimeEditText.text?.toString()?.trim().orEmpty(),
+                timeFormatter
+            )
+            val endLocalTime: LocalTime = LocalTime.parse(
+                binding.endTimeEditText.text?.toString()?.trim().orEmpty(),
+                timeFormatter
+            )
+
+            val startLdt: LocalDateTime = LocalDateTime.of(pickedLocalDate, startLocalTime)
+            val endLdt: LocalDateTime = LocalDateTime.of(pickedLocalDate, endLocalTime)
+
+            // Validate end after start
+            if (!endLdt.isAfter(startLdt)) {
+                binding.endTimeInputLayout.error = getString(R.string.error_generic)
+                showError("End time must be after start time")
+                return
+            } else {
+                binding.endTimeInputLayout.error = null
+            }
+
+            val updated = Meeting(
+                id = (current.id.ifEmpty { meetingId }),
+                dateTime = startLdt,
+                endDateTime = endLdt,
                 location = venue,
                 theme = theme,
-                isRecurring = isRecurring,
-                createdBy = meeting?.createdBy ?: "",
-                createdAt = meeting?.createdAt ?: System.currentTimeMillis(),
+                preferredRoles = preferredRoles.toList(),
+                isRecurring = current.isRecurring,
+                createdBy = current.createdBy,
+                createdAt = current.createdAt,
                 updatedAt = System.currentTimeMillis()
             )
 
-            viewModel.updateMeeting(meeting)
+            viewModel.updateMeeting(updated)
 
         } catch (e: Exception) {
             showError("Error saving meeting: ${e.message}")

@@ -102,11 +102,17 @@ class CreateMeetingFragment : Fragment() {
             ItemMeetingFormBinding.inflate(layoutInflater, binding.meetingFormsContainer, false)
 
         // Set default date to next Saturday
-        val calendar = Calendar.getInstance().apply {
-            // Move to next Saturday
-            val today = get(Calendar.DAY_OF_WEEK)
+        val calendar = Calendar.getInstance()
+        if (meetingForms.isNotEmpty()) {
+            // If there are existing forms, base the new date on the last one
+            val lastMeetingCalendar = meetingForms.last().startCalendar
+            calendar.time = lastMeetingCalendar.time
+            calendar.add(Calendar.DAY_OF_MONTH, 7) // Add 7 days for the next week
+        } else {
+            // For the first form, find the next Saturday from today
+            val today = calendar.get(Calendar.DAY_OF_WEEK)
             val daysUntilSaturday = (Calendar.SATURDAY - today + 7) % 7
-            add(Calendar.DAY_OF_WEEK, if (daysUntilSaturday == 0) 7 else daysUntilSaturday)
+            calendar.add(Calendar.DAY_OF_WEEK, if (daysUntilSaturday == 0) 7 else daysUntilSaturday)
         }
 
         // Set default start time (5:30 PM)

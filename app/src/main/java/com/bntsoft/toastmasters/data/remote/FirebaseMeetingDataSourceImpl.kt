@@ -31,7 +31,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     override fun getAllMeetings(): Flow<List<Meeting>> = callbackFlow {
         val subscription = meetingsCollection
-            .orderBy("dateTime")
+            .orderBy("date")
+            .orderBy("startTime")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -40,8 +41,21 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
                 val meetings = snapshot?.documents?.mapNotNull { document ->
                     try {
-                        val dto = document.toObject(MeetingDto::class.java)
-                        dto?.let { meetingMapper.mapToDomain(it) }
+                        val dto = MeetingDto(
+                            meetingID = document.getString("meetingID") ?: document.id,
+                            date = document.getString("date") ?: return@mapNotNull null,
+                            startTime = document.getString("startTime") ?: return@mapNotNull null,
+                            endTime = document.getString("endTime") ?: "",
+                            venue = document.getString("venue") ?: "",
+                            theme = document.getString("theme") ?: "",
+                            preferredRoles = (document.get("preferredRoles") as? List<String>) ?: emptyList(),
+                            createdAt = document.getLong("createdAt")?.toLong() ?: System.currentTimeMillis(),
+                            isRecurring = document.getBoolean("isRecurring") ?: false,
+                            recurringDayOfWeek = (document.getLong("recurringDayOfWeek")?.toInt()),
+                            recurringStartTime = document.getString("recurringStartTime"),
+                            recurringEndTime = document.getString("recurringEndTime")
+                        )
+                        meetingMapper.mapToDomain(dto)
                     } catch (e: Exception) {
                         null
                     }
@@ -68,8 +82,21 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
                 val meetings = snapshot?.documents?.mapNotNull { document ->
                     try {
-                        val dto = document.toObject(MeetingDto::class.java)
-                        dto?.let { meetingMapper.mapToDomain(it) }
+                        val dto = MeetingDto(
+                            meetingID = document.getString("meetingID") ?: document.id,
+                            date = document.getString("date") ?: return@mapNotNull null,
+                            startTime = document.getString("startTime") ?: return@mapNotNull null,
+                            endTime = document.getString("endTime") ?: "",
+                            venue = document.getString("venue") ?: "",
+                            theme = document.getString("theme") ?: "",
+                            preferredRoles = (document.get("preferredRoles") as? List<String>) ?: emptyList(),
+                            createdAt = document.getLong("createdAt")?.toLong() ?: System.currentTimeMillis(),
+                            isRecurring = document.getBoolean("isRecurring") ?: false,
+                            recurringDayOfWeek = (document.getLong("recurringDayOfWeek")?.toInt()),
+                            recurringStartTime = document.getString("recurringStartTime"),
+                            recurringEndTime = document.getString("recurringEndTime")
+                        )
+                        meetingMapper.mapToDomain(dto)
                     } catch (e: Exception) {
                         null
                     }

@@ -5,12 +5,17 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import com.bntsoft.toastmasters.databinding.FragmentDashboardBinding
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bntsoft.toastmasters.R
+import com.bntsoft.toastmasters.databinding.FragmentDashboardBinding
 import com.bntsoft.toastmasters.presentation.viewmodel.MeetingsViewModel
-import com.bntsoft.toastmasters.presentation.viewmodel.UpcomingMeetingsState
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.bntsoft.toastmasters.presentation.viewmodel.UpcomingMeetingsStateWithCounts as UpcomingMeetingsState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
@@ -19,9 +24,10 @@ import java.time.format.DateTimeFormatter
 class DashboardFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
-        private val binding get() = _binding!!
+    private val binding get() = _binding!!
 
     private val viewModel: MeetingsViewModel by viewModels()
+    private lateinit var meetingAdapter: MeetingAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,38 +41,64 @@ class DashboardFragment : Fragment() {
     ): View {
         Log.d("DashboardFragment", "onCreateView called")
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+        setupRecyclerView()
         observeUpcomingMeetings()
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadUpcomingMeetings()
+    }
+
+    private fun setupRecyclerView() {
+        meetingAdapter = MeetingAdapter(
+            onEdit = { meetingId ->
+                findNavController().navigate(
+                    R.id.action_dashboardFragment_to_editMeetingFragment,
+                    bundleOf("meeting_id" to meetingId)
+                )
+            },
+            onDelete = { meetingId ->
+                // Confirm and delete directly
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Delete Meeting")
+                    .setMessage("Are you sure you want to delete this meeting?")
+                    .setPositiveButton("Delete") { _, _ ->
+                        viewModel.deleteMeeting(meetingId)
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+        )
+        binding.rvMeetings.apply {
+            adapter = meetingAdapter
+            layoutManager = LinearLayoutManager(context)
+        }
+    }
+
     private fun observeUpcomingMeetings() {
         lifecycleScope.launch {
-            viewModel.upcomingMeetingsState.collect { state ->
+            viewModel.upcomingMeetingsStateWithCounts.collect { state ->
                 when (state) {
                     is UpcomingMeetingsState.Success -> {
-                        val mostRecentMeeting = state.meetings.firstOrNull()
-                        if (mostRecentMeeting != null) {
-                            binding.cardRecentMeeting.visibility = View.VISIBLE
-                            binding.tvRecentMeetingTitle.text = mostRecentMeeting.theme
-                            val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
-                            binding.tvRecentMeetingDate.text = mostRecentMeeting.dateTime.format(formatter)
-                            val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-                            val time = "${mostRecentMeeting.dateTime.format(timeFormatter)} - ${mostRecentMeeting.endDateTime?.format(timeFormatter)}"
-                            binding.tvRecentMeetingTime.text = time
-                                                        binding.tvRecentMeetingVenue.text = mostRecentMeeting.location
-                        } else {
-                            binding.cardRecentMeeting.visibility = View.GONE
-                        }
+                        meetingAdapter.submitList(state.meetings)
                     }
+
                     is UpcomingMeetingsState.Empty -> {
-                        binding.cardRecentMeeting.visibility = View.GONE
+                        meetingAdapter.submitList(emptyList())
+                        // Optionally, show an empty state view
                     }
+
                     is UpcomingMeetingsState.Error -> {
-                        // Handle error
+                        // Handle error state, e.g., show a toast or an error message
                     }
+
                     is UpcomingMeetingsState.Loading -> {
-                        // Handle loading
+                        // Handle loading state, e.g., show a progress bar
                     }
+
+                    is UpcomingMeetingsState.Error -> TODO()
                 }
             }
         }

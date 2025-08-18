@@ -1,6 +1,8 @@
 package com.bntsoft.toastmasters
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
 import androidx.navigation.NavController
@@ -54,9 +56,7 @@ class MainActivity : BaseActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
         
-        // Inflate the navigation graph programmatically
-        val navGraph = navController.navInflater.inflate(R.navigation.auth_nav_graph)
-        navController.graph = navGraph
+        // We'll set the appropriate navigation graph based on the user role below
 
         // Setup bottom navigation
         bottomNav = binding.bottomNavView
@@ -64,11 +64,37 @@ class MainActivity : BaseActivity() {
         // Setup action bar with nav controller
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        // Bypass login and directly show VP Education dashboard
-        setupBottomNavForUser(UserRole.VP_EDUCATION)
+        // Show Login first
+        setupAuthNavigation()
 
         // Setup navigation listener
         setupNavigationListener()
+    }
+
+    // Always show status bar menu
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.status_bar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_reports -> {
+                // Navigate to reports
+                if (navController.currentDestination?.id != R.id.reportsFragment) {
+                    navController.navigate(R.id.reportsFragment)
+                }
+                true
+            }
+            R.id.action_settings -> {
+                // Navigate to settings
+                if (navController.currentDestination?.id != R.id.settingsFragment) {
+                    navController.navigate(R.id.settingsFragment)
+                }
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun setupAuthNavigation() {
@@ -136,7 +162,7 @@ class MainActivity : BaseActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    private fun navigateToRoleBasedScreen(role: UserRole) {
+    fun navigateToRoleBasedScreen(role: UserRole) {
         setupBottomNavForUser(role)
     }
 }

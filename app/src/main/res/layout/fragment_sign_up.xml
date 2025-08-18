@@ -7,23 +7,6 @@
     android:background="?attr/colorSurface"
     tools:context=".presentation.auth.SignUpFragment">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        app:elevation="0dp">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorSurface"
-            app:navigationIcon="@drawable/ic_arrow_back"
-            app:title="@string/title_sign_up"
-            app:titleTextColor="?attr/colorOnSurface" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -39,15 +22,15 @@
             <!-- Name -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/nameInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_full_name"
-                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_person"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/nameEditText"
@@ -62,15 +45,15 @@
             <!-- Email -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/emailInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_email"
-                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_email"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/emailEditText"
@@ -85,15 +68,15 @@
             <!-- Phone -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/phoneInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_phone"
-                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_phone"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/phoneEditText"
@@ -108,15 +91,15 @@
             <!-- Address -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/addressInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_address"
-                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_location_on"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/addressEditText"
@@ -131,22 +114,22 @@
             <!-- Gender -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/genderInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_gender"
-                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_person"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <AutoCompleteTextView
                     android:id="@+id/genderAutoCompleteTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="none"
-                    android:textColor="?colorOnSurface"
+                    android:textColor="?attr/colorOnSurface"
                     tools:text="Male" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -154,15 +137,15 @@
             <!-- Joined Date -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/joinedDateInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_joined_date"
-                app:boxStrokeColor="?colorOnSurfaceVariant"
-                app:hintTextColor="?colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_calendar_today"
-                app:startIconTint="?colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/joinedDateEditText"
@@ -170,7 +153,7 @@
                     android:layout_height="wrap_content"
                     android:focusable="false"
                     android:inputType="none"
-                    android:textColor="?colorOnSurface"
+                    android:textColor="?attr/colorOnSurface"
                     tools:text="01/01/2023" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -178,15 +161,15 @@
             <!-- Toastmasters ID -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/toastmastersIdInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_toastmasters_id"
-                app:boxStrokeColor="?colorOnSurfaceVariant"
-                app:hintTextColor="?colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_badge"
-                app:startIconTint="?colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/toastmastersIdEditText"
@@ -194,22 +177,22 @@
                     android:layout_height="wrap_content"
                     android:inputType="text"
                     android:maxLines="1"
-                    android:textColor="?colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Club ID -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/clubIdInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_club_id"
-                app:boxStrokeColor="?colorOnSurfaceVariant"
-                app:hintTextColor="?colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_group"
-                app:startIconTint="?colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/clubIdEditText"
@@ -217,24 +200,24 @@
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:maxLines="1"
-                    android:textColor="?colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Password -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/passwordInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_password"
-                app:boxStrokeColor="?colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
                 app:endIconMode="password_toggle"
-                app:endIconTint="?colorOnSurfaceVariant"
-                app:hintTextColor="?colorOnSurfaceVariant"
+                app:endIconTint="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_lock"
-                app:startIconTint="?colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordEditText"
@@ -242,24 +225,24 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:textColor="?colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Confirm Password -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/confirmPasswordInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_xlarge"
+                android:layout_marginBottom="@dimen/space_large"
                 android:hint="@string/hint_confirm_password"
-                app:boxStrokeColor="?colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
                 app:endIconMode="password_toggle"
-                app:endIconTint="?colorOnSurfaceVariant"
-                app:hintTextColor="?colorOnSurfaceVariant"
+                app:endIconTint="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_lock_outline"
-                app:startIconTint="?colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/confirmPasswordEditText"
@@ -267,7 +250,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:textColor="?colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -275,7 +258,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_xlarge"
+                android:layout_marginBottom="@dimen/space_large"
                 app:cardBackgroundColor="?attr/colorSurfaceVariant"
                 app:cardElevation="0dp"
                 app:strokeColor="?attr/colorOutline"
@@ -302,28 +285,28 @@
                         android:layout_height="wrap_content"
                         android:checked="false"
                         android:text="@string/has_mentor"
-                        android:textColor="?colorOnSurface" />
+                        android:textColor="?attr/colorOnSurface" />
 
                     <!-- Mentor Selection (Initially hidden) -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/mentorInputLayout"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_medium"
                         android:hint="@string/hint_select_mentor"
                         android:visibility="gone"
-                        app:boxStrokeColor="?attr/colorOnSurfaceVariant"
-                        app:hintTextColor="?attr/colorOnSurfaceVariant"
+                        app:boxStrokeColor="?attr/colorOnSurface"
+                        app:hintTextColor="?attr/colorOnSurface"
                         app:startIconDrawable="@drawable/ic_person"
-                        app:startIconTint="?attr/colorOnSurfaceVariant">
+                        app:startIconTint="?attr/colorOnSurface">
 
                         <AutoCompleteTextView
                             android:id="@+id/mentorAutoCompleteTextView"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:textColor="?colorOnSurface" />
+                            android:textColor="?attr/colorOnSurface" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 

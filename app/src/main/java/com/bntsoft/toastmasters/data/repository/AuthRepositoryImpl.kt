@@ -3,9 +3,13 @@ package com.bntsoft.toastmasters.data.repository
 import android.util.Log
 import com.bntsoft.toastmasters.data.remote.FirebaseAuthService
 import com.bntsoft.toastmasters.data.remote.FirestoreService
+import com.bntsoft.toastmasters.data.model.NotificationData
+import com.bntsoft.toastmasters.domain.model.SignupResult
 import com.bntsoft.toastmasters.domain.model.AuthResult
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
+import com.bntsoft.toastmasters.domain.repository.NotificationRepository
+import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -22,13 +26,23 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firebaseAuthService: FirebaseAuthService,
-    private val firestoreService: FirestoreService
+    private val firestoreService: FirestoreService,
+    private val notificationRepository: NotificationRepository
 ) : AuthRepository {
 
     override suspend fun login(identifier: String, password: String): AuthResult<User> {
         return try {
-            // Try to sign in with email first
-            val result = firebaseAuth.signInWithEmailAndPassword(identifier, password).await()
+            // Determine if identifier is email or phone
+            val emailToUse = if (identifier.contains("@")) {
+                identifier
+            } else {
+                // Lookup by phone to get email
+                val phoneQuery = firestoreService.getUserByPhone(identifier)
+                val doc = phoneQuery.documents.firstOrNull()
+                doc?.getString("email") ?: identifier // fallback to original
+            }
+
+            val result = firebaseAuth.signInWithEmailAndPassword(emailToUse, password).await()
             val firebaseUser = result.user
 
             if (firebaseUser != null) {
@@ -61,7 +75,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signUp(user: User, password: String): AuthResult<User> {
+    override suspend fun signUp(user: User, password: String): AuthResult<SignupResult> {
         return try {
             // Create Firebase Auth user
             val authResult =
@@ -76,7 +90,23 @@ class AuthRepositoryImpl @Inject constructor(
                 // Send email verification
                 firebaseUser.sendEmailVerification().await()
 
-                AuthResult.Success(userWithId)
+                // Notify VP Education about new signup (pending approval)
+                val vpNotification = NotificationData(
+                    title = "New member signup",
+                    message = "${userWithId.name} has signed up and is pending approval.",
+                    type = NotificationHelper.TYPE_MEMBER_APPROVAL,
+                    data = mapOf(
+                        NotificationHelper.EXTRA_USER_ID to userWithId.id
+                    )
+                )
+                try {
+                    notificationRepository.sendNotificationToRole("VP_EDUCATION", vpNotification)
+                } catch (_: Exception) {
+                    // Don't fail signup on notification errors
+                }
+
+                val requiresApproval = !(userWithId.isVpEducation || userWithId.isApproved)
+                AuthResult.Success(SignupResult(userWithId, requiresApproval))
             } else {
                 AuthResult.Error("Failed to create user")
             }

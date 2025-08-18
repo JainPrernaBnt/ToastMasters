@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/dashboardFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.dashboard.DashboardFragment"
-        android:label="DashboardFragment"
+        android:label="Dashboard"
         tools:layout="@layout/fragment_dashboard">
         <action
             android:id="@+id/action_dashboardFragment_to_createMeetingFragment"
@@ -19,12 +19,15 @@
         <action
             android:id="@+id/action_dashboardFragment_to_leaderboardFragment"
             app:destination="@id/leaderboardFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_editMeetingFragment"
+            app:destination="@id/editMeetingFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/createMeetingFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.meetings.CreateMeetingFragment"
-        android:label="CreateMeetingFragment">
+        android:label="Create Meeting">
         <action
             android:id="@+id/action_createMeetingFragment_to_dashboardFragment"
             app:destination="@id/dashboardFragment" />
@@ -33,7 +36,7 @@
     <fragment
         android:id="@+id/assignRolesFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.roles.AssignRolesFragment"
-        android:label="fragment_assign_roles"
+        android:label="Assign Roles"
         tools:layout="@layout/fragment_assign_roles">
         <action
             android:id="@+id/action_assignRolesFragment_to_dashboardFragment"
@@ -43,7 +46,7 @@
     <fragment
         android:id="@+id/leaderboardFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.LeaderboardFragment"
-        android:label="LeaderboardFragment"
+        android:label="Leaderboard"
         tools:layout="@layout/fragment_leaderboard">
         <action
             android:id="@+id/action_leaderboardFragment_to_dashboardFragment"
@@ -51,14 +54,24 @@
     </fragment>
 
     <fragment
+        android:id="@+id/editMeetingFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.meetings.EditMeetingFragment"
+        android:label="Edit Meeting"
+        tools:layout="@layout/fragment_edit_meeting">
+        <argument
+            android:name="meeting_id"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/reportsFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.reports.ReportsFragment"
-        android:label="ReportsFragment"
+        android:label="Reports"
         tools:layout="@layout/fragment_reports" />
 
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.SettingsFragment"
-        android:label="SettingsFragment"
+        android:label="Settings"
         tools:layout="@layout/fragment_settings" />
 </navigation>

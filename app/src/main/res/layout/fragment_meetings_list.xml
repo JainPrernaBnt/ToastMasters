@@ -10,15 +10,14 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        >
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="@string/meetings"
-            app:titleTextColor="@android:color/white"
-            app:menu="@menu/menu_meetings"
+                        app:menu="@menu/menu_meetings"
             app:layout_scrollFlags="scroll|enterAlways|snap" />
 
         <com.google.android.material.tabs.TabLayout
@@ -26,9 +25,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            app:tabTextColor="@android:color/white"
-            app:tabSelectedTextColor="@android:color/white"
-            app:tabIndicatorColor="@android:color/white"
+            app:tabTextColor="?attr/colorOnPrimary"
+            app:tabSelectedTextColor="?attr/colorOnPrimary"
+            app:tabIndicatorColor="?attr/colorOnPrimary"
             app:tabIndicatorHeight="3dp"
             app:tabMode="scrollable"
             app:tabGravity="fill">
@@ -99,7 +98,7 @@
         android:contentDescription="@string/add_meeting"
         android:src="@drawable/ic_add"
         app:backgroundTint="?attr/colorPrimary"
-        app:tint="@android:color/white"
+        app:tint="?attr/colorOnPrimary"
         app:borderWidth="0dp"
         app:elevation="4dp"
         app:fabCustomSize="56dp"

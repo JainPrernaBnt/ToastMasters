@@ -72,13 +72,13 @@ class AuthViewModel @Inject constructor(
 
                 when (val result = authRepository.signUp(user, password)) {
                     is AuthResult.Success -> {
-                        val signupResult = result.data as? SignupResult
-                        val signedUpUser = signupResult?.user ?: user
+                        val signupResult: SignupResult = result.data
+                        val signedUpUser = signupResult.user
                         val userRole = if (signedUpUser.isVpEducation) UserRole.VP_EDUCATION else UserRole.MEMBER
                         _uiState.value = AuthUiState.SignUpSuccess(
                             user = signedUpUser,
                             userRole = userRole,
-                            requiresApproval = signupResult?.requiresApproval ?: true
+                            requiresApproval = signupResult.requiresApproval
                         )
                     }
 

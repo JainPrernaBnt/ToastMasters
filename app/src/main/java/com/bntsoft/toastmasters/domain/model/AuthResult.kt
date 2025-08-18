@@ -11,8 +11,3 @@ data class LoginResult(
     val isNewUser: Boolean = false,
     val requiresApproval: Boolean = false
 )
-
-data class SignupResult(
-    val user: User? = null,
-    val requiresApproval: Boolean = true
-)

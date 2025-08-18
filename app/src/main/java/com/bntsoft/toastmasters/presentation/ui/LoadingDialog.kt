@@ -1,10 +1,11 @@
-package com.bntsoft.toastmasters.ui.common
+package com.bntsoft.toastmasters.presentation.ui
 
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import com.bntsoft.toastmasters.databinding.DialogLoadingBinding
@@ -37,9 +38,9 @@ class LoadingDialog(context: Context) : Dialog(context) {
         // Set message if provided
         if (message.isNotEmpty()) {
             binding.tvMessage.text = message
-            binding.tvMessage.visibility = android.view.View.VISIBLE
+            binding.tvMessage.visibility = View.VISIBLE
         } else {
-            binding.tvMessage.visibility = android.view.View.GONE
+            binding.tvMessage.visibility = View.GONE
         }
     }
 
@@ -47,7 +48,7 @@ class LoadingDialog(context: Context) : Dialog(context) {
         this.message = message
         binding.tvMessage.text = message
         binding.tvMessage.visibility =
-            if (message.isNotEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+            if (message.isNotEmpty()) View.VISIBLE else View.GONE
         return this
     }
 

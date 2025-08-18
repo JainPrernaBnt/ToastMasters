@@ -66,8 +66,9 @@ object RepositoryModule {
     fun provideAuthRepository(
         firebaseAuth: FirebaseAuth,
         firebaseAuthService: FirebaseAuthService,
-        firestoreService: FirestoreService
-    ): AuthRepository = AuthRepositoryImpl(firebaseAuth, firebaseAuthService, firestoreService)
+        firestoreService: FirestoreService,
+        notificationRepository: NotificationRepository
+    ): AuthRepository = AuthRepositoryImpl(firebaseAuth, firebaseAuthService, firestoreService, notificationRepository)
 
     @Provides
     @Singleton
@@ -90,24 +91,22 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideMeetingRepository(
-        meetingDao: MeetingDao,
-        firebaseDataSource: FirebaseMeetingDataSource,
-        mapper: MeetingDomainMapper
-    ): MeetingRepository = MeetingRepositoryImpl(meetingDao, firebaseDataSource, mapper)
+        firebaseDataSource: FirebaseMeetingDataSource
+    ): MeetingRepository = MeetingRepositoryImpl(firebaseDataSource)
 
     @Provides
     @Singleton
     fun provideMemberRepository(
-        firestoreService: FirestoreService
-    ): MemberRepository = MemberRepositoryImpl(firestoreService)
+        firestoreService: FirestoreService,
+        notificationRepository: NotificationRepository
+    ): MemberRepository = MemberRepositoryImpl(firestoreService, notificationRepository)
 
     @Provides
     @Singleton
     fun provideMemberResponseRepository(
-        localDataSource: MemberResponseDao,
         remoteDataSource: FirebaseMemberResponseDataSource,
         mapper: MemberResponseMapper
-    ): MemberResponseRepository = MemberResponseRepositoryImpl(localDataSource, remoteDataSource, mapper)
+    ): MemberResponseRepository = MemberResponseRepositoryImpl(remoteDataSource, mapper)
 
     @Provides
     @Singleton

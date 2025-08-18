@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base theme that inherits from the Material3 theme -->
-    <style name="Base.Theme.ToastMasters" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Base theme that inherits from the MaterialComponents theme -->
+    <style name="Base.Theme.ToastMasters" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryDark">@color/purple_700</item>
@@ -29,7 +29,7 @@
         <item name="colorOnSurfaceVariant">@color/gray_800</item>
 
         <!-- Text input layout style -->
-        <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
         
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.Material3.Button</item>

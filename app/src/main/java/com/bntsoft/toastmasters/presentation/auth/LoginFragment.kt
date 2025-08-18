@@ -50,20 +50,11 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupToolbar()
         setupForm()
         setupClickListeners()
         observeViewModel()
     }
 
-    private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            // Handle back navigation or close
-            if (!findNavController().navigateUp()) {
-                requireActivity().finish()
-            }
-        }
-    }
 
     private fun setupForm() {
         // Set up text change listeners for form validation
@@ -118,22 +109,9 @@ class LoginFragment : Fragment() {
                             // Save user role
                             preferenceManager.saveUserRole(state.userRole)
                             
-                            // Navigate based on user role
-                            when (state.userRole) {
-                                UserRole.VP_EDUCATION -> {
-                                    findNavController().navigate(R.id.action_login_to_vp_nav_graph)
-                                }
-                                UserRole.MEMBER -> {
-                                    findNavController().navigate(R.id.action_login_to_member_nav_graph)
-                                }
-                                else -> {
-                                    // Default to VP navigation for any other roles
-                                    findNavController().navigate(R.id.action_login_to_vp_nav_graph)
-                                }
-                            }
-                            
-                            // Finish the activity to prevent going back to login
-                            requireActivity().finish()
+                            // Delegate to MainActivity to switch nav graph and bottom nav based on role
+                            (requireActivity() as? com.bntsoft.toastmasters.MainActivity)
+                                ?.let { it.navigateToRoleBasedScreen(state.userRole) }
                         }
 
                         is AuthViewModel.AuthUiState.SignUpSuccess -> {

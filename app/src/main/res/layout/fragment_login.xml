@@ -7,23 +7,6 @@
     android:background="?attr/colorSurface"
     tools:context=".presentation.auth.LoginFragment">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        app:elevation="0dp">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorSurface"
-            app:navigationIcon="@drawable/ic_close"
-            app:title="@string/title_login"
-            app:titleTextColor="?attr/colorOnSurface" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -40,16 +23,16 @@
             <!-- Email/Phone Input -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/emailPhoneInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_email_or_phone"
-                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
                 app:endIconMode="clear_text"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_email"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/emailPhoneEditText"
@@ -57,7 +40,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress|textNoSuggestions"
                     android:maxLines="1"
-                    android:textColor="?colorOnSurface"
+                    android:textColor="?attr/colorOnSurface"
                     tools:text="test@example.com" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -65,16 +48,16 @@
             <!-- Password Input -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/passwordInputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_password"
-                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                app:boxStrokeColor="?attr/colorOnSurface"
                 app:endIconMode="password_toggle"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_lock"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?attr/colorOnSurface">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordEditText"
@@ -82,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:textColor="?colorOnSurface"
+                    android:textColor="?attr/colorOnSurface"
                     tools:text="password123" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -94,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:layout_marginBottom="@dimen/space_xlarge"
+                android:layout_marginBottom="@dimen/space_medium"
                 android:text="@string/action_forgot_password"
                 android:textColor="?attr/colorPrimary"
                 app:icon="@drawable/ic_key"
@@ -106,27 +89,15 @@
                 style="@style/Widget.Material3.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_medium"
                 android:paddingVertical="@dimen/space_small"
                 android:text="@string/action_login"
                 android:textAllCaps="false"
                 android:textSize="16sp"
                 app:cornerRadius="8dp" />
 
-            <!-- Divider -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="@dimen/space_large"
-                android:gravity="center"
-                android:text="@string/or"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="14sp" />
-
             <!-- Sign Up Button -->
-            <com.google.android.material.button.MaterialButton
+            <TextView
                 android:id="@+id/signUpButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
@@ -134,9 +105,8 @@
                 android:text="@string/action_sign_up"
                 android:textAllCaps="false"
                 android:textSize="16sp"
-                app:cornerRadius="8dp"
-                app:strokeColor="?attr/colorOutline"
-                app:strokeWidth="1dp" />
+                android:gravity="center" />
+
 
             <!-- Loading Progress -->
             <ProgressBar

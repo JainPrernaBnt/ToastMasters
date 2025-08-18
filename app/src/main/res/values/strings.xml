@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">ToastMasters</string>
-    <string name="app_tagline">Empowering Leaders Through Public Speaking</string>
     <string name="title_sign_up">Sign Up</string>
     <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 
@@ -62,6 +61,8 @@
     <string name="error_invalid_phone">Please enter a valid phone number</string>
     <string name="error_address_too_short">Address must be at least 5 characters long</string>
     <string name="error_field_required">This field is required</string>
+    <string name="error_required">This field is required</string>
+    <string name="error_duplicate">Already added</string>
     <string name="error_invalid_toastmasters_id">Invalid Toastmasters ID</string>
     <string name="error_invalid_club_id">Invalid Club ID</string>
     <string name="error_password_too_short">Password must be at least 6 characters long</string>
@@ -267,6 +268,10 @@
     <string name="delete_all_notifications">Delete all notifications</string>
     <string name="delete_notification">Delete notification</string>
     <string name="notification_icon">Notification icon</string>
+
+    <!-- Overflow menu -->
+    <string name="more_options">More options</string>
+    <string name="btn_edit">Edit</string>
 
     <!-- Notification Messages -->
     <string name="notification_member_approved_title">Membership Approved</string>
