@@ -40,6 +40,11 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    
+    // Room schema location
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
 }
 
 dependencies {

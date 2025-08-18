@@ -80,10 +80,11 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         awaitClose { subscription.remove() }
     }
 
-    override suspend fun getMeetingById(id: String): Meeting? {
+    override suspend fun getMeetingById(id: Int): Meeting? {
         return try {
-            val document = meetingsCollection.document(id).get().await()
-            val dto = document.toObject(MeetingDto::class.java)
+            val query = meetingsCollection.whereEqualTo("meetingID", id).limit(1).get().await()
+            val document = query.documents.firstOrNull()
+            val dto = document?.toObject(MeetingDto::class.java)
             dto?.let { meetingMapper.mapToDomain(it) }
         } catch (e: Exception) {
             null
@@ -93,7 +94,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     override suspend fun createMeeting(meeting: Meeting): Result<Unit> {
         return try {
             val dto = meetingMapper.mapToDto(meeting)
-            val document = meetingsCollection.document(meeting.id)
+            // Create a new document with the meeting ID as a field
+            val document = meetingsCollection.document()
             document.set(dto).await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -104,17 +106,27 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     override suspend fun updateMeeting(meeting: Meeting): Result<Unit> {
         return try {
             val dto = meetingMapper.mapToDto(meeting)
-            val document = meetingsCollection.document(meeting.id)
-            document.set(dto).await()
-            Result.success(Unit)
+            // Find the document with the matching meetingID
+            val query = meetingsCollection.whereEqualTo("meetingID", meeting.id).limit(1).get().await()
+            val document = query.documents.firstOrNull()
+            
+            if (document != null) {
+                document.reference.set(dto).await()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Meeting not found"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    override suspend fun deleteMeeting(id: String): Result<Unit> {
+    override suspend fun deleteMeeting(id: Int): Result<Unit> {
         return try {
-            meetingsCollection.document(id).delete().await()
+            // Find the document with the matching meetingID field and delete it
+            val query = meetingsCollection.whereEqualTo("meetingID", id).limit(1).get().await()
+            val document = query.documents.firstOrNull()
+            document?.reference?.delete()?.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

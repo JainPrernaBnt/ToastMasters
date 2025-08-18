@@ -24,7 +24,7 @@ class MemberResponseViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Meeting ID from navigation arguments
-    private val meetingId: String = savedStateHandle[MEETING_ID_ARG] ?: ""
+    private val meetingId: Int = savedStateHandle.get<String>(MEETING_ID_ARG)?.toIntOrNull() ?: 0
 
     // Current user ID (to be replaced with actual user ID from authentication)
     private val currentUserId = "current_user_id" // TODO: Replace with actual user ID
@@ -92,7 +92,8 @@ class MemberResponseViewModel @Inject constructor(
             meetingId = meetingId,
             memberId = currentUserId,
             availability = MemberResponse.AvailabilityStatus.NOT_CONFIRMED,
-            preferredRoles = emptyList()
+            preferredRoles = emptyList(),
+            notes = ""
         )
     }
 

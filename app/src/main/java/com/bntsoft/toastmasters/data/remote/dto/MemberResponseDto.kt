@@ -2,7 +2,7 @@ package com.bntsoft.toastmasters.data.remote.dto
 
 data class MemberResponseDto(
     val id: String = "",
-    val meetingId: String = "",
+    val meetingId: Int = 0,
     val memberId: String = "",
     val availability: String = "",
     val preferredRoles: List<String> = emptyList(),

@@ -17,12 +17,15 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentLoginBinding
+import com.bntsoft.toastmasters.data.model.UserRole
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
@@ -30,6 +33,9 @@ class LoginFragment : Fragment() {
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
 
+    @Inject
+    lateinit var preferenceManager: PreferenceManager
+    
     private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
@@ -109,8 +115,15 @@ class LoginFragment : Fragment() {
 
                         is AuthViewModel.AuthUiState.Success -> {
                             showLoading(false)
+                            // Save login state and user role
+                            preferenceManager.isLoggedIn = true
+                            preferenceManager.userRole = state.userRole.name
+                            
                             // Navigate to main screen
                             findNavController().navigate(R.id.action_login_to_main_navigation)
+                            
+                            // Finish the activity to prevent going back to login
+                            requireActivity().finish()
                         }
 
                         is AuthViewModel.AuthUiState.SignUpSuccess -> {

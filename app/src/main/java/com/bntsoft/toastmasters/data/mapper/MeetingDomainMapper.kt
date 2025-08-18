@@ -17,7 +17,7 @@ class MeetingDomainMapper @Inject constructor() {
         val endDateTime = entity.endTime?.let { LocalDateTime.parse("${entity.date}T$it") }
         
         return Meeting(
-            id = entity.meetingID.toString(),
+            id = entity.meetingID,
             title = entity.title,
             dateTime = dateTime,
             endDateTime = endDateTime,
@@ -33,7 +33,7 @@ class MeetingDomainMapper @Inject constructor() {
         val endDateTime = dto.endTime?.let { LocalDateTime.parse("${dto.date}T$it") }
         
         return Meeting(
-            id = dto.meetingID.toString(),
+            id = dto.meetingID,
             title = dto.title,
             dateTime = dateTime,
             endDateTime = endDateTime,
@@ -46,7 +46,7 @@ class MeetingDomainMapper @Inject constructor() {
     
     fun mapToEntity(meeting: Meeting): MeetingEntity {
         return MeetingEntity(
-            meetingID = meeting.id.toIntOrNull() ?: 0,
+            meetingID = meeting.id,
             title = meeting.title,
             date = meeting.dateTime.format(dateFormatter),
             startTime = meeting.dateTime.format(timeFormatter),
@@ -64,7 +64,7 @@ class MeetingDomainMapper @Inject constructor() {
     
     fun mapToDto(meeting: Meeting): MeetingDto {
         return MeetingDto(
-            meetingID = meeting.id.toIntOrNull() ?: 0,
+            meetingID = meeting.id,
             title = meeting.title,
             date = meeting.dateTime.format(dateFormatter),
             startTime = meeting.dateTime.format(timeFormatter),

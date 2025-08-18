@@ -10,13 +10,13 @@ interface FirebaseMeetingDataSource {
 
     fun getUpcomingMeetings(afterDate: LocalDate = LocalDate.now()): Flow<List<Meeting>>
 
-    suspend fun getMeetingById(id: String): Meeting?
+    suspend fun getMeetingById(id: Int): Meeting?
 
     suspend fun createMeeting(meeting: Meeting): Result<Unit>
 
     suspend fun updateMeeting(meeting: Meeting): Result<Unit>
 
-    suspend fun deleteMeeting(id: String): Result<Unit>
+    suspend fun deleteMeeting(id: Int): Result<Unit>
 
     suspend fun sendMeetingNotification(meeting: Meeting): Result<Unit>
 }

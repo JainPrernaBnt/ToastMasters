@@ -30,7 +30,7 @@ class EditMeetingFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: EditMeetingViewModel by viewModels()
-    private var meetingId: String = ""
+    private var meetingId: Int = 0
     private var meeting: Meeting? = null
 
     private val dateFormat = java.text.SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
@@ -51,11 +51,7 @@ class EditMeetingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Get meeting ID from arguments
-        meetingId = arguments?.getString(ARG_MEETING_ID) ?: run {
-            showError("Meeting ID is required")
-            findNavController().navigateUp()
-            return
-        }
+        meetingId = arguments?.getInt(ARG_MEETING_ID) ?: 0
 
         setupToolbar()
         setupClickListeners()
@@ -260,7 +256,7 @@ class EditMeetingFragment : Fragment() {
             val endDate = dateFormat.parse(endDateTime)
 
             val meeting = Meeting(
-                id = meeting?.id ?: "",
+                id = meeting?.id ?: 0,
                 title = title,
                 description = "",
                 dateTime = startDate?.toInstant()?.atZone(java.time.ZoneId.systemDefault())
@@ -374,10 +370,8 @@ class EditMeetingFragment : Fragment() {
     companion object {
         private const val ARG_MEETING_ID = "meeting_id"
 
-        fun newInstance(meetingId: String): EditMeetingFragment {
-            return EditMeetingFragment().apply {
-                arguments = bundleOf(ARG_MEETING_ID to meetingId)
-            }
+        fun newInstance(meetingId: Int) = EditMeetingFragment().apply {
+            arguments = bundleOf(ARG_MEETING_ID to meetingId)
         }
     }
 }

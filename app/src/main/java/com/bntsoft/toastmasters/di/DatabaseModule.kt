@@ -23,4 +23,16 @@ object DatabaseModule {
             "toastmasters_database"
         ).build()
     }
+    
+    @Provides
+    fun provideMeetingDao(database: AppDatabase) = database.meetingDao()
+    
+    @Provides
+    fun provideMemberResponseDao(database: AppDatabase) = database.memberResponseDao()
+    
+    @Provides
+    fun provideUserDao(database: AppDatabase) = database.userDao()
+    
+    @Provides
+    fun provideMeetingAvailabilityDao(database: AppDatabase) = database.meetingAvailabilityDao()
 }

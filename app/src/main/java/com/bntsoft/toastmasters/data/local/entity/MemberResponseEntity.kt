@@ -9,23 +9,23 @@ import com.bntsoft.toastmasters.domain.model.MemberResponse
 @Entity(
     tableName = "member_responses",
     indices = [
-        Index(value = ["meeting_id"]),
-        Index(value = ["member_id"]),
-        Index(value = ["meeting_id", "member_id"], unique = true)
+        Index(value = ["meetingId"]),
+        Index(value = ["memberId"]),
+        Index(value = ["meetingId", "memberId"], unique = true)
     ],
     foreignKeys = [
         ForeignKey(
             entity = MeetingEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["meeting_id"],
+            parentColumns = ["meetingID"],
+            childColumns = ["meetingId"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class MemberResponseEntity(
     @PrimaryKey
-    val id: String,
-    val meetingId: String,
+    val id: String = "",
+    val meetingId: Int,
     val memberId: String,
     val availability: String,
     val preferredRoles: String, // Comma-separated list of role IDs

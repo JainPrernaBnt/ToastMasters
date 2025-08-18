@@ -16,15 +16,34 @@ import com.bntsoft.toastmasters.data.local.entity.MeetingRolesBackout
 import com.bntsoft.toastmasters.data.local.entity.ReportRequests
 import com.bntsoft.toastmasters.data.local.entity.UserEntity
 import com.bntsoft.toastmasters.data.local.entity.Winners
+import com.bntsoft.toastmasters.data.local.entity.MemberResponseEntity
+import com.bntsoft.toastmasters.data.local.dao.MeetingDao
+import com.bntsoft.toastmasters.data.local.dao.MemberResponseDao
+import com.bntsoft.toastmasters.data.local.dao.UserDao
+import com.bntsoft.toastmasters.data.local.dao.MeetingAvailabilityDao
 
 @Database(
-    entities = [UserEntity::class, MeetingEntity::class, MeetingAvailability::class,
-        MeetingRoles::class, MeetingRolesBackout::class, AgendaMaster::class,
-        AgendaItems::class, ClubOfficers::class, Guest::class, Winners::class,
-        ReportRequests::class],
+    entities = [
+        UserEntity::class, 
+        MeetingEntity::class, 
+        MeetingAvailability::class,
+        MeetingRoles::class, 
+        MeetingRolesBackout::class, 
+        AgendaMaster::class,
+        AgendaItems::class, 
+        ClubOfficers::class, 
+        Guest::class, 
+        Winners::class,
+        ReportRequests::class,
+        MemberResponseEntity::class
+    ],
     version = 1,
     exportSchema = true
 )
 @TypeConverters(PreferredRoleConverter::class, ReportTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun meetingDao(): MeetingDao
+    abstract fun memberResponseDao(): MemberResponseDao
+    abstract fun userDao(): UserDao
+    abstract fun meetingAvailabilityDao(): MeetingAvailabilityDao
 }

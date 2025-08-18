@@ -22,13 +22,13 @@ class MemberResponseRepositoryImpl @Inject constructor(
     private val mapper: MemberResponseMapper
 ) : MemberResponseRepository {
 
-    override fun getMemberResponse(meetingId: String, memberId: String): Flow<MemberResponse?> {
+    override fun getMemberResponse(meetingId: Int, memberId: String): Flow<MemberResponse?> {
         return localDataSource.getResponse(meetingId, memberId).map { entity ->
             entity?.let { mapper.mapToDomain(it) }
         }
     }
 
-    override fun getResponsesForMeeting(meetingId: String): Flow<List<MemberResponse>> {
+    override fun getResponsesForMeeting(meetingId: Int): Flow<List<MemberResponse>> {
         return localDataSource.getResponsesForMeeting(meetingId).map { entities ->
             entities.map { mapper.mapToDomain(it) }
         }
@@ -57,15 +57,18 @@ class MemberResponseRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteResponse(meetingId: String, memberId: String): Result<Unit> {
-        return Result.runCatching {
-            // Delete from local database first for immediate UI update
-            localDataSource.getResponse(meetingId, memberId)?.firstOrNull()?.let { entity ->
-                localDataSource.deleteResponse(entity)
-            }
-
-            // Then delete from remote database
+    override suspend fun deleteResponse(meetingId: Int, memberId: String): Result<Unit> {
+        return try {
+            // Delete from remote
             remoteDataSource.deleteResponse(meetingId, memberId)
+
+            // Delete from local
+            val response = localDataSource.getResponse(meetingId, memberId).firstOrNull()
+            response?.let { localDataSource.deleteResponse(it) }
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
         }
     }
 
@@ -96,7 +99,7 @@ class MemberResponseRepositoryImpl @Inject constructor(
 
     // Network-bound resource implementation for automatic data refresh
     private fun getResponseWithRefresh(
-        meetingId: String,
+        meetingId: Int,
         memberId: String,
         forceRefresh: Boolean = false
     ): Flow<Resource<MemberResponse>> {

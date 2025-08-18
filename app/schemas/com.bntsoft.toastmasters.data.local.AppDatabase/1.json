@@ -1,0 +1,1162 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "bbaa1fd9173ab1ba8ea377a2a7c9aa5f",
+    "entities": [
+      {
+        "tableName": "members",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `role` TEXT NOT NULL, `name` TEXT NOT NULL, `email` TEXT NOT NULL, `number` INTEGER NOT NULL, `password` TEXT NOT NULL, `address` TEXT NOT NULL, `level` INTEGER NOT NULL, `gender` TEXT NOT NULL, `isApproved` INTEGER NOT NULL, `hasVpPermission` INTEGER NOT NULL, `clubId` INTEGER NOT NULL, `toastmastersId` INTEGER NOT NULL, `mentor` TEXT NOT NULL, `mentorAssignedBy` TEXT, `mentorAssignedDate` INTEGER, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "number",
+            "columnName": "number",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "password",
+            "columnName": "password",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gender",
+            "columnName": "gender",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isApproved",
+            "columnName": "isApproved",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasVpPermission",
+            "columnName": "hasVpPermission",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clubId",
+            "columnName": "clubId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toastmastersId",
+            "columnName": "toastmastersId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mentor",
+            "columnName": "mentor",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mentorAssignedBy",
+            "columnName": "mentorAssignedBy",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "mentorAssignedDate",
+            "columnName": "mentorAssignedDate",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "meetings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`meetingID` INTEGER NOT NULL, `title` TEXT NOT NULL, `date` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `venue` TEXT NOT NULL, `theme` TEXT NOT NULL, `preferredRoles` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `isRecurring` INTEGER NOT NULL, `recurringDayOfWeek` INTEGER, `recurringStartTime` TEXT, `recurringEndTime` TEXT, PRIMARY KEY(`meetingID`))",
+        "fields": [
+          {
+            "fieldPath": "meetingID",
+            "columnName": "meetingID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startTime",
+            "columnName": "startTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTime",
+            "columnName": "endTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "venue",
+            "columnName": "venue",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "theme",
+            "columnName": "theme",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "preferredRoles",
+            "columnName": "preferredRoles",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isRecurring",
+            "columnName": "isRecurring",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recurringDayOfWeek",
+            "columnName": "recurringDayOfWeek",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "recurringStartTime",
+            "columnName": "recurringStartTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "recurringEndTime",
+            "columnName": "recurringEndTime",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "meetingID"
+          ]
+        }
+      },
+      {
+        "tableName": "meeting_availability",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`availabilityId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `userId` INTEGER NOT NULL, `preferredRole` TEXT NOT NULL, `available` TEXT NOT NULL, `submittedOn` TEXT NOT NULL, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`userId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "availabilityId",
+            "columnName": "availabilityId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "preferredRole",
+            "columnName": "preferredRole",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "available",
+            "columnName": "available",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "submittedOn",
+            "columnName": "submittedOn",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "availabilityId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_meeting_availability_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meeting_availability_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          },
+          {
+            "name": "index_meeting_availability_userId",
+            "unique": false,
+            "columnNames": [
+              "userId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meeting_availability_userId` ON `${TABLE_NAME}` (`userId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "assigned_roles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`roleId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `userId` INTEGER NOT NULL, `assignedRole` TEXT NOT NULL, `isBackupMember` INTEGER NOT NULL, `isCancelled` INTEGER NOT NULL, `assignedAt` INTEGER NOT NULL, `cancelledAt` INTEGER, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`userId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "roleId",
+            "columnName": "roleId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "assignedRole",
+            "columnName": "assignedRole",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isBackupMember",
+            "columnName": "isBackupMember",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCancelled",
+            "columnName": "isCancelled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "assignedAt",
+            "columnName": "assignedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cancelledAt",
+            "columnName": "cancelledAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "roleId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_assigned_roles_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_assigned_roles_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          },
+          {
+            "name": "index_assigned_roles_userId",
+            "unique": false,
+            "columnNames": [
+              "userId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_assigned_roles_userId` ON `${TABLE_NAME}` (`userId`)"
+          },
+          {
+            "name": "index_assigned_roles_assignedRole",
+            "unique": false,
+            "columnNames": [
+              "assignedRole"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_assigned_roles_assignedRole` ON `${TABLE_NAME}` (`assignedRole`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "meeting_roles_backout",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`backoutRoleId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `originalUserId` INTEGER NOT NULL, `roleName` TEXT NOT NULL, `backupUserId` INTEGER, `reassignedAt` INTEGER, `reassignedBy` TEXT, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`originalUserId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`backupUserId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "backoutRoleId",
+            "columnName": "backoutRoleId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originalUserId",
+            "columnName": "originalUserId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "roleName",
+            "columnName": "roleName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "backupUserId",
+            "columnName": "backupUserId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "reassignedAt",
+            "columnName": "reassignedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "reassignedBy",
+            "columnName": "reassignedBy",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "backoutRoleId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_meeting_roles_backout_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meeting_roles_backout_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          },
+          {
+            "name": "index_meeting_roles_backout_originalUserId",
+            "unique": false,
+            "columnNames": [
+              "originalUserId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meeting_roles_backout_originalUserId` ON `${TABLE_NAME}` (`originalUserId`)"
+          },
+          {
+            "name": "index_meeting_roles_backout_backupUserId",
+            "unique": false,
+            "columnNames": [
+              "backupUserId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_meeting_roles_backout_backupUserId` ON `${TABLE_NAME}` (`backupUserId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "originalUserId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "backupUserId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "agenda_master",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`agendaId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `createdBy` INTEGER, `createdAt` INTEGER NOT NULL, `status` TEXT NOT NULL, `meetingStartTime` TEXT NOT NULL, `meetingEndTime` TEXT NOT NULL, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`createdBy`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "agendaId",
+            "columnName": "agendaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdBy",
+            "columnName": "createdBy",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingStartTime",
+            "columnName": "meetingStartTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingEndTime",
+            "columnName": "meetingEndTime",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "agendaId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_agenda_master_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_agenda_master_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          },
+          {
+            "name": "index_agenda_master_createdBy",
+            "unique": false,
+            "columnNames": [
+              "createdBy"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_agenda_master_createdBy` ON `${TABLE_NAME}` (`createdBy`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "createdBy"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "agenda_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemsId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `agendaId` INTEGER NOT NULL, `time` TEXT NOT NULL, `activity` TEXT NOT NULL, `presenterId` INTEGER, `level` TEXT, `project` TEXT, `speechTitle` TEXT, `pathName` TEXT, `greenTimeMin` INTEGER, `yellowTimeMin` INTEGER, `redTimeMin` INTEGER, `order` INTEGER, FOREIGN KEY(`agendaId`) REFERENCES `agenda_master`(`agendaId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`presenterId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "itemsId",
+            "columnName": "itemsId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "agendaId",
+            "columnName": "agendaId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activity",
+            "columnName": "activity",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "presenterId",
+            "columnName": "presenterId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "level",
+            "columnName": "level",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "project",
+            "columnName": "project",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "speechTitle",
+            "columnName": "speechTitle",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "pathName",
+            "columnName": "pathName",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "greenTimeMin",
+            "columnName": "greenTimeMin",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "yellowTimeMin",
+            "columnName": "yellowTimeMin",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "redTimeMin",
+            "columnName": "redTimeMin",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "order",
+            "columnName": "order",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "itemsId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_agenda_items_agendaId",
+            "unique": false,
+            "columnNames": [
+              "agendaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_agenda_items_agendaId` ON `${TABLE_NAME}` (`agendaId`)"
+          },
+          {
+            "name": "index_agenda_items_presenterId",
+            "unique": false,
+            "columnNames": [
+              "presenterId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_agenda_items_presenterId` ON `${TABLE_NAME}` (`presenterId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "agenda_master",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "agendaId"
+            ],
+            "referencedColumns": [
+              "agendaId"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "presenterId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "club_officers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`officersId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER, `userId` INTEGER NOT NULL, `role` TEXT NOT NULL, `termStart` TEXT NOT NULL, `termEnd` TEXT NOT NULL, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`userId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "officersId",
+            "columnName": "officersId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "termStart",
+            "columnName": "termStart",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "termEnd",
+            "columnName": "termEnd",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "officersId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_club_officers_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_club_officers_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          },
+          {
+            "name": "index_club_officers_userId",
+            "unique": false,
+            "columnNames": [
+              "userId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_club_officers_userId` ON `${TABLE_NAME}` (`userId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "guests",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`guestId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `name` TEXT NOT NULL, `phone` TEXT NOT NULL, `email` TEXT NOT NULL, `playedRole` INTEGER NOT NULL, `rolePlayed` TEXT, `gender` TEXT NOT NULL, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "guestId",
+            "columnName": "guestId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phone",
+            "columnName": "phone",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playedRole",
+            "columnName": "playedRole",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rolePlayed",
+            "columnName": "rolePlayed",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "gender",
+            "columnName": "gender",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "guestId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_guests_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_guests_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "winners",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `category` TEXT NOT NULL, `winnerUserId` INTEGER, `isGuest` INTEGER NOT NULL, `guestName` TEXT, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`winnerUserId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "winnerUserId",
+            "columnName": "winnerUserId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isGuest",
+            "columnName": "isGuest",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "guestName",
+            "columnName": "guestName",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_winners_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_winners_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          },
+          {
+            "name": "index_winners_winnerUserId",
+            "unique": false,
+            "columnNames": [
+              "winnerUserId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_winners_winnerUserId` ON `${TABLE_NAME}` (`winnerUserId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          },
+          {
+            "table": "members",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "winnerUserId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "report_requests",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `reportType` TEXT NOT NULL, `requestedBy` TEXT NOT NULL, `startDate` TEXT NOT NULL, `endDate` TEXT NOT NULL, `generatedAt` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reportType",
+            "columnName": "reportType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "requestedBy",
+            "columnName": "requestedBy",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startDate",
+            "columnName": "startDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endDate",
+            "columnName": "endDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "generatedAt",
+            "columnName": "generatedAt",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "member_responses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `meetingId` INTEGER NOT NULL, `memberId` TEXT NOT NULL, `availability` TEXT NOT NULL, `preferredRoles` TEXT NOT NULL, `notes` TEXT NOT NULL, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "meetingId",
+            "columnName": "meetingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memberId",
+            "columnName": "memberId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "availability",
+            "columnName": "availability",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "preferredRoles",
+            "columnName": "preferredRoles",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastUpdated",
+            "columnName": "lastUpdated",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_member_responses_meetingId",
+            "unique": false,
+            "columnNames": [
+              "meetingId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_member_responses_meetingId` ON `${TABLE_NAME}` (`meetingId`)"
+          },
+          {
+            "name": "index_member_responses_memberId",
+            "unique": false,
+            "columnNames": [
+              "memberId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_member_responses_memberId` ON `${TABLE_NAME}` (`memberId`)"
+          },
+          {
+            "name": "index_member_responses_meetingId_memberId",
+            "unique": true,
+            "columnNames": [
+              "meetingId",
+              "memberId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_member_responses_meetingId_memberId` ON `${TABLE_NAME}` (`meetingId`, `memberId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "meetings",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "meetingId"
+            ],
+            "referencedColumns": [
+              "meetingID"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bbaa1fd9173ab1ba8ea377a2a7c9aa5f')"
+    ]
+  }
+}

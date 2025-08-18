@@ -1,21 +1,29 @@
 package com.bntsoft.toastmasters.di
 
+import com.bntsoft.toastmasters.data.local.dao.MeetingDao
+import com.bntsoft.toastmasters.data.local.dao.MemberResponseDao
+import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
+import com.bntsoft.toastmasters.data.mapper.MemberResponseMapper
 import com.bntsoft.toastmasters.data.remote.FirebaseAuthService
+import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
+import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSourceImpl
+import com.bntsoft.toastmasters.data.remote.FirebaseMemberResponseDataSource
+import com.bntsoft.toastmasters.data.remote.FirebaseMemberResponseDataSourceImpl
 import com.bntsoft.toastmasters.data.remote.FirestoreService
 import com.bntsoft.toastmasters.data.remote.NotificationService
 import com.bntsoft.toastmasters.data.remote.UserService
-import com.bntsoft.toastmasters.data.repository.AuthRepository
 import com.bntsoft.toastmasters.data.repository.AuthRepositoryImpl
-import com.bntsoft.toastmasters.data.repository.MeetingRepository
 import com.bntsoft.toastmasters.data.repository.MeetingRepositoryImpl
-import com.bntsoft.toastmasters.data.repository.MemberRepository
 import com.bntsoft.toastmasters.data.repository.MemberRepositoryImpl
-import com.bntsoft.toastmasters.data.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.data.repository.MemberResponseRepositoryImpl
-import com.bntsoft.toastmasters.data.repository.NotificationRepository
 import com.bntsoft.toastmasters.data.repository.NotificationRepositoryImpl
-import com.bntsoft.toastmasters.data.repository.UserRepository
 import com.bntsoft.toastmasters.data.repository.UserRepositoryImpl
+import com.bntsoft.toastmasters.domain.repository.AuthRepository
+import com.bntsoft.toastmasters.domain.repository.MeetingRepository
+import com.bntsoft.toastmasters.domain.repository.MemberRepository
+import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
+import com.bntsoft.toastmasters.domain.repository.NotificationRepository
+import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -28,20 +36,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
 
-    @Provides
-    @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
-
-    @Provides
-    @Singleton
-    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
     @Provides
     @Singleton
     fun provideFirebaseAuthService(
-        firebaseAuth: FirebaseAuth,
-        firestoreService: FirestoreService
-    ): FirebaseAuthService = FirebaseAuthService(firebaseAuth, firestoreService)
+        firebaseAuth: FirebaseAuth
+    ): FirebaseAuthService = FirebaseAuthService(firebaseAuth)
 
     @Provides
     @Singleton
@@ -71,10 +71,29 @@ object RepositoryModule {
 
     @Provides
     @Singleton
+    fun provideFirebaseMeetingDataSource(
+        meetingMapper: MeetingDomainMapper
+    ): FirebaseMeetingDataSource = FirebaseMeetingDataSourceImpl(meetingMapper)
+
+    @Provides
+    @Singleton
+    fun provideFirebaseMemberResponseDataSource(): FirebaseMemberResponseDataSource = FirebaseMemberResponseDataSourceImpl()
+
+    @Provides
+    @Singleton
+    fun provideMeetingDomainMapper(): MeetingDomainMapper = MeetingDomainMapper()
+
+    @Provides
+    @Singleton
+    fun provideMemberResponseMapper(): MemberResponseMapper = MemberResponseMapper()
+
+    @Provides
+    @Singleton
     fun provideMeetingRepository(
-        firestoreService: FirestoreService,
-        notificationService: NotificationService
-    ): MeetingRepository = MeetingRepositoryImpl(firestoreService, notificationService)
+        meetingDao: MeetingDao,
+        firebaseDataSource: FirebaseMeetingDataSource,
+        mapper: MeetingDomainMapper
+    ): MeetingRepository = MeetingRepositoryImpl(meetingDao, firebaseDataSource, mapper)
 
     @Provides
     @Singleton
@@ -85,9 +104,10 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideMemberResponseRepository(
-        firestoreService: FirestoreService,
-        notificationService: NotificationService
-    ): MemberResponseRepository = MemberResponseRepositoryImpl(firestoreService, notificationService)
+        localDataSource: MemberResponseDao,
+        remoteDataSource: FirebaseMemberResponseDataSource,
+        mapper: MemberResponseMapper
+    ): MemberResponseRepository = MemberResponseRepositoryImpl(localDataSource, remoteDataSource, mapper)
 
     @Provides
     @Singleton

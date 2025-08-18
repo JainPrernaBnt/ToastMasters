@@ -66,19 +66,16 @@ class MeetingRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun getMeetingById(id: String): Meeting? {
+    override suspend fun getMeetingById(id: Int): Meeting? {
         return withContext(Dispatchers.IO) {
             // First try to get from local database
-            val localMeeting =
-                meetingDao.getMeetingById(id.toIntOrNull() ?: return@withContext null)
-                    ?.let { mapper.mapToDomain(it) }
+            val localMeeting = meetingDao.getMeetingById(id)?.let { mapper.mapToDomain(it) }
 
             // If not found locally or sync is needed, try to sync
             if (localMeeting == null || shouldSync()) {
                 syncMeetings()
                 // Try to get again after sync
-                meetingDao.getMeetingById(id.toIntOrNull() ?: return@withContext null)
-                    ?.let { mapper.mapToDomain(it) }
+                meetingDao.getMeetingById(id)?.let { mapper.mapToDomain(it) }
             } else {
                 localMeeting
             }
@@ -130,25 +127,20 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteMeeting(id: String): Resource<Unit> {
-        return try {
-            // First, delete from Firebase
-            val result = firebaseDataSource.deleteMeeting(id)
+    override suspend fun deleteMeeting(id: Int): Resource<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                // First delete from Firebase
+                firebaseDataSource.deleteMeeting(id)
 
-            if (result.isSuccess) {
-                // If Firebase deletion is successful, delete from local database
-                meetingDao.deleteMeetingById(
-                    id.toIntOrNull() ?: return Resource.Error("Invalid meeting ID")
-                )
+                // Then delete from local database
+                meetingDao.deleteMeetingById(id)
 
-                // Update last sync time
-                lastSyncTime = System.currentTimeMillis()
                 Resource.Success(Unit)
-            } else {
-                Resource.Error("Failed to delete meeting from Firebase")
+            } catch (e: Exception) {
+                Timber.e(e, "Error deleting meeting")
+                Resource.Error(e.message ?: "Failed to delete meeting")
             }
-        } catch (e: Exception) {
-            Resource.Error(e.message ?: "An unknown error occurred")
         }
     }
 

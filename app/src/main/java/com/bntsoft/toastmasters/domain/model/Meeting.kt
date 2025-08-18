@@ -3,7 +3,7 @@ package com.bntsoft.toastmasters.domain.model
 import java.time.LocalDateTime
 
 data class Meeting(
-    val id: String = "",
+    val id: Int = 0,
     val title: String,
     val description: String = "",
     val dateTime: LocalDateTime,
