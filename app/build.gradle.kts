@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.gms.services)
     id("kotlin-parcelize")
 }
 
@@ -54,27 +55,23 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     
-    // Material Design 3
-    implementation("com.google.android.material:material:1.11.0")
+    // Material Design Components (using latest stable version)
+    implementation("com.google.android.material:material:1.12.0")
     
-    // Material3 Components
+    // Material3 Components (if using Compose)
     implementation("androidx.compose.material3:material3:1.2.0")
-    implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
     
-    // For backward compatibility
-    implementation("androidx.compose.material:material:1.6.3")
-    implementation("androidx.compose.material:material-icons-extended:1.6.3")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.kotlinx.coroutines.android)
-
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
 
+    // Hilt
     implementation("com.google.dagger:hilt-android:2.56.2")
     ksp("com.google.dagger:hilt-android-compiler:2.56.2")
 
@@ -85,18 +82,16 @@ dependencies {
     implementation("androidx.room:room-paging:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
 
-    val lottieVersion = "6.0.0"
-    implementation("com.airbnb.android:lottie:$lottieVersion")
+    // Lottie
+    implementation("com.airbnb.android:lottie:6.0.0")
 
+    // UI Components
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-
-    // Hilt dependencies
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-
-    // Additional UI components
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
-    implementation("com.google.android.material:material:1.12.0")
+    
+    // Hilt Navigation (if using Compose)
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Image loading
     implementation("com.github.bumptech.glide:glide:4.16.0")

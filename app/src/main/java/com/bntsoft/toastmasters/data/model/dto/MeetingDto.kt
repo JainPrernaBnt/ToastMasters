@@ -1,8 +1,7 @@
 package com.bntsoft.toastmasters.data.model.dto
 
 data class MeetingDto(
-    val meetingID: Int,
-    val title: String,
+    val meetingID: String,
     val date: String,
     val startTime: String,
     val endTime: String,

@@ -9,7 +9,6 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
     override fun mapFromEntity(entity: MeetingEntity): MeetingDto {
         return MeetingDto(
             meetingID = entity.meetingID,
-            title = entity.title,
             date = entity.date,
             venue = entity.venue,
             theme = entity.theme,
@@ -27,7 +26,6 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
     override fun mapToEntity(dto: MeetingDto): MeetingEntity {
         return MeetingEntity(
             meetingID = dto.meetingID,
-            title = dto.title,
             date = dto.date,
             venue = dto.venue,
             theme = dto.theme,

@@ -11,8 +11,13 @@
         android:label="Login"
         tools:layout="@layout/fragment_login">
         <action
-            android:id="@+id/action_login_to_main_navigation"
+            android:id="@+id/action_login_to_vp_nav_graph"
             app:destination="@id/vp_nav_graph"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_login_to_member_nav_graph"
+            app:destination="@id/member_nav_graph"
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="true" />
         <action
@@ -26,9 +31,9 @@
         android:label="Sign Up"
         tools:layout="@layout/fragment_sign_up" />
 
-    <navigation
-        android:id="@+id/vp_nav_graph"
-        app:startDestination="@id/dashboardFragment">
-        <include app:graph="@navigation/vp_nav_graph" />
-    </navigation>
+    <!-- VP Education Navigation Graph -->
+    <include app:graph="@navigation/vp_nav_graph" />
+    
+    <!-- Member Navigation Graph -->
+    <include app:graph="@navigation/member_nav_graph" />
 </navigation>

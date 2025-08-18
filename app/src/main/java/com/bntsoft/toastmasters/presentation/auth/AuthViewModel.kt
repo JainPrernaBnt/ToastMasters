@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.domain.model.AuthResult
 import com.bntsoft.toastmasters.domain.model.SignupResult
 import com.bntsoft.toastmasters.domain.model.User
@@ -72,8 +73,11 @@ class AuthViewModel @Inject constructor(
                 when (val result = authRepository.signUp(user, password)) {
                     is AuthResult.Success -> {
                         val signupResult = result.data as? SignupResult
+                        val signedUpUser = signupResult?.user ?: user
+                        val userRole = if (signedUpUser.isVpEducation) UserRole.VP_EDUCATION else UserRole.MEMBER
                         _uiState.value = AuthUiState.SignUpSuccess(
-                            user = signupResult?.user ?: user,
+                            user = signedUpUser,
+                            userRole = userRole,
                             requiresApproval = signupResult?.requiresApproval ?: true
                         )
                     }
@@ -117,6 +121,6 @@ class AuthViewModel @Inject constructor(
         object Loading : AuthUiState()
         data class Error(val message: String) : AuthUiState()
         data class Success(val user: User, val userRole: UserRole) : AuthUiState()
-        data class SignUpSuccess(val user: User, val requiresApproval: Boolean) : AuthUiState()
+        data class SignUpSuccess(val user: User, val userRole: UserRole, val requiresApproval: Boolean) : AuthUiState()
     }
 }

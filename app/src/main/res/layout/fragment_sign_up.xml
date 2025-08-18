@@ -44,6 +44,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_full_name"
+                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_person"
                 app:startIconTint="?attr/colorOnSurfaceVariant">
 
@@ -53,8 +55,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName|textCapWords"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="John Doe" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -66,6 +67,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_email"
+                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_email"
                 app:startIconTint="?attr/colorOnSurfaceVariant">
 
@@ -75,8 +78,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress|textNoSuggestions"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="test@example.com" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -88,6 +90,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_phone"
+                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_phone"
                 app:startIconTint="?attr/colorOnSurfaceVariant">
 
@@ -97,8 +101,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="phone"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="+1234567890" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -110,6 +113,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_address"
+                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_location_on"
                 app:startIconTint="?attr/colorOnSurfaceVariant">
 
@@ -119,8 +124,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPostalAddress"
                     android:maxLines="2"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="123 Main St, City, Country" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -132,6 +136,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_gender"
+                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_person"
                 app:startIconTint="?attr/colorOnSurfaceVariant">
 
@@ -140,7 +146,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="none"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="?colorOnSurface"
                     tools:text="Male" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -153,8 +159,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_joined_date"
+                app:boxStrokeColor="?colorOnSurfaceVariant"
+                app:hintTextColor="?colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_calendar_today"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?colorOnSurfaceVariant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/joinedDateEditText"
@@ -162,7 +170,7 @@
                     android:layout_height="wrap_content"
                     android:focusable="false"
                     android:inputType="none"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="?colorOnSurface"
                     tools:text="01/01/2023" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -175,8 +183,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_toastmasters_id"
+                app:boxStrokeColor="?colorOnSurfaceVariant"
+                app:hintTextColor="?colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_badge"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?colorOnSurfaceVariant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/toastmastersIdEditText"
@@ -184,8 +194,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="text"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="12345678" />
+                    android:textColor="?colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -197,8 +206,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_club_id"
+                app:boxStrokeColor="?colorOnSurfaceVariant"
+                app:hintTextColor="?colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_group"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?colorOnSurfaceVariant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/clubIdEditText"
@@ -206,8 +217,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="123456" />
+                    android:textColor="?colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -219,9 +229,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_password"
+                app:boxStrokeColor="?colorOnSurfaceVariant"
                 app:endIconMode="password_toggle"
+                app:endIconTint="?colorOnSurfaceVariant"
+                app:hintTextColor="?colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_lock"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?colorOnSurfaceVariant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/passwordEditText"
@@ -229,8 +242,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="password123" />
+                    android:textColor="?colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -242,9 +254,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_xlarge"
                 android:hint="@string/hint_confirm_password"
+                app:boxStrokeColor="?colorOnSurfaceVariant"
                 app:endIconMode="password_toggle"
+                app:endIconTint="?colorOnSurfaceVariant"
+                app:hintTextColor="?colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_lock_outline"
-                app:startIconTint="?attr/colorOnSurfaceVariant">
+                app:startIconTint="?colorOnSurfaceVariant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/confirmPasswordEditText"
@@ -252,8 +267,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="password123" />
+                    android:textColor="?colorOnSurface" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -288,7 +302,7 @@
                         android:layout_height="wrap_content"
                         android:checked="false"
                         android:text="@string/has_mentor"
-                        android:textColor="?android:attr/textColorPrimary" />
+                        android:textColor="?colorOnSurface" />
 
                     <!-- Mentor Selection (Initially hidden) -->
                     <com.google.android.material.textfield.TextInputLayout
@@ -297,9 +311,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_medium"
-                        android:visibility="gone"
                         android:hint="@string/hint_select_mentor"
-                        app:startIconDrawable="@drawable/ic_people"
+                        android:visibility="gone"
+                        app:boxStrokeColor="?attr/colorOnSurfaceVariant"
+                        app:hintTextColor="?attr/colorOnSurfaceVariant"
+                        app:startIconDrawable="@drawable/ic_person"
                         app:startIconTint="?attr/colorOnSurfaceVariant">
 
                         <AutoCompleteTextView
@@ -307,8 +323,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:textColor="?android:attr/textColorPrimary"
-                            tools:text="John Doe (Mentor)" />
+                            android:textColor="?colorOnSurface" />
 
                     </com.google.android.material.textfield.TextInputLayout>
 

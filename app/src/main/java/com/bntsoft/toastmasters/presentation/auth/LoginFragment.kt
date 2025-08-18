@@ -115,12 +115,22 @@ class LoginFragment : Fragment() {
 
                         is AuthViewModel.AuthUiState.Success -> {
                             showLoading(false)
-                            // Save login state and user role
-                            preferenceManager.isLoggedIn = true
-                            preferenceManager.userRole = state.userRole.name
+                            // Save user role
+                            preferenceManager.saveUserRole(state.userRole)
                             
-                            // Navigate to main screen
-                            findNavController().navigate(R.id.action_login_to_main_navigation)
+                            // Navigate based on user role
+                            when (state.userRole) {
+                                UserRole.VP_EDUCATION -> {
+                                    findNavController().navigate(R.id.action_login_to_vp_nav_graph)
+                                }
+                                UserRole.MEMBER -> {
+                                    findNavController().navigate(R.id.action_login_to_member_nav_graph)
+                                }
+                                else -> {
+                                    // Default to VP navigation for any other roles
+                                    findNavController().navigate(R.id.action_login_to_vp_nav_graph)
+                                }
+                            }
                             
                             // Finish the activity to prevent going back to login
                             requireActivity().finish()

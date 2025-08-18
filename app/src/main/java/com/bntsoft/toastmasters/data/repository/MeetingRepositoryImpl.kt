@@ -65,11 +65,11 @@ class MeetingRepositoryImpl @Inject constructor(
         return localFlow
     }
 
-
-    override suspend fun getMeetingById(id: Int): Meeting? {
+    override suspend fun getMeetingById(id: String): Meeting? {
         return withContext(Dispatchers.IO) {
             // First try to get from local database
-            val localMeeting = meetingDao.getMeetingById(id)?.let { mapper.mapToDomain(it) }
+            val localMeeting =
+                meetingDao.getMeetingById(id)?.let { mapper.mapToDomain(it) }
 
             // If not found locally or sync is needed, try to sync
             if (localMeeting == null || shouldSync()) {
@@ -82,26 +82,30 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createMeeting(meeting: Meeting): Resource<Unit> {
+    override suspend fun createMeeting(meeting: Meeting): Resource<Meeting> {
         return try {
             // First, save to Firebase
             val result = firebaseDataSource.createMeeting(meeting)
 
-            if (result.isSuccess) {
+            result.onSuccess {
+                val newMeeting = result.getOrThrow()
                 // If Firebase save is successful, save to local database
-                val entity = mapper.mapToEntity(meeting)
+                val entity = mapper.mapToEntity(newMeeting)
                 meetingDao.insertMeeting(entity)
 
                 // Send notification to all members
-                firebaseDataSource.sendMeetingNotification(meeting)
+                firebaseDataSource.sendMeetingNotification(newMeeting)
 
                 // Update last sync time
                 lastSyncTime = System.currentTimeMillis()
-                Resource.Success(Unit)
-            } else {
-                Resource.Error("Failed to create meeting in Firebase")
+                return Resource.Success(newMeeting)
+            }.onFailure { exception ->
+
+                return Resource.Error("Failed to create meeting in Firebase")
             }
+            return Resource.Error("An unknown error occurred")
         } catch (e: Exception) {
+
             Resource.Error(e.message ?: "An unknown error occurred")
         }
     }
@@ -127,7 +131,7 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteMeeting(id: Int): Resource<Unit> {
+    override suspend fun deleteMeeting(id: String): Resource<Unit> {
         return withContext(Dispatchers.IO) {
             try {
                 // First delete from Firebase

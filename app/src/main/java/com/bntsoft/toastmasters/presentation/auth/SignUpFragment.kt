@@ -17,8 +17,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
+import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.databinding.FragmentSignUpBinding
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -26,12 +28,16 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SignUpFragment : Fragment() {
 
     private var _binding: FragmentSignUpBinding? = null
     private val binding get() = _binding!!
+    
+    @Inject
+    lateinit var preferenceManager: PreferenceManager
     
     private val viewModel: AuthViewModel by viewModels()
     
@@ -156,7 +162,7 @@ class SignUpFragment : Fragment() {
                         }
                         is AuthViewModel.AuthUiState.SignUpSuccess -> {
                             showLoading(false)
-                            showSuccessMessage(state.requiresApproval)
+                            showSuccessMessage(state.userRole, state.requiresApproval)
                         }
                         is AuthViewModel.AuthUiState.Error -> {
                             showLoading(false)
@@ -342,14 +348,33 @@ class SignUpFragment : Fragment() {
         binding.loginButton.isEnabled = !show
     }
     
-    private fun showSuccessMessage(requiresApproval: Boolean) {
-        val message = if (requiresApproval) {
-            getString(R.string.signup_success_pending_approval)
+    private fun showSuccessMessage(userRole: UserRole, requiresApproval: Boolean) {
+        if (requiresApproval) {
+            // Don't navigate, just show message and stay on signup screen
+            UiUtils.showSuccessMessage(binding.root, getString(R.string.signup_success_pending_approval))
+            // Save user role
+            preferenceManager.saveUserRole(userRole)
         } else {
-            getString(R.string.signup_success_approved)
+            // Save user role
+            preferenceManager.saveUserRole(userRole)
+            
+            // Navigate based on user role
+            when (userRole) {
+                UserRole.VP_EDUCATION -> {
+                    findNavController().navigate(R.id.action_login_to_vp_nav_graph)
+                }
+                UserRole.MEMBER -> {
+                    findNavController().navigate(R.id.action_login_to_member_nav_graph)
+                }
+                else -> {
+                    // Default to member navigation for any other roles
+                    findNavController().navigate(R.id.action_login_to_member_nav_graph)
+                }
+            }
+            
+            // Finish the activity to prevent going back to signup
+            requireActivity().finish()
         }
-        
-        UiUtils.showSuccessMessage(binding.root, message)
     }
     
     private fun showErrorSnackbar(message: String) {

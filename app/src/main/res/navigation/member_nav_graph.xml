@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/member_nav_graph"
+    app:startDestination="@id/memberDashboardFragment">
+
+    <fragment
+        android:id="@+id/memberDashboardFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.members.dashboard.MemberDashboardFragment"
+        android:label="My Dashboard"
+        tools:layout="@layout/fragment_member_dashboard">
+
+        <action
+            android:id="@+id/action_memberDashboardFragment_to_upcomingMeetingsFragment"
+            app:destination="@id/upcomingMeetingsFragment" />
+        <action
+            android:id="@+id/action_memberDashboardFragment_to_settingsFragment2"
+            app:destination="@id/settingsFragment2" />
+        <action
+            android:id="@+id/action_memberDashboardFragment_to_leaderboardFragment2"
+            app:destination="@id/leaderboardFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/upcomingMeetingsFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.members.upcoming.UpcomingMeetingsFragment"
+        android:label="UpcomingMeetingsFragment" >
+        <action
+            android:id="@+id/action_upcomingMeetingsFragment_to_memberDashboardFragment"
+            app:destination="@id/memberDashboardFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment2"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.SettingsFragment"
+        android:label="SettingsFragment" >
+        <action
+            android:id="@+id/action_settingsFragment2_to_memberDashboardFragment"
+            app:destination="@id/memberDashboardFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/leaderboardFragment2"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.LeaderboardFragment"
+        android:label="LeaderboardFragment" >
+        <action
+            android:id="@+id/action_leaderboardFragment2_to_memberDashboardFragment"
+            app:destination="@id/memberDashboardFragment" />
+    </fragment>
+
+</navigation>

@@ -14,14 +14,15 @@ class MeetingDomainMapper @Inject constructor() {
     
     fun mapToDomain(entity: MeetingEntity): Meeting {
         val dateTime = LocalDateTime.parse("${entity.date}T${entity.startTime}")
-        val endDateTime = entity.endTime?.let { LocalDateTime.parse("${entity.date}T$it") }
+        val endDateTime = if (entity.endTime.isNotEmpty()) entity.endTime?.let { LocalDateTime.parse("${entity.date}T$it") } else null
         
         return Meeting(
             id = entity.meetingID,
-            title = entity.title,
+            theme = entity.theme,
             dateTime = dateTime,
             endDateTime = endDateTime,
             location = entity.venue,
+            preferredRoles = entity.preferredRoles,
             isRecurring = entity.isRecurring,
             createdAt = entity.createdAt,
             updatedAt = entity.createdAt // Using created time as updated time if not available
@@ -30,14 +31,15 @@ class MeetingDomainMapper @Inject constructor() {
     
     fun mapToDomain(dto: MeetingDto): Meeting {
         val dateTime = LocalDateTime.parse("${dto.date}T${dto.startTime}")
-        val endDateTime = dto.endTime?.let { LocalDateTime.parse("${dto.date}T$it") }
+        val endDateTime = if (dto.endTime.isNotEmpty()) dto.endTime?.let { LocalDateTime.parse("${dto.date}T$it") } else null
         
         return Meeting(
             id = dto.meetingID,
-            title = dto.title,
+            theme = dto.theme,
             dateTime = dateTime,
             endDateTime = endDateTime,
             location = dto.venue,
+            preferredRoles = dto.preferredRoles,
             isRecurring = dto.isRecurring,
             createdAt = dto.createdAt,
             updatedAt = dto.createdAt // Using created time as updated time if not available
@@ -47,13 +49,12 @@ class MeetingDomainMapper @Inject constructor() {
     fun mapToEntity(meeting: Meeting): MeetingEntity {
         return MeetingEntity(
             meetingID = meeting.id,
-            title = meeting.title,
             date = meeting.dateTime.format(dateFormatter),
             startTime = meeting.dateTime.format(timeFormatter),
             endTime = meeting.endDateTime?.format(timeFormatter) ?: "",
             venue = meeting.location,
-            theme = "", // Not in domain model
-            preferredRoles = emptyList(), // Not in domain model
+            theme = meeting.theme,
+            preferredRoles = meeting.preferredRoles,
             createdAt = meeting.createdAt,
             isRecurring = meeting.isRecurring,
             recurringDayOfWeek = if (meeting.isRecurring) meeting.dateTime.dayOfWeek.value else null,
@@ -65,13 +66,12 @@ class MeetingDomainMapper @Inject constructor() {
     fun mapToDto(meeting: Meeting): MeetingDto {
         return MeetingDto(
             meetingID = meeting.id,
-            title = meeting.title,
             date = meeting.dateTime.format(dateFormatter),
             startTime = meeting.dateTime.format(timeFormatter),
             endTime = meeting.endDateTime?.format(timeFormatter) ?: "",
             venue = meeting.location,
-            theme = "", // Not in domain model
-            preferredRoles = emptyList(), // Not in domain model
+            theme = meeting.theme,
+            preferredRoles = meeting.preferredRoles,
             createdAt = meeting.createdAt,
             isRecurring = meeting.isRecurring,
             recurringDayOfWeek = if (meeting.isRecurring) meeting.dateTime.dayOfWeek.value else null,

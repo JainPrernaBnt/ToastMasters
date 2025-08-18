@@ -60,7 +60,7 @@ class MemberResponseViewModel @Inject constructor(
                 _uiState.value = MemberResponseUiState.Loading
 
                 // Load meeting details
-                val meetingResult = meetingRepository.getMeetingById(meetingId)
+                val meetingResult = meetingRepository.getMeetingById(meetingId.toString())
                 meetingResult?.let { meeting ->
                     _meeting.value = meeting
                     // Roles are now hardcoded in _availableRoles initialization

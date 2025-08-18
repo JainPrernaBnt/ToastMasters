@@ -17,7 +17,15 @@ class PreferenceManager @Inject constructor(
 
     companion object {
         private const val KEY_USER_ROLE = "user_role"
+        private const val KEY_IS_LOGGED_IN = "is_logged_in"
     }
+    
+    var isLoggedIn: Boolean
+        get() = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
+        set(value) = sharedPreferences.edit {
+            putBoolean(KEY_IS_LOGGED_IN, value)
+            apply()
+        }
 
     fun saveUserRole(role: UserRole) {
         sharedPreferences.edit {
@@ -40,6 +48,7 @@ class PreferenceManager @Inject constructor(
     fun clearUserData() {
         sharedPreferences.edit {
             remove(KEY_USER_ROLE)
+            remove(KEY_IS_LOGGED_IN)
             apply()
         }
     }

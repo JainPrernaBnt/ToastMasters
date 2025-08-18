@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "bbaa1fd9173ab1ba8ea377a2a7c9aa5f",
+    "identityHash": "248e542e08d8c9cee5193e853c500b14",
     "entities": [
       {
         "tableName": "members",
@@ -118,17 +118,11 @@
       },
       {
         "tableName": "meetings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`meetingID` INTEGER NOT NULL, `title` TEXT NOT NULL, `date` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `venue` TEXT NOT NULL, `theme` TEXT NOT NULL, `preferredRoles` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `isRecurring` INTEGER NOT NULL, `recurringDayOfWeek` INTEGER, `recurringStartTime` TEXT, `recurringEndTime` TEXT, PRIMARY KEY(`meetingID`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`meetingID` TEXT NOT NULL, `date` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `venue` TEXT NOT NULL, `theme` TEXT NOT NULL, `preferredRoles` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `isRecurring` INTEGER NOT NULL, `recurringDayOfWeek` INTEGER, `recurringStartTime` TEXT, `recurringEndTime` TEXT, PRIMARY KEY(`meetingID`))",
         "fields": [
           {
             "fieldPath": "meetingID",
             "columnName": "meetingID",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "title",
-            "columnName": "title",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -1156,7 +1150,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bbaa1fd9173ab1ba8ea377a2a7c9aa5f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '248e542e08d8c9cee5193e853c500b14')"
     ]
   }
 }

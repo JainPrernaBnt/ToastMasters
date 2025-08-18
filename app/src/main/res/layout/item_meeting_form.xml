@@ -12,9 +12,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginBottom="8dp"
         android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
+        android:orientation="horizontal">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/formTitle"
@@ -31,31 +31,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/remove"
+            android:textColor="?attr/colorError"
             app:icon="@drawable/ic_delete"
             app:iconGravity="textStart"
-            app:iconTint="?attr/colorError"
-            android:textColor="?attr/colorError" />
+            app:iconTint="?attr/colorError" />
     </LinearLayout>
 
-    <!-- Meeting Title -->
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="@string/meeting_title"
-        app:startIconDrawable="@drawable/ic_title">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/meetingTitleInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:maxLines="1"
-            android:importantForAutofill="no"
-            tools:ignore="TextFields" />
-
-    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Meeting Date -->
     <com.google.android.material.textfield.TextInputLayout
@@ -70,8 +51,8 @@
             android:id="@+id/meetingDateInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:focusable="false"
             android:cursorVisible="false"
+            android:focusable="false"
             android:inputType="none"
             tools:text="Saturday, August 5, 2023" />
 
@@ -81,16 +62,16 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
 
         <!-- Start Time -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginEnd="4dp"
+            android:layout_weight="1"
             android:hint="@string/start_time"
             app:startIconDrawable="@drawable/ic_time">
 
@@ -98,8 +79,8 @@
                 android:id="@+id/startTimeInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="false"
                 android:cursorVisible="false"
+                android:focusable="false"
                 android:inputType="none"
                 tools:text="5:30 PM" />
 
@@ -110,8 +91,8 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="4dp"
+            android:layout_weight="1"
             android:hint="@string/end_time"
             app:startIconDrawable="@drawable/ic_time">
 
@@ -119,8 +100,8 @@
                 android:id="@+id/endTimeInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="false"
                 android:cursorVisible="false"
+                android:focusable="false"
                 android:inputType="none"
                 tools:text="7:30 PM" />
 
@@ -170,14 +151,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="16dp"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="0dp"
@@ -193,10 +174,46 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/add_role"
+                android:textColor="?attr/colorPrimary"
                 app:icon="@drawable/ic_add"
                 app:iconGravity="textStart"
-                app:iconTint="?attr/colorPrimary"
-                android:textColor="?attr/colorPrimary" />
+                app:iconTint="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/roleInputLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/role_name"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/roleInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapWords" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/saveRoleButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/save"
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
         </LinearLayout>
 
@@ -204,19 +221,10 @@
             android:id="@+id/roleChipGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:singleSelection="false"
             android:layout_marginTop="8dp"
-            android:minHeight="48dp"/>
+            android:minHeight="48dp"
+            app:singleSelection="false" />
 
     </LinearLayout>
-
-    <!-- Helper Text -->
-    <com.google.android.material.textview.MaterialTextView
-        style="@style/TextAppearance.MaterialComponents.Caption"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/meeting_form_helper_text"
-        android:textColor="?android:attr/textColorSecondary" />
 
 </LinearLayout>

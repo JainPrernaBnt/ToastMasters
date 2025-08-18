@@ -22,7 +22,7 @@ class EditMeetingViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<EditMeetingState>(EditMeetingState.Loading)
     val uiState: StateFlow<EditMeetingState> = _uiState.asStateFlow()
 
-    fun loadMeeting(meetingId: Int) {
+    fun loadMeeting(meetingId: String) {
         viewModelScope.launch {
             _uiState.value = EditMeetingState.Loading
             
@@ -70,7 +70,7 @@ class EditMeetingViewModel @Inject constructor(
         }
     }
 
-    fun deleteMeeting(meetingId: Int) {
+    fun deleteMeeting(meetingId: String) {
         viewModelScope.launch {
             _uiState.value = EditMeetingState.Loading
             

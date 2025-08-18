@@ -137,8 +137,6 @@ class MeetingResponseDialogFragment : DialogFragment() {
     }
 
     private fun updateMeetingDetails(meeting: com.bntsoft.toastmasters.domain.model.Meeting) {
-        binding.tvMeetingTitle.text = meeting.title
-        
         // Format date and time
         val dateTime = meeting.dateTime
         val endDateTime = meeting.endDateTime ?: dateTime.plusHours(2) // Default 2-hour duration if end time not specified

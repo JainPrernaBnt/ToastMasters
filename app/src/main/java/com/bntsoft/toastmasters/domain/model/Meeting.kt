@@ -3,13 +3,12 @@ package com.bntsoft.toastmasters.domain.model
 import java.time.LocalDateTime
 
 data class Meeting(
-    val id: Int = 0,
-    val title: String,
-    val description: String = "",
+    val id: String = "",
     val dateTime: LocalDateTime,
     val endDateTime: LocalDateTime? = null,
     val location: String = "",
-    val agenda: String = "",
+    val theme: String = "",
+    val preferredRoles: List<String> = emptyList(),
     val isRecurring: Boolean = false,
     val createdBy: String = "",
     val createdAt: Long = System.currentTimeMillis(),

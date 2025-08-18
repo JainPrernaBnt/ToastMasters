@@ -28,8 +28,8 @@ interface MeetingDao {
     suspend fun deleteMeeting(meeting: MeetingEntity)
 
     // Delete by meeting ID
-    @Query("DELETE FROM meetings WHERE meetingID = :meetingId")
-    suspend fun deleteMeetingById(meetingId: Int)
+    @Query("DELETE FROM meetings WHERE meetingID = :id")
+    suspend fun deleteMeetingById(id: String)
 
     // Get all meetings (sorted by date ascending)
     @Query("SELECT * FROM meetings ORDER BY date ASC")
@@ -40,8 +40,8 @@ interface MeetingDao {
     fun getUpcomingMeetings(today: String): Flow<List<MeetingEntity>>
 
     // Get a specific meeting by ID
-    @Query("SELECT * FROM meetings WHERE meetingID = :meetingId LIMIT 1")
-    suspend fun getMeetingById(meetingId: Int): MeetingEntity?
+    @Query("SELECT * FROM meetings WHERE meetingID = :id")
+    suspend fun getMeetingById(id: String): MeetingEntity?
 
     // Get all recurring meetings (e.g., every Saturday)
     @Query("SELECT * FROM meetings WHERE isRecurring = 1 ORDER BY date ASC")

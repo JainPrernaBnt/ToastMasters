@@ -8,8 +8,7 @@ import com.bntsoft.toastmasters.data.local.converters.PreferredRoleConverter
 @Entity(tableName = "meetings")
 @TypeConverters(PreferredRoleConverter::class)
 data class MeetingEntity(
-    @PrimaryKey val meetingID: Int,
-    val title: String,
+    @PrimaryKey val meetingID: String,
     val date: String,
     val startTime: String,
     val endTime: String,

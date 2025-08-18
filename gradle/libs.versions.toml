@@ -15,6 +15,7 @@ constraintlayout = "2.2.1"
 firebaseAuthKtx = "23.2.1"
 firebaseFirestoreKtx = "25.1.4"
 navigationFragment = "2.9.2"
+googleGms = "4.4.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,3 +39,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.27" }
 hilt = { id = "com.google.dagger.hilt.android", version = "2.56.2" }
+google-gms-services = { id = "com.google.gms.google-services", version.ref = "googleGms" }

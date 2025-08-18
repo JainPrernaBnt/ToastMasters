@@ -13,16 +13,16 @@ interface MeetingRepository {
     fun getUpcomingMeetings(afterDate: LocalDate = LocalDate.now()): Flow<List<Meeting>>
     
     // Get a meeting by ID
-    suspend fun getMeetingById(id: Int): Meeting?
+    suspend fun getMeetingById(id: String): Meeting?
     
     // Create a new meeting
-    suspend fun createMeeting(meeting: Meeting): Resource<Unit>
+    suspend fun createMeeting(meeting: Meeting): Resource<Meeting>
     
     // Update an existing meeting
     suspend fun updateMeeting(meeting: Meeting): Resource<Unit>
     
     // Delete a meeting
-    suspend fun deleteMeeting(id: Int): Resource<Unit>
+    suspend fun deleteMeeting(id: String): Resource<Unit>
     
     // Sync meetings with remote data source
     suspend fun syncMeetings(): Resource<Unit>

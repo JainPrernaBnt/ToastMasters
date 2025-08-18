@@ -36,16 +36,6 @@
             android:orientation="vertical"
             android:padding="@dimen/space_large">
 
-            <!-- Logo -->
-            <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/space_xxlarge"
-                android:layout_marginBottom="@dimen/space_xxlarge"
-                android:contentDescription="@string/app_name"
-                android:src="@drawable/ic_logo"
-                app:tint="?attr/colorPrimary" />
 
             <!-- Email/Phone Input -->
             <com.google.android.material.textfield.TextInputLayout
@@ -55,7 +45,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_email_or_phone"
+                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
                 app:endIconMode="clear_text"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_email"
                 app:startIconTint="?attr/colorOnSurfaceVariant">
 
@@ -65,7 +57,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress|textNoSuggestions"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="?colorOnSurface"
                     tools:text="test@example.com" />
 
             </com.google.android.material.textfield.TextInputLayout>
@@ -78,7 +70,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_password"
+                app:boxStrokeColor="?attr/colorOnSurfaceVariant"
                 app:endIconMode="password_toggle"
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
                 app:startIconDrawable="@drawable/ic_lock"
                 app:startIconTint="?attr/colorOnSurfaceVariant">
 
@@ -88,7 +82,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:maxLines="1"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="?colorOnSurface"
                     tools:text="password123" />
 
             </com.google.android.material.textfield.TextInputLayout>

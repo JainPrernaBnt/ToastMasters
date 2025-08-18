@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -23,8 +24,10 @@ class MeetingsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<MeetingsUiState>(MeetingsUiState.Loading)
     val uiState: StateFlow<MeetingsUiState> = _uiState.asStateFlow()
 
-    private val _upcomingMeetingsState = MutableStateFlow<UpcomingMeetingsState>(UpcomingMeetingsState.Loading)
-    val upcomingMeetingsState: StateFlow<UpcomingMeetingsState> = _upcomingMeetingsState.asStateFlow()
+    private val _upcomingMeetingsState =
+        MutableStateFlow<UpcomingMeetingsState>(UpcomingMeetingsState.Loading)
+    val upcomingMeetingsState: StateFlow<UpcomingMeetingsState> =
+        _upcomingMeetingsState.asStateFlow()
 
     private val _createMeetingState = MutableStateFlow<CreateMeetingState>(CreateMeetingState.Idle)
     val createMeetingState: StateFlow<CreateMeetingState> = _createMeetingState.asStateFlow()
@@ -37,7 +40,7 @@ class MeetingsViewModel @Inject constructor(
     fun loadMeetings() {
         viewModelScope.launch {
             _uiState.value = MeetingsUiState.Loading
-            
+
             meetingRepository.getAllMeetings()
                 .catch { e ->
                     _uiState.value = MeetingsUiState.Error(e.message ?: "Unknown error occurred")
@@ -55,10 +58,11 @@ class MeetingsViewModel @Inject constructor(
     fun loadUpcomingMeetings() {
         viewModelScope.launch {
             _upcomingMeetingsState.value = UpcomingMeetingsState.Loading
-            
+
             meetingRepository.getUpcomingMeetings(LocalDate.now())
                 .catch { e ->
-                    _upcomingMeetingsState.value = UpcomingMeetingsState.Error(e.message ?: "Unknown error occurred")
+                    _upcomingMeetingsState.value =
+                        UpcomingMeetingsState.Error(e.message ?: "Unknown error occurred")
                 }
                 .collectLatest { meetings ->
                     if (meetings.isEmpty()) {
@@ -71,20 +75,26 @@ class MeetingsViewModel @Inject constructor(
     }
 
     fun createMeeting(meeting: Meeting) {
+        Timber.d("createMeeting called with: ${meeting}")
         viewModelScope.launch {
             _createMeetingState.value = CreateMeetingState.Loading
-            
+            Timber.d("CreateMeetingState set to Loading")
+
             when (val result = meetingRepository.createMeeting(meeting)) {
                 is Resource.Success -> {
-                    _createMeetingState.value = CreateMeetingState.Success
+                    Timber.d("Meeting creation successful: ${result.data}")
+                    _createMeetingState.value = CreateMeetingState.Success(result.data!!)
                     loadMeetings() // Refresh the meetings list
                     loadUpcomingMeetings() // Refresh upcoming meetings
                 }
+
                 is Resource.Error -> {
-                    _createMeetingState.value = CreateMeetingState.Error(result.message ?: "Failed to create meeting")
+                    Timber.e("Meeting creation failed: ${result.message}")
+                    _createMeetingState.value =
+                        CreateMeetingState.Error(result.message ?: "Failed to create meeting")
                 }
 
-                is Resource.Loading -> TODO()
+                else -> {}
             }
         }
     }
@@ -92,13 +102,15 @@ class MeetingsViewModel @Inject constructor(
     fun syncMeetings() {
         viewModelScope.launch {
             _uiState.value = MeetingsUiState.Loading
-            
+
             when (val result = meetingRepository.syncMeetings()) {
                 is Resource.Success -> {
                     // The flow will automatically update the UI when the local DB is updated
                 }
+
                 is Resource.Error -> {
-                    _uiState.value = MeetingsUiState.Error(result.message ?: "Failed to sync meetings")
+                    _uiState.value =
+                        MeetingsUiState.Error(result.message ?: "Failed to sync meetings")
                 }
 
                 is Resource.Loading -> TODO()
@@ -129,6 +141,6 @@ sealed class UpcomingMeetingsState {
 sealed class CreateMeetingState {
     object Idle : CreateMeetingState()
     object Loading : CreateMeetingState()
-    object Success : CreateMeetingState()
+    data class Success(val meeting: Meeting) : CreateMeetingState()
     data class Error(val message: String) : CreateMeetingState()
 }

@@ -21,7 +21,9 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @AndroidEntryPoint
 class EditMeetingFragment : Fragment() {
@@ -30,11 +32,11 @@ class EditMeetingFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: EditMeetingViewModel by viewModels()
-    private var meetingId: Int = 0
+    private var meetingId: String = 0.toString()
     private var meeting: Meeting? = null
 
-    private val dateFormat = java.text.SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
-    private val timeFormat = java.text.SimpleDateFormat("h:mm a", Locale.getDefault())
+    private val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
+    private val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
 
     private val calendar = Calendar.getInstance()
 
@@ -51,7 +53,7 @@ class EditMeetingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Get meeting ID from arguments
-        meetingId = arguments?.getInt(ARG_MEETING_ID) ?: 0
+        meetingId = (arguments?.getInt(ARG_MEETING_ID) ?: 0).toString()
 
         setupToolbar()
         setupClickListeners()
@@ -165,7 +167,6 @@ class EditMeetingFragment : Fragment() {
     private fun populateForm(meeting: Meeting) {
         with(binding) {
             // Set meeting title
-            titleEditText.setText(meeting.title)
 
             // Set meeting date and time
             val date = Date(meeting.dateTime.toEpochSecond(java.time.ZoneOffset.UTC) * 1000)
@@ -182,8 +183,8 @@ class EditMeetingFragment : Fragment() {
             venueEditText.setText(meeting.location)
 
             // Set agenda if available
-            if (meeting.agenda.isNotBlank()) {
-                agendaEditText.setText(meeting.agenda)
+            if (meeting.theme.isNotBlank()) {
+                agendaEditText.setText(meeting.theme)
             }
         }
     }
@@ -230,21 +231,18 @@ class EditMeetingFragment : Fragment() {
         val currentMeeting = meeting ?: return false
 
         with(binding) {
-            return titleEditText.text?.toString() != currentMeeting.title ||
-                    venueEditText.text?.toString() != currentMeeting.location ||
-                    agendaEditText.text?.toString() != currentMeeting.agenda
+            return venueEditText.text?.toString() != currentMeeting.location ||
+                    agendaEditText.text?.toString() != currentMeeting.theme
         }
     }
 
     private fun updateMeeting() {
         if (!validateForm()) return
-
-        val title = binding.titleEditText.text.toString().trim()
         val date = binding.dateEditText.text.toString().trim()
         val startTime = binding.startTimeEditText.text.toString().trim()
         val endTime = binding.endTimeEditText.text.toString().trim()
         val venue = binding.venueEditText.text.toString().trim()
-        val agenda = binding.agendaEditText.text.toString().trim()
+        val theme = binding.agendaEditText.text.toString().trim()
         val isRecurring = false // Removed recurring switch from UI
 
         try {
@@ -256,16 +254,14 @@ class EditMeetingFragment : Fragment() {
             val endDate = dateFormat.parse(endDateTime)
 
             val meeting = Meeting(
-                id = meeting?.id ?: 0,
-                title = title,
-                description = "",
+                id = (meeting?.id ?: 0).toString(),
                 dateTime = startDate?.toInstant()?.atZone(java.time.ZoneId.systemDefault())
                     ?.toLocalDateTime()
                     ?: throw IllegalStateException("Invalid start date"),
                 endDateTime = endDate?.toInstant()?.atZone(java.time.ZoneId.systemDefault())
                     ?.toLocalDateTime(),
                 location = venue,
-                agenda = agenda,
+                theme = theme,
                 isRecurring = isRecurring,
                 createdBy = meeting?.createdBy ?: "",
                 createdAt = meeting?.createdAt ?: System.currentTimeMillis(),
@@ -360,7 +356,7 @@ class EditMeetingFragment : Fragment() {
             duration = Snackbar.LENGTH_LONG
         )
     }
-    
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

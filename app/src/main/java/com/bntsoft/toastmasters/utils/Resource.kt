@@ -1,9 +1,5 @@
 package com.bntsoft.toastmasters.utils
 
-/**
- * A generic class that holds a value with its loading status.
- * @param <T>
- */
 sealed class Resource<T>(
     val data: T? = null,
     val message: String? = null
@@ -21,8 +17,5 @@ sealed class Resource<T>(
     }
 }
 
-/**
- * `true` if [Resource] is of type [Success] & holds non-null [Success.data].
- */
 val Resource<*>.succeeded
     get() = this is Resource.Success && data != null
