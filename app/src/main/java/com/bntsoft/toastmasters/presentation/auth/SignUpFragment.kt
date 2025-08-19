@@ -255,7 +255,7 @@ class SignUpFragment : Fragment() {
             role = role, // Use selected role
             isApproved = role == UserRole.VP_EDUCATION, // Auto-approve VP Education
             isNewMember = true,
-            mentorIds = if (mentorName.isNotBlank()) listOf(mentorName) else emptyList()
+            mentorNames = if (mentorName.isNotBlank()) listOf(mentorName) else emptyList()
         )
 
         viewModel.signUp(user, binding.passwordEditText.text.toString())

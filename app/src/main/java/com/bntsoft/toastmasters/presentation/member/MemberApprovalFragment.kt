@@ -43,58 +43,19 @@ class MemberApprovalFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupToolbar()
+        // Use Activity toolbar; hide Activity menu icons on this screen
+        setHasOptionsMenu(true)
         setupRecyclerView()
-        setupClickListeners()
         observeViewModel()
 
-        // Set up tabs for filtering
-        setupTabs()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_member_approval, menu)
-
-        // Set up search functionality
-        val searchItem = menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as SearchView
-
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                viewModel.filterMembers(newText.orEmpty())
-                return true
-            }
-        })
-
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_refresh -> {
-                viewModel.refresh()
-                true
-            }
-
-            R.id.action_filter -> {
-                showFilterDialog()
-                true
-            }
-
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun setupToolbar() {
-        setHasOptionsMenu(true)
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().navigateUp()
-        }
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+        // Hide activity menu items for this screen
+        menu.findItem(R.id.action_reports)?.isVisible = false
+        menu.findItem(R.id.action_settings)?.isVisible = false
+        menu.findItem(R.id.action_notifications)?.isVisible = false
     }
 
     private fun setupRecyclerView() {
@@ -105,12 +66,8 @@ class MemberApprovalFragment : Fragment() {
             onRejectClick = { member ->
                 showRejectConfirmationDialog(member)
             },
-            onAssignMentorClick = { member ->
-                showMentorSelectionDialog(member)
-            },
-            onMentorClick = { member ->
-                // Show mentor details or edit mentor
-                showMentorSelectionDialog(member)
+            onApplyMentors = { member, names ->
+                viewModel.assignMentors(member, names)
             }
         )
 
@@ -125,38 +82,15 @@ class MemberApprovalFragment : Fragment() {
         }
     }
 
-    private fun setupClickListeners() {
-        binding.approveAllButton.setOnClickListener {
-            showApproveAllConfirmationDialog()
-        }
-    }
-
-    private fun setupTabs() {
-        binding.tabLayout.addOnTabSelectedListener(object :
-            com.google.android.material.tabs.TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: com.google.android.material.tabs.TabLayout.Tab?) {
-                when (tab?.position) {
-                    0 -> viewModel.setFilter(MemberApprovalFilter.ALL)
-                    1 -> viewModel.setFilter(MemberApprovalFilter.NEW_MEMBERS)
-                    2 -> viewModel.setFilter(MemberApprovalFilter.PENDING_APPROVAL)
-                }
-            }
-
-            override fun onTabUnselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
-            override fun onTabReselected(tab: com.google.android.material.tabs.TabLayout.Tab?) {}
-        })
-
-        // Set default tab
-        binding.tabLayout.getTabAt(1)?.select()
-    }
-
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // Observe members list
-                viewModel.members.collectLatest { members ->
-                    adapter.submitList(members)
-                    updateEmptyState(members.isEmpty())
+                // Observe filtered members list
+                viewModel.filteredMembers.collectLatest { members ->
+                    // Filter out approved members
+                    val pendingMembers = members.filter { !it.isApproved }
+                    adapter.submitList(pendingMembers)
+                    updateEmptyState(pendingMembers.isEmpty())
                 }
             }
         }
@@ -166,7 +100,7 @@ class MemberApprovalFragment : Fragment() {
                 // Observe loading state
                 viewModel.isLoading.collectLatest { isLoading ->
                     binding.progressBar.isVisible = isLoading
-                    binding.approveAllButton.isEnabled = !isLoading
+
                 }
             }
         }
@@ -197,8 +131,6 @@ class MemberApprovalFragment : Fragment() {
     private fun updateEmptyState(isEmpty: Boolean) {
         binding.emptyStateView.isVisible = isEmpty
         binding.membersRecyclerView.isVisible = !isEmpty
-        binding.approveAllButton.isVisible =
-            !isEmpty && viewModel.currentFilter == MemberApprovalFilter.PENDING_APPROVAL
     }
 
     private fun showApproveConfirmationDialog(member: User) {
@@ -223,48 +155,6 @@ class MemberApprovalFragment : Fragment() {
             .show()
     }
 
-    private fun showApproveAllConfirmationDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.approve_all_title)
-            .setMessage(R.string.approve_all_message)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                viewModel.approveAll()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
-    }
-
-    private fun showMentorSelectionDialog(member: User) {
-        // TODO: Implement mentor selection dialog
-        // This should show a list of available mentors and allow selection
-        // For now, we'll just show a placeholder message
-        showSuccessMessage("Mentor selection will be implemented here")
-    }
-
-    private fun showFilterDialog() {
-        val filters = arrayOf(
-            getString(R.string.filter_all),
-            getString(R.string.filter_new_members),
-            getString(R.string.filter_pending_approval)
-        )
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.filter_members)
-            .setSingleChoiceItems(filters, viewModel.currentFilter.ordinal) { dialog, which ->
-                viewModel.setFilter(MemberApprovalFilter.values()[which])
-                dialog.dismiss()
-            }
-            .setNegativeButton(android.R.string.cancel, null)
-            .show()
-    }
-
-    private fun showErrorSnackbar(message: String) {
-        UiUtils.showErrorWithRetry(
-            view = requireView(),
-            message = message,
-            retryAction = { viewModel.refresh() }
-        )
-    }
 
     private fun showErrorSnackbar(view: View, message: String) {
         UiUtils.showErrorWithRetry(

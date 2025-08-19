@@ -67,7 +67,8 @@ class UserService @Inject constructor(
                 "role" to user.role,
                 "isApproved" to user.isApproved,
                 "isNewMember" to user.isNewMember,
-                "mentorIds" to user.mentorIds,
+                "mentorNames" to user.mentorNames,
+                "mentorIds" to user.mentorNames, // Keep both for backward compatibility
                 "fcmToken" to user.fcmToken,
                 "updatedAt" to FieldValue.serverTimestamp()
             )

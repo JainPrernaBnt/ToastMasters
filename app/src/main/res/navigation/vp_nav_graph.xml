@@ -86,7 +86,7 @@
     <fragment
         android:id="@+id/memberApprovalFragment"
         android:name="com.bntsoft.toastmasters.presentation.member.MemberApprovalFragment"
-        android:label="fragment_member_approval"
+        android:label="@string/approve_member"
         tools:layout="@layout/fragment_member_approval" >
         <action
             android:id="@+id/action_memberApprovalFragment_to_dashboardFragment"

@@ -68,11 +68,21 @@ class FirestoreService @Inject constructor(
 
     // Pending approvals
     fun getPendingApprovals(): Flow<List<DocumentSnapshot>> = flow {
-        val snapshot = firestore.collection(USERS_COLLECTION)
-            .whereEqualTo("isApproved", false)
-            .get()
-            .await()
-        emit(snapshot.documents)
+        val collection = firestore.collection(USERS_COLLECTION)
+        // Query both the current 'isApproved' and legacy 'approved' flags and merge
+        val results = linkedMapOf<String, DocumentSnapshot>()
+
+        try {
+            val q1 = collection.whereEqualTo("isApproved", false).get().await()
+            q1.documents.forEach { results[it.id] = it }
+        } catch (_: Exception) { /* ignore partial failure */ }
+
+        try {
+            val q2 = collection.whereEqualTo("approved", false).get().await()
+            q2.documents.forEach { results[it.id] = it }
+        } catch (_: Exception) { /* ignore partial failure */ }
+
+        emit(results.values.toList())
     }
 
     // Mentors
@@ -88,14 +98,15 @@ class FirestoreService @Inject constructor(
     // Member operations
     suspend fun approveMember(
         userId: String,
-        mentorIds: List<String>,
+        mentorNames: List<String>,
         isNewMember: Boolean
     ): Boolean {
         return try {
             val updates = hashMapOf<String, Any>(
                 "isApproved" to true,
                 "isNewMember" to isNewMember,
-                "mentorIds" to mentorIds,
+                "mentorNames" to mentorNames,
+                "mentorIds" to mentorNames, // Keep both for backward compatibility
                 "updatedAt" to FieldValue.serverTimestamp()
             )
 

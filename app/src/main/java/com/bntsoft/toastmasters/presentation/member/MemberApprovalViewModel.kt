@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.presentation.member
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bntsoft.toastmasters.domain.models.MemberApprovalFilter
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,11 +36,15 @@ class MemberApprovalViewModel @Inject constructor(
     private val _successMessages = MutableStateFlow("")
     val successMessages = _successMessages.asStateFlow()
 
-    var currentFilter: MemberApprovalFilter = MemberApprovalFilter.NEW_MEMBERS
+    private val _mentors = MutableStateFlow<List<DomainUser>>(emptyList())
+    val mentors = _mentors.asStateFlow()
+
+    var currentFilter: MemberApprovalFilter = MemberApprovalFilter.PENDING_APPROVAL
         private set
 
     init {
         loadMembers()
+        loadMentors()
     }
 
     fun loadMembers() {
@@ -60,6 +65,18 @@ class MemberApprovalViewModel @Inject constructor(
 
     fun refresh() {
         loadMembers()
+    }
+
+    private fun loadMentors() {
+        viewModelScope.launch {
+            try {
+                memberRepository.getMentors().collectLatest { users ->
+                    _mentors.value = users
+                }
+            } catch (e: Exception) {
+                // non-fatal; just log to error state optionally
+            }
+        }
     }
 
     fun approveMember(member: DomainUser) {
@@ -110,19 +127,36 @@ class MemberApprovalViewModel @Inject constructor(
         }
     }
 
-    fun assignMentor(member: DomainUser, mentorId: String) {
+    fun assignMentor(member: DomainUser, mentorName: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val updatedMentorIds = member.mentorIds.toMutableList().apply {
-                    if (!contains(mentorId)) add(mentorId)
+                val updatedMentorNames = member.mentorNames.toMutableList().apply {
+                    if (!contains(mentorName)) add(mentorName)
                 }
-                val updatedMember = member.copy(mentorIds = updatedMentorIds)
+                val updatedMember = member.copy(mentorNames = updatedMentorNames)
                 memberRepository.updateMember(updatedMember)
                 _successMessages.value = "Mentor assigned successfully"
                 loadMembers() // Refresh the list
             } catch (e: Exception) {
                 _errorMessages.value = e.message ?: "Failed to assign mentor"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun assignMentors(member: DomainUser, mentorNames: List<String>) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val cleaned = mentorNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+                val updatedMember = member.copy(mentorNames = cleaned)
+                memberRepository.updateMember(updatedMember)
+                _successMessages.value = "Mentors updated successfully"
+                loadMembers()
+            } catch (e: Exception) {
+                _errorMessages.value = e.message ?: "Failed to update mentors"
             } finally {
                 _isLoading.value = false
             }

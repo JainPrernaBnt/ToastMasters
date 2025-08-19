@@ -56,40 +56,11 @@ class NotificationFragment : Fragment() {
         
         setupRecyclerView()
         setupSwipeRefresh()
-        setupClickListeners()
         observeViewModel()
         
         // Load notifications when the view is created
         viewModel.loadNotifications()
     }
-    
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_notifications, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-    
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                requireActivity().onBackPressed()
-                true
-            }
-            R.id.action_refresh -> {
-                viewModel.refreshNotifications()
-                true
-            }
-            R.id.action_mark_all_read -> {
-                viewModel.markAllNotificationsAsRead()
-                true
-            }
-            R.id.action_delete_all -> {
-                showDeleteAllConfirmation()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     private fun setupRecyclerView() {
         notificationAdapter = NotificationAdapter(
             onNotificationClick = { notification ->
@@ -116,15 +87,7 @@ class NotificationFragment : Fragment() {
         }
     }
 
-    private fun setupClickListeners() {
-        binding.fabMarkAllRead.setOnClickListener {
-            viewModel.markAllNotificationsAsRead()
-        }
 
-        binding.fabDeleteAll.setOnClickListener {
-            showDeleteAllConfirmation()
-        }
-    }
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -136,16 +99,7 @@ class NotificationFragment : Fragment() {
                     
                     // Update swipe refresh state
                     binding.swipeRefreshLayout.isRefreshing = state.isRefreshing
-                    
-                    // Update FABs state
-                    binding.fabMarkAllRead.isEnabled = state.notifications.any { !it.isRead } && 
-                            !state.isMarkingAsRead && 
-                            !state.isDeleting
-                    
-                    binding.fabDeleteAll.isEnabled = state.notifications.isNotEmpty() && 
-                            !state.isMarkingAsRead && 
-                            !state.isDeleting
-                    
+
                     // Update notifications list
                     notificationAdapter.submitList(state.notifications)
                     

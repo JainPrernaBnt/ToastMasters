@@ -7,32 +7,7 @@
     android:background="?attr/colorSurface"
     tools:context=".presentation.member.MemberApprovalFragment">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        app:elevation="0dp">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorSurface"
-            app:menu="@menu/menu_member_approval"
-            app:title="@string/title_pending_approvals"
-            app:titleTextColor="?attr/colorOnSurface" />
-
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tabLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorSurface"
-            app:tabIndicatorColor="?attr/colorPrimary"
-            app:tabMode="scrollable"
-            app:tabSelectedTextColor="?attr/colorPrimary"
-            app:tabTextColor="?android:attr/textColorSecondary" />
-
-    </com.google.android.material.appbar.AppBarLayout>
+    <!-- Use Activity's AppBar/Toolbar; title is provided by NavController label -->
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -49,21 +24,6 @@
             tools:listitem="@layout/item_member_approval" />
 
     </androidx.core.widget.NestedScrollView>
-
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/approveAllButton"
-        style="@style/Widget.Material3.ExtendedFloatingActionButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/space_large"
-        android:contentDescription="@string/approve_all"
-        android:text="@string/approve_all"
-        app:icon="@drawable/ic_check_circle"
-        app:iconTint="@android:color/white"
-        app:showMotionSpec="@animator/fab_show"
-        app:hideMotionSpec="@animator/fab_hide"
-        app:iconPadding="@dimen/space_small" />
 
     <ProgressBar
         android:id="@+id/progressBar"

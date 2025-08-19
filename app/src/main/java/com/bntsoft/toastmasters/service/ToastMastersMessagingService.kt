@@ -1,18 +1,26 @@
 package com.bntsoft.toastmasters.service
 
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.bntsoft.toastmasters.MainActivity
 import com.bntsoft.toastmasters.R
+import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.NotificationHelper
+import com.bntsoft.toastmasters.utils.PrefsManager
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -23,62 +31,122 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var notificationHelper: NotificationHelper
-    
+
+    @Inject
+    lateinit var firebaseAuth: FirebaseAuth
+
+    @Inject
+    lateinit var prefsManager: PrefsManager
+
+    @Inject
+    lateinit var userRepository: UserRepository
+
+    private val notificationManager by lazy {
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
     companion object {
-        private const val TAG = "ToastMastersFCM"
-        
-        // Actions
+        private const val TAG = "ToastMastersMsgService"
+        const val CHANNEL_ID_MEETINGS = "meetings_channel"
+
+        // Notification types
+        private const val TYPE_MEETING_CREATED = "MEETING_CREATED"
+        private const val TYPE_MEETING_UPDATED = "MEETING_UPDATED"
+        private const val TYPE_MEETING_REMINDER = "MEETING_REMINDER"
+
+        // Intent extras
+        private const val EXTRA_MEETING_ID = "meetingId"
+        private const val EXTRA_FRAGMENT = "fragment"
+        private const val FRAGMENT_MEETING_DETAILS = "meeting_details"
+
         const val ACTION_TOKEN_REFRESH = "com.bntsoft.toastmasters.ACTION_TOKEN_REFRESH"
     }
-    
+
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "ToastMastersMessagingService created")
+        Timber.d("ToastMastersMessagingService created")
     }
-    
+
     /**
      * Called when a new FCM token is generated.
      */
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "Refreshed FCM token: $token")
-        
+
         // Broadcast the token refresh to update it in the repository
         val intent = Intent(ACTION_TOKEN_REFRESH).apply {
             putExtra("token", token)
         }
         sendBroadcast(intent)
-        
+
         // Update the token in the repository
         updateTokenInRepository(token)
     }
-    
+
     /**
      * Called when a new FCM message is received.
      */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Log.d(TAG, "Message received from: ${remoteMessage.from}")
-        
-        // Check if message contains a data payload
-        if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
-            
-            // Handle the message in the background
-            handleMessageInBackground(remoteMessage)
-        }
-        
-        // Check if message contains a notification payload
-        remoteMessage.notification?.let { notification ->
-            Log.d(TAG, "Message Notification Body: ${notification.body}")
-            
-            // If the app is in the foreground, we can show the notification directly
-            if (!isAppInForeground()) {
-                notificationHelper.handleRemoteMessage(remoteMessage)
+        Timber.d("Message received from: ${remoteMessage.from}")
+
+        try {
+            // Check if message contains a data payload
+            if (remoteMessage.data.isNotEmpty()) {
+                Timber.d("Message data payload: ${remoteMessage.data}")
+
+                // Handle different types of notifications
+                when (remoteMessage.data["type"]) {
+                    TYPE_MEETING_CREATED -> handleMeetingCreated(remoteMessage)
+                    TYPE_MEETING_UPDATED -> handleMeetingUpdated(remoteMessage)
+                    TYPE_MEETING_REMINDER -> handleMeetingReminder(remoteMessage)
+                    else -> handleMessageInBackground(remoteMessage)
+                }
             }
+
+            // Check if message contains a notification payload
+            remoteMessage.notification?.let { notification ->
+                Timber.d("Message Notification: ${notification.title} - ${notification.body}")
+
+                // Show notification if app is in background or if it's a high priority message
+                if (!isAppInForeground() || remoteMessage.priority == RemoteMessage.PRIORITY_HIGH) {
+                    showNotification(notification, remoteMessage.data)
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error handling FCM message")
         }
     }
-    
+
+    private fun handleMeetingCreated(remoteMessage: RemoteMessage) {
+        try {
+            val data = remoteMessage.data
+            val meetingId = data["meetingId"] ?: return
+            val title = data["title"] ?: "New Meeting Scheduled"
+            val body = data["body"] ?: "A new meeting has been scheduled."
+            val date = data["date"]
+            val location = data["location"]
+
+            // Delegate to NotificationHelper
+            notificationHelper.showMeetingNotification(
+                meetingId = meetingId,
+                title = title,
+                message = body,
+                date = date,
+                location = location,
+                isReminder = false
+            )
+
+            Timber.d("Meeting created notification shown for meeting: $meetingId")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to handle meeting created notification")
+        }
+    }
+
+    private fun createMeetingPendingIntent(meetingId: String): PendingIntent {
+        return notificationHelper.createMeetingPendingIntent(meetingId)
+    }
+
     /**
      * Handle the message in a background coroutine
      */
@@ -87,16 +155,16 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
             try {
                 // Process the message data
                 processMessageData(remoteMessage.data)
-                
+
                 // Show the notification
                 notificationHelper.handleRemoteMessage(remoteMessage)
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing FCM message", e)
             }
         }
     }
-    
+
     /**
      * Process the data payload of the FCM message
      */
@@ -105,9 +173,9 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         val type = data["type"]
         val title = data["title"] ?: getString(R.string.app_name)
         val message = data["message"] ?: ""
-        
+
         Log.d(TAG, "Processing message - Type: $type, Title: $title, Message: $message")
-        
+
         // Handle different message types
         when (type) {
             NotificationHelper.TYPE_MEMBER_APPROVAL -> {
@@ -118,27 +186,31 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                     Log.d(TAG, "Member approved: $userId")
                 }
             }
+
             NotificationHelper.TYPE_MENTOR_ASSIGNMENT -> {
                 // Handle mentor assignment notification
                 val userId = data["user_id"]
                 val mentorId = data["mentor_id"]
-                Log.d(TAG, "Mentor assigned - User: $userId, Mentor: $mentorId")
+                Timber.d(TAG, "Mentor assigned - User: $userId, Mentor: $mentorId")
             }
+
             NotificationHelper.TYPE_MEETING_CREATED -> {
                 // Handle meeting created notification
                 val meetingId = data["meeting_id"]
                 meetingId?.let {
                     // Refresh the meetings list
-                    Log.d(TAG, "New meeting created: $meetingId")
+                    Timber.d(TAG, "New meeting created: $meetingId")
+                    updateTokenInRepository("token")
                 }
             }
+
             else -> {
                 // Handle other notification types or unknown types
-                Log.d(TAG, "Received unknown message type: $type")
+                Timber.d(TAG, "Received unknown message type: $type")
             }
         }
     }
-    
+
     /**
      * Check if the app is in the foreground
      */
@@ -146,30 +218,99 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         val appProcessInfo = android.app.ActivityManager.RunningAppProcessInfo()
         android.app.ActivityManager.getMyMemoryState(appProcessInfo)
         return appProcessInfo.importance == android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND ||
-               appProcessInfo.importance == android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
+                appProcessInfo.importance == android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
     }
-    
-    /**
-     * Update the FCM token in the repository
-     */
-    private fun updateTokenInRepository(token: String) {
-        // This will be handled by the FcmTokenManager
-        // We just need to ensure the token is passed to the repository
-        Log.d(TAG, "Updating FCM token in repository")
-    }
-    
-    /**
-     * Check if notifications are enabled for the app
-     */
+
     private fun areNotificationsEnabled(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // For Android O and above, check if the notification channel is enabled
-            val manager = getSystemService(NotificationManager::class.java)
-            val channel = manager.getNotificationChannel(NotificationHelper.CHANNEL_ID_DEFAULT)
-            channel.importance != NotificationManager.IMPORTANCE_NONE
+            val channel = notificationManager.getNotificationChannel(CHANNEL_ID_MEETINGS)
+            channel != null && channel.importance != NotificationManager.IMPORTANCE_NONE
         } else {
             // For older versions, check if notifications are enabled in system settings
             NotificationManagerCompat.from(this).areNotificationsEnabled()
+        }
+    }
+
+    private fun showNotification(
+        notification: RemoteMessage.Notification,
+        data: Map<String, String>
+    ) {
+        try {
+            val title = notification.title ?: getString(R.string.app_name)
+            val body = notification.body ?: ""
+
+            // Create pending intent if needed
+            val pendingIntent = data["click_action"]?.let { action ->
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    data.forEach { (key, value) ->
+                        putExtra(key, value)
+                    }
+                }
+                PendingIntent.getActivity(
+                    this,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+
+            // Delegate to NotificationHelper
+            notificationHelper.showNotification(
+                title = title,
+                message = body,
+                channelId = NotificationHelper.CHANNEL_ID_DEFAULT,
+                notificationId = System.currentTimeMillis().toInt(),
+                priority = NotificationCompat.PRIORITY_DEFAULT,
+                autoCancel = true,
+                pendingIntent = pendingIntent,
+                data = data
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to show notification")
+        }
+    }
+
+    private fun handleMeetingUpdated(remoteMessage: RemoteMessage) {
+        try {
+            val data = remoteMessage.data
+            val meetingId = data["meetingId"] ?: return
+            val title = data["title"] ?: "Meeting Updated"
+            val body = data["body"] ?: "A meeting has been updated."
+            val date = data["date"]
+            val location = data["location"]
+
+            notificationHelper.showMeetingNotification(
+                meetingId = meetingId,
+                title = title,
+                message = body,
+                date = date,
+                location = location,
+                isReminder = false
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to handle meeting updated notification")
+        }
+    }
+
+    private fun handleMeetingReminder(remoteMessage: RemoteMessage) {
+        try {
+            val data = remoteMessage.data
+            val meetingId = data["meetingId"] ?: return
+            val title = data["title"] ?: "Meeting Reminder"
+            val body = data["body"] ?: "You have a meeting starting soon."
+            val time = data["time"] ?: ""
+            val location = data["location"]
+
+            notificationHelper.showMeetingNotification(
+                meetingId = meetingId,
+                title = title,
+                message = "$body\n\nTime: $time",
+                location = location,
+                isReminder = true
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to handle meeting reminder notification")
         }
     }
 }

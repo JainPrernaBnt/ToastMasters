@@ -162,6 +162,16 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavigationListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
+            // Show/hide toolbar based on destination (hide for auth screens)
+            val isAuth = destination.id == R.id.loginFragment || destination.id == R.id.signUpFragment
+            if (isAuth) {
+                supportActionBar?.hide()
+                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+            } else {
+                supportActionBar?.show()
+                window.decorView.systemUiVisibility = 0
+            }
+
             // Handle back button visibility
             val isTopLevelDestination =
                 appBarConfiguration.topLevelDestinations.contains(destination.id)

@@ -44,6 +44,16 @@ class PrefsManager @Inject constructor(
     var areNotificationsEnabled: Boolean
         get() = prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true)
         set(value) = prefs.edit { putBoolean(KEY_NOTIFICATIONS_ENABLED, value) }
+        
+    var pendingTokenUpdate: String?
+        get() = prefs.getString(KEY_PENDING_TOKEN_UPDATE, null)
+        set(value) = prefs.edit { 
+            if (value == null) {
+                remove(KEY_PENDING_TOKEN_UPDATE)
+            } else {
+                putString(KEY_PENDING_TOKEN_UPDATE, value)
+            }
+        }
 
     fun clear() {
         prefs.edit().clear().apply()
@@ -58,5 +68,6 @@ class PrefsManager @Inject constructor(
         private const val KEY_FCM_TOKEN = "fcm_token"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
         private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        private const val KEY_PENDING_TOKEN_UPDATE = "pending_token_update"
     }
 }

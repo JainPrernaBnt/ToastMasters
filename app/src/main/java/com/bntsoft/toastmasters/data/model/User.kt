@@ -17,7 +17,7 @@ data class User(
     val clubId: String = "",
     val profileImageUrl: String = "",
     val fcmToken: String = "",
-    val mentorIds: List<String> = emptyList(),
+    val mentorNames: List<String> = emptyList(),
     val menteeIds: List<String> = emptyList(),
     val roles: List<UserRole> = emptyList(),
     val status: Status = Status.PENDING_APPROVAL,
@@ -70,7 +70,7 @@ data class User(
             "clubId" to clubId,
             "profileImageUrl" to profileImageUrl,
             "fcmToken" to fcmToken,
-            "mentorIds" to mentorIds,
+            "mentorNames" to mentorNames,
             "menteeIds" to menteeIds,
             "roles" to roles.map { it.name },
             "status" to status.name,
@@ -99,7 +99,7 @@ data class User(
                 clubId = map["clubId"] as? String ?: "",
                 profileImageUrl = map["profileImageUrl"] as? String ?: "",
                 fcmToken = map["fcmToken"] as? String ?: "",
-                mentorIds = (map["mentorIds"] as? List<*>)?.filterIsInstance<String>()
+                mentorNames = (map["mentorNames"] as? List<*>)?.filterIsInstance<String>()
                     ?: emptyList(),
                 menteeIds = (map["menteeIds"] as? List<*>)?.filterIsInstance<String>()
                     ?: emptyList(),

@@ -125,8 +125,13 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             val dto = meetingMapper.mapToDto(meeting).copy(meetingID = document.id)
             document.set(dto).await()
             val newMeeting = meetingMapper.mapToDomain(dto)
+            
+            // Send notification about the new meeting
+            sendMeetingNotification(newMeeting)
+            
             Result.success(newMeeting)
         } catch (e: Exception) {
+            Timber.e(e, "Failed to create meeting")
             Result.failure(e)
         }
     }
@@ -164,33 +169,66 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     override suspend fun sendMeetingNotification(meeting: Meeting): Result<Unit> {
         return try {
-            // Create a map with the notification data
+            // Get all approved members who should receive the notification
+            val usersSnapshot = firestore.collection("users")
+                .whereEqualTo("accountStatus", "APPROVED")
+                .get()
+                .await()
+                
+            val fcmTokens = usersSnapshot.documents
+                .mapNotNull { it.getString("fcmToken") }
+                .filter { it.isNotBlank() }
+                .toSet()
+                
+            if (fcmTokens.isEmpty()) {
+                Timber.w("No valid FCM tokens found for notification")
+                return Result.success(Unit)
+            }
+            
+            // Create notification data
             val notificationData = mapOf(
-                "to" to "/topics/${NotificationAudience.ALL}",
+                "registration_ids" to fcmTokens.toList(),
+                "priority" to "high",
                 "notification" to mapOf(
-                    "theme" to "New Meeting Scheduled: ${meeting.theme}",
-                    "body" to "Date: ${meeting.dateTime.toLocalDate()}\nTime: ${meeting.dateTime.toLocalTime()}\nLocation: ${meeting.location.takeIf { it.isNotBlank() } ?: "TBD"}",
-                    "click_action" to "OPEN_MEETING_DETAILS",
-                    "meeting_id" to meeting.id
+                    "title" to "New Meeting: ${meeting.theme}",
+                    "body" to "${meeting.dateTime.toLocalDate()} at ${meeting.dateTime.toLocalTime()}",
+                    "sound" to "default"
                 ),
                 "data" to mapOf(
-                    "type" to "NEW_MEETING",
-                    "meeting_id" to meeting.id,
-                    "title" to meeting.theme,
+                    "type" to "MEETING_CREATED",
+                    "meetingId" to meeting.id,
+                    "title" to "New Meeting: ${meeting.theme}",
+                    "body" to "${meeting.theme} on ${meeting.dateTime.toLocalDate()} at ${meeting.dateTime.toLocalTime()}",
                     "date" to meeting.dateTime.toString(),
-                    "location" to meeting.location
+                    "location" to meeting.location,
+                    "click_action" to "FLUTTER_NOTIFICATION_CLICK"
                 )
             )
-
-            // Send the notification using Firebase Cloud Messaging
-            val response = firestore.collection("notifications").add(notificationData).await()
-
-            if (response.id.isNotEmpty()) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Failed to send notification"))
+            
+            // Send to all tokens in batches (FCM allows up to 500 tokens per batch)
+            val batchSize = 500
+            fcmTokens.chunked(batchSize).forEach { batch ->
+                val batchData = notificationData.toMutableMap()
+                batchData["registration_ids"] = batch
+                
+                // Store notification in Firestore for history and offline access
+                firestore.collection("notifications").add(mapOf(
+                    "type" to "MEETING_CREATED",
+                    "meetingId" to meeting.id,
+                    "title" to "New Meeting: ${meeting.theme}",
+                    "body" to "${meeting.theme} on ${meeting.dateTime.toLocalDate()}",
+                    "timestamp" to System.currentTimeMillis(),
+                    "sentTo" to batch.size,
+                    "data" to notificationData["data"]
+                )).await()
+                
+                // Log the notification
+                Timber.d("Sent meeting notification to ${batch.size} devices")
             }
+            
+            Result.success(Unit)
         } catch (e: Exception) {
+            Timber.e(e, "Failed to send meeting notification")
             Result.failure(e)
         }
     }

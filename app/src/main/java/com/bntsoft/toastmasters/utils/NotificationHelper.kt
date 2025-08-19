@@ -18,6 +18,7 @@ import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,12 +34,17 @@ class NotificationHelper @Inject constructor(
         // Notification channel IDs
         const val CHANNEL_ID_DEFAULT = "default_channel"
         const val CHANNEL_ID_IMPORTANT = "important_channel"
+        const val CHANNEL_ID_MEETINGS = "meetings_channel"
         
         // Notification IDs
         const val NOTIFICATION_ID_MEMBER_APPROVED = 1001
         const val NOTIFICATION_ID_MENTOR_ASSIGNED = 1002
         const val NOTIFICATION_ID_MEETING_CREATED = 1003
+        const val NOTIFICATION_ID_MEETING_UPDATED = 1004
+        const val NOTIFICATION_ID_MEETING_REMINDER = 1005
         
+        // Notification types
+
         // Topic for all users
         private const val TOPIC_ALL = "all_users"
         
@@ -47,6 +53,10 @@ class NotificationHelper @Inject constructor(
         
         // Topic for VP Education
         private const val TOPIC_VP_EDUCATION = "vp_education"
+        
+        // Intent extras
+        const val EXTRA_FRAGMENT = "fragment"
+        const val FRAGMENT_MEETING_DETAILS = "meeting_details"
         
         // Topic for club officers
         private const val TOPIC_OFFICERS = "officers"
@@ -71,29 +81,46 @@ class NotificationHelper @Inject constructor(
         createNotificationChannels()
     }
 
-    private fun createNotificationChannels() {
+    /**
+     * Initialize notification channels
+     */
+    fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Default channel for general notifications
             val defaultChannel = NotificationChannel(
                 CHANNEL_ID_DEFAULT,
-                context.getString(R.string.notification_channel_default),
+                context.getString(R.string.default_notification_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = context.getString(R.string.notification_channel_default_description)
+                description = context.getString(R.string.default_notification_channel_description)
             }
-            
-            // Important channel for high-priority notifications
+
             val importantChannel = NotificationChannel(
                 CHANNEL_ID_IMPORTANT,
-                context.getString(R.string.notification_channel_important),
+                context.getString(R.string.important_notification_channel_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = context.getString(R.string.notification_channel_important_description)
+                description = context.getString(R.string.important_notification_channel_description)
+                setShowBadge(true)
                 enableVibration(true)
             }
             
-            // Register the channels with the system
-            notificationManager.createNotificationChannels(listOf(defaultChannel, importantChannel))
+            val meetingsChannel = NotificationChannel(
+                CHANNEL_ID_MEETINGS,
+                context.getString(R.string.meetings_notification_channel_name),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = context.getString(R.string.meetings_notification_channel_description)
+                setShowBadge(true)
+                enableVibration(true)
+                enableLights(true)
+                lightColor = context.getColor(R.color.colorPrimary)
+                lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
+            }
+
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            notificationManager?.createNotificationChannels(
+                listOf(defaultChannel, importantChannel, meetingsChannel)
+            )
         }
     }
 
@@ -148,61 +175,38 @@ class NotificationHelper @Inject constructor(
     }
     
 
+    /**
+     * Show a notification
+     */
     fun showNotification(
         title: String,
         message: String,
-        notificationId: Int = System.currentTimeMillis().toInt(),
         channelId: String = CHANNEL_ID_DEFAULT,
+        notificationId: Int = System.currentTimeMillis().toInt(),
         priority: Int = NotificationCompat.PRIORITY_DEFAULT,
         autoCancel: Boolean = true,
-        data: Map<String, String>? = null
+        pendingIntent: PendingIntent? = null,
+        style: NotificationCompat.Style? = null,
+        actions: List<NotificationCompat.Action> = emptyList()
     ) {
-        // Create an explicit intent for the MainActivity
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            data?.forEach { (key, value) ->
-                putExtra(key, value)
-            }
-        }
-        
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        // Get the appropriate icon based on notification type
-        val iconResId = when (data?.get("type")) {
-            TYPE_MEETING_CREATED, TYPE_MEETING_REMINDER -> R.drawable.ic_notification_meeting
-            TYPE_MENTOR_ASSIGNMENT -> R.drawable.ic_notification_mentor
-            else -> R.drawable.ic_notification_default
-        }
-        
-        // Build the notification
         val builder = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(iconResId)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(priority)
             .setAutoCancel(autoCancel)
-            .setContentIntent(pendingIntent)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-        
-        // Show the notification
+            .apply {
+                style?.let { setStyle(it) }
+                pendingIntent?.let { setContentIntent(it) }
+                actions.forEach { addAction(it) }
+            }
+
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
+            NotificationManagerCompat.from(context).notify(notificationId, builder.build())
         }
         notificationManager.notify(notificationId, builder.build())
     }
@@ -314,6 +318,87 @@ class NotificationHelper @Inject constructor(
      */
     fun cancelAllNotifications() {
         notificationManager.cancelAll()
+    }
+    
+    /**
+     * Show a meeting notification with appropriate styling and actions
+     */
+    fun showMeetingNotification(
+        meetingId: String,
+        title: String,
+        message: String,
+        date: String? = null,
+        location: String? = null,
+        isReminder: Boolean = false
+    ) {
+        try {
+            // Build the notification content
+            val notificationId = System.currentTimeMillis().toInt()
+            val channelId = if (isReminder) CHANNEL_ID_IMPORTANT else CHANNEL_ID_MEETINGS
+            val priority = if (isReminder) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT
+            
+            // Create the notification style
+            val style = NotificationCompat.BigTextStyle()
+                .setBigContentTitle(title)
+                .bigText(buildMeetingNotificationText(message, date, location))
+            
+            // Create the pending intent for the notification
+            val pendingIntent = createMeetingPendingIntent(meetingId)
+            
+            // Build and show the notification
+            showNotification(
+                title = title,
+                message = message,
+                channelId = channelId,
+                notificationId = notificationId,
+                priority = priority,
+                pendingIntent = pendingIntent,
+                style = style,
+                actions = listOf(
+                    NotificationCompat.Action.Builder(
+                        R.drawable.ic_calendar,
+                        context.getString(R.string.view_meeting),
+                        pendingIntent
+                    ).build()
+                )
+            )
+            
+            Timber.d("Meeting notification shown: $title")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to show meeting notification")
+        }
+    }
+    
+    /**
+     * Create a pending intent for opening meeting details
+     */
+    fun createMeetingPendingIntent(meetingId: String): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(EXTRA_MEETING_ID, meetingId)
+            putExtra(EXTRA_FRAGMENT, FRAGMENT_MEETING_DETAILS)
+        }
+        return PendingIntent.getActivity(
+            context,
+            System.currentTimeMillis().toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+    
+    /**
+     * Build the notification text with meeting details
+     */
+    private fun buildMeetingNotificationText(
+        message: String,
+        date: String?,
+        location: String?
+    ): String {
+        return buildString {
+            append(message)
+            date?.let { append("\n\nDate: $it") }
+            location?.let { append("\nLocation: $it") }
+        }
     }
 }
 

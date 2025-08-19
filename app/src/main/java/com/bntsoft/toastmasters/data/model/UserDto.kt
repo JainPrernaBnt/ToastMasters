@@ -20,7 +20,7 @@ data class UserDto(
     val role: String = "MEMBER", // "VP_EDUCATION" or "MEMBER"
     val isApproved: Boolean = false,
     val isNewMember: Boolean = true,
-    val mentorIds: List<String> = emptyList(),
+    val mentorNames: List<String> = emptyList(),
     val fcmToken: String? = null,
     val isRejected: Boolean = false,
     val rejectionReason: String? = null,

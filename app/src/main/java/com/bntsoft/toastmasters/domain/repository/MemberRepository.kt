@@ -7,7 +7,7 @@ interface MemberRepository {
 
     fun getPendingApprovals(): Flow<List<User>>
 
-    suspend fun approveMember(userId: String, mentorIds: List<String>, isNewMember: Boolean): Boolean
+    suspend fun approveMember(userId: String, mentorNames: List<String>, isNewMember: Boolean): Boolean
 
     suspend fun rejectMember(userId: String, reason: String? = null): Boolean
 

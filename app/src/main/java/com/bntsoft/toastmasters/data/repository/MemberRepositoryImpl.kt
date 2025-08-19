@@ -27,8 +27,8 @@ class MemberRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun approveMember(userId: String, mentorIds: List<String>, isNewMember: Boolean): Boolean {
-        val ok = firestoreService.approveMember(userId, mentorIds, isNewMember)
+    override suspend fun approveMember(userId: String, mentorNames: List<String>, isNewMember: Boolean): Boolean {
+        val ok = firestoreService.approveMember(userId, mentorNames, isNewMember)
         if (ok) {
             val notification = NotificationData(
                 title = "Membership approved",

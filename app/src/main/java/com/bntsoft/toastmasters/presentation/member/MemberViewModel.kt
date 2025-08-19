@@ -73,19 +73,19 @@ class MemberViewModel @Inject constructor(
     /**
      * Approves a member's registration.
      * @param userId ID of the member to approve
-     * @param mentorIds List of mentor user IDs to assign
+     * @param mentorNames List of mentor names to assign
      * @param isNewMember Whether this is a new member
      * @param onComplete Callback with the result
      */
     fun approveMember(
         userId: String,
-        mentorIds: List<String>,
+        mentorNames: List<String>,
         isNewMember: Boolean,
         onComplete: (Result<Boolean>) -> Unit
     ) {
         viewModelScope.launch {
             try {
-                val success = memberRepository.approveMember(userId, mentorIds, isNewMember)
+                val success = memberRepository.approveMember(userId, mentorNames, isNewMember)
                 if (success) {
                     onComplete(Result.Success(true))
                 } else {

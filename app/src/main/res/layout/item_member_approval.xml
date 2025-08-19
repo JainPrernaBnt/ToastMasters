@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardView"
-    style="@style/Widget.Material3.CardView.Elevated"
+    style="@style/Widget.Material3.CardView.Outlined"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/space_small"
-    app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="12dp"
+    android:layout_marginHorizontal="@dimen/space_medium"
+    android:layout_marginVertical="@dimen/space_xsmall"
+    app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:strokeColor="?attr/colorOutline"
-    app:strokeWidth="1dp">
+    app:strokeColor="?attr/colorOutlineVariant">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -23,10 +23,8 @@
             android:id="@+id/avatarImageView"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:layout_marginEnd="@dimen/space_medium"
             android:contentDescription="@string/member_avatar"
             android:scaleType="centerCrop"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:shapeAppearanceOverlay="@style/CircleImageView"
@@ -34,154 +32,180 @@
             app:tint="?attr/colorOnSurfaceVariant"
             tools:src="@drawable/ic_person" />
 
-        <!-- Member Name -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/nameTextView"
-            style="@style/TextAppearance.Material3.TitleMedium"
+        <!-- Member Info Group -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/memberInfoLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/space_small"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="?android:attr/textColorPrimary"
-            app:layout_constraintEnd_toStartOf="@+id/approveButton"
-            app:layout_constraintStart_toEndOf="@id/avatarImageView"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="John Doe" />
-
-        <!-- Member Email -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/emailTextView"
-            style="@style/TextAppearance.Material3.BodyMedium"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xxsmall"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="?android:attr/textColorSecondary"
-            app:layout_constraintEnd_toEndOf="@id/nameTextView"
-            app:layout_constraintStart_toStartOf="@id/nameTextView"
-            app:layout_constraintTop_toBottomOf="@id/nameTextView"
-            tools:text="john.doe@example.com" />
-
-        <!-- Member Phone -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/phoneTextView"
-            style="@style/TextAppearance.Material3.BodyMedium"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xxsmall"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="?android:attr/textColorSecondary"
-            app:drawableStartCompat="@drawable/ic_phone"
-            app:drawableTint="?attr/colorOnSurfaceVariant"
-            app:drawablePadding="4dp"
-            app:layout_constraintEnd_toEndOf="@id/nameTextView"
-            app:layout_constraintStart_toStartOf="@id/nameTextView"
-            app:layout_constraintTop_toBottomOf="@id/emailTextView"
-            tools:text="+1 (555) 123-4567" />
-
-        <!-- Joined Date -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/joinedDateTextView"
-            style="@style/TextAppearance.Material3.BodySmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xsmall"
-            android:drawablePadding="4dp"
-            android:textColor="?android:attr/textColorTertiary"
-            app:drawableStartCompat="@drawable/ic_calendar_today"
-            app:drawableTint="?attr/colorOnSurfaceVariant"
-            app:layout_constraintStart_toStartOf="@id/nameTextView"
-            app:layout_constraintTop_toBottomOf="@id/phoneTextView"
-            tools:text="Joined: 2 days ago" />
-
-        <!-- Approve Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/approveButton"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_small"
-            android:minWidth="0dp"
-            android:paddingHorizontal="@dimen/space_small"
-            android:text="@string/approve"
-            android:textColor="?attr/colorPrimary"
-            app:icon="@drawable/ic_check_circle"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconTint="?attr/colorPrimary"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginStart="@dimen/space_medium"
+            app:layout_constraintStart_toEndOf="@+id/avatarImageView"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:rippleColor="?attr/colorPrimaryContainer"
-            tools:ignore="ContentDescription" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Reject Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/rejectButton"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_small"
-            android:minWidth="0dp"
-            android:paddingHorizontal="@dimen/space_small"
-            android:text="@string/reject"
-            android:textColor="?attr/colorError"
-            app:icon="@drawable/ic_cancel"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconTint="?attr/colorError"
-            app:layout_constraintBottom_toBottomOf="@id/approveButton"
-            app:layout_constraintEnd_toStartOf="@id/approveButton"
-            app:layout_constraintTop_toTopOf="@id/approveButton"
-            app:rippleColor="?attr/colorErrorContainer"
-            tools:ignore="ContentDescription" />
+            <!-- Member Name -->
+            <TextView
+                android:id="@+id/nameTextView"
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="?android:attr/textColorPrimary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Johnathan Doe" />
 
-        <!-- Assign Mentor Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/assignMentorButton"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_small"
-            android:minWidth="0dp"
-            android:paddingHorizontal="@dimen/space_small"
-            android:text="@string/assign_mentor"
-            android:textColor="?attr/colorPrimary"
-            app:icon="@drawable/ic_people"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconTint="?attr/colorPrimary"
-            app:layout_constraintEnd_toEndOf="@id/nameTextView"
-            app:layout_constraintStart_toStartOf="@id/nameTextView"
-            app:layout_constraintTop_toBottomOf="@id/joinedDateTextView"
-            app:rippleColor="?attr/colorPrimaryContainer"
-            tools:visibility="visible" />
+            <!-- Member Email -->
+            <TextView
+                android:id="@+id/emailTextView"
+                style="@style/TextAppearance.Material3.BodyMedium"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xxsmall"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="?android:attr/textColorSecondary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/nameTextView"
+                tools:text="john.doe@example.com" />
 
-        <!-- Current Mentor (Visible when assigned) -->
-        <com.google.android.material.chip.Chip
-            android:id="@+id/mentorChip"
-            style="@style/Widget.Material3.Chip.Assist"
-            android:layout_width="wrap_content"
+            <!-- Member Phone -->
+            <TextView
+                android:id="@+id/phoneTextView"
+                style="@style/TextAppearance.Material3.BodyMedium"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xxsmall"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="?android:attr/textColorSecondary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/emailTextView"
+                tools:text="+1 (555) 123-4567" />
+
+            <!-- Joined Date -->
+            <TextView
+                android:id="@+id/joinedDateTextView"
+                style="@style/TextAppearance.Material3.BodySmall"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                android:textColor="?android:attr/textColorTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/phoneTextView"
+                tools:text="Joined: 2 days ago" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:id="@+id/actionButtonsContainer"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_small"
-            android:checkable="false"
-            android:clickable="false"
-            android:focusable="false"
-            app:chipBackgroundColor="?attr/colorSecondaryContainer"
-            app:chipIcon="@drawable/ic_mentor"
-            app:chipIconTint="?attr/colorOnSecondaryContainer"
-            app:chipStrokeWidth="0dp"
-            app:chipTextColor="?attr/colorOnSecondaryContainer"
-            app:closeIcon="@drawable/ic_edit"
-            app:closeIconTint="?attr/colorOnSecondaryContainer"
-            app:layout_constraintStart_toStartOf="@id/nameTextView"
-            app:layout_constraintTop_toBottomOf="@id/joinedDateTextView"
-            tools:text="Mentor: Jane Smith"
-            tools:visibility="gone" />
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="@dimen/space_medium"
+            app:layout_constraintTop_toBottomOf="@+id/memberInfoLayout"
+            app:layout_constraintStart_toStartOf="@+id/memberInfoLayout"
+            app:layout_constraintEnd_toEndOf="@+id/memberInfoLayout"
+            tools:visibility="visible">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/rejectButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/reject"
+                android:textColor="?attr/colorError" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/approveButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_small"
+                android:text="@string/approve" />
+        </LinearLayout>
+
+        <!-- Mentors Section -->
+        <LinearLayout
+            android:id="@+id/mentorsSection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="@dimen/space_medium"
+            app:layout_constraintTop_toBottomOf="@+id/actionButtonsContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mentors"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:layout_centerVertical="true"
+                    android:layout_alignParentStart="true" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/assignMentorButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/assign_mentor"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true" />
+            </RelativeLayout>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/mentorsChipGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_small"
+                app:chipSpacingHorizontal="@dimen/space_small" />
+
+            <LinearLayout
+                android:id="@+id/mentorInputLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="@dimen/space_medium"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/mentorNamesInput"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="@string/hint_mentor_names">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/mentorNamesEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:inputType="textPersonName|textCapWords"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/applyMentorsButton"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_small"
+                    app:icon="@drawable/ic_check" />
+            </LinearLayout>
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </com.google.android.material.card.MaterialCardView>

@@ -27,7 +27,7 @@ class UserEntityMapper @Inject constructor() {
             },
             isApproved = entity.isApproved,
             isNewMember = entity.mentorAssignedBy == null, // Assuming new if no mentor assigned
-            mentorIds = if (entity.mentor.isNotBlank()) {
+            mentorNames = if (entity.mentor.isNotBlank()) {
                 listOf(entity.mentor)
             } else {
                 emptyList()
@@ -53,9 +53,9 @@ class UserEntityMapper @Inject constructor() {
             hasVpPermission = domain.role == UserRole.VP_EDUCATION,
             clubId = domain.clubId.toIntOrNull() ?: 0,
             toastmastersId = domain.toastmastersId.toIntOrNull() ?: 0,
-            mentor = domain.mentorIds.firstOrNull() ?: "",
-            mentorAssignedBy = if (domain.mentorIds.isNotEmpty()) "system" else null,
-            mentorAssignedDate = if (domain.mentorIds.isNotEmpty()) {
+            mentor = domain.mentorNames.firstOrNull() ?: "",
+            mentorAssignedBy = if (domain.mentorNames.isNotEmpty()) "system" else null,
+            mentorAssignedDate = if (domain.mentorNames.isNotEmpty()) {
                 domain.updatedAt.time
             } else {
                 null
