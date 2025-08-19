@@ -1,7 +1,7 @@
 package com.bntsoft.toastmasters.data.local.converters
 
 import androidx.room.TypeConverter
-import com.bntsoft.toastmasters.domain.model.ReportType
+import com.bntsoft.toastmasters.domain.models.ReportType
 
 class ReportTypeConverter {
     @TypeConverter

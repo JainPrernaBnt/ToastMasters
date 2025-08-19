@@ -45,7 +45,7 @@
     <string name="ic_location">Location icon</string>
     <string name="ic_theme">Theme icon</string>
     <string name="ic_delete">Delete icon</string>
-    
+
     <!-- Auth Flow -->
     <string name="action_login_to_main_navigation">action_login_to_main_navigation</string>
     <string name="action_login_to_signUpFragment">action_login_to_signUpFragment</string>
@@ -68,7 +68,7 @@
     <string name="error_password_too_short">Password must be at least 6 characters long</string>
     <string name="error_passwords_dont_match">Passwords don\'t match</string>
     <string name="error_select_mentor">Please select a mentor</string>
-    
+
     <!-- Member Approval -->
     <string name="approve_member_title">Approve Member</string>
     <string name="approve_member_message">Are you sure you want to approve this member?</string>
@@ -83,9 +83,12 @@
 
     <!-- Sign Up Screen -->
     <string name="has_mentor">Do you have a mentor?</string>
-    <string name="hint_select_mentor">Select Mentor</string>
+    <string name="hint_enter_mentor_name">Enter mentor\'s name</string>
     <string name="already_have_account">Already have an account? </string>
-    
+    <string name="error_select_role">Please select a role</string>
+    <string name="role_vp_education">VP Education</string>
+    <string name="role_member">Club Member</string>
+
     <!-- Member Approval -->
     <string name="approve">Approve</string>
     <string name="not_provided">Not provided</string>
@@ -93,14 +96,14 @@
     <string name="mentor_assigned_placeholder">Mentor assigned</string>
     <string name="reject">Reject</string>
     <string name="no_response">No Response</string>
-    
+
     <!-- Member Roles -->
     <string name="preferred_roles_label">Preferred Roles</string>
     <string name="preferred">Preferred</string>
     <string name="assign_role">Assign Role</string>
     <string name="select_role">Select Role</string>
     <string name="assign_backup">Assign Backup</string>
-    
+
     <!-- Meetings -->
     <string name="recurring_meeting">Recurring Meeting</string>
     <string name="ic_check">Check icon</string>
@@ -133,7 +136,6 @@
     <string name="assigned_roles">Assigned Roles</string>
     <string name="auto_assign">Auto Assign\n</string>
     <string name="clear_all">Clear All</string>
-    <string name="settings">Settings\n</string>
     <string name="leaderboard">Leaderboard</string>
 
     <!-- Availability -->
@@ -174,14 +176,12 @@
     <string name="assign_mentor">Assign Mentor</string>
 
     <!-- General -->
-    <string name="cancel">Cancel</string>
     <string name="ok">OK</string>
-    <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="loading">Loading...</string>
     <string name="error">Error</string>
     <string name="success">Success</string>
-    
+
     <!-- Missing strings -->
     <string name="select_date_range">Select Date Range</string>
     <string name="from_date">From Date</string>
@@ -192,7 +192,7 @@
     <string name="your_availability">Your Availability</string>
     <string name="not_confirmed">Not Confirmed</string>
     <string name="no_roles_available">No roles available</string>
-    
+
     <!-- Notification -->
     <string name="confirm_delete_notification_title">Delete Notification</string>
     <string name="confirm_delete_notification_message">Are you sure you want to delete this notification?</string>
@@ -204,7 +204,7 @@
     <string name="available_members_preferred_roles">Available Members (Preferred Roles)</string>
     <string name="members_not_responded">Members Not Responded</string>
     <string name="not_confirmed_members">Not Confirmed Members</string>
-    
+
     <!-- More missing strings -->
     <string name="title_edit_meeting">Edit Meeting</string>
     <string name="agenda">Agenda</string>
@@ -221,7 +221,7 @@
     <string name="add_meeting">Add Meeting</string>
     <string name="title_pending_approvals">Pending Approvals</string>
     <string name="approve_all">Approve All</string>
-    
+
     <!-- Additional missing strings -->
     <string name="no_pending_approvals">No pending approvals</string>
     <string name="hint_full_name">Full Name</string>
@@ -273,6 +273,13 @@
     <string name="more_options">More options</string>
     <string name="btn_edit">Edit</string>
 
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="account_settings">Account Settings</string>
+    <string name="logout_confirmation">Are you sure you want to logout?</string>
+    <string name="yes">Yes</string>
+    <string name="cancel">Cancel</string>
+
     <!-- Notification Messages -->
     <string name="notification_member_approved_title">Membership Approved</string>
     <string name="notification_member_approved_message">Your membership has been approved. Welcome to the club!</string>
@@ -306,4 +313,6 @@
     <string name="notification_channel_default_description">General notifications</string>
     <string name="notification_channel_important">Important</string>
     <string name="notification_channel_important_description">Important notifications that require your attention</string>
+    <string name="logout">Logout</string>
+    <string name="notification">notification</string>
 </resources>

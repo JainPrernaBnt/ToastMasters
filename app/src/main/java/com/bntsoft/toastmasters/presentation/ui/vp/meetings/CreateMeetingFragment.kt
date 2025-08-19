@@ -104,26 +104,25 @@ class CreateMeetingFragment : Fragment() {
         // Set default date to next Saturday
         val calendar = Calendar.getInstance()
         if (meetingForms.isNotEmpty()) {
-            // If there are existing forms, base the new date on the last one
             val lastMeetingCalendar = meetingForms.last().startCalendar
             calendar.time = lastMeetingCalendar.time
-            calendar.add(Calendar.DAY_OF_MONTH, 7) // Add 7 days for the next week
+            calendar.add(Calendar.DAY_OF_MONTH, 7)
         } else {
-            // For the first form, find the next Saturday from today
             val today = calendar.get(Calendar.DAY_OF_WEEK)
             val daysUntilSaturday = (Calendar.SATURDAY - today + 7) % 7
-            calendar.add(Calendar.DAY_OF_WEEK, if (daysUntilSaturday == 0) 7 else daysUntilSaturday)
+            calendar.add(
+                Calendar.DAY_OF_MONTH,
+                if (daysUntilSaturday == 0) 7 else daysUntilSaturday
+            )
         }
 
         // Set default start time (5:30 PM)
-        val startTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 17) // 5 PM
+        val startTime = (calendar.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 17)
             set(Calendar.MINUTE, 30)
         }
-
-        // Set default end time (7:30 PM)
-        val endTime = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 19) // 7 PM
+        val endTime = (calendar.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 19)
             set(Calendar.MINUTE, 30)
         }
 
@@ -292,7 +291,8 @@ class CreateMeetingFragment : Fragment() {
             val endLocalDateTime =
                 LocalDateTime.ofInstant(finalEndCalendar.toInstant(), ZoneId.systemDefault())
 
-            val roles = formData.binding.roleChipGroup.children.map { (it as Chip).text.toString() }.toList()
+            val roles = formData.binding.roleChipGroup.children.map { (it as Chip).text.toString() }
+                .toList()
 
             val meeting = Meeting(
                 theme = theme, // Using theme as title

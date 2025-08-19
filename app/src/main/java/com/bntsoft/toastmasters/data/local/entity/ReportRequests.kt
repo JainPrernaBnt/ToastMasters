@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.bntsoft.toastmasters.data.local.converters.ReportTypeConverter
-import com.bntsoft.toastmasters.domain.model.ReportType
+import com.bntsoft.toastmasters.domain.models.ReportType
 
 @Entity(tableName = "report_requests")
 @TypeConverters(ReportTypeConverter::class)

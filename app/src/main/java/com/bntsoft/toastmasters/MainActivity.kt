@@ -55,8 +55,6 @@ class MainActivity : BaseActivity() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
-        
-        // We'll set the appropriate navigation graph based on the user role below
 
         // Setup bottom navigation
         bottomNav = binding.bottomNavView
@@ -64,8 +62,12 @@ class MainActivity : BaseActivity() {
         // Setup action bar with nav controller
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        // Show Login first
-        setupAuthNavigation()
+        if (preferenceManager.isLoggedIn) {
+            val role = preferenceManager.getUserRole() ?: UserRole.MEMBER
+            setupBottomNavForUser(role)
+        } else {
+            setupAuthNavigation()
+        }
 
         // Setup navigation listener
         setupNavigationListener()
@@ -86,6 +88,7 @@ class MainActivity : BaseActivity() {
                 }
                 true
             }
+
             R.id.action_settings -> {
                 // Navigate to settings
                 if (navController.currentDestination?.id != R.id.settingsFragment) {
@@ -93,6 +96,15 @@ class MainActivity : BaseActivity() {
                 }
                 true
             }
+
+            R.id.action_notifications -> {
+                // Navigate to member approval
+                if (navController.currentDestination?.id != R.id.memberApprovalFragment) {
+                    navController.navigate(R.id.memberApprovalFragment)
+                }
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -151,7 +163,8 @@ class MainActivity : BaseActivity() {
     private fun setupNavigationListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             // Handle back button visibility
-            val isTopLevelDestination = appBarConfiguration.topLevelDestinations.contains(destination.id)
+            val isTopLevelDestination =
+                appBarConfiguration.topLevelDestinations.contains(destination.id)
             supportActionBar?.let { actionBar ->
                 actionBar.setDisplayHomeAsUpEnabled(!isTopLevelDestination)
             }

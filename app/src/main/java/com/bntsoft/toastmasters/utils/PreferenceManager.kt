@@ -19,13 +19,11 @@ class PreferenceManager @Inject constructor(
         private const val KEY_USER_ROLE = "user_role"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
     }
-    
+
     var isLoggedIn: Boolean
         get() = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
-        set(value) = sharedPreferences.edit {
-            putBoolean(KEY_IS_LOGGED_IN, value)
-            apply()
-        }
+        set(value) = sharedPreferences.edit().putBoolean(KEY_IS_LOGGED_IN, value).apply()
+
 
     fun saveUserRole(role: UserRole) {
         sharedPreferences.edit {

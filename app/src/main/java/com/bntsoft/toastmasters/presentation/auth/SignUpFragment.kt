@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
@@ -48,6 +49,8 @@ class SignUpFragment : Fragment() {
     private var selectedMentorId: String? = null
     private var mentorsList: List<Pair<String, String>> = emptyList() // Pair of (id, name)
 
+    private var formSubmitted: Boolean = false
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -64,8 +67,6 @@ class SignUpFragment : Fragment() {
         setupClickListeners()
         observeViewModel()
 
-        // Load mentors if needed
-        // viewModel.loadMentors() // Uncomment when implementing mentor loading
     }
 
     private fun setupForm() {
@@ -131,6 +132,8 @@ class SignUpFragment : Fragment() {
             }
             validateForm()
         }
+
+        // Setup role selection - no navigation needed here, just handle the selection
     }
 
     private fun setupClickListeners() {
@@ -139,7 +142,7 @@ class SignUpFragment : Fragment() {
             attemptSignUp()
         }
 
-        binding.loginButton.setOnClickListener {
+        binding.loginTextView.setOnClickListener {
             findNavController().navigateUp()
         }
     }
@@ -213,118 +216,122 @@ class SignUpFragment : Fragment() {
     }
 
     private fun attemptSignUp() {
+        formSubmitted = true
         if (!validateForm()) return
 
+        val name = binding.nameEditText.text.toString().trim()
+        val email = binding.emailEditText.text.toString().trim()
+        val phone = binding.phoneEditText.text.toString().trim()
+        val address = binding.addressEditText.text.toString().trim()
+        val gender = selectedGender ?: ""
+        val joinedDate = binding.joinedDateEditText.text.toString()
+        val toastmastersId = binding.toastmastersIdEditText.text.toString().trim()
+        val clubId = binding.clubIdEditText.text.toString().trim()
+        val password = binding.passwordEditText.text.toString()
+        val confirmPassword = binding.confirmPasswordEditText.text.toString()
+        val mentorName = if (binding.mentorInputLayout.visibility == View.VISIBLE) {
+            binding.mentorEditText.text.toString().trim()
+        } else {
+            ""
+        }
+
+        // Get selected role
+        val role = if (binding.roleVpEducation.isChecked) {
+            UserRole.VP_EDUCATION
+        } else {
+            UserRole.MEMBER
+        }
+
         val user = User(
-            name = binding.nameEditText.text.toString().trim(),
-            email = binding.emailEditText.text.toString().trim(),
-            phoneNumber = binding.phoneEditText.text.toString().trim(),
-            address = binding.addressEditText.text.toString().trim(),
-            gender = selectedGender ?: "",
-            joinedDate = calendar.time,
-            toastmastersId = binding.toastmastersIdEditText.text.toString().trim(),
-            clubId = binding.clubIdEditText.text.toString().trim(),
-            password = binding.passwordEditText.text.toString(),
-            mentorIds = selectedMentorId?.let { listOf(it) } ?: emptyList(),
+            name = name,
+            email = email,
+            phoneNumber = phone,
+            address = address,
+            gender = gender,
+            joinedDate = dateFormatter.parse(joinedDate) ?: Date(),
+            toastmastersId = toastmastersId,
+            clubId = clubId,
+            password = password,
+            role = role, // Use selected role
+            isApproved = role == UserRole.VP_EDUCATION, // Auto-approve VP Education
             isNewMember = true,
-            isApproved = false // Will be set by admin
+            mentorIds = if (mentorName.isNotBlank()) listOf(mentorName) else emptyList()
         )
 
         viewModel.signUp(user, binding.passwordEditText.text.toString())
     }
 
     private fun validateForm(): Boolean {
-        val name = binding.nameEditText.text.toString().trim()
-        val email = binding.emailEditText.text.toString().trim()
-        val phone = binding.phoneEditText.text.toString().trim()
-        val address = binding.addressEditText.text.toString().trim()
-        val toastmastersId = binding.toastmastersIdEditText.text.toString().trim()
-        val clubId = binding.clubIdEditText.text.toString().trim()
-        val password = binding.passwordEditText.text.toString()
-        val confirmPassword = binding.confirmPasswordEditText.text.toString()
+        if (!formSubmitted) {
+            // Don't show validation errors until form is submitted
+            return false
+        }
 
         var isValid = true
 
         // Name validation
-        if (name.length < 2) {
-            binding.nameInputLayout.error = getString(R.string.error_name_too_short)
+        if (binding.nameEditText.text.isNullOrEmpty()) {
+            binding.nameInputLayout.error = getString(R.string.error_field_required)
             isValid = false
         } else {
             binding.nameInputLayout.error = null
         }
 
         // Email validation
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (binding.emailEditText.text.isNullOrEmpty()) {
+            binding.emailInputLayout.error = getString(R.string.error_field_required)
+            isValid = false
+        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(binding.emailEditText.text.toString()).matches()) {
             binding.emailInputLayout.error = getString(R.string.error_invalid_email)
             isValid = false
         } else {
             binding.emailInputLayout.error = null
         }
 
-        // Phone validation (basic check)
-        if (phone.length < 6) {
-            binding.phoneInputLayout.error = getString(R.string.error_invalid_phone)
-            isValid = false
-        } else {
-            binding.phoneInputLayout.error = null
-        }
-
-        // Address validation
-        if (address.length < 5) {
-            binding.addressInputLayout.error = getString(R.string.error_address_too_short)
-            isValid = false
-        } else {
-            binding.addressInputLayout.error = null
-        }
-
-        // Gender validation
-        if (selectedGender.isNullOrEmpty()) {
-            binding.genderAutoCompleteTextView.error = getString(R.string.error_field_required)
-            isValid = false
-        } else {
-            binding.genderAutoCompleteTextView.error = null
-        }
-
-        // Joined date validation
-        if (binding.joinedDateEditText.text.isNullOrEmpty()) {
-            binding.joinedDateInputLayout.error = getString(R.string.error_field_required)
-            isValid = false
-        } else {
-            binding.joinedDateInputLayout.error = null
-        }
-
-        // Toastmasters ID validation
-        if (toastmastersId.length < 4) {
-            binding.toastmastersIdInputLayout.error =
-                getString(R.string.error_invalid_toastmasters_id)
-            isValid = false
-        } else {
-            binding.toastmastersIdInputLayout.error = null
-        }
-
-        // Club ID validation
-        if (clubId.length < 2) {
-            binding.clubIdInputLayout.error = getString(R.string.error_invalid_club_id)
-            isValid = false
-        } else {
-            binding.clubIdInputLayout.error = null
-        }
-
         // Password validation
-        if (password.length < 6) {
+        if (binding.passwordEditText.text.isNullOrEmpty()) {
+            binding.passwordInputLayout.error = getString(R.string.error_field_required)
+            isValid = false
+        } else if (binding.passwordEditText.text.toString().length < 6) {
             binding.passwordInputLayout.error = getString(R.string.error_password_too_short)
             isValid = false
         } else {
             binding.passwordInputLayout.error = null
         }
 
-        // Confirm password validation
-        if (password != confirmPassword) {
-            binding.confirmPasswordInputLayout.error =
-                getString(R.string.error_passwords_dont_match)
+        // Confirm Password validation
+        if (binding.confirmPasswordEditText.text.toString() != binding.passwordEditText.text.toString()) {
+            binding.confirmPasswordInputLayout.error = getString(R.string.error_passwords_dont_match)
             isValid = false
         } else {
             binding.confirmPasswordInputLayout.error = null
+        }
+
+        // Phone validation
+        if (binding.phoneEditText.text.isNullOrEmpty()) {
+            binding.phoneInputLayout.error = getString(R.string.error_field_required)
+            isValid = false
+        } else if (binding.phoneEditText.text.toString().length < 10) {
+            binding.phoneInputLayout.error = getString(R.string.error_invalid_phone)
+            isValid = false
+        } else {
+            binding.phoneInputLayout.error = null
+        }
+
+        // Toastmasters ID validation
+        if (binding.toastmastersIdEditText.text.isNullOrEmpty()) {
+            binding.toastmastersIdInputLayout.error = getString(R.string.error_field_required)
+            isValid = false
+        } else {
+            binding.toastmastersIdInputLayout.error = null
+        }
+
+        // Club ID validation
+        if (binding.clubIdEditText.text.isNullOrEmpty()) {
+            binding.clubIdInputLayout.error = getString(R.string.error_field_required)
+            isValid = false
+        } else {
+            binding.clubIdInputLayout.error = null
         }
 
         // Mentor validation (if has mentor is selected)
@@ -335,6 +342,14 @@ class SignUpFragment : Fragment() {
             binding.mentorInputLayout.error = null
         }
 
+        // Role validation
+        if (!binding.roleVpEducation.isChecked && !binding.roleMember.isChecked) {
+            binding.roleInputLayout.error = getString(R.string.error_select_role)
+            isValid = false
+        } else {
+            binding.roleInputLayout.error = null
+        }
+
         binding.signUpButton.isEnabled = isValid
         return isValid
     }
@@ -342,37 +357,33 @@ class SignUpFragment : Fragment() {
     private fun showLoading(show: Boolean) {
         binding.progressBar.isVisible = show
         binding.signUpButton.isEnabled = !show
-        binding.loginButton.isEnabled = !show
+        binding.loginTextView.isEnabled = !show
     }
 
     private fun showSuccessMessage(userRole: UserRole, requiresApproval: Boolean) {
+        // Save user role
+        preferenceManager.saveUserRole(userRole)
+
         if (requiresApproval) {
-            // Don't navigate, just show message and stay on signup screen
+            // For members requiring approval
             UiUtils.showSuccessMessage(
                 binding.root,
                 getString(R.string.signup_success_pending_approval)
             )
-            // Save user role
-            preferenceManager.saveUserRole(userRole)
+
+            // Navigate back to login after showing the message
+            findNavController().popBackStack()
         } else {
-            // Save user role
-            preferenceManager.saveUserRole(userRole)
+            // For VP Education (auto-approved) - navigate to main screen
+            // The exact navigation action will be handled by the activity based on user role
+            // We'll just pop back to login and let the login flow handle the rest
+            findNavController().popBackStack()
 
-            // Navigate based on user role
-            when (userRole) {
-                UserRole.VP_EDUCATION -> {
-                    findNavController().navigate(R.id.action_login_to_vp_nav_graph)
-                }
-
-                UserRole.MEMBER -> {
-                    findNavController().navigate(R.id.action_login_to_member_nav_graph)
-                }
-
-                else -> {
-                    // Default to member navigation for any other roles
-                    findNavController().navigate(R.id.action_login_to_member_nav_graph)
-                }
-            }
+            // Show success message
+            UiUtils.showSuccessMessage(
+                binding.root,
+                getString(R.string.signup_success_approved)
+            )
 
             // Finish the activity to prevent going back to signup
             requireActivity().finish()

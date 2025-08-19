@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.domain.model
+package com.bntsoft.toastmasters.domain.models
 
 enum class ReportType {
     MEETING_SUMMARY,

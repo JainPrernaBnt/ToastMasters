@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -17,11 +19,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentLoginBinding
-import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -35,7 +35,7 @@ class LoginFragment : Fragment() {
 
     @Inject
     lateinit var preferenceManager: PreferenceManager
-    
+
     private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
@@ -49,6 +49,22 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Hide action bar and status bar
+        (activity as? AppCompatActivity)?.supportActionBar?.hide()
+        requireActivity().window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+
+        // Disable back button
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Do nothing to disable back button
+                }
+            })
+
+        // Hide menu items
+        setHasOptionsMenu(false)
 
         setupForm()
         setupClickListeners()
@@ -106,9 +122,10 @@ class LoginFragment : Fragment() {
 
                         is AuthViewModel.AuthUiState.Success -> {
                             showLoading(false)
+                            preferenceManager.isLoggedIn = true
                             // Save user role
                             preferenceManager.saveUserRole(state.userRole)
-                            
+
                             // Delegate to MainActivity to switch nav graph and bottom nav based on role
                             (requireActivity() as? com.bntsoft.toastmasters.MainActivity)
                                 ?.let { it.navigateToRoleBasedScreen(state.userRole) }

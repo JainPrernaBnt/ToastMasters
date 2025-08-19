@@ -1,6 +1,6 @@
 package com.bntsoft.toastmasters.data.model.dto
 
-import com.bntsoft.toastmasters.domain.model.ReportType
+import com.bntsoft.toastmasters.domain.models.ReportType
 
 data class ReportRequestsDto(
     val id: Int = 0,

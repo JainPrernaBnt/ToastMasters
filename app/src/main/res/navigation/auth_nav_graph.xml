@@ -29,11 +29,23 @@
         android:id="@+id/signUpFragment"
         android:name="com.bntsoft.toastmasters.presentation.auth.SignUpFragment"
         android:label="Sign Up"
-        tools:layout="@layout/fragment_sign_up" />
+        tools:layout="@layout/fragment_sign_up" >
+        <action
+            android:id="@+id/action_signUpFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+    </fragment>
 
     <!-- VP Education Navigation Graph -->
     <include app:graph="@navigation/vp_nav_graph" />
     
     <!-- Member Navigation Graph -->
     <include app:graph="@navigation/member_nav_graph" />
+    
+    <!-- Global Action -->
+    <action
+        android:id="@+id/action_global_auth_nav_graph"
+        app:destination="@id/auth_nav_graph"
+        app:popUpTo="@id/auth_nav_graph"
+        app:popUpToInclusive="true" />
+        
 </navigation>

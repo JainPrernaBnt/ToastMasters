@@ -22,7 +22,6 @@
             app:title="@string/title_notifications"
             app:titleTextColor="@color/white"
             app:navigationIcon="@drawable/ic_arrow_back"
-            app:menu="@menu/menu_notifications"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar" />
 
@@ -84,47 +83,5 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
-    <!-- Mark All as Read FAB -->
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabMarkAllRead"
-        style="@style/Widget.MaterialComponents.ExtendedFloatingActionButton.Icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="@string/mark_all_as_read"
-        android:visibility="gone"
-        app:icon="@drawable/ic_done_all"
-        app:iconTint="@color/white"
-        app:showMotionSpec="@animator/fab_show"
-        app:hideMotionSpec="@animator/fab_hide"
-        app:layout_anchorGravity="bottom|end"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
-        app:backgroundTint="?attr/colorPrimary"
-        tools:ignore="ContentDescription"
-        tools:targetApi="m"
-        tools:visibility="visible" />
-
-    <!-- Delete All FAB -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabDeleteAll"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="88dp"
-        android:contentDescription="@string/delete_all_notifications"
-        android:src="@drawable/ic_delete"
-        app:backgroundTint="@color/error"
-        app:fabSize="normal"
-        app:hideMotionSpec="@animator/fab_hide"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
-        app:showMotionSpec="@animator/fab_show"
-        app:tint="@color/white"
-        tools:ignore="ContentDescription"
-        tools:targetApi="m"
-        tools:visibility="visible" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

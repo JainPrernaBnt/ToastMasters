@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base theme that inherits from the MaterialComponents theme -->
-    <style name="Base.Theme.ToastMasters" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <!-- Base theme that inherits from the Material3 theme -->
+    <style name="Base.Theme.ToastMasters" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryDark">@color/purple_700</item>
@@ -29,23 +29,33 @@
         <item name="colorOnSurfaceVariant">@color/gray_800</item>
 
         <!-- Text input layout style -->
-        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
-        
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox
+        </item>
+
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
-        <item name="materialButtonOutlinedStyle">@style/Widget.Material3.Button.OutlinedButton</item>
-        
+        <item name="materialButtonOutlinedStyle">@style/Widget.Material3.Button.OutlinedButton
+        </item>
+
         <!-- Floating action button -->
         <item name="floatingActionButtonStyle">@style/Widget.Material3.FloatingActionButton</item>
-        <item name="extendedFloatingActionButtonStyle">@style/Widget.Material3.ExtendedFloatingActionButton</item>
-        
+        <item name="extendedFloatingActionButtonStyle">
+            @style/Widget.Material3.ExtendedFloatingActionButton
+        </item>
+
         <!-- Progress indicator -->
-        <item name="circularProgressIndicatorStyle">@style/Widget.Material3.CircularProgressIndicator</item>
+        <item name="circularProgressIndicatorStyle">
+            @style/Widget.Material3.CircularProgressIndicator
+        </item>
 
         <!-- Shape appearance -->
-        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Material3.SmallComponent</item>
-        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Material3.MediumComponent</item>
-        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.LargeComponent</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Material3.SmallComponent
+        </item>
+        <item name="shapeAppearanceMediumComponent">
+            @style/ShapeAppearance.Material3.MediumComponent
+        </item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Material3.LargeComponent
+        </item>
     </style>
 
     <!-- Main application theme -->

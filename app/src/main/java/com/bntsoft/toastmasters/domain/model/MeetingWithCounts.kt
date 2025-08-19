@@ -1,6 +1,4 @@
-package com.bntsoft.toastmasters.domain.models
-
-import com.bntsoft.toastmasters.domain.model.Meeting
+package com.bntsoft.toastmasters.domain.model
 
 data class MeetingWithCounts(
     val meeting: Meeting,

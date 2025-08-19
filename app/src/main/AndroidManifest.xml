@@ -26,13 +26,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-            
+
         <activity
             android:name=".VpMainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan|stateHidden"
             android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
         </activity>
+
+        <activity android:name=".MemberActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan|stateHidden"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"/>
     </application>
 
 </manifest>

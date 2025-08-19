@@ -22,6 +22,15 @@
         <action
             android:id="@+id/action_dashboardFragment_to_editMeetingFragment"
             app:destination="@id/editMeetingFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_memberApprovalFragment"
+            app:destination="@id/memberApprovalFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_reportsFragment"
+            app:destination="@id/reportsFragment" />
     </fragment>
 
     <fragment
@@ -74,4 +83,13 @@
         android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/memberApprovalFragment"
+        android:name="com.bntsoft.toastmasters.presentation.member.MemberApprovalFragment"
+        android:label="fragment_member_approval"
+        tools:layout="@layout/fragment_member_approval" >
+        <action
+            android:id="@+id/action_memberApprovalFragment_to_dashboardFragment"
+            app:destination="@id/dashboardFragment" />
+    </fragment>
 </navigation>

@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.databinding.ItemUpcomingMeetingBinding
-import com.bntsoft.toastmasters.domain.models.MeetingWithCounts
+import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import java.time.format.DateTimeFormatter
 
 class UpcomingMeetingAdapter :
