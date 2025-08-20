@@ -31,90 +31,54 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     override fun getAllMeetings(): Flow<List<Meeting>> = callbackFlow {
         val subscription = meetingsCollection
-            .orderBy("date")
-            .orderBy("startTime")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-
-                val meetings = snapshot?.documents?.mapNotNull { document ->
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val meetings = snapshot.documents.mapNotNull { document ->
                     try {
                         val dto = MeetingDto(
                             meetingID = document.getString("meetingID") ?: document.id,
-                            date = document.getString("date") ?: return@mapNotNull null,
-                            startTime = document.getString("startTime") ?: return@mapNotNull null,
+                            date = document.getString("date") ?: "",
+                            startTime = document.getString("startTime") ?: "",
                             endTime = document.getString("endTime") ?: "",
                             venue = document.getString("venue") ?: "",
-                            theme = document.getString("theme") ?: "",
-                            preferredRoles = (document.get("preferredRoles") as? List<String>) ?: emptyList(),
-                            createdAt = document.getLong("createdAt")?.toLong() ?: System.currentTimeMillis(),
-                            isRecurring = document.getBoolean("isRecurring") ?: false,
-                            recurringDayOfWeek = (document.getLong("recurringDayOfWeek")?.toInt()),
-                            recurringStartTime = document.getString("recurringStartTime"),
-                            recurringEndTime = document.getString("recurringEndTime")
+                            theme = document.getString("theme") ?: "No Theme",
+                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                            createdAt = document.getLong("createdAt") ?: 0,
+                            isRecurring = document.getBoolean("isRecurring") ?: false
                         )
                         meetingMapper.mapToDomain(dto)
                     } catch (e: Exception) {
                         null
                     }
-                } ?: emptyList()
-
-                trySend(meetings)
-            }
-
-        awaitClose { subscription.remove() }
-    }
-
-    override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> = callbackFlow {
-        val dateString = afterDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
-
-        val subscription = meetingsCollection
-            .whereGreaterThanOrEqualTo("date", dateString)
-            .orderBy("date")
-            .orderBy("startTime")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
                 }
-
-                val meetings = snapshot?.documents?.mapNotNull { document ->
-                    try {
-                        val dto = MeetingDto(
-                            meetingID = document.getString("meetingID") ?: document.id,
-                            date = document.getString("date") ?: return@mapNotNull null,
-                            startTime = document.getString("startTime") ?: return@mapNotNull null,
-                            endTime = document.getString("endTime") ?: "",
-                            venue = document.getString("venue") ?: "",
-                            theme = document.getString("theme") ?: "",
-                            preferredRoles = (document.get("preferredRoles") as? List<String>) ?: emptyList(),
-                            createdAt = document.getLong("createdAt")?.toLong() ?: System.currentTimeMillis(),
-                            isRecurring = document.getBoolean("isRecurring") ?: false,
-                            recurringDayOfWeek = (document.getLong("recurringDayOfWeek")?.toInt()),
-                            recurringStartTime = document.getString("recurringStartTime"),
-                            recurringEndTime = document.getString("recurringEndTime")
-                        )
-                        meetingMapper.mapToDomain(dto)
-                    } catch (e: Exception) {
-                        null
-                    }
-                } ?: emptyList()
-
-                trySend(meetings)
+                trySend(meetings).isSuccess
+            }
+            .addOnFailureListener { e ->
+                close(e)
             }
 
-        awaitClose { subscription.remove() }
+        awaitClose { /* No-op since we're not using snapshot listener */ }
     }
 
+    override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> {
+        return getAllMeetings()
+    }
     override suspend fun getMeetingById(id: String): Meeting? {
         return try {
-            val query = meetingsCollection.whereEqualTo("meetingID", id).limit(1).get().await()
-            val document = query.documents.firstOrNull()
+            // First try with meetingID (uppercase ID)
+            var query = meetingsCollection.whereEqualTo("meetingID", id).limit(1).get().await()
+            var document = query.documents.firstOrNull()
+            
+            // If not found, try with id (lowercase)
+            if (document == null) {
+                query = meetingsCollection.whereEqualTo("id", id).limit(1).get().await()
+                document = query.documents.firstOrNull()
+            }
+            
             val dto = document?.toObject(MeetingDto::class.java)
             dto?.let { meetingMapper.mapToDomain(it) }
         } catch (e: Exception) {
+            Timber.e(e, "Error getting meeting by id: $id")
             null
         }
     }

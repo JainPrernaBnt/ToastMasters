@@ -331,4 +331,5 @@
     <string name="notification">notification</string>
     <string name="mentors">Mentors</string>
     <string name="assign">Assign\n</string>
+    <string name="error_loading_meetings">Error loading meetings</string>
 </resources>

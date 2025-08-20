@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class UpcomingMeetingFragment : DialogFragment() {
-
+    
     private var _binding: DialogMeetingResponseBinding? = null
     private val binding get() = _binding!!
 
@@ -30,11 +31,14 @@ class UpcomingMeetingFragment : DialogFragment() {
 
     private var meetingId: String = ""
     private var onResponseSubmitted: (() -> Unit)? = null
+    private var loadingDialog: androidx.appcompat.app.AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            meetingId = it.getString(ARG_MEETING_ID) ?: ""
+        setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
+        meetingId = arguments?.getString("meetingId") ?: run {
+            dismiss()
+            return
         }
     }
 
@@ -44,15 +48,46 @@ class UpcomingMeetingFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = DialogMeetingResponseBinding.inflate(inflater, container, false)
+        dialog?.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
         return binding.root
     }
+
+    private var isDialogShown = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        if (savedInstanceState?.getBoolean(KEY_DIALOG_SHOWN, false) == true) {
+            // If we're recreating after a configuration change and dialog was shown, dismiss
+            dismiss()
+            return
+        }
+
         setupUI()
         setupClickListeners()
         observeViewModel()
+        
+        // Load the meeting data
+        if (meetingId.isNotBlank()) {
+            viewModel.loadMeetingAndResponse()
+        } else {
+            showError("No meeting ID provided")
+            safeDismiss()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(KEY_DIALOG_SHOWN, isDialogShown)
+    }
+
+    private fun safeDismiss() {
+        if (isAdded && !isRemoving) {
+            dismiss()
+        }
     }
 
     private fun setupUI() {
@@ -215,9 +250,9 @@ class UpcomingMeetingFragment : DialogFragment() {
                 setOnCheckedChangeListener { _, isChecked ->
                     viewModel.toggleRole(role)
                 }
-                setChipBackgroundColorResource(R.color.chip_background_selector)
-                setTextColorResource(R.color.chip_text_selector)
-                chipStrokeColor = resources.getColorStateList(R.color.chip_stroke_selector, null)
+                setChipBackgroundColorResource(R.drawable.chip_background_selector)
+                setTextColor(androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.chip_text_selector))
+                chipStrokeColor = androidx.core.content.ContextCompat.getColorStateList(requireContext(), R.color.chip_stroke_selector)
                 chipStrokeWidth = resources.getDimension(R.dimen.chip_stroke_width)
                 chipCornerRadius = resources.getDimension(R.dimen.chip_corner_radius)
             }
@@ -263,13 +298,13 @@ class UpcomingMeetingFragment : DialogFragment() {
     }
 
     private fun showLoading(message: String) {
-        // Show loading state - using a dialog for now since we don't have progress views in the layout
-        context?.let {
-            MaterialAlertDialogBuilder(it)
+        if (loadingDialog == null) {
+            loadingDialog = MaterialAlertDialogBuilder(requireContext())
                 .setMessage(message)
                 .setCancelable(false)
-                .show()
+                .create()
         }
+        loadingDialog?.show()
         
         // Disable UI
         binding.btnSubmit.isEnabled = false
@@ -277,8 +312,8 @@ class UpcomingMeetingFragment : DialogFragment() {
     }
 
     private fun hideLoading() {
-        // Dismiss any loading dialog
-        dialog?.takeIf { it.isShowing }?.dismiss()
+        loadingDialog?.dismiss()
+        loadingDialog = null
         
         // Enable UI
         binding.btnSubmit.isEnabled = true
@@ -286,8 +321,9 @@ class UpcomingMeetingFragment : DialogFragment() {
     }
 
     private fun showError(message: String) {
-        view?.let { view ->
-            UiUtils.showSnackbar(view, message, duration = Snackbar.LENGTH_LONG)
+        if (isAdded) {
+            Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+            safeDismiss()
         }
     }
 
@@ -297,19 +333,6 @@ class UpcomingMeetingFragment : DialogFragment() {
     }
 
     companion object {
-        private const val ARG_MEETING_ID = "meetingID"
-        private const val ARG_MEMBER_ID = "member_id"
-
-        fun newInstance(
-            meetingId: String,
-            onResponseSubmitted: (() -> Unit)? = null
-        ): UpcomingMeetingFragment {
-            return UpcomingMeetingFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_MEETING_ID, meetingId)
-                }
-                this.onResponseSubmitted = onResponseSubmitted
-            }
-        }
+        private const val KEY_DIALOG_SHOWN = "dialog_shown"
     }
 }

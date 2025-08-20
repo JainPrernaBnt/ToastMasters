@@ -111,29 +111,6 @@
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/ic_theme"
-                    app:tint="@color/on_surface_medium" />
-
-                <TextView
-                    android:id="@+id/tvMeetingTheme"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Theme: Leadership &amp; Communication"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
 
         </LinearLayout>
 
@@ -204,37 +181,12 @@
                 android:id="@+id/chipGroupPreferredRoles"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:selectionRequired="false">
-
+                android:layout_marginBottom="@dimen/space_medium"
+                app:singleLine="true"
+                app:singleSelection="false"
+                app:chipSpacingHorizontal="@dimen/chip_spacing"
+                app:chipSpacingVertical="@dimen/chip_spacing">
                 <!-- Roles will be added programmatically -->
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checkable="true"
-                    android:text="Toastmaster"
-                    app:chipBackgroundColor="@drawable/chip_role_selector"
-                    app:chipStrokeColor="@color/purple_500"
-                    app:chipStrokeWidth="1dp" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checkable="true"
-                    android:text="Speaker"
-                    app:chipBackgroundColor="@drawable/chip_role_selector"
-                    app:chipStrokeColor="@color/purple_500"
-                    app:chipStrokeWidth="1dp" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checkable="true"
-                    android:text="Evaluator"
-                    app:chipBackgroundColor="@drawable/chip_role_selector"
-                    app:chipStrokeColor="@color/purple_500"
-                    app:chipStrokeWidth="1dp" />
-
             </com.google.android.material.chip.ChipGroup>
 
         </LinearLayout>

@@ -8,16 +8,13 @@ import kotlinx.coroutines.flow.Flow
 interface MemberResponseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(response: MemberResponseEntity)
-    
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertResponse(response: MemberResponseEntity)
 
     @Query("SELECT * FROM member_responses WHERE meetingId = :meetingId AND memberId = :memberId")
-    fun getResponse(meetingId: Int, memberId: String): Flow<MemberResponseEntity?>
+    suspend fun getResponse(meetingId: String, memberId: String): MemberResponseEntity?
 
     @Query("SELECT * FROM member_responses WHERE meetingId = :meetingId")
-    fun getResponsesForMeeting(meetingId: Int): Flow<List<MemberResponseEntity>>
+    fun getResponsesForMeeting(meetingId: String): Flow<List<MemberResponseEntity>>
 
     @Query("SELECT * FROM member_responses WHERE memberId = :memberId")
     fun getResponsesByMember(memberId: String): Flow<List<MemberResponseEntity>>
@@ -26,8 +23,11 @@ interface MemberResponseDao {
     suspend fun deleteResponse(response: MemberResponseEntity)
 
     @Query("DELETE FROM member_responses WHERE meetingId = :meetingId")
-    suspend fun deleteResponsesForMeeting(meetingId: Int)
+    suspend fun deleteResponsesForMeeting(meetingId: String)
 
+    @Query("DELETE FROM member_responses WHERE meetingId = :meetingId AND memberId = :memberId")
+    suspend fun deleteResponse(meetingId: String, memberId: String)
+    
     @Query("SELECT lastUpdated FROM member_responses WHERE meetingId = :meetingId AND memberId = :memberId")
-    suspend fun getLastUpdated(meetingId: Int, memberId: String): Long?
+    suspend fun getLastUpdated(meetingId: String, memberId: String): Long?
 }

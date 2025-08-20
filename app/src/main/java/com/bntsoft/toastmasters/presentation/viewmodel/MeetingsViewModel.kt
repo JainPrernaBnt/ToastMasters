@@ -77,9 +77,8 @@ class MeetingsViewModel @Inject constructor(
                 }
 
                 val flows = meetings.map { meeting ->
-                    val idInt = meeting.id?.toIntOrNull()
-                    if (idInt != null) {
-                        memberResponseRepository.getResponsesForMeeting(idInt)
+                    if (!meeting.id.isNullOrBlank()) {
+                        memberResponseRepository.getResponsesForMeeting(meeting.id)
                     } else {
                         flowOf(emptyList())
                     }

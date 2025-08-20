@@ -2,7 +2,7 @@ package com.bntsoft.toastmasters.domain.model
 
 data class MemberResponse(
     val id: String = "",
-    val meetingId: Int,
+    val meetingId: String,
     val memberId: String,
     val availability: AvailabilityStatus,
     val preferredRoles: List<String>,
@@ -25,7 +25,7 @@ data class MemberResponse(
     }
 
     companion object {
-        fun defaultForMeeting(meetingId: Int, memberId: String): MemberResponse {
+        fun defaultForMeeting(meetingId: String, memberId: String): MemberResponse {
             return MemberResponse(
                 meetingId = meetingId,
                 memberId = memberId,

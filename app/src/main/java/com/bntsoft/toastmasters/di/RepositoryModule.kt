@@ -1,7 +1,5 @@
 package com.bntsoft.toastmasters.di
 
-import com.bntsoft.toastmasters.data.local.dao.MeetingDao
-import com.bntsoft.toastmasters.data.local.dao.MemberResponseDao
 import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
 import com.bntsoft.toastmasters.data.mapper.MemberResponseMapper
 import com.bntsoft.toastmasters.data.remote.FirebaseAuthService
@@ -68,7 +66,12 @@ object RepositoryModule {
         firebaseAuthService: FirebaseAuthService,
         firestoreService: FirestoreService,
         notificationRepository: NotificationRepository
-    ): AuthRepository = AuthRepositoryImpl(firebaseAuth, firebaseAuthService, firestoreService, notificationRepository)
+    ): AuthRepository = AuthRepositoryImpl(
+        firebaseAuth,
+        firebaseAuthService,
+        firestoreService,
+        notificationRepository
+    )
 
     @Provides
     @Singleton
@@ -78,7 +81,8 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideFirebaseMemberResponseDataSource(): FirebaseMemberResponseDataSource = FirebaseMemberResponseDataSourceImpl()
+    fun provideFirebaseMemberResponseDataSource(): FirebaseMemberResponseDataSource =
+        FirebaseMemberResponseDataSourceImpl()
 
     @Provides
     @Singleton
@@ -91,8 +95,9 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideMeetingRepository(
-        firebaseDataSource: FirebaseMeetingDataSource
-    ): MeetingRepository = MeetingRepositoryImpl(firebaseDataSource)
+        firebaseDataSource: FirebaseMeetingDataSource,
+        memberResponseRepository: MemberResponseRepository
+    ): MeetingRepository = MeetingRepositoryImpl(firebaseDataSource, memberResponseRepository)
 
     @Provides
     @Singleton

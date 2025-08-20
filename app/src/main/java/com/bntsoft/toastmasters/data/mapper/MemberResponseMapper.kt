@@ -7,29 +7,29 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MemberResponseMapper @Inject constructor() {
+class MemberResponseMapper @Inject constructor() : Mapper<MemberResponseDto, MemberResponse> {
 
-    fun mapToEntity(domain: MemberResponse): MemberResponseEntity {
-        return MemberResponseEntity.fromDomain(domain)
-    }
-
-    fun mapToDomain(entity: MemberResponseEntity): MemberResponse {
-        return entity.toDomain()
-    }
-
-    fun mapToDomain(dto: MemberResponseDto): MemberResponse {
+    fun map(input: MemberResponseDto): MemberResponse {
         return MemberResponse(
-            id = dto.id,
-            meetingId = dto.meetingId,
-            memberId = dto.memberId,
-            availability = MemberResponse.AvailabilityStatus.fromString(dto.availability),
-            preferredRoles = dto.preferredRoles,
-            notes = dto.notes,
-            lastUpdated = dto.lastUpdated
+            id = input.id,
+            meetingId = input.meetingId,
+            memberId = input.memberId,
+            availability = MemberResponse.AvailabilityStatus.valueOf(input.availability),
+            preferredRoles = input.preferredRoles,
+            notes = input.notes,
+            lastUpdated = input.lastUpdated
         )
     }
 
-    fun mapToDto(domain: MemberResponse): MemberResponseDto {
+    fun toEntity(domain: MemberResponse): MemberResponseEntity {
+        return MemberResponseEntity.fromDomain(domain)
+    }
+
+    fun toDomain(entity: MemberResponseEntity): MemberResponse {
+        return entity.toDomain()
+    }
+
+    fun toDto(domain: MemberResponse): MemberResponseDto {
         return MemberResponseDto(
             id = domain.id,
             meetingId = domain.meetingId,
@@ -41,7 +41,19 @@ class MemberResponseMapper @Inject constructor() {
         )
     }
 
-    fun mapEntityToDto(entity: MemberResponseEntity): MemberResponseDto {
+    fun toEntity(dto: MemberResponseDto): MemberResponseEntity {
+        return MemberResponseEntity(
+            id = dto.id,
+            meetingId = dto.meetingId,
+            memberId = dto.memberId,
+            availability = dto.availability,
+            preferredRoles = dto.preferredRoles.joinToString(","),
+            notes = dto.notes,
+            lastUpdated = dto.lastUpdated
+        )
+    }
+
+    fun toDto(entity: MemberResponseEntity): MemberResponseDto {
         return MemberResponseDto(
             id = entity.id,
             meetingId = entity.meetingId,
@@ -53,15 +65,11 @@ class MemberResponseMapper @Inject constructor() {
         )
     }
 
-    fun mapDtoToEntity(dto: MemberResponseDto): MemberResponseEntity {
-        return MemberResponseEntity(
-            id = dto.id,
-            meetingId = dto.meetingId,
-            memberId = dto.memberId,
-            availability = dto.availability,
-            preferredRoles = dto.preferredRoles.joinToString(","),
-            notes = dto.notes,
-            lastUpdated = dto.lastUpdated
-        )
+    override fun mapFromEntity(entity: MemberResponse): MemberResponseDto {
+        return toDto(entity)
+    }
+
+    override fun mapToEntity(dto: MemberResponseDto): MemberResponse {
+        return map(dto)
     }
 }

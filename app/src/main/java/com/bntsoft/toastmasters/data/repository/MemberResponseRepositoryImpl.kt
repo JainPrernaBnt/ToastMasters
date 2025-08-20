@@ -16,28 +16,28 @@ class MemberResponseRepositoryImpl @Inject constructor(
     private val mapper: MemberResponseMapper
 ) : MemberResponseRepository {
 
-    override fun getMemberResponse(meetingId: Int, memberId: String): Flow<MemberResponse?> {
+    override fun getMemberResponse(meetingId: String, memberId: String): Flow<MemberResponse?> {
         return remoteDataSource.observeResponse(meetingId, memberId).map { dto ->
-            dto?.let { mapper.mapToDomain(it) }
+            dto?.let { mapper.map(it) }
         }
     }
 
-    override fun getResponsesForMeeting(meetingId: Int): Flow<List<MemberResponse>> {
+    override fun getResponsesForMeeting(meetingId: String): Flow<List<MemberResponse>> {
         return remoteDataSource.observeResponsesForMeeting(meetingId).map { dtos ->
-            dtos.map { mapper.mapToDomain(it) }
+            dtos.map { mapper.map(it) }
         }
     }
 
     override fun getResponsesByMember(memberId: String): Flow<List<MemberResponse>> {
         return kotlinx.coroutines.flow.flow {
             val dtos = remoteDataSource.getResponsesByMember(memberId)
-            emit(dtos.map { mapper.mapToDomain(it) })
+            emit(dtos.map { mapper.map(it) })
         }
     }
 
     override suspend fun saveResponse(response: MemberResponse): Result<Unit> {
         return try {
-            val dto = mapper.mapToDto(response)
+            val dto = mapper.toDto(response)
             remoteDataSource.saveResponse(dto)
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -45,7 +45,7 @@ class MemberResponseRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteResponse(meetingId: Int, memberId: String): Result<Unit> {
+    override suspend fun deleteResponse(meetingId: String, memberId: String): Result<Unit> {
         return try {
             remoteDataSource.deleteResponse(meetingId, memberId)
             Result.Success(Unit)

@@ -26,7 +26,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
     private val db: FirebaseFirestore = Firebase.firestore
     private val responsesCollection = db.collection(COLLECTION_RESPONSES)
 
-    override suspend fun getResponse(meetingId: Int, memberId: String): MemberResponseDto? {
+    override suspend fun getResponse(meetingId: String, memberId: String): MemberResponseDto? {
         return try {
             val querySnapshot = responsesCollection
                 .whereEqualTo(FIELD_MEETING_ID, meetingId)
@@ -42,7 +42,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
         }
     }
 
-    override suspend fun getResponsesForMeeting(meetingId: Int): List<MemberResponseDto> {
+    override suspend fun getResponsesForMeeting(meetingId: String): List<MemberResponseDto> {
         return try {
             val querySnapshot = responsesCollection
                 .whereEqualTo(FIELD_MEETING_ID, meetingId)
@@ -97,7 +97,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
         }
     }
 
-    override suspend fun deleteResponse(meetingId: Int, memberId: String) {
+    override suspend fun deleteResponse(meetingId: String, memberId: String) {
         try {
             val querySnapshot = responsesCollection
                 .whereEqualTo(FIELD_MEETING_ID, meetingId)
@@ -106,23 +106,20 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
                 .get()
                 .await()
 
-            for (document in querySnapshot) {
-                document.reference.delete().await()
-            }
+            querySnapshot.documents.firstOrNull()?.reference?.delete()?.await()
         } catch (e: Exception) {
             Timber.e(e, "Error deleting response for meeting $meetingId and member $memberId")
             throw e
         }
     }
 
-    override fun observeResponse(meetingId: Int, memberId: String): Flow<MemberResponseDto?> = callbackFlow {
+    override fun observeResponse(meetingId: String, memberId: String): Flow<MemberResponseDto?> = callbackFlow {
         val listener = responsesCollection
             .whereEqualTo(FIELD_MEETING_ID, meetingId)
             .whereEqualTo(FIELD_MEMBER_ID, memberId)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
                     Timber.e(e, "Error observing response for meeting $meetingId and member $memberId")
-                    close(e)
                     return@addSnapshotListener
                 }
 
@@ -136,7 +133,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
         awaitClose { listener.remove() }
     }
 
-    override fun observeResponsesForMeeting(meetingId: Int): Flow<List<MemberResponseDto>> = callbackFlow {
+    override fun observeResponsesForMeeting(meetingId: String): Flow<List<MemberResponseDto>> = callbackFlow {
         val listener = responsesCollection
             .whereEqualTo(FIELD_MEETING_ID, meetingId)
             .addSnapshotListener { snapshot, e ->

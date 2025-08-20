@@ -13,7 +13,8 @@ import java.time.format.DateTimeFormatter
 
 class MeetingAdapter(
     private val onEdit: (meetingId: String) -> Unit = {},
-    private val onDelete: (meetingId: String) -> Unit = {}
+    private val onDelete: (meetingId: String) -> Unit = {},
+    private val onItemClick: (meetingId: String) -> Unit = {}
 ) :
     ListAdapter<MeetingWithCounts, MeetingAdapter.MeetingViewHolder>(MeetingDiffCallback()) {
 
@@ -30,6 +31,17 @@ class MeetingAdapter(
 
     inner class MeetingViewHolder(private val binding: ItemMeetingCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            itemView.setOnClickListener {
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val meeting = getItem(position).meeting
+                    onItemClick(meeting.id)
+                }
+            }
+        }
+
         fun bind(meetingWithCounts: MeetingWithCounts) {
             val meeting = meetingWithCounts.meeting
             binding.tvMeetingTitle.text = meeting.theme
@@ -56,32 +68,33 @@ class MeetingAdapter(
                                 onEdit(meeting.id)
                                 true
                             }
+
                             R.id.action_delete -> {
                                 onDelete(meeting.id)
                                 true
                             }
+
                             else -> false
                         }
                     }
-                    show()
                 }
             }
         }
     }
+}
 
-    class MeetingDiffCallback : DiffUtil.ItemCallback<MeetingWithCounts>() {
-        override fun areItemsTheSame(
-            oldItem: MeetingWithCounts,
-            newItem: MeetingWithCounts
-        ): Boolean {
-            return oldItem.meeting.id == newItem.meeting.id
-        }
+class MeetingDiffCallback : DiffUtil.ItemCallback<MeetingWithCounts>() {
+    override fun areItemsTheSame(
+        oldItem: MeetingWithCounts,
+        newItem: MeetingWithCounts
+    ): Boolean {
+        return oldItem.meeting.id == newItem.meeting.id
+    }
 
-        override fun areContentsTheSame(
-            oldItem: MeetingWithCounts,
-            newItem: MeetingWithCounts
-        ): Boolean {
-            return oldItem == newItem
-        }
+    override fun areContentsTheSame(
+        oldItem: MeetingWithCounts,
+        newItem: MeetingWithCounts
+    ): Boolean {
+        return oldItem == newItem
     }
 }

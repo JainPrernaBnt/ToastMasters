@@ -7,14 +7,22 @@
     android:layout_height="match_parent"
     android:background="@drawable/gradient_background">
 
-    <!-- Meetings List -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvUpcomingMeetings"
+    <!-- Swipe Refresh Layout -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp"
-        android:clipToPadding="false"
-        tools:listitem="@layout/item_upcoming_meeting" />
+        android:layout_height="match_parent">
+
+        <!-- Meetings List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvUpcomingMeetings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_upcoming_meeting" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- Loading Indicator -->
     <ProgressBar

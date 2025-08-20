@@ -130,4 +130,18 @@
         <item name="android:padding">2dp</item>
         <item name="android:background">@drawable/circle_background</item>
     </style>
+    <!-- Full Screen Dialog Theme -->
+    <style name="FullScreenDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowCloseOnTouchOutside">true</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
+    </style>
+
+    <!-- Dialog Animation -->
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/slide_up</item>
+        <item name="android:windowExitAnimation">@anim/slide_down</item>
+    </style>
 </resources>

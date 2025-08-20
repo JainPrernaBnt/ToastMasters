@@ -25,7 +25,7 @@ import com.bntsoft.toastmasters.domain.model.MemberResponse
 data class MemberResponseEntity(
     @PrimaryKey
     val id: String = "",
-    val meetingId: Int,
+    val meetingId: String,
     val memberId: String,
     val availability: String,
     val preferredRoles: String, // Comma-separated list of role IDs
@@ -36,7 +36,7 @@ data class MemberResponseEntity(
 
         fun fromDomain(domain: MemberResponse): MemberResponseEntity {
             return MemberResponseEntity(
-                id = domain.id.ifEmpty { "${domain.meetingId}_${domain.memberId}" },
+                id = domain.id,
                 meetingId = domain.meetingId,
                 memberId = domain.memberId,
                 availability = domain.availability.name,

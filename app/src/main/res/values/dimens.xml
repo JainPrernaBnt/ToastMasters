@@ -22,6 +22,11 @@
     <dimen name="input_height">56dp</dimen>
     <dimen name="card_corner_radius">8dp</dimen>
     <dimen name="chip_corner_radius">16dp</dimen>
+    <dimen name="chip_stroke_width">1dp</dimen>
+    <dimen name="chip_min_height">32dp</dimen>
+    <dimen name="chip_horizontal_padding">12dp</dimen>
+    <dimen name="chip_vertical_padding">6dp</dimen>
+    <dimen name="chip_spacing">8dp</dimen>
     <dimen name="toolbar_height">56dp</dimen>
     <dimen name="bottom_nav_height">56dp</dimen>
     

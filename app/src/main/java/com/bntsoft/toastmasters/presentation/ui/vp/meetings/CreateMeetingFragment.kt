@@ -299,7 +299,7 @@ class CreateMeetingFragment : Fragment() {
                 dateTime = startLocalDateTime,
                 endDateTime = endLocalDateTime,
                 location = venue,
-                preferredRoles = roles
+                availableRoles = roles
             )
             viewModel.createMeeting(meeting)
         }

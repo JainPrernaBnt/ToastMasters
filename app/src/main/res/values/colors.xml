@@ -93,4 +93,11 @@
     <color name="colorPrimaryLight">#BB86FC</color>
     <color name="green_500">#4CAF50</color>
     <color name="gray_400">#BDBDBD</color>
+    <!-- Chip Colors -->
+    <color name="chip_background_checked">#E8F5E9</color>
+    <color name="chip_background_unchecked">#FFFFFF</color>
+    <color name="chip_text_checked">#2E7D32</color>
+    <color name="chip_text_unchecked">#212121</color>
+    <color name="chip_stroke_checked">#81C784</color>
+    <color name="chip_stroke_unchecked">#E0E0E0</color>
 </resources>

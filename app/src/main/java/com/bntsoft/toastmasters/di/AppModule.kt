@@ -3,8 +3,10 @@ package com.bntsoft.toastmasters.di
 import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
+import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.bntsoft.toastmasters.utils.PrefsManager
+import com.bntsoft.toastmasters.utils.UserManager
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.Module
 import dagger.Provides
@@ -42,5 +44,11 @@ object AppModule {
         prefsManager: PrefsManager
     ): NotificationHelper {
         return NotificationHelper(context, firebaseMessaging, prefsManager)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideUserManager(userRepository: UserRepository): UserManager {
+        return UserManager(userRepository)
     }
 }

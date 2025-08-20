@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.domain.repository
 
 import com.bntsoft.toastmasters.domain.model.Meeting
+import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -23,6 +24,9 @@ interface MeetingRepository {
     
     // Delete a meeting
     suspend fun deleteMeeting(id: String): Resource<Unit>
+    
+    // Get upcoming meetings with response counts
+    fun getUpcomingMeetingsWithCounts(afterDate: LocalDate = LocalDate.now()): Flow<List<MeetingWithCounts>>
     
     // Sync meetings with remote data source
     suspend fun syncMeetings(): Resource<Unit>

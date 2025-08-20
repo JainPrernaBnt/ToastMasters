@@ -46,9 +46,15 @@ class DashboardFragment : Fragment() {
         return binding.root
     }
 
+    private var isDialogShowing = false
+    private var currentMeetingId: String? = null
+
     override fun onResume() {
         super.onResume()
         viewModel.loadUpcomingMeetings()
+        // Reset dialog state when coming back to this fragment
+        isDialogShowing = false
+        currentMeetingId = null
     }
 
     private fun setupRecyclerView() {
@@ -69,6 +75,16 @@ class DashboardFragment : Fragment() {
                     }
                     .setNegativeButton("Cancel", null)
                     .show()
+            },
+            onItemClick = { meetingId ->
+                if (!isDialogShowing) {
+                    isDialogShowing = true
+                    currentMeetingId = meetingId
+                    findNavController().navigate(
+                        R.id.action_dashboardFragment_to_upcomingMeetingFragment,
+                        bundleOf("meetingId" to meetingId)
+                    )
+                }
             }
         )
         binding.rvMeetings.apply {

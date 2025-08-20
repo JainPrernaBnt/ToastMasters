@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "248e542e08d8c9cee5193e853c500b14",
+    "identityHash": "b5571b67ea610162f2f63d89a2af01a1",
     "entities": [
       {
         "tableName": "members",
@@ -1052,7 +1052,7 @@
       },
       {
         "tableName": "member_responses",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `meetingId` INTEGER NOT NULL, `memberId` TEXT NOT NULL, `availability` TEXT NOT NULL, `preferredRoles` TEXT NOT NULL, `notes` TEXT NOT NULL, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `meetingId` TEXT NOT NULL, `memberId` TEXT NOT NULL, `availability` TEXT NOT NULL, `preferredRoles` TEXT NOT NULL, `notes` TEXT NOT NULL, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1063,7 +1063,7 @@
           {
             "fieldPath": "meetingId",
             "columnName": "meetingId",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -1150,7 +1150,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '248e542e08d8c9cee5193e853c500b14')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b5571b67ea610162f2f63d89a2af01a1')"
     ]
   }
 }

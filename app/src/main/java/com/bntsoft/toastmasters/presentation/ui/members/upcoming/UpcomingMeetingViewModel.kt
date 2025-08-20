@@ -30,7 +30,7 @@ class UpcomingMeetingViewModel @Inject constructor(
     private val meetingId: String = savedStateHandle.get<String>(MEETING_ID_ARG) ?: ""
 
     // Current user ID (to be replaced with actual user ID from authentication)
-    private val _currentUserId = MutableStateFlow<String>("")
+    private val _currentUserId = MutableStateFlow("")
     val currentUserId: StateFlow<String> = _currentUserId.asStateFlow()
 
     // UI State
@@ -68,15 +68,7 @@ class UpcomingMeetingViewModel @Inject constructor(
         }
     }
 
-    init {
-        viewModelScope.launch {
-            val userId = authRepository.getCurrentUser() ?: ""
-            _currentUserId.value = userId
-            loadMeetingAndResponse(userId)
-        }
-    }
-
-    private fun loadMeetingAndResponse() {
+    fun loadMeetingAndResponse() {
         viewModelScope.launch {
             try {
                 _uiState.value = MemberResponseUiState.Loading
@@ -113,7 +105,7 @@ class UpcomingMeetingViewModel @Inject constructor(
     private fun createDefaultResponse(): MemberResponse {
         return MemberResponse(
             meetingId = meetingId,
-            memberId = currentUserId,
+            memberId = currentUserId.value,
             availability = MemberResponse.AvailabilityStatus.NOT_CONFIRMED,
             preferredRoles = emptyList(),
             notes = ""

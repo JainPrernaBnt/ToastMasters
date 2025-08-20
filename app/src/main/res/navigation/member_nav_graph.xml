@@ -20,19 +20,42 @@
         <action
             android:id="@+id/action_memberDashboardFragment_to_leaderboardFragment2"
             app:destination="@id/navigation_leaderboard" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_upcomingMeetingFragment"
+            app:destination="@id/dialog_upcoming_meeting">
+            <argument
+                android:name="meetingId"
+                app:argType="string" />
+        </action>
     </fragment>
     <fragment
         android:id="@+id/navigation_meetings"
-        android:name="com.bntsoft.toastmasters.presentation.ui.members.upcoming.UpcomingMeetingFragment"
-        android:label="Upcoming Meetings" >
+        android:name="com.bntsoft.toastmasters.presentation.ui.members.upcoming.UpcomingMeetingsListFragment"
+        android:label="Upcoming Meetings"
+        tools:layout="@layout/fragment_upcoming_meetings">
         <action
-            android:id="@+id/action_upcomingMeetingsFragment_to_memberDashboardFragment"
-            app:destination="@id/navigation_dashboard" />
+            android:id="@+id/action_meetings_to_upcomingMeeting"
+            app:destination="@id/dialog_upcoming_meeting">
+            <argument
+                android:name="meetingId"
+                app:argType="string" />
+        </action>
     </fragment>
+
+    <dialog
+        android:id="@+id/dialog_upcoming_meeting"
+        android:name="com.bntsoft.toastmasters.presentation.ui.members.upcoming.UpcomingMeetingFragment"
+        android:label="Upcoming Meeting Details"
+        tools:layout="@layout/dialog_meeting_response">
+        <argument
+            android:name="meetingId"
+            app:argType="string" />
+    </dialog>
     <fragment
         android:id="@+id/navigation_settings"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.SettingsFragment"
-        android:label="Settings" >
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings">
         <action
             android:id="@+id/action_settingsFragment2_to_memberDashboardFragment"
             app:destination="@id/navigation_dashboard" />
@@ -40,7 +63,8 @@
     <fragment
         android:id="@+id/navigation_leaderboard"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.LeaderboardFragment"
-        android:label="Leaderboard" >
+        android:label="Leaderboard"
+        tools:layout="@layout/fragment_leaderboard">
         <action
             android:id="@+id/action_leaderboardFragment2_to_memberDashboardFragment"
             app:destination="@id/navigation_dashboard" />
