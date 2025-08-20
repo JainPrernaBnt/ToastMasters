@@ -33,10 +33,10 @@ class MainActivity : BaseActivity() {
     private val appBarConfiguration = AppBarConfiguration(
         setOf(
             R.id.dashboardFragment,
-            R.id.memberDashboardFragment,
-            R.id.upcomingMeetingsFragment,
-            R.id.settingsFragment2,
-            R.id.leaderboardFragment2,
+            R.id.navigation_dashboard,
+            R.id.navigation_meetings,
+            R.id.navigation_settings,
+            R.id.navigation_leaderboard,
             R.id.createMeetingFragment,
             R.id.assignRolesFragment,
             R.id.leaderboardFragment
@@ -73,10 +73,14 @@ class MainActivity : BaseActivity() {
         setupNavigationListener()
     }
 
-    // Always show status bar menu
+    // Only show status bar menu for VP Education users
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.status_bar_menu, menu)
-        return true
+        val currentRole = preferenceManager.getUserRole()
+        if (currentRole == UserRole.VP_EDUCATION) {
+            menuInflater.inflate(R.menu.status_bar_menu, menu)
+            return true
+        }
+        return false
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -130,8 +134,7 @@ class MainActivity : BaseActivity() {
         // Setup bottom navigation based on user role
         val (navGraph, menuRes) = when (role) {
             UserRole.VP_EDUCATION -> R.navigation.vp_nav_graph to R.menu.vp_bottom_nav_menu
-            UserRole.MEMBER -> R.navigation.member_nav_graph to R.menu.member_bottom_nav_menu
-            else -> R.navigation.vp_nav_graph to R.menu.vp_bottom_nav_menu // Default to VP navigation
+            else -> R.navigation.member_nav_graph to R.menu.member_bottom_nav_menu
         }
 
         // Inflate the navigation graph
@@ -167,17 +170,23 @@ class MainActivity : BaseActivity() {
             if (isAuth) {
                 supportActionBar?.hide()
                 window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+                bottomNav.visibility = View.GONE
             } else {
                 supportActionBar?.show()
                 window.decorView.systemUiVisibility = 0
+                // Only show bottom nav for members or VP users
+                val currentRole = preferenceManager.getUserRole()
+                bottomNav.visibility = if (currentRole != null) View.VISIBLE else View.GONE
             }
 
             // Handle back button visibility
-            val isTopLevelDestination =
-                appBarConfiguration.topLevelDestinations.contains(destination.id)
+            val isTopLevelDestination = appBarConfiguration.topLevelDestinations.contains(destination.id)
             supportActionBar?.let { actionBar ->
                 actionBar.setDisplayHomeAsUpEnabled(!isTopLevelDestination)
             }
+            
+            // Invalidate options menu to update status bar menu visibility
+            invalidateOptionsMenu()
         }
     }
 

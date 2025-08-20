@@ -3,204 +3,160 @@ package com.bntsoft.toastmasters.presentation.member.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.R
-import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.databinding.ItemMemberApprovalBinding
+import com.bntsoft.toastmasters.domain.model.User
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.request.RequestOptions
-import java.text.SimpleDateFormat
-import java.util.*
+import com.google.android.material.chip.Chip
 
 class MemberApprovalAdapter(
     private val onApproveClick: (User) -> Unit,
     private val onRejectClick: (User) -> Unit,
-    private val onApplyMentors: (member: User, mentorNames: List<String>) -> Unit
-) : ListAdapter<User, MemberApprovalAdapter.MemberApprovalViewHolder>(MemberDiffCallback()) {
+    private val onApplyMentors: (User, List<String>) -> Unit
+) : ListAdapter<User, MemberApprovalAdapter.MemberViewHolder>(MemberDiffCallback()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemberApprovalViewHolder {
-        val binding = ItemMemberApprovalBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return MemberApprovalViewHolder(binding)
+    // Track mentor input visibility state per user
+    private val mentorInputVisibility = mutableMapOf<String, Boolean>()
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemberViewHolder {
+        val binding =
+            ItemMemberApprovalBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return MemberViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: MemberApprovalViewHolder, position: Int) {
-        val member = getItem(position)
-        holder.bind(member)
+    override fun onBindViewHolder(holder: MemberViewHolder, position: Int) {
+        holder.bind(getItem(position))
     }
 
-    inner class MemberApprovalViewHolder(
-        private val binding: ItemMemberApprovalBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
+    inner class MemberViewHolder(private val binding: ItemMemberApprovalBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
-        private val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-        private var isMentorInputVisible = false
-        
-        // Store the current member
-        private var currentMember: User? = null
-
-        init {
-            binding.apply {
-                // Toggle mentor input visibility
-                assignMentorButton.setOnClickListener {
-                    isMentorInputVisible = !isMentorInputVisible
-                    updateMentorInputVisibility()
-
-                    if (isMentorInputVisible) {
-                        mentorNamesEditText.requestFocus()
-                    }
-                }
-
-                // Handle apply mentors
-                applyMentorsButton.setOnClickListener {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val member = getItem(position)
-                        val raw = mentorNamesEditText.text?.toString().orEmpty()
-                        val names = raw.split(',')
-                            .map { it.trim() }
-                            .filter { it.isNotEmpty() }
-
-                        if (names.isNotEmpty()) {
-                            onApplyMentors(member, names)
-                            isMentorInputVisible = false
-                            updateMentorInputVisibility()
-                        }
-                    }
-                }
-
-                // Handle approve button
-                approveButton.setOnClickListener {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        onApproveClick(getItem(position))
-                    }
-                }
-
-                // Handle reject button
-                rejectButton.setOnClickListener {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        onRejectClick(getItem(position))
-                    }
-                }
-
-                // Handle keyboard done action
-                mentorNamesEditText.setOnEditorActionListener { _, actionId, _ ->
-                    if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
-                        applyMentorsButton.performClick()
-                        true
-                    } else {
-                        false
-                    }
-                }
-            }
-        }
-
-        private fun updateMentorInputVisibility() {
-            with(binding) {
-                if (isMentorInputVisible) {
-                    mentorInputLayout.visibility = View.VISIBLE
-                    assignMentorButton.text = itemView.context.getString(R.string.cancel)
-                    mentorNamesEditText.requestFocus()
-                } else {
-                    mentorInputLayout.visibility = View.GONE
-                    assignMentorButton.text = itemView.context.getString(R.string.assign_mentor)
-                    mentorNamesEditText.text?.clear()
-                }
-            }
-        }
-
+        private val avatarImageView = binding.avatarImageView
+        private val nameTextView = binding.nameTextView
+        private val emailTextView = binding.emailTextView
+        private val approveButton = binding.approveButton
+        private val rejectButton = binding.rejectButton
+        private val mentorsChipGroup = binding.mentorsChipGroup
+        private val addMentorEditText = binding.mentorNamesEditText
+        private val applyMentorsButton = binding.applyMentorsButton
+        private val assignMentor = binding.assignMentorButton
         fun bind(member: User) {
-            currentMember = member
-            
-            // Reset input visibility when binding new data
-            isMentorInputVisible = false
-            updateMentorInputVisibility()
+            // Load avatar with fallback
+            Glide.with(itemView)
+                .load(R.drawable.ic_person)
+                .apply(RequestOptions.bitmapTransform(CircleCrop()))
+                .placeholder(R.drawable.ic_person)
+                .into(avatarImageView)
 
-            with(binding) {
-                // Set member name
-                nameTextView.text = member.name
+            nameTextView.text = member.name
+            emailTextView.text = member.email
 
-                // Set email
-                emailTextView.text = member.email
+            assignMentor.setOnClickListener {
+                mentorInputVisibility[member.id] = true
+                setMentorInputVisibility(true)
+            }
+            // Restore visibility state
+            val isMentorVisible = mentorInputVisibility[member.id] ?: false
+            setMentorInputVisibility(isMentorVisible)
 
-                // Set phone number (if available)
-                phoneTextView.text = member.phoneNumber.ifEmpty {
-                    itemView.context.getString(R.string.not_provided)
-                }
+            // Populate mentor chips
+            mentorsChipGroup.removeAllViews()
+            member.mentorNames.forEach { mentorName ->
+                val chip = Chip(itemView.context).apply {
+                    text = mentorName
+                    isCloseIconVisible = true
+                    setChipBackgroundColorResource(R.color.chip_background)
+                    setTextColor(ContextCompat.getColor(context, android.R.color.white))
 
-                // Set joined date
-                val joinedDate = member.joinedDate?.let { date ->
-                    itemView.context.getString(
-                        R.string.joined_date,
-                        dateFormat.format(date)
-                    )
-                } ?: itemView.context.getString(R.string.not_available)
-                joinedDateTextView.text = joinedDate
+                    setOnCloseIconClickListener {
+                        val updatedMentors =
+                            member.mentorNames.toMutableList().apply { remove(mentorName) }
+                        onApplyMentors(member.copy(mentorNames = updatedMentors), updatedMentors)
 
-                // Load member avatar
-                Glide.with(itemView)
-                    .load(R.drawable.ic_person)
-                    .apply(RequestOptions.bitmapTransform(CircleCrop()))
-                    .placeholder(R.drawable.ic_person)
-                    .into(avatarImageView)
-
-                // Populate mentor chips
-                mentorsChipGroup.removeAllViews()
-                if (member.mentorNames.isNotEmpty()) {
-                    mentorsChipGroup.visibility = View.VISIBLE
-                    member.mentorNames.forEach { name ->
-                        val chip = com.google.android.material.chip.Chip(itemView.context).apply {
-                            text = name
-                            isCheckable = false
-                            isClickable = false
-                            isCloseIconVisible = true
-                            setChipBackgroundColorResource(com.google.android.material.R.color.m3_chip_assist_text_color)
-                            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodySmall)
-                            chipStrokeWidth = 0f
-                            setOnCloseIconClickListener {
-                                // Remove mentor when close icon is clicked
-                                val updatedMentors = member.mentorNames.toMutableList().apply { remove(name) }
-                                currentMember?.let { user ->
-                                    onApplyMentors(user, updatedMentors)
-                                }
-                            }
-                        }
-                        mentorsChipGroup.addView(chip)
+                        // Update UI immediately
+                        mentorsChipGroup.removeView(this)
                     }
-                    mentorNamesEditText.setText(member.mentorNames.joinToString(", "))
-                } else {
-                    mentorsChipGroup.visibility = View.GONE
-                    mentorNamesEditText.setText("")
                 }
+                mentorsChipGroup.addView(chip)
+            }
 
-                // Show/hide approve/reject buttons based on member approval status
-                if (member.isApproved) {
-                    actionButtonsContainer.visibility = View.GONE
-                } else {
-                    actionButtonsContainer.visibility = View.VISIBLE
+            // Add mentor
+            addMentorEditText.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    applyMentorsButton.performClick()
+                    true
+                } else false
+            }
+
+            applyMentorsButton.setOnClickListener {
+                val newMentor = addMentorEditText.text.toString().trim()
+                if (newMentor.isNotEmpty()) {
+                    val updatedMentors = member.mentorNames.toMutableList().apply { add(newMentor) }
+                    val updatedMember = member.copy(mentorNames = updatedMentors)
+
+                    onApplyMentors(updatedMember, updatedMentors)
+
+                    // Update UI immediately
+                    val chip = Chip(itemView.context).apply {
+                        text = newMentor
+                        isCloseIconVisible = true
+                        setChipBackgroundColorResource(R.color.chip_background)
+                        setTextColor(ContextCompat.getColor(context, android.R.color.white))
+
+                        setOnCloseIconClickListener {
+                            val refreshed = updatedMember.mentorNames.toMutableList()
+                                .apply { remove(newMentor) }
+                            onApplyMentors(updatedMember.copy(mentorNames = refreshed), refreshed)
+                            mentorsChipGroup.removeView(this)
+                        }
+                    }
+                    mentorsChipGroup.addView(chip)
+
+                    addMentorEditText.text?.clear()
                 }
+            }
 
-                // Mentor section is always visible
-                mentorsSection.visibility = View.VISIBLE
+            // Approve
+            approveButton.setOnClickListener {
+                val updatedMember = member.copy(mentorNames = member.mentorNames)
+                onApproveClick(updatedMember)
+                refreshMember(updatedMember)
+            }
+
+            // Reject
+            rejectButton.setOnClickListener {
+                onRejectClick(member)
             }
         }
+
+        private fun setMentorInputVisibility(visible: Boolean) {
+            binding.mentorInputLayout.visibility = if (visible) View.VISIBLE else View.GONE
+            if (!visible) {
+                addMentorEditText.text?.clear()
+            }
+        }
+
+        private fun refreshMember(updatedMember: User) {
+            val position = bindingAdapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                submitList(currentList.toMutableList().apply {
+                    set(position, updatedMember)
+                })
+            }
         }
     }
 
-    private class MemberDiffCallback : DiffUtil.ItemCallback<User>() {
-        override fun areItemsTheSame(oldItem: User, newItem: User): Boolean {
-            return oldItem.id == newItem.id
-        }
+    class MemberDiffCallback : DiffUtil.ItemCallback<User>() {
+        override fun areItemsTheSame(oldItem: User, newItem: User): Boolean =
+            oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: User, newItem: User): Boolean {
-            return oldItem == newItem
-        }
+        override fun areContentsTheSame(oldItem: User, newItem: User): Boolean = oldItem == newItem
     }
+}

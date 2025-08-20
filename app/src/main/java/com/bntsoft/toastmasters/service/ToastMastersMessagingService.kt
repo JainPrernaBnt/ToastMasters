@@ -11,6 +11,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.bntsoft.toastmasters.MainActivity
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.utils.FcmTokenManager
 import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.bntsoft.toastmasters.utils.PrefsManager
 import com.google.firebase.auth.FirebaseAuth
@@ -23,9 +24,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * Service to handle Firebase Cloud Messaging (FCM) messages.
- */
+
 @AndroidEntryPoint
 class ToastMastersMessagingService : FirebaseMessagingService() {
 
@@ -40,6 +39,9 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var userRepository: UserRepository
+
+    @Inject
+    lateinit var fcmTokenManager: FcmTokenManager
 
     private val notificationManager by lazy {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -67,9 +69,6 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         Timber.d("ToastMastersMessagingService created")
     }
 
-    /**
-     * Called when a new FCM token is generated.
-     */
     override fun onNewToken(token: String) {
         super.onNewToken(token)
 
@@ -79,13 +78,16 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         }
         sendBroadcast(intent)
 
-        // Update the token in the repository
-        updateTokenInRepository(token)
+        // Update the token in the repository using a coroutine
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                fcmTokenManager.updateToken(token)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to update FCM token")
+            }
+        }
     }
 
-    /**
-     * Called when a new FCM message is received.
-     */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
         Timber.d("Message received from: ${remoteMessage.from}")
@@ -134,7 +136,8 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 message = body,
                 date = date,
                 location = location,
-                isReminder = false
+                isReminder = false,
+                data = data
             )
 
             Timber.d("Meeting created notification shown for meeting: $meetingId")
@@ -147,9 +150,6 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         return notificationHelper.createMeetingPendingIntent(meetingId)
     }
 
-    /**
-     * Handle the message in a background coroutine
-     */
     private fun handleMessageInBackground(remoteMessage: RemoteMessage) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -165,9 +165,6 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         }
     }
 
-    /**
-     * Process the data payload of the FCM message
-     */
     private fun processMessageData(data: Map<String, String>) {
         // Extract data from the message
         val type = data["type"]
@@ -190,20 +187,19 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
             NotificationHelper.TYPE_MENTOR_ASSIGNMENT -> {
                 // Handle mentor assignment notification
                 val userId = data["user_id"]
-                val mentorId = data["mentor_id"]
-                Timber.d(TAG, "Mentor assigned - User: $userId, Mentor: $mentorId")
+                val mentorNames = data["mentor_names"]
+                Timber.d(TAG, "Mentor assigned - User: $userId, Mentor: $mentorNames")
             }
 
             NotificationHelper.TYPE_MEETING_CREATED -> {
                 // Handle meeting created notification
                 val meetingId = data["meeting_id"]
                 meetingId?.let {
-                    // Refresh the meetings list
+                    // TODO: Refresh the meetings list
                     Timber.d(TAG, "New meeting created: $meetingId")
-                    updateTokenInRepository("token")
+                    // No need to update token here as it's unrelated to meeting creation
                 }
             }
-
             else -> {
                 // Handle other notification types or unknown types
                 Timber.d(TAG, "Received unknown message type: $type")
@@ -211,9 +207,6 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         }
     }
 
-    /**
-     * Check if the app is in the foreground
-     */
     private fun isAppInForeground(): Boolean {
         val appProcessInfo = android.app.ActivityManager.RunningAppProcessInfo()
         android.app.ActivityManager.getMyMemoryState(appProcessInfo)
@@ -286,7 +279,8 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 message = body,
                 date = date,
                 location = location,
-                isReminder = false
+                isReminder = false,
+                data = data
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to handle meeting updated notification")
@@ -307,7 +301,8 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 title = title,
                 message = "$body\n\nTime: $time",
                 location = location,
-                isReminder = true
+                isReminder = true,
+                data = data
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to handle meeting reminder notification")

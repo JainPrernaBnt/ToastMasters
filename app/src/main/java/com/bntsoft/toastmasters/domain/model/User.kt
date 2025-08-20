@@ -17,7 +17,6 @@ data class User(
     val password:String = "",
     val role: UserRole = UserRole.MEMBER,
     val isApproved: Boolean = false,
-    val isNewMember: Boolean = true,
     val mentorNames: List<String> = emptyList(),
     val fcmToken: String? = null,
     val createdAt: Date = Date(),

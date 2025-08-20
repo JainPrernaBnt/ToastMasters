@@ -187,7 +187,8 @@ class NotificationHelper @Inject constructor(
         autoCancel: Boolean = true,
         pendingIntent: PendingIntent? = null,
         style: NotificationCompat.Style? = null,
-        actions: List<NotificationCompat.Action> = emptyList()
+        actions: List<NotificationCompat.Action> = emptyList(),
+        data: Map<String, String> = emptyMap()
     ) {
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_notification)
@@ -329,7 +330,8 @@ class NotificationHelper @Inject constructor(
         message: String,
         date: String? = null,
         location: String? = null,
-        isReminder: Boolean = false
+        isReminder: Boolean = false,
+        data: Map<String, String> = emptyMap()
     ) {
         try {
             // Build the notification content
@@ -360,7 +362,8 @@ class NotificationHelper @Inject constructor(
                         context.getString(R.string.view_meeting),
                         pendingIntent
                     ).build()
-                )
+                ),
+                data = data
             )
             
             Timber.d("Meeting notification shown: $title")

@@ -26,7 +26,6 @@ class UserEntityMapper @Inject constructor() {
                 UserRole.MEMBER
             },
             isApproved = entity.isApproved,
-            isNewMember = entity.mentorAssignedBy == null, // Assuming new if no mentor assigned
             mentorNames = if (entity.mentor.isNotBlank()) {
                 listOf(entity.mentor)
             } else {

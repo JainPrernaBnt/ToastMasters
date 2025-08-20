@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.data.remote
 
+import com.bntsoft.toastmasters.data.model.UserDeserializer
 import com.bntsoft.toastmasters.domain.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -23,8 +24,9 @@ class UserService @Inject constructor(
         val currentUser = firebaseAuth.currentUser ?: return null
         return try {
             val document = usersCollection.document(currentUser.uid).get().await()
-            document.toObject(User::class.java)?.copy(id = currentUser.uid)
+            UserDeserializer.fromDocument(document)
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
@@ -32,8 +34,9 @@ class UserService @Inject constructor(
     suspend fun getUserById(userId: String): User? {
         return try {
             val document = usersCollection.document(userId).get().await()
-            document.toObject(User::class.java)?.copy(id = userId)
+            UserDeserializer.fromDocument(document)
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
@@ -47,8 +50,9 @@ class UserService @Inject constructor(
                 .await()
             
             val document = querySnapshot.documents.firstOrNull()
-            document?.toObject(User::class.java)?.copy(id = document.id)
+            document?.let { UserDeserializer.fromDocument(it) }
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
@@ -66,9 +70,7 @@ class UserService @Inject constructor(
                 "clubId" to user.clubId,
                 "role" to user.role,
                 "isApproved" to user.isApproved,
-                "isNewMember" to user.isNewMember,
                 "mentorNames" to user.mentorNames,
-                "mentorIds" to user.mentorNames, // Keep both for backward compatibility
                 "fcmToken" to user.fcmToken,
                 "updatedAt" to FieldValue.serverTimestamp()
             )
@@ -105,10 +107,9 @@ class UserService @Inject constructor(
             // Combine results and remove duplicates
             val allDocuments = (nameQuery.documents + emailQuery.documents).distinctBy { it.id }
             
-            allDocuments.mapNotNull { document ->
-                document.toObject(User::class.java)?.copy(id = document.id)
-            }
+            allDocuments.mapNotNull { UserDeserializer.fromDocument(it) }
         } catch (e: Exception) {
+            e.printStackTrace()
             emptyList()
         }
     }

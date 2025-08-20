@@ -69,18 +69,36 @@ class FirestoreService @Inject constructor(
     // Pending approvals
     fun getPendingApprovals(): Flow<List<DocumentSnapshot>> = flow {
         val collection = firestore.collection(USERS_COLLECTION)
-        // Query both the current 'isApproved' and legacy 'approved' flags and merge
         val results = linkedMapOf<String, DocumentSnapshot>()
 
         try {
-            val q1 = collection.whereEqualTo("isApproved", false).get().await()
-            q1.documents.forEach { results[it.id] = it }
-        } catch (_: Exception) { /* ignore partial failure */ }
+            // Get all users first
+            val allUsers = collection.get().await()
 
-        try {
-            val q2 = collection.whereEqualTo("approved", false).get().await()
-            q2.documents.forEach { results[it.id] = it }
-        } catch (_: Exception) { /* ignore partial failure */ }
+            // Filter for users who are either:
+            // 1. Have isApproved = false
+            // 2. Have approved = false
+            // 3. Don't have isApproved field (new users)
+            val pendingUsers = allUsers.documents.filter { doc ->
+                val isApproved = doc.getBoolean("isApproved") ?: false
+                !isApproved
+            }
+
+            pendingUsers.forEach { results[it.id] = it }
+        } catch (e: Exception) {
+            // Fallback to original behavior if there's an error
+            try {
+                val q1 = collection.whereEqualTo("isApproved", false).get().await()
+                q1.documents.forEach { results[it.id] = it }
+            } catch (_: Exception) { /* ignore */
+            }
+
+            try {
+                val q2 = collection.whereEqualTo("approved", false).get().await()
+                q2.documents.forEach { results[it.id] = it }
+            } catch (_: Exception) { /* ignore */
+            }
+        }
 
         emit(results.values.toList())
     }
@@ -99,24 +117,34 @@ class FirestoreService @Inject constructor(
     suspend fun approveMember(
         userId: String,
         mentorNames: List<String>,
-        isNewMember: Boolean
     ): Boolean {
         return try {
+            val userRef = firestore.collection(USERS_COLLECTION).document(userId)
+
+            // First get the current document to preserve existing fields
+            val doc = userRef.get().await()
+            val currentData = doc.data?.toMutableMap() ?: mutableMapOf()
+
+            // Update the necessary fields
             val updates = hashMapOf<String, Any>(
                 "isApproved" to true,
-                "isNewMember" to isNewMember,
                 "mentorNames" to mentorNames,
-                "mentorIds" to mentorNames, // Keep both for backward compatibility
                 "updatedAt" to FieldValue.serverTimestamp()
             )
 
-            firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .update(updates)
-                .await()
+            // Merge with existing data
+            currentData.putAll(updates)
 
-            true
+            // Use set with merge to ensure all fields are updated
+            userRef.set(currentData, com.google.firebase.firestore.SetOptions.merge()).await()
+
+            // Force a read to ensure the update was applied
+            val updatedDoc = userRef.get().await()
+            val isApproved = updatedDoc.getBoolean("isApproved") ?: false
+
+            isApproved
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }

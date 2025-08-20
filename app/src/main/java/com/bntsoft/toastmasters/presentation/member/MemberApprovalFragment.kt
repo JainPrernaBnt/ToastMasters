@@ -67,7 +67,7 @@ class MemberApprovalFragment : Fragment() {
                 showRejectConfirmationDialog(member)
             },
             onApplyMentors = { member, names ->
-                viewModel.assignMentors(member, names)
+                viewModel.assignMentor(member, names)
             }
         )
 
@@ -134,15 +134,18 @@ class MemberApprovalFragment : Fragment() {
     }
 
     private fun showApproveConfirmationDialog(member: User) {
+        val mentorNamesInput = member.mentorNames.joinToString(", ")
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.approve_member_title)
-            .setMessage(R.string.approve_member_message)
+            .setMessage("Approve ${member.name} with mentors: $mentorNamesInput ?")
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 viewModel.approveMember(member)
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
+
 
     private fun showRejectConfirmationDialog(member: User) {
         MaterialAlertDialogBuilder(requireContext())

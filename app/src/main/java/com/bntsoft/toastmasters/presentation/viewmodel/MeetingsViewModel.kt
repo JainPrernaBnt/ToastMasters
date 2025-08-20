@@ -66,7 +66,7 @@ class MeetingsViewModel @Inject constructor(
         }
     }
 
-    public fun loadUpcomingMeetings() {
+    fun loadUpcomingMeetings() {
         viewModelScope.launch {
             _upcomingMeetingsStateWithCounts.value = UpcomingMeetingsStateWithCounts.Loading
 

@@ -23,7 +23,7 @@ class MemberApprovalViewModel @Inject constructor(
 
     private val _members = MutableStateFlow<List<DomainUser>>(emptyList())
     val members = _members.asStateFlow()
-    
+
     private val _filteredMembers = MutableStateFlow<List<DomainUser>>(emptyList())
     val filteredMembers = _filteredMembers.asStateFlow()
 
@@ -83,9 +83,31 @@ class MemberApprovalViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                memberRepository.approveMember(member.id, emptyList(), member.isNewMember)
-                _successMessages.value = "${member.name} has been approved"
-                loadMembers() // Refresh the list
+                // Ensure we have the latest mentor names from the UI
+                val mentorNames = member.mentorNames ?: emptyList()
+
+                // First update the member with the mentor names
+                if (mentorNames.isNotEmpty()) {
+                    val updatedMember = member.copy(mentorNames = mentorNames)
+                    memberRepository.updateMember(updatedMember)
+                }
+
+                // Then approve the member
+                val isApproved = memberRepository.approveMember(member.id, mentorNames)
+
+                if (isApproved) {
+                    _successMessages.value = "${member.name} has been approved"
+
+                    // Update the local list
+                    val updatedList = _members.value.toMutableList().apply {
+                        removeAll { it.id == member.id }
+                    }
+                    _members.value = updatedList
+                    applyFilter(currentFilter, updatedList)
+                } else {
+                    _errorMessages.value = "Failed to approve member. Please try again."
+                }
+
             } catch (e: Exception) {
                 _errorMessages.value = e.message ?: "Failed to approve member"
             } finally {
@@ -100,7 +122,14 @@ class MemberApprovalViewModel @Inject constructor(
             try {
                 memberRepository.rejectMember(member.id)
                 _successMessages.value = "${member.name} has been rejected"
-                loadMembers() // Refresh the list
+
+                // Update the local list instead of reloading
+                val updatedList = _members.value.toMutableList().apply {
+                    removeAll { it.id == member.id }
+                }
+                _members.value = updatedList
+                applyFilter(currentFilter, updatedList)
+
             } catch (e: Exception) {
                 _errorMessages.value = e.message ?: "Failed to reject member"
             } finally {
@@ -109,35 +138,19 @@ class MemberApprovalViewModel @Inject constructor(
         }
     }
 
-    fun approveAll() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val pendingMembers = _members.value.filter { it.isApproved.not() }
-                pendingMembers.forEach { member ->
-                    memberRepository.approveMember(member.id, emptyList(), member.isNewMember)
-                }
-                _successMessages.value = "${pendingMembers.size} members approved"
-                loadMembers() // Refresh the list
-            } catch (e: Exception) {
-                _errorMessages.value = e.message ?: "Failed to approve all members"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun assignMentor(member: DomainUser, mentorName: String) {
+    fun assignMentor(member: DomainUser, mentorNames: List<String>) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val updatedMentorNames = member.mentorNames.toMutableList().apply {
-                    if (!contains(mentorName)) add(mentorName)
+                    mentorNames.forEach { name ->
+                        if (!contains(name)) add(name) // avoid duplicates
+                    }
                 }
                 val updatedMember = member.copy(mentorNames = updatedMentorNames)
-                memberRepository.updateMember(updatedMember)
-                _successMessages.value = "Mentor assigned successfully"
-                loadMembers() // Refresh the list
+                memberRepository.updateMember(updatedMember)  // yahi firebase me save karega
+                _successMessages.value = "Mentor(s) assigned successfully"
+                loadMembers() // Refresh UI
             } catch (e: Exception) {
                 _errorMessages.value = e.message ?: "Failed to assign mentor"
             } finally {
@@ -146,53 +159,9 @@ class MemberApprovalViewModel @Inject constructor(
         }
     }
 
-    fun assignMentors(member: DomainUser, mentorNames: List<String>) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val cleaned = mentorNames.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
-                val updatedMember = member.copy(mentorNames = cleaned)
-                memberRepository.updateMember(updatedMember)
-                _successMessages.value = "Mentors updated successfully"
-                loadMembers()
-            } catch (e: Exception) {
-                _errorMessages.value = e.message ?: "Failed to update mentors"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun filterMembers(query: String) {
-        val filtered = when (currentFilter) {
-            MemberApprovalFilter.ALL -> _members.value
-            MemberApprovalFilter.NEW_MEMBERS -> _members.value.filter { it.isNewMember }
-            MemberApprovalFilter.PENDING_APPROVAL -> _members.value.filter { !it.isApproved }
-        }
-
-        val result = if (query.isBlank()) {
-            filtered
-        } else {
-            val lowerCaseQuery = query.lowercase()
-            filtered.filter {
-                it.name.lowercase().contains(lowerCaseQuery) ||
-                it.email.lowercase().contains(lowerCaseQuery) ||
-                it.phoneNumber.lowercase().contains(lowerCaseQuery)
-            }
-        }
-
-        _filteredMembers.value = result
-    }
-
-    fun setFilter(filter: MemberApprovalFilter) {
-        currentFilter = filter
-        applyFilter(filter, _members.value)
-    }
-
     private fun applyFilter(filter: MemberApprovalFilter, members: List<DomainUser>) {
         val filtered = when (filter) {
             MemberApprovalFilter.ALL -> members
-            MemberApprovalFilter.NEW_MEMBERS -> members.filter { it.isNewMember }
             MemberApprovalFilter.PENDING_APPROVAL -> members.filter { !it.isApproved }
         }
         _filteredMembers.value = filtered

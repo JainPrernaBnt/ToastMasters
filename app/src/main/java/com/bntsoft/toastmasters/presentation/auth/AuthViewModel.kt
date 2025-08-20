@@ -32,9 +32,8 @@ class AuthViewModel @Inject constructor(
                 when (val result = authRepository.login(identifier, password)) {
                     is AuthResult.Success -> {
                         val user = result.data
-                        if (user.isVpEducation || user.isApproved) {
-                            val userRole = if (user.isVpEducation) UserRole.VP_EDUCATION else UserRole.MEMBER
-                            _uiState.value = AuthUiState.Success(user, userRole)
+                        if (user.role == UserRole.VP_EDUCATION || (user.role == UserRole.MEMBER && user.isApproved)) {
+                            _uiState.value = AuthUiState.Success(user, user.role)
                         } else {
                             _uiState.value = AuthUiState.Error("Your account is pending approval")
                             authRepository.logout()
@@ -55,9 +54,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Handles user registration.
-     */
     fun signUp(user: User, password: String) {
         _uiState.value = AuthUiState.Loading
 
@@ -95,7 +91,6 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
-
 
     fun resetState() {
         _uiState.value = AuthUiState.Initial

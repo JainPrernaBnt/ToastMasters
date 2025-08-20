@@ -27,18 +27,62 @@ class MemberRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun approveMember(userId: String, mentorNames: List<String>, isNewMember: Boolean): Boolean {
-        val ok = firestoreService.approveMember(userId, mentorNames, isNewMember)
-        if (ok) {
-            val notification = NotificationData(
-                title = "Membership approved",
-                message = "Your account has been approved. You can now sign in and use the app.",
-                type = NotificationHelper.TYPE_MEMBER_APPROVAL,
-                data = mapOf(NotificationHelper.EXTRA_USER_ID to userId)
-            )
-            try { notificationRepository.sendNotificationToUser(userId, notification) } catch (_: Exception) {}
+    override suspend fun approveMember(userId: String, mentorNames: List<String>): Boolean {
+        return try {
+            // First update mentor names if provided
+            if (mentorNames.isNotEmpty()) {
+                val updates = mapOf(
+                    "mentorNames" to mentorNames,
+                    "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                )
+                firestoreService.getUserDocument(userId).update(updates).await()
+            }
+            
+            // Then update approval status
+            var updateSuccess = firestoreService.approveMember(userId, mentorNames)
+            
+            if (updateSuccess) {
+                // Double-check the approval status was actually updated
+                val userDoc = firestoreService.getUserDocument(userId).get().await()
+                val isApproved = userDoc.getBoolean("isApproved") ?: userDoc.getBoolean("approved") ?: false
+                
+                if (!isApproved) {
+                    // If not approved, try a direct update
+                    val updates = mapOf(
+                        "isApproved" to true,
+                        "approved" to true,
+                        "mentorNames" to mentorNames,
+                        "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    )
+                    firestoreService.getUserDocument(userId).update(updates).await()
+                    
+                    // Verify again
+                    val updatedDoc = firestoreService.getUserDocument(userId).get().await()
+                    updateSuccess = updatedDoc.getBoolean("isApproved") ?: updatedDoc.getBoolean("approved") ?: false
+                }
+                
+                if (updateSuccess) {
+                    // Send notification only if update was successful
+                    val notification = NotificationData(
+                        title = "Membership approved",
+                        message = "Your account has been approved. You can now sign in and use the app.",
+                        type = NotificationHelper.TYPE_MEMBER_APPROVAL,
+                        data = mapOf(NotificationHelper.EXTRA_USER_ID to userId)
+                    )
+                    try { 
+                        notificationRepository.sendNotificationToUser(userId, notification) 
+                    } catch (e: Exception) {
+                        // Log error but don't fail the operation
+                        e.printStackTrace()
+                    }
+                }
+            }
+            
+            updateSuccess
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
-        return ok
     }
 
     override suspend fun rejectMember(userId: String, reason: String?): Boolean {
@@ -58,6 +102,20 @@ class MemberRepositoryImpl @Inject constructor(
             try { notificationRepository.sendNotificationToUser(userId, notification) } catch (_: Exception) {}
         }
         return ok
+    }
+
+    override suspend fun updateMember(user: User): Boolean {
+        return try {
+            val updates = mapOf(
+                "mentorNames" to (user.mentorNames ?: emptyList()),
+                "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+            )
+            firestoreService.getUserDocument(user.id).update(updates).await()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
     override fun getAllMembers(includePending: Boolean): Flow<List<User>> = flow {
@@ -97,15 +155,6 @@ class MemberRepositoryImpl @Inject constructor(
             documents.mapNotNull { doc ->
                 doc.toObject(User::class.java)?.copy(id = doc.id)
             }
-        }
-    }
-
-    override suspend fun updateMember(user: User): Boolean {
-        return try {
-            firestoreService.setUserDocument(user.id, user)
-            true
-        } catch (e: Exception) {
-            false
         }
     }
 

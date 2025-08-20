@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.ui.member
+package com.bntsoft.toastmasters.presentation.ui.members.upcoming
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.DialogMeetingResponseBinding
 import com.bntsoft.toastmasters.domain.model.MemberResponse
-import com.bntsoft.toastmasters.presentation.viewmodel.MemberResponseViewModel
 import com.bntsoft.toastmasters.utils.DateTimeUtils
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.chip.Chip
@@ -21,16 +20,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-/**
- * Dialog fragment for members to respond to a meeting with their availability and preferred roles.
- */
 @AndroidEntryPoint
-class MeetingResponseDialogFragment : DialogFragment() {
+class UpcomingMeetingFragment : DialogFragment() {
 
     private var _binding: DialogMeetingResponseBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MemberResponseViewModel by viewModels()
+    private val viewModel: UpcomingMeetingViewModel by viewModels()
 
     private var meetingId: String = ""
     private var onResponseSubmitted: (() -> Unit)? = null
@@ -92,46 +88,53 @@ class MeetingResponseDialogFragment : DialogFragment() {
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            // Observe meeting details
-            viewModel.meeting.collect { meeting ->
-                meeting?.let { updateMeetingDetails(it) }
+            // Observe UI state first
+            viewModel.uiState.collectLatest { state ->
+                when (state) {
+                    is UpcomingMeetingViewModel.MemberResponseUiState.Loading -> {
+                        showLoading(true)
+                    }
+                    is UpcomingMeetingViewModel.MemberResponseUiState.Saving -> {
+                        showLoading(true, getString(R.string.saving_changes))
+                    }
+                    is UpcomingMeetingViewModel.MemberResponseUiState.Success -> {
+                        showLoading(false)
+                        onResponseSubmitted?.invoke()
+                    }
+                    is UpcomingMeetingViewModel.MemberResponseUiState.Error -> {
+                        showLoading(false)
+                        showError(state.message)
+                        if (state.message.contains("Failed to load meeting") || 
+                            state.message.contains("Meeting not found")) {
+                            dismiss()
+                        }
+                    }
+                }
             }
         }
 
+        // Observe meeting details
         viewLifecycleOwner.lifecycleScope.launch {
-            // Observe current response
+            viewModel.meeting.collect { meeting ->
+                meeting?.let { 
+                    updateMeetingDetails(it)
+                    // Load available roles from the meeting
+                    updateAvailableRoles(it.availableRoles)
+                }
+            }
+        }
+
+        // Observe current response
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.currentResponse.collect { response ->
                 response?.let { updateResponseUI(it) }
             }
         }
 
+        // Observe available roles
         viewLifecycleOwner.lifecycleScope.launch {
-            // Observe available roles
             viewModel.availableRoles.collect { roles ->
                 updateAvailableRoles(roles)
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            // Observe UI state
-            viewModel.uiState.collectLatest { state ->
-                when (state) {
-                    is MemberResponseViewModel.MemberResponseUiState.Loading -> {
-                        showLoading(true)
-                    }
-                    is MemberResponseViewModel.MemberResponseUiState.Saving -> {
-                        showLoading(true, getString(R.string.saving_changes))
-                    }
-                    is MemberResponseViewModel.MemberResponseUiState.Success -> {
-                        showLoading(false)
-                        onResponseSubmitted?.invoke()
-                        dismiss()
-                    }
-                    is MemberResponseViewModel.MemberResponseUiState.Error -> {
-                        showLoading(false)
-                        showError(state.message)
-                    }
-                }
             }
         }
     }
@@ -183,8 +186,24 @@ class MeetingResponseDialogFragment : DialogFragment() {
     }
 
     private fun updateAvailableRoles(roles: List<String>) {
+        if (roles.isEmpty()) {
+            binding.tvNoRoles.isVisible = true
+            binding.cgRoles.isVisible = false
+            return
+        }
+        
+        binding.tvNoRoles.isVisible = false
+        binding.cgRoles.isVisible = true
+        
+        // Only update if the roles have changed to avoid UI flicker
+        val currentRoles = (0 until binding.cgRoles.childCount)
+            .map { binding.cgRoles.getChildAt(it) as? Chip }
+            .filterNotNull()
+            .map { it.text.toString() }
+            
+        if (currentRoles == roles) return
+        
         binding.cgRoles.removeAllViews()
-        binding.tvNoRoles.isVisible = roles.isEmpty()
         
         roles.forEach { role ->
             val chip = Chip(requireContext()).apply {
@@ -192,13 +211,15 @@ class MeetingResponseDialogFragment : DialogFragment() {
                 tag = role
                 isCheckable = true
                 isClickable = true
+                isChecked = viewModel.currentResponse.value?.preferredRoles?.contains(role) == true
                 setOnCheckedChangeListener { _, isChecked ->
-                    if (isChecked) {
-                        viewModel.toggleRole(role)
-                    } else {
-                        viewModel.toggleRole(role)
-                    }
+                    viewModel.toggleRole(role)
                 }
+                setChipBackgroundColorResource(R.color.chip_background_selector)
+                setTextColorResource(R.color.chip_text_selector)
+                chipStrokeColor = resources.getColorStateList(R.color.chip_stroke_selector, null)
+                chipStrokeWidth = resources.getDimension(R.dimen.chip_stroke_width)
+                chipCornerRadius = resources.getDimension(R.dimen.chip_corner_radius)
             }
             binding.cgRoles.addView(chip)
         }
@@ -276,19 +297,14 @@ class MeetingResponseDialogFragment : DialogFragment() {
     }
 
     companion object {
-        private const val ARG_MEETING_ID = "meeting_id"
+        private const val ARG_MEETING_ID = "meetingID"
         private const val ARG_MEMBER_ID = "member_id"
 
-        /**
-         * Creates a new instance of [MeetingResponseDialogFragment].
-         * @param meetingId The ID of the meeting to respond to
-         * @param onResponseSubmitted Callback when the response is successfully submitted
-         */
         fun newInstance(
             meetingId: String,
             onResponseSubmitted: (() -> Unit)? = null
-        ): MeetingResponseDialogFragment {
-            return MeetingResponseDialogFragment().apply {
+        ): UpcomingMeetingFragment {
+            return UpcomingMeetingFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_MEETING_ID, meetingId)
                 }

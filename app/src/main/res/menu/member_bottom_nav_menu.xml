@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/navigation_home"
+        android:id="@+id/navigation_dashboard"
         android:icon="@drawable/ic_dashboard"
         android:title="@string/title_dashboard" />
     <item
-        android:id="@+id/navigation_my_roles"
+        android:id="@+id/navigation_meetings"
         android:icon="@drawable/ic_notification_meeting"
         android:title="@string/title_upcoming_meetings" />
     <item
@@ -14,7 +14,7 @@
         android:title="@string/title_leaderboard" />
 
     <item
-        android:id="@+id/navigation_my_speeches"
+        android:id="@+id/navigation_settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/title_settings" />
 </menu>

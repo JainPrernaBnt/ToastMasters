@@ -13,9 +13,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel for member-related operations.
- */
 @HiltViewModel
 class MemberViewModel @Inject constructor(
     private val memberRepository: MemberRepository
@@ -35,9 +32,6 @@ class MemberViewModel @Inject constructor(
         loadMentors()
     }
 
-    /**
-     * Loads pending member approvals.
-     */
     fun loadPendingApprovals() {
         viewModelScope.launch {
             try {
@@ -55,9 +49,6 @@ class MemberViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Loads available mentors.
-     */
     private fun loadMentors() {
         viewModelScope.launch {
             try {
@@ -70,22 +61,14 @@ class MemberViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Approves a member's registration.
-     * @param userId ID of the member to approve
-     * @param mentorNames List of mentor names to assign
-     * @param isNewMember Whether this is a new member
-     * @param onComplete Callback with the result
-     */
     fun approveMember(
         userId: String,
         mentorNames: List<String>,
-        isNewMember: Boolean,
         onComplete: (Result<Boolean>) -> Unit
     ) {
         viewModelScope.launch {
             try {
-                val success = memberRepository.approveMember(userId, mentorNames, isNewMember)
+                val success = memberRepository.approveMember(userId, mentorNames)
                 if (success) {
                     onComplete(Result.Success(true))
                 } else {
@@ -97,12 +80,6 @@ class MemberViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Rejects a member's registration.
-     * @param userId ID of the member to reject
-     * @param reason Optional reason for rejection
-     * @param onComplete Callback with the result
-     */
     fun rejectMember(
         userId: String,
         reason: String? = null,
@@ -122,9 +99,6 @@ class MemberViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Sealed class representing the member UI state.
-     */
     sealed class MemberUiState {
         object Loading : MemberUiState()
         object Success : MemberUiState()

@@ -3,47 +3,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/member_nav_graph"
-    app:startDestination="@id/memberDashboardFragment">
+    app:startDestination="@id/navigation_dashboard">
 
     <fragment
-        android:id="@+id/memberDashboardFragment"
+        android:id="@+id/navigation_dashboard"
         android:name="com.bntsoft.toastmasters.presentation.ui.members.dashboard.MemberDashboardFragment"
-        android:label="My Dashboard"
+        android:label="Dashboard"
         tools:layout="@layout/fragment_member_dashboard">
 
         <action
             android:id="@+id/action_memberDashboardFragment_to_upcomingMeetingsFragment"
-            app:destination="@id/upcomingMeetingsFragment" />
+            app:destination="@id/navigation_meetings" />
         <action
             android:id="@+id/action_memberDashboardFragment_to_settingsFragment2"
-            app:destination="@id/settingsFragment2" />
+            app:destination="@id/navigation_settings" />
         <action
             android:id="@+id/action_memberDashboardFragment_to_leaderboardFragment2"
-            app:destination="@id/leaderboardFragment2" />
+            app:destination="@id/navigation_leaderboard" />
     </fragment>
     <fragment
-        android:id="@+id/upcomingMeetingsFragment"
-        android:name="com.bntsoft.toastmasters.presentation.ui.members.upcoming.UpcomingMeetingsFragment"
-        android:label="UpcomingMeetingsFragment" >
+        android:id="@+id/navigation_meetings"
+        android:name="com.bntsoft.toastmasters.presentation.ui.members.upcoming.UpcomingMeetingFragment"
+        android:label="Upcoming Meetings" >
         <action
             android:id="@+id/action_upcomingMeetingsFragment_to_memberDashboardFragment"
-            app:destination="@id/memberDashboardFragment" />
+            app:destination="@id/navigation_dashboard" />
     </fragment>
     <fragment
-        android:id="@+id/settingsFragment2"
+        android:id="@+id/navigation_settings"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.SettingsFragment"
-        android:label="SettingsFragment" >
+        android:label="Settings" >
         <action
             android:id="@+id/action_settingsFragment2_to_memberDashboardFragment"
-            app:destination="@id/memberDashboardFragment" />
+            app:destination="@id/navigation_dashboard" />
     </fragment>
     <fragment
-        android:id="@+id/leaderboardFragment2"
+        android:id="@+id/navigation_leaderboard"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.LeaderboardFragment"
-        android:label="LeaderboardFragment" >
+        android:label="Leaderboard" >
         <action
             android:id="@+id/action_leaderboardFragment2_to_memberDashboardFragment"
-            app:destination="@id/memberDashboardFragment" />
+            app:destination="@id/navigation_dashboard" />
     </fragment>
-
 </navigation>

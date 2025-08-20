@@ -4,11 +4,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
-    app:cardElevation="4dp"
-    app:cardCornerRadius="12dp"
     app:cardBackgroundColor="@color/white"
-    app:strokeWidth="1dp"
-    app:strokeColor="@color/outline_variant">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeColor="@color/outline_variant"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -20,15 +20,15 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
             android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:orientation="horizontal">
 
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_event"
                 android:layout_marginEnd="12dp"
+                android:src="@drawable/ic_event"
                 app:tint="@color/purple_500" />
 
             <TextView
@@ -37,20 +37,20 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Weekly ToastMasters Meeting"
+                android:textColor="@color/on_surface"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/on_surface" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvMeetingDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Aug 15, 2024"
-                android:textSize="14sp"
-                android:textColor="@color/on_surface_medium"
                 android:background="@drawable/bg_date_chip"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp" />
+                android:paddingVertical="4dp"
+                android:text="Aug 15, 2024"
+                android:textColor="@color/on_surface_medium"
+                android:textSize="14sp" />
 
         </LinearLayout>
 
@@ -58,21 +58,21 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginBottom="8dp"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_time"
                     android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_time"
                     app:tint="@color/on_surface_medium" />
 
                 <TextView
@@ -81,23 +81,23 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="5:30 PM - 7:30 PM"
-                    android:textSize="14sp"
-                    android:textColor="@color/on_surface_medium" />
+                    android:textColor="@color/on_surface_medium"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginBottom="8dp"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_location"
                     android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_location"
                     app:tint="@color/on_surface_medium" />
 
                 <TextView
@@ -106,22 +106,22 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Community Center, Room 101"
-                    android:textSize="14sp"
-                    android:textColor="@color/on_surface_medium" />
+                    android:textColor="@color/on_surface_medium"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_theme"
                     android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_theme"
                     app:tint="@color/on_surface_medium" />
 
                 <TextView
@@ -130,8 +130,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Theme: Leadership &amp; Communication"
-                    android:textSize="14sp"
-                    android:textColor="@color/on_surface_medium" />
+                    android:textColor="@color/on_surface_medium"
+                    android:textSize="14sp" />
 
             </LinearLayout>
 
@@ -141,11 +141,11 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:text="@string/your_availability"
-            android:textSize="14sp"
-            android:textStyle="bold"
             android:textColor="@color/on_surface"
-            android:layout_marginBottom="12dp" />
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/chipGroupAvailability"
@@ -158,9 +158,8 @@
                 android:id="@+id/chipAvailable"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/available"
                 android:checkable="true"
-                app:chipBackgroundColor="@drawable/chip_availability_selector"
+                android:text="@string/available"
                 app:chipStrokeColor="@color/success"
                 app:chipStrokeWidth="1dp" />
 
@@ -168,9 +167,8 @@
                 android:id="@+id/chipNotAvailable"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/not_available"
                 android:checkable="true"
-                app:chipBackgroundColor="@drawable/chip_availability_selector"
+                android:text="@string/not_available"
                 app:chipStrokeColor="@color/error"
                 app:chipStrokeWidth="1dp" />
 
@@ -178,9 +176,8 @@
                 android:id="@+id/chipNotConfirmed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/not_confirmed"
                 android:checkable="true"
-                app:chipBackgroundColor="@drawable/chip_availability_selector"
+                android:text="@string/not_confirmed"
                 app:chipStrokeColor="@color/on_surface_medium"
                 app:chipStrokeWidth="1dp" />
 
@@ -197,11 +194,11 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 android:text="@string/preferred_roles"
-                android:textSize="14sp"
-                android:textStyle="bold"
                 android:textColor="@color/on_surface"
-                android:layout_marginBottom="12dp" />
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupPreferredRoles"
@@ -214,8 +211,8 @@
                 <com.google.android.material.chip.Chip
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checkable="true"
                     android:text="Toastmaster"
-                    android:checkable="true"
                     app:chipBackgroundColor="@drawable/chip_role_selector"
                     app:chipStrokeColor="@color/purple_500"
                     app:chipStrokeWidth="1dp" />
@@ -223,8 +220,8 @@
                 <com.google.android.material.chip.Chip
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checkable="true"
                     android:text="Speaker"
-                    android:checkable="true"
                     app:chipBackgroundColor="@drawable/chip_role_selector"
                     app:chipStrokeColor="@color/purple_500"
                     app:chipStrokeWidth="1dp" />
@@ -232,8 +229,8 @@
                 <com.google.android.material.chip.Chip
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Evaluator"
                     android:checkable="true"
+                    android:text="Evaluator"
                     app:chipBackgroundColor="@drawable/chip_role_selector"
                     app:chipStrokeColor="@color/purple_500"
                     app:chipStrokeWidth="1dp" />
@@ -246,8 +243,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end">
+            android:gravity="end"
+            android:orientation="horizontal">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSaveAvailability"
@@ -255,10 +252,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/save_availability"
+                android:textColor="@color/purple_500"
                 android:textSize="14sp"
                 app:cornerRadius="8dp"
-                app:strokeColor="@color/purple_500"
-                android:textColor="@color/purple_500" />
+                app:strokeColor="@color/purple_500" />
 
         </LinearLayout>
 

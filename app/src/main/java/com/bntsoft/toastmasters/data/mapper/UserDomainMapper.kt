@@ -25,7 +25,6 @@ class UserDomainMapper @Inject constructor() {
                 else -> UserRole.MEMBER
             },
             isApproved = dto.isApproved,
-            isNewMember = dto.isNewMember,
             mentorNames = dto.mentorNames,
             fcmToken = dto.fcmToken,
             createdAt = dto.createdAt ?: Date(),
@@ -50,7 +49,6 @@ class UserDomainMapper @Inject constructor() {
                 else -> "MEMBER"
             },
             isApproved = domain.isApproved,
-            isNewMember = domain.isNewMember,
             mentorNames = domain.mentorNames,
             fcmToken = domain.fcmToken,
             isRejected = false, // Default value, adjust as needed

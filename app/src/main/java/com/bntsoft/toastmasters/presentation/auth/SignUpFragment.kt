@@ -254,7 +254,6 @@ class SignUpFragment : Fragment() {
             password = password,
             role = role, // Use selected role
             isApproved = role == UserRole.VP_EDUCATION, // Auto-approve VP Education
-            isNewMember = true,
             mentorNames = if (mentorName.isNotBlank()) listOf(mentorName) else emptyList()
         )
 
@@ -317,7 +316,6 @@ class SignUpFragment : Fragment() {
         } else {
             binding.phoneInputLayout.error = null
         }
-
         // Toastmasters ID validation
         if (binding.toastmastersIdEditText.text.isNullOrEmpty()) {
             binding.toastmastersIdInputLayout.error = getString(R.string.error_field_required)
@@ -374,19 +372,17 @@ class SignUpFragment : Fragment() {
             // Navigate back to login after showing the message
             findNavController().popBackStack()
         } else {
-            // For VP Education (auto-approved) - navigate to main screen
-            // The exact navigation action will be handled by the activity based on user role
-            // We'll just pop back to login and let the login flow handle the rest
-            findNavController().popBackStack()
-
-            // Show success message
+            // For VP Education (auto-approved)
+            // Show success message with email verification info
             UiUtils.showSuccessMessage(
                 binding.root,
-                getString(R.string.signup_success_approved)
+                getString(R.string.vp_education_signup_success)
             )
 
-            // Finish the activity to prevent going back to signup
-            requireActivity().finish()
+            // Navigate back to login after a short delay
+            binding.root.postDelayed({
+                findNavController().popBackStack()
+            }, 2000) // 2 seconds delay to show the message
         }
     }
 

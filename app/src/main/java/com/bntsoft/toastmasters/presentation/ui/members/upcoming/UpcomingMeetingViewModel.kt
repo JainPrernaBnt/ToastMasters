@@ -1,10 +1,12 @@
-package com.bntsoft.toastmasters.presentation.viewmodel
+package com.bntsoft.toastmasters.presentation.ui.members.upcoming
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bntsoft.toastmasters.data.model.User
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MemberResponse
+import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,17 +19,19 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
-class MemberResponseViewModel @Inject constructor(
+class UpcomingMeetingViewModel @Inject constructor(
     private val memberResponseRepository: MemberResponseRepository,
     private val meetingRepository: MeetingRepository,
-    savedStateHandle: SavedStateHandle
+    private val authRepository: AuthRepository,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     // Meeting ID from navigation arguments
-    private val meetingId: Int = savedStateHandle.get<String>(MEETING_ID_ARG)?.toIntOrNull() ?: 0
+    private val meetingId: String = savedStateHandle.get<String>(MEETING_ID_ARG) ?: ""
 
     // Current user ID (to be replaced with actual user ID from authentication)
-    private val currentUserId = "current_user_id" // TODO: Replace with actual user ID
+    private val _currentUserId = MutableStateFlow<String>("")
+    val currentUserId: StateFlow<String> = _currentUserId.asStateFlow()
 
     // UI State
     private val _uiState = MutableStateFlow<MemberResponseUiState>(MemberResponseUiState.Loading)
@@ -41,17 +45,35 @@ class MemberResponseViewModel @Inject constructor(
     private val _currentResponse = MutableStateFlow<MemberResponse?>(null)
     val currentResponse: StateFlow<MemberResponse?> = _currentResponse.asStateFlow()
 
-    // Available roles for the meeting (hardcoded for now, should come from a repository or settings)
-    private val _availableRoles = MutableStateFlow<List<String>>(
-        listOf(
-            "Toastmaster", "Speaker", "Evaluator", "Table Topics Master", "General Evaluator",
-            "Ah-Counter", "Grammarian", "Timer", "Vote Counter"
-        )
-    )
+    // Available roles for the meeting
+    private val _availableRoles = MutableStateFlow<List<String>>(emptyList())
     val availableRoles: StateFlow<List<String>> = _availableRoles.asStateFlow()
+    
+    init {
+        loadCurrentUser()
+    }
+    
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            try {
+                authRepository.getCurrentUser()?.let { user ->
+                    _currentUserId.value = user.id
+                    loadMeetingAndResponse()
+                } ?: run {
+                    _uiState.value = MemberResponseUiState.Error("User not authenticated")
+                }
+            } catch (e: Exception) {
+                _uiState.value = MemberResponseUiState.Error("Failed to load user: ${e.message}")
+            }
+        }
+    }
 
     init {
-        loadMeetingAndResponse()
+        viewModelScope.launch {
+            val userId = authRepository.getCurrentUser() ?: ""
+            _currentUserId.value = userId
+            loadMeetingAndResponse(userId)
+        }
     }
 
     private fun loadMeetingAndResponse() {
@@ -60,29 +82,30 @@ class MemberResponseViewModel @Inject constructor(
                 _uiState.value = MemberResponseUiState.Loading
 
                 // Load meeting details
-                val meetingResult = meetingRepository.getMeetingById(meetingId.toString())
-                meetingResult?.let { meeting ->
-                    _meeting.value = meeting
-                    // Roles are now hardcoded in _availableRoles initialization
-                } ?: run {
-                    _uiState.value = MemberResponseUiState.Error("Failed to load meeting details")
-                    return@launch
+                val meetingResult = meetingRepository.getMeetingById(meetingId)
+                if (meetingResult != null) {
+                    _meeting.value = meetingResult
+                    // Update available roles from meeting
+                    _availableRoles.value = meetingResult.availableRoles.ifEmpty {
+                        listOf("Toastmaster", "Speaker", "Evaluator", "Table Topics Master") // Default roles
+                    }
+                    
+                    // Load or create member response
+                    memberResponseRepository.getMemberResponse(meetingId, _currentUserId.value)
+                        .catch { e ->
+                            _uiState.value = MemberResponseUiState.Error("Failed to load your response")
+                            Timber.e(e, "Error loading member response")
+                        }
+                        .collect { response ->
+                            _currentResponse.value = response ?: createDefaultResponse()
+                            _uiState.value = MemberResponseUiState.Success
+                        }
+                } else {
+                    _uiState.value = MemberResponseUiState.Error("Meeting not found")
                 }
-
-                // Load or create member response
-                memberResponseRepository.getMemberResponse(meetingId, currentUserId)
-                    .catch { e ->
-                        _uiState.value = MemberResponseUiState.Error("Failed to load your response")
-                        Timber.e(e, "Error loading member response")
-                    }
-                    .collect { response ->
-                        _currentResponse.value = response ?: createDefaultResponse()
-                        _uiState.value = MemberResponseUiState.Success
-                    }
-
             } catch (e: Exception) {
-                _uiState.value = MemberResponseUiState.Error("An unexpected error occurred")
-                Timber.e(e, "Error loading meeting and response")
+                _uiState.value = MemberResponseUiState.Error("Failed to load meeting: ${e.message}")
+                Timber.e(e, "Error in loadMeetingAndResponse")
             }
         }
     }

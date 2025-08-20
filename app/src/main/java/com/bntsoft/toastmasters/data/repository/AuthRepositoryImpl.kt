@@ -1,11 +1,13 @@
 package com.bntsoft.toastmasters.data.repository
 
 import android.util.Log
+import com.bntsoft.toastmasters.data.model.NotificationData
+import com.bntsoft.toastmasters.data.model.UserDeserializer
+import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.data.remote.FirebaseAuthService
 import com.bntsoft.toastmasters.data.remote.FirestoreService
-import com.bntsoft.toastmasters.data.model.NotificationData
-import com.bntsoft.toastmasters.domain.model.SignupResult
 import com.bntsoft.toastmasters.domain.model.AuthResult
+import com.bntsoft.toastmasters.domain.model.SignupResult
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,12 +49,38 @@ class AuthRepositoryImpl @Inject constructor(
             val firebaseUser = result.user
 
             if (firebaseUser != null) {
-                // Get user data from Firestore
+                // Get user data from Firestore using our custom deserializer
                 val userDoc = firestoreService.getUserDocument(firebaseUser.uid).get().await()
                 if (userDoc.exists()) {
-                    val user = userDoc.toObject(User::class.java)?.copy(id = firebaseUser.uid)
+                    val user = UserDeserializer.fromDocument(userDoc)
                     if (user != null) {
-                        AuthResult.Success(user)
+                        // Log user details for debugging
+                        Timber.tag("AuthRepositoryImpl")
+                            .d("User role: ${user.role}, isApproved: ${user.isApproved}, isVpEducation: ${user.isVpEducation}")
+                        
+                        // Check if user is VP Education (always allow login) or an approved member
+                        if (user.isVpEducation) {
+                            Timber.tag("AuthRepositoryImpl")
+                                .d("VP Education user logged in successfully")
+                            AuthResult.Success(user)
+                        } else if (user.role == UserRole.MEMBER) {
+                            if (user.isApproved) {
+                                Timber.tag("AuthRepositoryImpl")
+                                    .d("Approved member logged in successfully")
+                                AuthResult.Success(user)
+                            } else {
+                                // Regular member not approved yet
+                                Timber.tag("AuthRepositoryImpl")
+                                    .d("Member not approved, signing out")
+                                firebaseAuth.signOut()
+                                AuthResult.Error("Your account is pending approval")
+                            }
+                        } else {
+                            // Unknown role
+                            Timber.tag("AuthRepositoryImpl").d("Unknown role, signing out")
+                            firebaseAuth.signOut()
+                            AuthResult.Error("Invalid user role")
+                        }
                     } else {
                         AuthResult.Error("Failed to parse user data")
                     }
@@ -79,12 +108,16 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             // Create Firebase Auth user
             val authResult =
-                firebaseAuth.createUserWithEmailAndPassword(user.email, password).await()
+                firebaseAuth.createUserWithEmailAndPassword(user.email, user.password).await()
             val firebaseUser = authResult.user
 
             if (firebaseUser != null) {
-                // Create user document in Firestore
-                val userWithId = user.copy(id = firebaseUser.uid)
+                // Create user document in Firestore with all required fields
+                val userWithId = user.copy(
+                    id = firebaseUser.uid,
+                    isApproved = false, // New users are not approved by default
+                    role = UserRole.MEMBER // Default role for new users
+                )
                 firestoreService.setUserDocument(firebaseUser.uid, userWithId)
 
                 // Send email verification
@@ -121,7 +154,7 @@ class AuthRepositoryImpl @Inject constructor(
                 }
 
                 else -> {
-                    Log.e("AuthRepository", "Sign up error", e)
+                    Timber.tag("AuthRepository").e(e, "Sign up error")
                     AuthResult.Error(e.message ?: "Failed to create account")
                 }
             }
@@ -188,8 +221,24 @@ class AuthRepositoryImpl @Inject constructor(
                     try {
                         val userDoc =
                             firestoreService.getUserDocument(firebaseUser.uid).get().await()
-                        val user = userDoc.toObject(User::class.java)?.copy(id = firebaseUser.uid)
-                        trySend(user)
+                        if (userDoc.exists()) {
+                            val user =
+                                userDoc.toObject(User::class.java)?.copy(id = firebaseUser.uid)
+                            if (user != null) {
+                                // Check if user is approved
+                                if (user.isVpEducation || (user.role == UserRole.MEMBER && user.isApproved)) {
+                                    trySend(user)
+                                } else {
+                                    // User is not approved yet, sign them out
+                                    firebaseAuth.signOut()
+                                    trySend(null)
+                                }
+                            } else {
+                                trySend(null)
+                            }
+                        } else {
+                            trySend(null)
+                        }
                     } catch (e: Exception) {
                         trySend(null)
                     }

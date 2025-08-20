@@ -51,6 +51,7 @@
     <string name="action_login_to_signUpFragment">action_login_to_signUpFragment</string>
     <string name="signup_success_pending_approval">Your account is pending approval from the VP Education.</string>
     <string name="signup_success_approved">Your account has been created successfully!</string>
+    <string name="vp_education_signup_success">Account created! Please check your email to verify your account.</string>
     <string name="forgot_password_title">Forgot Password</string>
     <string name="forgot_password_message">Enter your email address and we\'ll send you a link to reset your password.</string>
     <string name="send_reset_link">SEND RESET LINK</string>
@@ -275,6 +276,14 @@
     <string name="more_options">More options</string>
     <string name="btn_edit">Edit</string>
 
+    <!-- Notification Channels -->
+    <string name="default_notification_channel_name">Default Notifications</string>
+    <string name="default_notification_channel_description">General notifications</string>
+    <string name="important_notification_channel_name">Important Notifications</string>
+    <string name="important_notification_channel_description">Important and time-sensitive notifications</string>
+    <string name="meetings_notification_channel_name">Meetings</string>
+    <string name="meetings_notification_channel_description">Meeting-related notifications</string>
+    
     <!-- Notification Actions -->
     <string name="view_meeting">View Meeting</string>
     

@@ -29,17 +29,17 @@ class MemberActivity : BaseActivity() {
             val navController = navHostFragment.navController
 
             val navGraph = navController.navInflater.inflate(R.navigation.member_nav_graph)
-            navGraph.setStartDestination(R.id.memberDashboardFragment)
+            navGraph.setStartDestination(R.id.navigation_dashboard)
             navController.graph = navGraph
 
             binding.bottomNavView.setupWithNavController(navController)
 
             navController.addOnDestinationChangedListener { _, destination, _ ->
                 supportActionBar?.title = when (destination.id) {
-                    R.id.memberDashboardFragment -> getString(R.string.title_dashboard)
-                    R.id.upcomingMeetingsFragment -> getString(R.string.title_upcoming_meetings)
-                    R.id.leaderboardFragment2 -> getString(R.string.title_leaderboard)
-                    R.id.settingsFragment2 -> getString(R.string.title_settings)
+                    R.id.navigation_dashboard -> getString(R.string.title_dashboard)
+                    R.id.navigation_meetings -> getString(R.string.title_upcoming_meetings)
+                    R.id.navigation_leaderboard -> getString(R.string.title_leaderboard)
+                    R.id.navigation_settings -> getString(R.string.title_settings)
                     else -> getString(R.string.app_name)
 
                 }
