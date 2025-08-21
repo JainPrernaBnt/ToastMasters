@@ -13,12 +13,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentDashboardBinding
-import com.bntsoft.toastmasters.presentation.viewmodel.MeetingsViewModel
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.MeetingsViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.bntsoft.toastmasters.presentation.viewmodel.UpcomingMeetingsStateWithCounts as UpcomingMeetingsState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.UpcomingMeetingsStateWithCounts as UpcomingMeetingsState
 
 @AndroidEntryPoint
 class DashboardFragment : Fragment() {
@@ -77,14 +76,11 @@ class DashboardFragment : Fragment() {
                     .show()
             },
             onItemClick = { meetingId ->
-                if (!isDialogShowing) {
-                    isDialogShowing = true
-                    currentMeetingId = meetingId
-                    findNavController().navigate(
-                        R.id.action_dashboardFragment_to_upcomingMeetingFragment,
-                        bundleOf("meetingId" to meetingId)
-                    )
-                }
+                findNavController().navigate(
+                    R.id.action_dashboardFragment_to_memberResponseFragment,
+                    bundleOf("meeting_id" to meetingId)
+                )
+
             }
         )
         binding.rvMeetings.apply {
@@ -114,7 +110,6 @@ class DashboardFragment : Fragment() {
                         // Handle loading state, e.g., show a progress bar
                     }
 
-                    is UpcomingMeetingsState.Error -> TODO()
                 }
             }
         }

@@ -57,6 +57,7 @@ class MeetingAdapter(
             binding.tvAvailableCount.text = meetingWithCounts.availableCount.toString()
             binding.tvNotAvailableCount.text = meetingWithCounts.notAvailableCount.toString()
             binding.tvNotConfirmedCount.text = meetingWithCounts.notConfirmedCount.toString()
+            binding.tvNotResponded.text = meetingWithCounts.notResponded.toString()
 
             // Overflow menu for edit/delete
             binding.btnOverflow.setOnClickListener { view ->
@@ -77,6 +78,7 @@ class MeetingAdapter(
                             else -> false
                         }
                     }
+                    show()
                 }
             }
         }

@@ -12,7 +12,8 @@ data class Meeting(
     val isRecurring: Boolean = false,
     val createdBy: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val availability: MeetingAvailability? = null
 ) {
     // For backward compatibility
     val preferredRoles: List<String> get() = availableRoles

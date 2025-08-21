@@ -3,4 +3,12 @@
         <item name="android:textSize">12sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
+
+    <!-- Chip Styles -->
+    <style name="ChipTextAppearance" parent="TextAppearance.MaterialComponents.Chip">
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <color name="chip_background">#E0E0E0</color>
 </resources>

@@ -9,5 +9,8 @@ data class MeetingDto(
     val theme: String = "No Theme",
     val preferredRoles: List<String> = emptyList(),
     val createdAt: Long = 0,
-    val isRecurring: Boolean = false
+    val isRecurring: Boolean = false,
+    val recurringDayOfWeek: Int? = null,
+    val recurringStartTime: String? = null,
+    val recurringEndTime: String? = null
 )

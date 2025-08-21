@@ -49,7 +49,6 @@
     <color name="success">#198754</color>
 
     <!-- Chip colors -->
-    <color name="chip_background">#1E88E5</color>
     <color name="chip_text">#FFFFFF</color>
 
     <!-- Divider -->

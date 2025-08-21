@@ -28,7 +28,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/member_not_confirmed"
+        android:text="@string/member_not_available"
         android:textSize="12sp"
         android:textColor="@color/on_surface_medium"
         android:background="@drawable/bg_status_chip"

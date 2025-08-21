@@ -3,201 +3,212 @@ package com.bntsoft.toastmasters.presentation.ui.members.upcoming
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.ItemUpcomingMeetingBinding
 import com.bntsoft.toastmasters.domain.model.Meeting
-import com.bntsoft.toastmasters.domain.model.MemberResponse
-import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
-import kotlinx.coroutines.flow.firstOrNull
+import com.bntsoft.toastmasters.domain.model.MeetingAvailability
+import com.google.android.material.chip.Chip
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
-class UpcomingMeetingsAdapter(
-    private val currentUserId: String,
-    private val onAvailabilityChanged: (meetingId: String, availability: MemberResponse.AvailabilityStatus) -> Unit,
-    private val onRolesUpdated: (meetingId: String, selectedRoles: List<String>) -> Unit,
-    private val memberResponseRepository: MemberResponseRepository
-) : ListAdapter<Meeting, UpcomingMeetingsAdapter.UpcomingMeetingViewHolder>(
-    UpcomingMeetingDiffCallback()
-) {
+class UpcomingMeetingsAdapter :
+    ListAdapter<Meeting, UpcomingMeetingsAdapter.MeetingViewHolder>(MeetingDiffCallback()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UpcomingMeetingViewHolder {
+    var onAvailabilitySubmitted: ((String, Boolean, List<String>) -> Unit)? = null
+
+    private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
+    private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MeetingViewHolder {
         val binding = ItemUpcomingMeetingBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
         )
-        return UpcomingMeetingViewHolder(binding)
+        return MeetingViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: UpcomingMeetingViewHolder, position: Int) {
-        val meeting = getItem(position)
-        holder.bind(meeting)
+    override fun onBindViewHolder(holder: MeetingViewHolder, position: Int) {
+        holder.bind(getItem(position))
     }
 
-    inner class UpcomingMeetingViewHolder(
+    inner class MeetingViewHolder(
         private val binding: ItemUpcomingMeetingBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        private var currentMeetingId: String = ""
+        private var isAvailable = false
+        private val selectedRoles = mutableSetOf<String>()
 
-        fun bind(meeting: Meeting) {
-            currentMeetingId = meeting.id
-
-            // If currentUserId is empty, don't try to load responses
-            if (currentUserId.isEmpty()) {
-                setupMeetingInfo(meeting, null)
-                return
-            }
-
-            // Load member's current response for this meeting (using runBlocking for simplicity)
-            try {
-                val currentResponse = kotlinx.coroutines.runBlocking {
-                    memberResponseRepository.getResponsesForMeeting(currentMeetingId)
-                        .firstOrNull()
-                        ?.find { it.memberId == currentUserId }
-                }
-                setupMeetingInfo(meeting, currentResponse)
-            } catch (e: Exception) {
-                android.util.Log.e("UpcomingMeetings", "Error loading response: ${e.message}")
-                setupMeetingInfo(meeting, null)
-            }
-
-        }
-
-        private fun setupMeetingInfo(meeting: Meeting, currentResponse: MemberResponse?) {
+        fun bind(meeting: Meeting, availability: MeetingAvailability? = null) {
             binding.apply {
-                // Always set meeting details
-                tvMeetingTitle.text = meeting.theme
-                tvMeetingDate.text =
-                    meeting.dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
-                tvMeetingTime.text =
-                    "${meeting.dateTime.format(DateTimeFormatter.ofPattern("h:mm a"))} - ${
-                        meeting.endDateTime?.format(DateTimeFormatter.ofPattern("h:mm a")) ?: ""
-                    }"
-                tvMeetingVenue.text = meeting.location
-
-                // Handle response UI only if we have a valid user ID
-                if (currentUserId.isNotEmpty()) {
-                    // Set up availability chips
-                    chipGroupAvailability.setOnCheckedChangeListener(null) // Clear previous listeners
-
-                    // Set initial state based on current response
-                    when (currentResponse?.availability) {
-                        MemberResponse.AvailabilityStatus.AVAILABLE -> chipAvailable.isChecked =
-                            true
-
-                        MemberResponse.AvailabilityStatus.NOT_AVAILABLE -> chipNotAvailable.isChecked =
-                            true
-
-                        else -> chipNotConfirmed.isChecked = true // Default to not confirmed
-                    }
-
-                    // Show/hide preferred roles based on current availability
-                    layoutPreferredRoles.isVisible =
-                        currentResponse?.availability == MemberResponse.AvailabilityStatus.AVAILABLE
-
-                    // Set up chip listeners
-                    val chipMap = mapOf(
-                        chipAvailable.id to MemberResponse.AvailabilityStatus.AVAILABLE,
-                        chipNotAvailable.id to MemberResponse.AvailabilityStatus.NOT_AVAILABLE,
-                        chipNotConfirmed.id to MemberResponse.AvailabilityStatus.NOT_CONFIRMED
-                    )
-
-                    chipGroupAvailability.setOnCheckedChangeListener { group, checkedId ->
-                        val status = chipMap[checkedId] ?: return@setOnCheckedChangeListener
-                        onAvailabilityChanged(meeting.id, status)
-
-                        // Show/hide preferred roles section based on availability
-                        layoutPreferredRoles.isVisible =
-                            status == MemberResponse.AvailabilityStatus.AVAILABLE
-                    }
-
-                    // Enable/disable interaction based on user authentication
-                    chipGroupAvailability.isEnabled = true
-                } else {
-                    // Disable interaction if user is not authenticated
-                    chipGroupAvailability.isEnabled = false
-                    layoutPreferredRoles.isVisible = false
+                // Set meeting title
+                tvMeetingTitle.text = meeting.theme.ifEmpty {
+                    itemView.context.getString(R.string.meeting_title)
                 }
 
-                // Set up preferred roles if available
-                if (meeting.availableRoles.isNotEmpty()) {
-                    setupPreferredRoles(
-                        meeting.id,
-                        meeting.availableRoles,
-                        currentResponse?.preferredRoles ?: emptyList()
-                    )
+                val date = "${meeting.dateTime.format(dateFormatter)} "
+                tvMeetingDate.text = date
+
+                val time = "${meeting.dateTime.format(timeFormatter)} - ${meeting.endDateTime?.format(timeFormatter) ?: ""}"
+                tvMeetingTime.text = time
+
+                // Set location
+                tvMeetingLocation.text = meeting.location.ifEmpty {
+                    itemView.context.getString(R.string.venue_not_specified)
+                }
+                if (availability != null) {
+                    // View mode - show submitted availability
+                    rgAvailability.visibility = View.GONE
+                    btnSubmit.visibility = View.GONE
+                    cgRoles.visibility = View.GONE
+
+                    // Show availability status
+                    val availabilityText = if (availability.isAvailable) {
+                        "Available" // You can move this to strings.xml
+                    } else {
+                        "Not Available"
+                    }
+
+                    binding.tvAvailabilityStatus.visibility = View.VISIBLE
+                    binding.tvAvailabilityStatus.text = "Your Availability: $availabilityText"
+
+                    // Show selected roles if available
+                    if (availability.isAvailable && availability.preferredRoles.isNotEmpty()) {
+                        binding.tvSelectedRoles.visibility = View.VISIBLE
+                        binding.tvSelectedRoles.text = "Preferred Roles: ${
+                            availability.preferredRoles.joinToString(", ")
+                        }"
+                    } else {
+                        binding.tvSelectedRoles.visibility = View.GONE
+                    }
                 } else {
-                    binding.layoutPreferredRoles.visibility = View.GONE
+                    // Edit mode
+                    setupInitialState()
+
+                    // Setup radio group listener
+                    rgAvailability.setOnCheckedChangeListener { _, checkedId ->
+                        isAvailable = checkedId == R.id.rbAvailable
+                        updatePreferredRolesVisibility()
+                    }
+
+                    // Show availability options
+                    rgAvailability.visibility = View.VISIBLE
+
+                    // Setup preferred roles (initially hidden)
+                    setupPreferredRoles(meeting.preferredRoles)
+
+                    // Set initial visibility
+                    updatePreferredRolesVisibility()
+
+                    // Setup submit button
+                    btnSubmit.visibility = View.VISIBLE
+                    btnSubmit.setOnClickListener {
+                        onAvailabilitySubmitted?.invoke(
+                            meeting.id,
+                            isAvailable,
+                            selectedRoles.toList()
+                        )
+                    }
+                }
+                // Initialize UI state
+
+
+            }
+        }
+
+        private fun setupInitialState() {
+            binding.apply {
+                // Initially hide preferred roles section
+                cgRoles.visibility = View.GONE
+                tvNoRoles.visibility = View.GONE
+
+                // Set default selection to not available
+                rgAvailability.clearCheck()
+            }
+        }
+
+        private fun updatePreferredRolesVisibility() {
+            binding.apply {
+                if (isAvailable) {
+                    // Show preferred roles when available is selected
+                    if (cgRoles.childCount > 0) {
+                        cgRoles.visibility = View.VISIBLE
+                        tvNoRoles.visibility = View.GONE
+                    } else {
+                        tvNoRoles.visibility = View.VISIBLE
+                        cgRoles.visibility = View.GONE
+                    }
+                } else {
+                    // Hide preferred roles for not available/not selected
+                    cgRoles.visibility = View.GONE
+                    tvNoRoles.visibility = View.GONE
                 }
             }
         }
 
-        private fun setupPreferredRoles(
-            meetingId: String,
-            availableRoles: List<String>,
-            selectedRoles: List<String>
-        ) {
-            // Clear any existing chips
-            binding.chipGroupPreferredRoles.removeAllViews()
-            
-            if (availableRoles.isEmpty()) {
-                binding.layoutPreferredRoles.visibility = View.GONE
-                return
+        private fun updateChipAppearance(chip: Chip, isSelected: Boolean) {
+            chip.apply {
+                if (isSelected) {
+                    setChipBackgroundColorResource(R.color.purple_200)
+                    setTextColor(resources.getColor(R.color.white, null))
+                } else {
+                    setChipBackgroundColorResource(R.color.chip_background)
+                    setTextAppearance(R.style.ChipTextAppearance)
+                }
             }
-            
-            // Show the roles section
-            binding.layoutPreferredRoles.visibility = View.VISIBLE
-            
-            // Get resources
-            val resources = itemView.context.resources
-            
-            // Create a chip for each available role
-            availableRoles.forEach { role ->
-                val chip = com.google.android.material.chip.Chip(binding.chipGroupPreferredRoles.context).apply {
-                    text = role
-                    isCheckable = true
-                    isChecked = selectedRoles.contains(role)
+        }
 
-                    // Set up chip styling
-                    setChipBackgroundColorResource(R.color.selector_chip_background)
-                    setTextAppearance(com.google.android.material.R.style.TextAppearance_MaterialComponents_Body2)
+        private fun setupPreferredRoles(roles: List<String>) {
+            binding.apply {
+                cgRoles.removeAllViews()
+                selectedRoles.clear()
 
-                    // Set chip dimensions and padding
-                    setEnsureMinTouchTargetSize(false)
-                    chipMinHeight = resources.getDimensionPixelSize(R.dimen.chip_min_height).toFloat()
-                    setPadding(
-                        resources.getDimensionPixelSize(R.dimen.chip_horizontal_padding),
-                        resources.getDimensionPixelSize(R.dimen.chip_vertical_padding),
-                        resources.getDimensionPixelSize(R.dimen.chip_horizontal_padding),
-                        resources.getDimensionPixelSize(R.dimen.chip_vertical_padding)
-                    )
+                if (roles.isEmpty()) {
+                    updatePreferredRolesVisibility()
+                    return@apply
+                }
 
-                    // Set up click listener for role selection
-                    setOnCheckedChangeListener { buttonView, isChecked ->
-                        val currentSelectedRoles = mutableListOf<String>()
-                        for (i in 0 until binding.chipGroupPreferredRoles.childCount) {
-                            val child = binding.chipGroupPreferredRoles.getChildAt(i) as? com.google.android.material.chip.Chip
-                            child?.let { chip ->
-                                if (chip.isChecked) {
-                                    currentSelectedRoles.add(chip.text.toString())
-                                }
+                roles.forEach { role ->
+                    val chip = Chip(itemView.context).apply {
+                        text = role
+                        isCheckable = true
+                        isClickable = true
+                        isCheckable = false // We'll handle the selection manually
+
+                        // Initial state
+                        updateChipAppearance(this, false)
+
+                        layoutParams = ViewGroup.MarginLayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            marginEnd = resources.getDimensionPixelSize(R.dimen.chip_spacing)
+                        }
+
+                        setOnClickListener {
+                            if (selectedRoles.contains(role)) {
+                                selectedRoles.remove(role)
+                                updateChipAppearance(this, false)
+                            } else {
+                                selectedRoles.add(role)
+                                updateChipAppearance(this, true)
                             }
                         }
-                        onRolesUpdated(meetingId, currentSelectedRoles)
                     }
+
+                    cgRoles.addView(chip)
                 }
 
-                binding.chipGroupPreferredRoles.addView(chip)
+                updatePreferredRolesVisibility()
             }
         }
     }
 
-    class UpcomingMeetingDiffCallback : DiffUtil.ItemCallback<Meeting>() {
+
+    class MeetingDiffCallback : DiffUtil.ItemCallback<Meeting>() {
         override fun areItemsTheSame(oldItem: Meeting, newItem: Meeting): Boolean {
             return oldItem.id == newItem.id
         }

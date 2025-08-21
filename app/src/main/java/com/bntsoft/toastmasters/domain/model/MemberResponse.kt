@@ -15,7 +15,8 @@ data class MemberResponse(
 
         NOT_AVAILABLE,
 
-        NOT_CONFIRMED;
+        NOT_CONFIRMED,
+        NOT_RESPONDED ;
 
         companion object {
             fun fromString(value: String): AvailabilityStatus {

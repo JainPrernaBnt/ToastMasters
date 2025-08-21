@@ -94,12 +94,13 @@ class MeetingRepositoryImpl @Inject constructor(
                     val availableCount = responses.count { it.availability == MemberResponse.AvailabilityStatus.AVAILABLE }
                     val notAvailableCount = responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE }
                     val notConfirmedCount = responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED }
-                    
+                    val notResponded = responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED }
                     MeetingWithCounts(
                         meeting = meeting,
                         availableCount = availableCount,
                         notAvailableCount = notAvailableCount,
-                        notConfirmedCount = notConfirmedCount
+                        notConfirmedCount = notConfirmedCount,
+                        notResponded = notResponded
                     )
                 } catch (e: Exception) {
                     Timber.e(e, "Error counting responses for meeting ${meeting.id}")
@@ -108,7 +109,8 @@ class MeetingRepositoryImpl @Inject constructor(
                         meeting = meeting,
                         availableCount = 0,
                         notAvailableCount = 0,
-                        notConfirmedCount = 0
+                        notConfirmedCount = 0,
+                        notResponded = 0
                     )
                 }
             }

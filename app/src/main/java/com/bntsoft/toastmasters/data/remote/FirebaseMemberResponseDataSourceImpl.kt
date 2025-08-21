@@ -22,7 +22,6 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
         private const val FIELD_MEMBER_ID = "memberId"
         private const val FIELD_LAST_UPDATED = "lastUpdated"
     }
-
     private val db: FirebaseFirestore = Firebase.firestore
     private val responsesCollection = db.collection(COLLECTION_RESPONSES)
 

@@ -24,6 +24,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:clickable="false"
+            android:focusable="false"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -31,14 +33,19 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_marginEnd="12dp"
+                android:clickable="false"
+                android:focusable="false"
                 android:src="@drawable/ic_event"
                 app:tint="@color/purple_500" />
 
             <TextView
                 android:id="@+id/tvMeetingTitle"
                 android:layout_width="0dp"
+
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:clickable="false"
+                android:focusable="false"
                 android:text="Weekly ToastMasters Meeting"
                 android:textColor="@color/on_surface"
                 android:textSize="16sp"
@@ -47,8 +54,11 @@
             <TextView
                 android:id="@+id/tvMeetingDate"
                 android:layout_width="wrap_content"
+
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_date_chip"
+                android:clickable="false"
+                android:focusable="false"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:text="Aug 15, 2024"
@@ -61,6 +71,7 @@
                 android:layout_height="36dp"
                 android:layout_marginStart="4dp"
                 android:background="@android:color/transparent"
+                android:clickable="true"
                 android:contentDescription="@string/more_options"
                 android:src="@drawable/ic_more_vert"
                 app:tint="@color/on_surface_medium" />
@@ -71,7 +82,10 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+
             android:layout_marginBottom="16dp"
+            android:clickable="false"
+            android:focusable="false"
             android:orientation="vertical">
 
             <LinearLayout
@@ -131,6 +145,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:baselineAligned="false"
+            android:clickable="false"
+            android:focusable="false"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -196,6 +212,7 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_availability_card"
                 android:gravity="center"
@@ -217,6 +234,35 @@
                     android:gravity="center_horizontal"
                     android:minLines="2"
                     android:text="@string/not_confirmed"
+                    android:textColor="@color/on_surface_medium"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_availability_card"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/tvNotResponded"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:textColor="@color/role_toastmaster"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:minLines="2"
+                    android:text="@string/not_responded"
                     android:textColor="@color/on_surface_medium"
                     android:textSize="12sp" />
 

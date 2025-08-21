@@ -1,216 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    app:cardBackgroundColor="@color/white"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:strokeColor="@color/outline_variant"
-    app:strokeWidth="1dp">
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="4dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
-        <!-- Meeting Header -->
-        <LinearLayout
+        <!-- Meeting Title -->
+        <TextView
+            android:id="@+id/tvMeetingTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:paddingBottom="8dp"
+            android:text="@string/meeting_title"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="Weekly Club Meeting" />
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="12dp"
-                android:src="@drawable/ic_event"
-                app:tint="@color/purple_500" />
-
-            <TextView
-                android:id="@+id/tvMeetingTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Weekly ToastMasters Meeting"
-                android:textColor="@color/on_surface"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvMeetingDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_date_chip"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
-                android:text="Aug 15, 2024"
-                android:textColor="@color/on_surface_medium"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
-        <!-- Meeting Details -->
-        <LinearLayout
+        <!-- Meeting Date & Time -->
+        <TextView
+            android:id="@+id/tvMeetingDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_calendar"
+            android:drawablePadding="8dp"
+            android:drawableTint="?attr/colorPrimary"
+            android:paddingBottom="4dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            tools:text="Fri, Oct 20, 2023 • 7:00 PM - 9:00 PM" />
+
+        <TextView
+            android:id="@+id/tvMeetingTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_time"
+            android:drawablePadding="8dp"
+            android:drawableTint="?attr/colorPrimary"
+            android:paddingBottom="4dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+            tools:text="7:00 PM - 9:00 PM" />
+
+        <!-- Meeting Location -->
+        <TextView
+            android:id="@+id/tvMeetingLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_location"
+            android:drawablePadding="8dp"
+            android:drawableTint="?attr/colorPrimary"
+            android:paddingBottom="16dp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            tools:text="Main Hall, Toastmasters Club" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
             android:layout_marginBottom="16dp"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/ic_time"
-                    app:tint="@color/on_surface_medium" />
-
-                <TextView
-                    android:id="@+id/tvMeetingTime"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="5:30 PM - 7:30 PM"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:src="@drawable/ic_location"
-                    app:tint="@color/on_surface_medium" />
-
-                <TextView
-                    android:id="@+id/tvMeetingVenue"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Community Center, Room 101"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="14sp" />
-
-            </LinearLayout>
-
-
-        </LinearLayout>
+            android:background="?attr/colorOutline" />
 
         <!-- Availability Section -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="8dp"
             android:text="@string/your_availability"
-            android:textColor="@color/on_surface"
-            android:textSize="14sp"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
             android:textStyle="bold" />
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupAvailability"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:singleSelection="true">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipAvailable"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:text="@string/available"
-                app:chipStrokeColor="@color/success"
-                app:chipStrokeWidth="1dp" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipNotAvailable"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:text="@string/not_available"
-                app:chipStrokeColor="@color/error"
-                app:chipStrokeWidth="1dp" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipNotConfirmed"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:text="@string/not_confirmed"
-                app:chipStrokeColor="@color/on_surface_medium"
-                app:chipStrokeWidth="1dp" />
-
-        </com.google.android.material.chip.ChipGroup>
-
-        <!-- Preferred Roles Section (Only visible when Available) -->
-        <LinearLayout
-            android:id="@+id/layoutPreferredRoles"
+        <RadioGroup
+            android:id="@+id/rgAvailability"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:paddingStart="8dp">
 
-            <TextView
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/rbAvailable"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="@string/preferred_roles"
-                android:textColor="@color/on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:paddingVertical="8dp"
+                android:text="@string/available"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupPreferredRoles"
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/rbNotAvailable"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_medium"
-                app:singleLine="true"
-                app:singleSelection="false"
-                app:chipSpacingHorizontal="@dimen/chip_spacing"
-                app:chipSpacingVertical="@dimen/chip_spacing">
-                <!-- Roles will be added programmatically -->
-            </com.google.android.material.chip.ChipGroup>
+                android:paddingVertical="8dp"
+                android:text="@string/member_not_available"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 
-        </LinearLayout>
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/rbNotConfirmed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingVertical="8dp"
+                android:text="@string/member_not_confirmed"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+        </RadioGroup>
 
-        <!-- Action Buttons -->
+        <!-- Preferred Roles Section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/preferred_roles"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvNoRoles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/no_roles_available"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cgRoles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:selectionRequired="false"
+            app:singleLine="false"
+            app:singleSelection="false">
+
+            <!-- Chips will be added programmatically -->
+
+        </com.google.android.material.chip.ChipGroup>
+        <!-- Add these inside your CardView's LinearLayout -->
+        <TextView
+            android:id="@+id/tvAvailabilityStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvSelectedRoles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:visibility="gone" />
+        <!-- Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:gravity="end"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:weightSum="1">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaveAvailability"
+                android:id="@+id/btnSubmit"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/save_availability"
-                android:textColor="@color/purple_500"
-                android:textSize="14sp"
-                app:cornerRadius="8dp"
-                app:strokeColor="@color/purple_500" />
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:text="@string/submit"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="?attr/colorPrimary" />
 
         </LinearLayout>
 
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>

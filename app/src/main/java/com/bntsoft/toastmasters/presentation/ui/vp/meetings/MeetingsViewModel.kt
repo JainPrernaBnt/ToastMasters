@@ -1,10 +1,10 @@
-package com.bntsoft.toastmasters.presentation.viewmodel
+package com.bntsoft.toastmasters.presentation.ui.vp.meetings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.model.Meeting
-import com.bntsoft.toastmasters.domain.model.MemberResponse
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
+import com.bntsoft.toastmasters.domain.model.MemberResponse
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.utils.Resource
@@ -93,12 +93,15 @@ class MeetingsViewModel @Inject constructor(
                             responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE }
                         val notConfirmedCount =
                             responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED }
+                        val notRespondedCount =
+                            responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED }
 
                         MeetingWithCounts(
                             meeting = meeting,
                             availableCount = availableCount,
                             notAvailableCount = notAvailableCount,
-                            notConfirmedCount = notConfirmedCount
+                            notConfirmedCount = notConfirmedCount,
+                            notResponded = notRespondedCount
                         )
                     }
                 }.catch { e ->
@@ -120,10 +123,12 @@ class MeetingsViewModel @Inject constructor(
                     loadMeetings()
                     loadUpcomingMeetings()
                 }
+
                 is Resource.Error -> {
                     // Optionally, expose an error state if needed later
                     Timber.e("Failed to delete meeting: ${result.message}")
                 }
+
                 else -> {}
             }
         }

@@ -31,9 +31,14 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     override fun getAllMeetings(): Flow<List<Meeting>> = callbackFlow {
         val subscription = meetingsCollection
-            .get()
-            .addOnSuccessListener { snapshot ->
-                val meetings = snapshot.documents.mapNotNull { document ->
+            .orderBy("date")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val meetings = snapshot?.documents?.mapNotNull { document ->
                     try {
                         val dto = MeetingDto(
                             meetingID = document.getString("meetingID") ?: document.id,
@@ -50,18 +55,51 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     } catch (e: Exception) {
                         null
                     }
-                }
+                } ?: emptyList()
+
                 trySend(meetings).isSuccess
             }
-            .addOnFailureListener { e ->
-                close(e)
-            }
 
-        awaitClose { /* No-op since we're not using snapshot listener */ }
+        awaitClose { subscription.remove() }
     }
 
-    override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> {
-        return getAllMeetings()
+
+    override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> = callbackFlow {
+        val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+        val dateString = afterDate.format(formatter)
+
+        val subscription = meetingsCollection
+            .whereGreaterThanOrEqualTo("date", dateString)
+            .orderBy("date")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val meetings = snapshot?.documents?.mapNotNull { document ->
+                    try {
+                        val dto = MeetingDto(
+                            meetingID = document.getString("meetingID") ?: document.id,
+                            date = document.getString("date") ?: "",
+                            startTime = document.getString("startTime") ?: "",
+                            endTime = document.getString("endTime") ?: "",
+                            venue = document.getString("venue") ?: "",
+                            theme = document.getString("theme") ?: "No Theme",
+                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                            createdAt = document.getLong("createdAt") ?: 0,
+                            isRecurring = document.getBoolean("isRecurring") ?: false
+                        )
+                        meetingMapper.mapToDomain(dto)
+                    } catch (e: Exception) {
+                        null
+                    }
+                } ?: emptyList()
+
+                trySend(meetings).isSuccess
+            }
+
+        awaitClose { subscription.remove() }
     }
     override suspend fun getMeetingById(id: String): Meeting? {
         return try {

@@ -9,12 +9,12 @@ import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentCreateMeetingBinding
 import com.bntsoft.toastmasters.databinding.ItemMeetingFormBinding
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingFormData
-import com.bntsoft.toastmasters.presentation.viewmodel.CreateMeetingState
-import com.bntsoft.toastmasters.presentation.viewmodel.MeetingsViewModel
 import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
@@ -76,8 +76,13 @@ class CreateMeetingFragment : Fragment() {
                             "Meeting '${state.meeting.theme}' created successfully",
                             Toast.LENGTH_SHORT
                         ).show()
+                        binding.meetingFormsContainer.removeAllViews()
+                        meetingForms.clear()
+                        addNewMeetingForm()
                         viewModel.resetCreateMeetingState()
-                        // Optionally, navigate back or clear forms
+                        findNavController().navigate(
+                            R.id.action_createMeetingFragment_to_dashboardFragment
+                        )
                     }
 
                     is CreateMeetingState.Error -> {

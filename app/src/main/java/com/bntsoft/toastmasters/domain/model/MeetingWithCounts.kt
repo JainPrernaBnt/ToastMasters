@@ -4,5 +4,6 @@ data class MeetingWithCounts(
     val meeting: Meeting,
     val availableCount: Int,
     val notAvailableCount: Int,
-    val notConfirmedCount: Int
+    val notConfirmedCount: Int,
+    val notResponded: Int
 )
