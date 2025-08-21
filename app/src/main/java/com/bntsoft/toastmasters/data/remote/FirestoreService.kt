@@ -51,6 +51,20 @@ class FirestoreService @Inject constructor(
             .await()
     }
 
+    fun getAllUsers(): Flow<List<DocumentSnapshot>> = callbackFlow {
+        val subscription = firestore.collection(USERS_COLLECTION)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty) {
+                    trySend(snapshot.documents).isSuccess
+                }
+            }
+        awaitClose { subscription.remove() }
+    }
+
     fun observeUser(userId: String): Flow<DocumentSnapshot> = callbackFlow {
         val listenerRegistration = getUserDocument(userId)
             .addSnapshotListener { snapshot, e ->

@@ -3,7 +3,6 @@ package com.bntsoft.toastmasters.data.remote
 import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
 import com.bntsoft.toastmasters.data.model.dto.MeetingDto
 import com.bntsoft.toastmasters.domain.model.Meeting
-import com.bntsoft.toastmasters.utils.NotificationAudience
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -13,6 +12,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -47,7 +48,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             endTime = document.getString("endTime") ?: "",
                             venue = document.getString("venue") ?: "",
                             theme = document.getString("theme") ?: "No Theme",
-                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
+                                ?: emptyList(),
                             createdAt = document.getLong("createdAt") ?: 0,
                             isRecurring = document.getBoolean("isRecurring") ?: false
                         )
@@ -62,7 +64,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
         awaitClose { subscription.remove() }
     }
-
 
     override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> = callbackFlow {
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -79,19 +80,40 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
                 val meetings = snapshot?.documents?.mapNotNull { document ->
                     try {
+                        val dateString = document.getString("date") ?: ""
+                        val startTimeString = document.getString("startTime") ?: "00:00"
+                        val endTimeString = document.getString("endTime") ?: "23:59"
+
+                        // Parse date and time
+                        val date = LocalDate.parse(dateString, formatter)
+                        val startTime = LocalTime.parse(startTimeString)
+                        val endTime = LocalTime.parse(endTimeString)
+
+                        val dateTime = LocalDateTime.of(date, startTime)
+                        val endDateTime = LocalDateTime.of(date, endTime)
+
                         val dto = MeetingDto(
                             meetingID = document.getString("meetingID") ?: document.id,
-                            date = document.getString("date") ?: "",
-                            startTime = document.getString("startTime") ?: "",
-                            endTime = document.getString("endTime") ?: "",
+                            date = dateString,
+                            startTime = startTimeString,
+                            endTime = endTimeString,
                             venue = document.getString("venue") ?: "",
                             theme = document.getString("theme") ?: "No Theme",
-                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
+                                ?: emptyList(),
                             createdAt = document.getLong("createdAt") ?: 0,
                             isRecurring = document.getBoolean("isRecurring") ?: false
                         )
-                        meetingMapper.mapToDomain(dto)
+
+                        val meeting = meetingMapper.mapToDomain(dto)
+                        // Ensure the meeting's date matches the filter
+                        if (date.isAfter(afterDate) || date.isEqual(afterDate)) {
+                            meeting
+                        } else {
+                            null
+                        }
                     } catch (e: Exception) {
+                        Timber.e(e, "Error parsing meeting document")
                         null
                     }
                 } ?: emptyList()
@@ -99,20 +121,25 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 trySend(meetings).isSuccess
             }
 
-        awaitClose { subscription.remove() }
+        awaitClose {
+            subscription.remove()
+
+        }
     }
+
+
     override suspend fun getMeetingById(id: String): Meeting? {
         return try {
             // First try with meetingID (uppercase ID)
             var query = meetingsCollection.whereEqualTo("meetingID", id).limit(1).get().await()
             var document = query.documents.firstOrNull()
-            
+
             // If not found, try with id (lowercase)
             if (document == null) {
                 query = meetingsCollection.whereEqualTo("id", id).limit(1).get().await()
                 document = query.documents.firstOrNull()
             }
-            
+
             val dto = document?.toObject(MeetingDto::class.java)
             dto?.let { meetingMapper.mapToDomain(it) }
         } catch (e: Exception) {
@@ -127,10 +154,10 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             val dto = meetingMapper.mapToDto(meeting).copy(meetingID = document.id)
             document.set(dto).await()
             val newMeeting = meetingMapper.mapToDomain(dto)
-            
+
             // Send notification about the new meeting
             sendMeetingNotification(newMeeting)
-            
+
             Result.success(newMeeting)
         } catch (e: Exception) {
             Timber.e(e, "Failed to create meeting")
@@ -176,17 +203,17 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 .whereEqualTo("accountStatus", "APPROVED")
                 .get()
                 .await()
-                
+
             val fcmTokens = usersSnapshot.documents
                 .mapNotNull { it.getString("fcmToken") }
                 .filter { it.isNotBlank() }
                 .toSet()
-                
+
             if (fcmTokens.isEmpty()) {
                 Timber.w("No valid FCM tokens found for notification")
                 return Result.success(Unit)
             }
-            
+
             // Create notification data
             val notificationData = mapOf(
                 "registration_ids" to fcmTokens.toList(),
@@ -206,28 +233,30 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     "click_action" to "FLUTTER_NOTIFICATION_CLICK"
                 )
             )
-            
+
             // Send to all tokens in batches (FCM allows up to 500 tokens per batch)
             val batchSize = 500
             fcmTokens.chunked(batchSize).forEach { batch ->
                 val batchData = notificationData.toMutableMap()
                 batchData["registration_ids"] = batch
-                
+
                 // Store notification in Firestore for history and offline access
-                firestore.collection("notifications").add(mapOf(
-                    "type" to "MEETING_CREATED",
-                    "meetingId" to meeting.id,
-                    "title" to "New Meeting: ${meeting.theme}",
-                    "body" to "${meeting.theme} on ${meeting.dateTime.toLocalDate()}",
-                    "timestamp" to System.currentTimeMillis(),
-                    "sentTo" to batch.size,
-                    "data" to notificationData["data"]
-                )).await()
-                
+                firestore.collection("notifications").add(
+                    mapOf(
+                        "type" to "MEETING_CREATED",
+                        "meetingId" to meeting.id,
+                        "title" to "New Meeting: ${meeting.theme}",
+                        "body" to "${meeting.theme} on ${meeting.dateTime.toLocalDate()}",
+                        "timestamp" to System.currentTimeMillis(),
+                        "sentTo" to batch.size,
+                        "data" to notificationData["data"]
+                    )
+                ).await()
+
                 // Log the notification
                 Timber.d("Sent meeting notification to ${batch.size} devices")
             }
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to send meeting notification")

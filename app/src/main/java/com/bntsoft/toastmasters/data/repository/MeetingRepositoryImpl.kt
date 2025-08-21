@@ -26,7 +26,11 @@ class MeetingRepositoryImpl @Inject constructor(
     }
 
     override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> {
-        return firebaseDataSource.getAllMeetings()
+        return firebaseDataSource.getAllMeetings().map { meetings ->
+            meetings.filter { meeting ->
+                !meeting.dateTime.isBefore(afterDate.atStartOfDay())
+            }.sortedBy { it.dateTime }
+        }
     }
     override suspend fun getMeetingById(id: String): Meeting? {
         Timber.d("Looking for meeting with id: $id")

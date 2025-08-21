@@ -2,6 +2,8 @@ package com.bntsoft.toastmasters.presentation.ui.vp.dashboard
 
 import android.os.Bundle
 import android.util.Log
+import timber.log.Timber
+import android.widget.Toast
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,11 +15,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentDashboardBinding
-import com.bntsoft.toastmasters.presentation.ui.vp.meetings.MeetingsViewModel
+import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.DashboardViewModel
+import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import com.bntsoft.toastmasters.presentation.ui.vp.meetings.UpcomingMeetingsStateWithCounts as UpcomingMeetingsState
 
 @AndroidEntryPoint
 class DashboardFragment : Fragment() {
@@ -25,7 +27,7 @@ class DashboardFragment : Fragment() {
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MeetingsViewModel by viewModels()
+    private val viewModel: DashboardViewModel by viewModels()
     private lateinit var meetingAdapter: MeetingAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +45,19 @@ class DashboardFragment : Fragment() {
         setupRecyclerView()
         observeUpcomingMeetings()
         return binding.root
+    }
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // Basic log to verify fragment is loading
+        android.util.Log.d("DashboardDebug", "DashboardFragment loaded successfully")
+        
+        // Debug: Print ViewModel and adapter state
+        Log.d("DashboardDebug", "ViewModel: $viewModel")
+        Log.d("DashboardDebug", "Adapter initialized: ${::meetingAdapter.isInitialized}")
+        
+        // Force refresh data
+        viewModel.loadUpcomingMeetings()
     }
 
     private var isDialogShowing = false
@@ -90,26 +105,38 @@ class DashboardFragment : Fragment() {
     }
 
     private fun observeUpcomingMeetings() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.upcomingMeetingsStateWithCounts.collect { state ->
-                when (state) {
-                    is UpcomingMeetingsState.Success -> {
+                val message = when (state) {
+                    is DashboardViewModel.UpcomingMeetingsStateWithCounts.Success -> {
                         meetingAdapter.submitList(state.meetings)
+                        "Loaded ${state.meetings.size} meetings"
                     }
-
-                    is UpcomingMeetingsState.Empty -> {
+                    is DashboardViewModel.UpcomingMeetingsStateWithCounts.Empty -> {
                         meetingAdapter.submitList(emptyList())
-                        // Optionally, show an empty state view
+                        "No upcoming meetings found"
                     }
-
-                    is UpcomingMeetingsState.Error -> {
-                        // Handle error state, e.g., show a toast or an error message
+                    is DashboardViewModel.UpcomingMeetingsStateWithCounts.Error -> {
+                        "Error: ${state.message}"
                     }
-
-                    is UpcomingMeetingsState.Loading -> {
-                        // Handle loading state, e.g., show a progress bar
+                    is DashboardViewModel.UpcomingMeetingsStateWithCounts.Loading -> {
+                        "Loading meetings..."
                     }
-
+                }
+                
+                // Show a toast with the current state
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                
+                // Also log to console for debugging
+                android.util.Log.d("DashboardDebug", message)
+                if (state is DashboardViewModel.UpcomingMeetingsStateWithCounts.Success) {
+                    state.meetings.forEach { meeting ->
+                        android.util.Log.d("DashboardDebug", "Meeting: ${meeting.meeting.theme}, " +
+                                "Available: ${meeting.availableCount}, " +
+                                "Not Available: ${meeting.notAvailableCount}, " +
+                                "Not Confirmed: ${meeting.notConfirmedCount}, " +
+                                "Not Responded: ${meeting.notResponded}")
+                    }
                 }
             }
         }

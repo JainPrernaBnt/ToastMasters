@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.MemberResponse
+import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
+import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -24,7 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MeetingsViewModel @Inject constructor(
     private val meetingRepository: MeetingRepository,
-    private val memberResponseRepository: MemberResponseRepository
+    private val memberResponseRepository: MemberResponseRepository,
+    private val memberRepository: MemberRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MeetingsUiState>(MeetingsUiState.Loading)
@@ -69,16 +73,38 @@ class MeetingsViewModel @Inject constructor(
     fun loadUpcomingMeetings() {
         viewModelScope.launch {
             _upcomingMeetingsStateWithCounts.value = UpcomingMeetingsStateWithCounts.Loading
+            Timber.d("Loading upcoming meetings...")
+
+            // Get all club members once
+            val allMembers = try {
+                val members = memberRepository.getAllMembers(includePending = false).first()
+                Timber.d("Fetched ${members.size} active members")
+                members
+            } catch (e: Exception) {
+                Timber.e(e, "Error fetching club members")
+                emptyList<User>()
+            }
+            val totalMembers = allMembers.size
+            Timber.d("Total active members: $totalMembers")
 
             meetingRepository.getUpcomingMeetings(LocalDate.now()).collectLatest { meetings ->
                 if (meetings.isEmpty()) {
+                    Timber.d("No upcoming meetings found")
                     _upcomingMeetingsStateWithCounts.value = UpcomingMeetingsStateWithCounts.Empty
                     return@collectLatest
                 }
 
+                Timber.d("Found ${meetings.size} upcoming meetings")
                 val flows = meetings.map { meeting ->
                     if (!meeting.id.isNullOrBlank()) {
-                        memberResponseRepository.getResponsesForMeeting(meeting.id)
+                        val responseFlow = memberResponseRepository.getResponsesForMeeting(meeting.id)
+                        responseFlow.collect { responses ->
+                            Timber.d("Meeting ${meeting.id} has ${responses.size} responses")
+                            responses.take(3).forEach { response ->
+                                Timber.d("Response: member=${response.memberId}, status=${response.availability}")
+                            }
+                        }
+                        responseFlow
                     } else {
                         flowOf(emptyList())
                     }
@@ -93,8 +119,21 @@ class MeetingsViewModel @Inject constructor(
                             responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE }
                         val notConfirmedCount =
                             responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED }
-                        val notRespondedCount =
-                            responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED }
+
+                        // Calculate not responded as total members minus those who have responded
+                        val totalResponses = responses.size
+                        val notRespondedCount = (totalMembers - totalResponses).coerceAtLeast(0)
+
+                        // Debug logging
+                        Timber.d("Meeting ${meeting.id} - Available: $availableCount, " +
+                                "Not Available: $notAvailableCount, " +
+                                "Not Confirmed: $notConfirmedCount, " +
+                                "Not Responded: $notRespondedCount (Total members: $totalMembers, Responses: $totalResponses)")
+
+                        // Log the first few responses for debugging
+                        responses.take(3).forEach { response ->
+                            Timber.d("Response - Member: ${response.memberId}, Status: ${response.availability}")
+                        }
 
                         MeetingWithCounts(
                             meeting = meeting,
