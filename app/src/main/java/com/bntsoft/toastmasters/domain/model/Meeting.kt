@@ -1,6 +1,8 @@
 package com.bntsoft.toastmasters.domain.model
 
 import java.time.LocalDateTime
+import java.time.LocalDate
+import java.time.LocalTime
 
 data class Meeting(
     val id: String = "",
@@ -13,8 +15,11 @@ data class Meeting(
     val createdBy: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val availability: MeetingAvailability? = null
+    val availability: MeetingAvailability? = null,
+    val isEditMode: Boolean = false
 ) {
     // For backward compatibility
     val preferredRoles: List<String> get() = availableRoles
+
+    fun toggleEditMode() = copy(isEditMode = !isEditMode)
 }

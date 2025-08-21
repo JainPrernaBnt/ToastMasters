@@ -189,6 +189,8 @@
     <string name="your_availability">Your Availability</string>
     <string name="not_confirmed">Not \nConfirm</string>
     <string name="no_roles_available">No roles available</string>
+    <string name="edit">Edit</string>
+    <string name="done">Done</string>
 
     <!--    Upcoming meetings-->
 

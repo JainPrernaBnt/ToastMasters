@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.R
+import com.bntsoft.toastmasters.domain.model.AvailabilityStatus
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingAvailability
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
@@ -34,13 +35,28 @@ class UpcomingMeetingsListViewModel @Inject constructor(
     val showSuccessDialog: LiveData<Boolean> = _showSuccessDialog
 
     private val db = Firebase.firestore
-    private val currentUserId = Firebase.auth.currentUser?.uid ?: ""
+    val currentUserId = Firebase.auth.currentUser?.uid ?: ""
 
-    private val _meetingAvailability = MutableLiveData<MeetingAvailability>()
-    val meetingAvailability: LiveData<MeetingAvailability> = _meetingAvailability
+    private val _meetingAvailability = MutableLiveData<MeetingAvailability?>()
+    val meetingAvailability: LiveData<MeetingAvailability> = _meetingAvailability as LiveData<MeetingAvailability>
     
     private val _meetings = MutableLiveData<List<Meeting>>()
     val meetings: LiveData<List<Meeting>> = _meetings
+
+    fun toggleEditMode(meeting: Meeting) {
+        val currentList = _meetings.value?.toMutableList() ?: return
+        val position = currentList.indexOfFirst { it.id == meeting.id }
+        if (position != -1) {
+            // Toggle edit mode for the selected meeting and ensure others are not in edit mode
+            currentList[position] = currentList[position].toggleEditMode()
+            currentList.forEachIndexed { index, item ->
+                if (index != position && item.isEditMode) {
+                    currentList[index] = item.copy(isEditMode = false)
+                }
+            }
+            _meetings.value = currentList
+        }
+    }
 
     init {
         fetchUpcomingMeetings()
@@ -48,30 +64,45 @@ class UpcomingMeetingsListViewModel @Inject constructor(
 
     fun saveMeetingAvailability(
         meetingId: String,
-        isAvailable: Boolean,
+        status: AvailabilityStatus,
         preferredRoles: List<String>
     ) {
         viewModelScope.launch {
             try {
                 _uiState.value = UpcomingMeetingsUiState.Loading
 
+                // Only keep preferred roles if member is Available
+                val finalPreferredRoles = if (status == AvailabilityStatus.AVAILABLE) preferredRoles else emptyList()
+
                 val meetingAvailability = MeetingAvailability(
                     userId = currentUserId,
                     meetingId = meetingId,
-                    isAvailable = isAvailable,
-                    preferredRoles = if (isAvailable) preferredRoles else emptyList(),
+                    status = status,
+                    preferredRoles = finalPreferredRoles,
                     timestamp = System.currentTimeMillis()
                 )
 
                 db.collection("meetings")
                     .document(meetingId)
                     .collection("availability")
-                    .document(currentUserId) // each user has their own doc
+                    .document(currentUserId)
                     .set(meetingAvailability)
                     .await()
 
+                // Update the meetings list directly to avoid a full refresh
+                _meetings.value = _meetings.value?.map { meeting ->
+                    if (meeting.id == meetingId) {
+                        meeting.copy(
+                            availability = meetingAvailability,
+                            isEditMode = false // Exit edit mode after saving
+                        )
+                    } else {
+                        meeting
+                    }
+                } ?: emptyList()
+
                 _showSuccessDialog.value = true
-                _uiState.value = UpcomingMeetingsUiState.Success()
+                _uiState.value = UpcomingMeetingsUiState.Success(_meetings.value ?: emptyList())
             } catch (e: Exception) {
                 _uiState.value = UpcomingMeetingsUiState.Error(
                     e.message ?: application.getString(R.string.error_saving_availability)
@@ -94,18 +125,19 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                     .get()
                     .await()
                     .toObject(MeetingAvailability::class.java)
-                
-                availability?.let { 
-                    _meetingAvailability.value = it
-                    // Update the meetings list with the new availability
-                    _meetings.value = _meetings.value?.map { meeting ->
-                        if (meeting.id == meetingId) {
-                            meeting.copy(availability = it)
-                        } else {
-                            meeting
-                        }
+
+                // Update the meetings list with the availability (or null if none found)
+                _meetings.value = _meetings.value?.map { meeting ->
+                    if (meeting.id == meetingId) {
+                        meeting.copy(availability = availability)
+                    } else {
+                        meeting
                     }
-                }
+                } ?: emptyList()
+                
+                // Update the single availability LiveData
+                _meetingAvailability.value = availability
+                
             } catch (e: Exception) {
                 _uiState.value = UpcomingMeetingsUiState.Error(
                     e.message ?: "Error checking availability"
@@ -119,10 +151,19 @@ class UpcomingMeetingsListViewModel @Inject constructor(
             _uiState.value = UpcomingMeetingsUiState.Loading
             try {
                 meetingRepository.getUpcomingMeetings(LocalDate.now()).collect { meetings ->
-                    _meetings.value = meetings
-                    _uiState.value = UpcomingMeetingsUiState.Success(meetings)
+                    // Initialize meetings with no availability and not in edit mode
+                    val meetingsWithDefaultState = meetings.map { meeting ->
+                        meeting.copy(
+                            availability = null,
+                            isEditMode = false
+                        )
+                    }
+                    
+                    _meetings.value = meetingsWithDefaultState
+                    _uiState.value = UpcomingMeetingsUiState.Success(meetingsWithDefaultState)
+                    
                     // Check availability for each meeting
-                    meetings.forEach { meeting ->
+                    meetingsWithDefaultState.forEach { meeting ->
                         checkMeetingAvailability(meeting.id)
                     }
                 }

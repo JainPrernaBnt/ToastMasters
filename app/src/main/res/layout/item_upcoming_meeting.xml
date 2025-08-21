@@ -163,21 +163,35 @@
             android:layout_marginTop="16dp"
             android:gravity="end"
             android:orientation="horizontal"
-            android:weightSum="1">
+            android:weightSum="2">
 
+            <!-- Edit Button (initially hidden) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEdit"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/edit"
+                android:visibility="gone"
+                app:icon="@drawable/ic_edit"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="?attr/colorPrimary" />
+
+            <!-- Submit Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSubmit"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginTop="8dp"
                 android:layout_weight="1"
                 android:text="@string/submit"
+                app:icon="@drawable/ic_done"
                 app:iconGravity="textStart"
                 app:iconPadding="8dp"
                 app:iconTint="?attr/colorPrimary" />
-
         </LinearLayout>
 
     </LinearLayout>

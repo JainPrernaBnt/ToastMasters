@@ -9,8 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentUpcomingMeetingsBinding
+import com.bntsoft.toastmasters.domain.model.AvailabilityStatus
 import com.bntsoft.toastmasters.domain.model.Meeting
-import com.bntsoft.toastmasters.domain.model.MeetingAvailability
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,9 +22,18 @@ class UpcomingMeetingsFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: UpcomingMeetingsListViewModel by viewModels()
     private var currentMeetings: List<Meeting> = emptyList()
-    private val adapter = UpcomingMeetingsAdapter().apply {
-        onAvailabilitySubmitted = { meetingId, isAvailable, preferredRoles ->
-            viewModel.saveMeetingAvailability(meetingId, isAvailable, preferredRoles)
+    private lateinit var adapter: UpcomingMeetingsAdapter
+    
+    private fun setupAdapter() {
+        adapter = UpcomingMeetingsAdapter().apply {
+            onAvailabilitySubmitted = { meetingId, status, preferredRoles ->
+                viewModel.saveMeetingAvailability(meetingId, status, preferredRoles)
+            }
+            onEditClicked = { meeting ->
+                viewModel.toggleEditMode(meeting)
+            }
+            // Set current user ID from ViewModel
+            currentUserId = viewModel.currentUserId
         }
     }
 
@@ -39,6 +48,7 @@ class UpcomingMeetingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupAdapter()
         setupRecyclerView()
         setupSwipeRefresh()
         observeViewModel()
@@ -82,7 +92,8 @@ class UpcomingMeetingsFragment : Fragment() {
                         binding.emptyStateLayout.visibility = View.GONE
                         binding.rvUpcomingMeetings.visibility = View.VISIBLE
                         currentMeetings = state.meetings
-                        adapter.submitList(currentMeetings)
+                        // Create a new list to ensure RecyclerView updates properly
+                        adapter.submitList(currentMeetings.toList())
                     }
                 }
             }
@@ -94,11 +105,13 @@ class UpcomingMeetingsFragment : Fragment() {
             }
         }
 
-        // Observe the meetings LiveData which will be updated with availability
+        // Observe the meetings LiveData for availability updates
         viewModel.meetings.observe(viewLifecycleOwner) { meetings ->
             if (meetings != null && meetings.isNotEmpty()) {
-                currentMeetings = meetings
-                adapter.submitList(meetings)
+                // Update the current meetings list
+                currentMeetings = meetings.toList()
+                // Submit a new list to trigger RecyclerView update
+                adapter.submitList(currentMeetings)
             }
         }
     }
