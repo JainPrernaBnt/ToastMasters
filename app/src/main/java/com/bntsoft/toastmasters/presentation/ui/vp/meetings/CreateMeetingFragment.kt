@@ -15,7 +15,7 @@ import com.bntsoft.toastmasters.databinding.FragmentCreateMeetingBinding
 import com.bntsoft.toastmasters.databinding.ItemMeetingFormBinding
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingFormData
-import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.CreateMeetingState
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
 import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputEditText
