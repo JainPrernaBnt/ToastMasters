@@ -68,6 +68,9 @@ class MemberApprovalFragment : Fragment() {
             },
             onApplyMentors = { member, names ->
                 viewModel.assignMentor(member, names)
+            },
+            onAssignVp = { member ->
+                viewModel.assignVp(member)
             }
         )
 

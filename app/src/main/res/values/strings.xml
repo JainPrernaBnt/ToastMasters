@@ -3,6 +3,21 @@
     <string name="title_sign_up">Sign Up</string>
     <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 
+    <string-array name="Preferred_roles">
+        <item>+ Add new role</item>
+        <item>Sergeant-at-Arms (SAA)</item>
+        <item>Toastmaster of the Day (TMOD)</item>
+        <item>Speaker(s)</item>
+        <item>Speech Evaluator(s)</item>
+        <item>General Evaluator (GE)</item>
+        <item>Timer</item>
+        <item>Presiding officer</item>
+        <item>Ah-Counter</item>
+        <item>Grammarian</item>
+        <item>Table Topics Master</item>
+        <item>Table Topics Speaker(s)</item>
+        <item>Quiz Master</item>
+    </string-array>
     <!-- Bottom Navigation -->
     <string name="title_dashboard">Dashboard</string>
     <string name="title_leaderboard">Leaderboard</string>
@@ -189,7 +204,7 @@
     <string name="your_availability">Your Availability</string>
     <string name="not_confirmed">Not \nConfirm</string>
     <string name="no_roles_available">No roles available</string>
-    
+
     <!-- Member Response Fragment -->
     <string name="empty_state">No data available</string>
     <string name="available_member">Available Members</string>

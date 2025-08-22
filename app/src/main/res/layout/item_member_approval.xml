@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardView"
@@ -38,8 +37,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/space_medium"
-            app:layout_constraintStart_toEndOf="@+id/avatarImageView"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/avatarImageView"
             app:layout_constraintTop_toTopOf="parent">
 
             <!-- Member Name -->
@@ -51,8 +50,8 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="?android:attr/textColorPrimary"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="Johnathan Doe" />
 
@@ -66,8 +65,8 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="?android:attr/textColorSecondary"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/nameTextView"
                 tools:text="john.doe@example.com" />
 
@@ -81,8 +80,8 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:textColor="?android:attr/textColorSecondary"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/emailTextView"
                 tools:text="+1 (555) 123-4567" />
 
@@ -92,10 +91,10 @@
                 style="@style/TextAppearance.Material3.BodySmall"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_small"
+                android:layout_marginTop="@dimen/space_xxsmall"
                 android:textColor="?android:attr/textColorTertiary"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/phoneTextView"
                 tools:text="Joined: 2 days ago" />
 
@@ -106,12 +105,11 @@
             android:id="@+id/actionButtonsContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="end"
-            android:layout_marginTop="@dimen/space_medium"
-            app:layout_constraintTop_toBottomOf="@+id/memberInfoLayout"
-            app:layout_constraintStart_toStartOf="@+id/memberInfoLayout"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="@+id/memberInfoLayout"
+            app:layout_constraintStart_toStartOf="@+id/memberInfoLayout"
+            app:layout_constraintTop_toBottomOf="@+id/memberInfoLayout"
             tools:visibility="visible">
 
             <com.google.android.material.button.MaterialButton
@@ -131,16 +129,41 @@
                 android:text="@string/approve" />
         </LinearLayout>
 
+        <!-- VP Membership Section -->
+        <LinearLayout
+            android:id="@+id/vpMembershipSection"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@+id/actionButtonsContainer"
+            app:layout_constraintStart_toStartOf="@+id/actionButtonsContainer"
+            app:layout_constraintTop_toBottomOf="@+id/actionButtonsContainer">
+
+            <TextView
+                android:id="@+id/assignVPText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Assign VP Membership"
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/vpMembershipSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false" />
+
+        </LinearLayout>
+
         <!-- Mentors Section -->
         <LinearLayout
             android:id="@+id/mentorsSection"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="@dimen/space_medium"
-            app:layout_constraintTop_toBottomOf="@+id/actionButtonsContainer"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@+id/vpMembershipSection">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -149,19 +172,19 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/mentors"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:layout_alignParentStart="true"
                     android:layout_centerVertical="true"
-                    android:layout_alignParentStart="true" />
+                    android:text="@string/mentors"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/assignMentorButton"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/assign_mentor"
                     android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true" />
+                    android:layout_centerVertical="true"
+                    android:text="@string/assign_mentor" />
             </RelativeLayout>
 
             <com.google.android.material.chip.ChipGroup
@@ -175,9 +198,9 @@
                 android:id="@+id/mentorInputLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:layout_marginTop="@dimen/space_medium"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:visibility="gone">
 
                 <com.google.android.material.textfield.TextInputLayout

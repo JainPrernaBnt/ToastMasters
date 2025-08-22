@@ -48,7 +48,7 @@ data class User(
 
     val isOfficer: Boolean
         get() = roles.any { role ->
-            role == UserRole.VP_EDUCATION || role == UserRole.MEMBER || role == UserRole.VP_EDUCATION_MEMBER
+            role == UserRole.VP_EDUCATION || role == UserRole.MEMBER
 
         }
 

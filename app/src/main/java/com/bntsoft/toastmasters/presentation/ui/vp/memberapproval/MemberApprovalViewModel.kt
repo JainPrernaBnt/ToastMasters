@@ -159,6 +159,42 @@ class MemberApprovalViewModel @Inject constructor(
         }
     }
 
+    fun assignVp(member: DomainUser) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val isPromoting = member.role != com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION
+                val newRole = if (isPromoting) {
+                    com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION
+                } else {
+                    com.bntsoft.toastmasters.domain.models.UserRole.MEMBER
+                }
+                
+                val updatedMember = member.copy(role = newRole)
+                memberRepository.updateMember(updatedMember)  // save in Firebase
+                
+                _successMessages.value = if (isPromoting) {
+                    "${member.name} is now VP Education"
+                } else {
+                    "${member.name} is now a regular member"
+                }
+
+                // update local list
+                val updatedList = _members.value.toMutableList().apply {
+                    val index = indexOfFirst { it.id == member.id }
+                    if (index != -1) set(index, updatedMember)
+                }
+                _members.value = updatedList
+                applyFilter(currentFilter, updatedList)
+
+            } catch (e: Exception) {
+                _errorMessages.value = e.message ?: "Failed to update member role"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
     private fun applyFilter(filter: MemberApprovalFilter, members: List<DomainUser>) {
         val filtered = when (filter) {
             MemberApprovalFilter.ALL -> members

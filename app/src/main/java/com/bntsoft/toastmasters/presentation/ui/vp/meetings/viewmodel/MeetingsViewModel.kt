@@ -9,7 +9,6 @@ import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
-import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CompleteMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.MeetingsUiState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.UpcomingMeetingsState
@@ -51,10 +50,6 @@ class MeetingsViewModel @Inject constructor(
 
     private val _createMeetingState = MutableStateFlow<CreateMeetingState>(CreateMeetingState.Idle)
     val createMeetingState: StateFlow<CreateMeetingState> = _createMeetingState.asStateFlow()
-
-    private val _completeMeetingState =
-        MutableStateFlow<CompleteMeetingState>(CompleteMeetingState.Idle)
-    val completeMeetingState: StateFlow<CompleteMeetingState> = _completeMeetingState.asStateFlow()
 
     init {
         loadMeetings()
@@ -210,50 +205,8 @@ class MeetingsViewModel @Inject constructor(
         }
     }
 
-    fun syncMeetings() {
-        viewModelScope.launch {
-            _uiState.value = MeetingsUiState.Loading
-
-            when (val result = meetingRepository.syncMeetings()) {
-                is Resource.Success -> {
-                    // The flow will automatically update the UI when the local DB is updated
-                }
-
-                is Resource.Error -> {
-                    _uiState.value =
-                        MeetingsUiState.Error(result.message ?: "Failed to sync meetings")
-                }
-
-                is Resource.Loading -> TODO()
-            }
-        }
-    }
-
     fun resetCreateMeetingState() {
         _createMeetingState.value = CreateMeetingState.Idle
     }
 
-    fun completeMeeting(meetingId: String) {
-        viewModelScope.launch {
-            _completeMeetingState.value = CompleteMeetingState.Loading
-            when (val result = meetingRepository.completeMeeting(meetingId)) {
-                is Resource.Success -> {
-                    _completeMeetingState.value = CompleteMeetingState.Success
-                    // Refresh the meetings list to reflect the change
-                    loadUpcomingMeetings()
-                }
-
-                is Resource.Error -> {
-                    _completeMeetingState.value =
-                        CompleteMeetingState.Error(result.message ?: "Failed to complete meeting")
-                }
-
-                is Resource.Loading -> _completeMeetingState.value = CompleteMeetingState.Loading
-            }
-        }
-    }
-
-    fun resetCompleteMeetingState() {
-        _completeMeetingState.value = CompleteMeetingState.Idle
-    }
 }
