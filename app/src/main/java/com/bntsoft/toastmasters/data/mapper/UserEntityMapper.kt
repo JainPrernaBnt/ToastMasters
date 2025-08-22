@@ -1,9 +1,9 @@
 package com.bntsoft.toastmasters.data.mapper
 
 import com.bntsoft.toastmasters.data.local.entity.UserEntity
-import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.domain.model.User
-import java.util.*
+import com.bntsoft.toastmasters.domain.models.UserRole
+import java.util.Date
 import javax.inject.Inject
 
 class UserEntityMapper @Inject constructor() {

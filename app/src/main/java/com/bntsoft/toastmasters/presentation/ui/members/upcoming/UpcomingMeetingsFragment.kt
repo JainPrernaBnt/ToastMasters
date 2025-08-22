@@ -9,7 +9,6 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentUpcomingMeetingsBinding
-import com.bntsoft.toastmasters.domain.model.AvailabilityStatus
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -23,7 +22,7 @@ class UpcomingMeetingsFragment : Fragment() {
     private val viewModel: UpcomingMeetingsListViewModel by viewModels()
     private var currentMeetings: List<Meeting> = emptyList()
     private lateinit var adapter: UpcomingMeetingsAdapter
-    
+
     private fun setupAdapter() {
         adapter = UpcomingMeetingsAdapter().apply {
             onAvailabilitySubmitted = { meetingId, status, preferredRoles ->

@@ -21,9 +21,10 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     companion object {
         private const val CHANNEL_ID = "toastmasters_notifications"
         private const val CHANNEL_NAME = "ToastMasters Notifications"
-        private const val CHANNEL_DESCRIPTION = "Notifications for upcoming meetings and important updates"
+        private const val CHANNEL_DESCRIPTION =
+            "Notifications for upcoming meetings and important updates"
         private const val NOTIFICATION_ID = 1001
-        
+
         // Notification actions
         private const val ACTION_MEETING_DETAILS = "meeting_details"
         private const val EXTRA_MEETING_ID = "meeting_id"
@@ -38,7 +39,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         // Handle data payload of FCM messages
         remoteMessage.notification?.let { notification ->
             val meetingId = remoteMessage.data["meeting_id"]
-            
+
             sendNotification(
                 title = notification.title ?: getString(R.string.app_name),
                 message = notification.body ?: "",
@@ -60,7 +61,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val intent = Intent(this, MainActivity::class.java).apply {
             // Set flags to create a new task and clear any existing ones
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            
+
             // Add meeting ID as an extra if available
             if (!meetingId.isNullOrEmpty()) {
                 putExtra(EXTRA_MEETING_ID, meetingId)
@@ -77,7 +78,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         )
 
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        
+
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info) // Using system icon as fallback
             .setContentTitle(title)

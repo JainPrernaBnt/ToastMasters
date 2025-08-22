@@ -48,7 +48,7 @@ class UserService @Inject constructor(
                 .limit(1)
                 .get()
                 .await()
-            
+
             val document = querySnapshot.documents.firstOrNull()
             document?.let { UserDeserializer.fromDocument(it) }
         } catch (e: Exception) {
@@ -106,7 +106,7 @@ class UserService @Inject constructor(
 
             // Combine results and remove duplicates
             val allDocuments = (nameQuery.documents + emailQuery.documents).distinctBy { it.id }
-            
+
             allDocuments.mapNotNull { UserDeserializer.fromDocument(it) }
         } catch (e: Exception) {
             e.printStackTrace()

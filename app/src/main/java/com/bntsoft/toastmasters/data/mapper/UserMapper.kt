@@ -5,7 +5,7 @@ import com.bntsoft.toastmasters.data.model.dto.UserDto
 import javax.inject.Inject
 
 class UserMapper @Inject constructor() : Mapper<UserDto, UserEntity> {
-    
+
     override fun mapFromEntity(entity: UserEntity): UserDto {
         return UserDto(
             id = entity.id,

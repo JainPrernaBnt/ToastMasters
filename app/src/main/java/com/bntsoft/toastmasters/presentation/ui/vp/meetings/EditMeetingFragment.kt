@@ -15,20 +15,20 @@ import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentEditMeetingBinding
 import com.bntsoft.toastmasters.domain.model.Meeting
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.EditMeetingViewModel
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @AndroidEntryPoint
 class EditMeetingFragment : Fragment() {
@@ -187,7 +187,8 @@ class EditMeetingFragment : Fragment() {
             venueEditText.setText(meeting.location)
 
             // Set meeting date (only date)
-            val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+            val dateFormatter =
+                DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
             val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
             dateEditText.setText(dateFormatter.format(meeting.dateTime.toLocalDate()))
 
@@ -260,7 +261,8 @@ class EditMeetingFragment : Fragment() {
             val current = meeting ?: throw IllegalStateException("Meeting not loaded")
 
             // Parse using java.time to avoid timezone shifts
-            val dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
+            val dateFormatter =
+                DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.getDefault())
             val timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.getDefault())
 
             val pickedLocalDate: LocalDate = LocalDate.parse(dateOnly, dateFormatter)

@@ -1,6 +1,10 @@
 package com.bntsoft.toastmasters.data.local.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import com.bntsoft.toastmasters.data.local.entity.MemberResponseEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -27,7 +31,7 @@ interface MemberResponseDao {
 
     @Query("DELETE FROM member_responses WHERE meetingId = :meetingId AND memberId = :memberId")
     suspend fun deleteResponse(meetingId: String, memberId: String)
-    
+
     @Query("SELECT lastUpdated FROM member_responses WHERE meetingId = :meetingId AND memberId = :memberId")
     suspend fun getLastUpdated(meetingId: String, memberId: String): Long?
 }

@@ -6,16 +6,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.R
-import com.bntsoft.toastmasters.domain.model.AvailabilityStatus
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingAvailability
+import com.bntsoft.toastmasters.domain.models.AvailabilityStatus
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
@@ -38,8 +37,9 @@ class UpcomingMeetingsListViewModel @Inject constructor(
     val currentUserId = Firebase.auth.currentUser?.uid ?: ""
 
     private val _meetingAvailability = MutableLiveData<MeetingAvailability?>()
-    val meetingAvailability: LiveData<MeetingAvailability> = _meetingAvailability as LiveData<MeetingAvailability>
-    
+    val meetingAvailability: LiveData<MeetingAvailability> =
+        _meetingAvailability as LiveData<MeetingAvailability>
+
     private val _meetings = MutableLiveData<List<Meeting>>()
     val meetings: LiveData<List<Meeting>> = _meetings
 
@@ -72,7 +72,8 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                 _uiState.value = UpcomingMeetingsUiState.Loading
 
                 // Only keep preferred roles if member is Available
-                val finalPreferredRoles = if (status == AvailabilityStatus.AVAILABLE) preferredRoles else emptyList()
+                val finalPreferredRoles =
+                    if (status == AvailabilityStatus.AVAILABLE) preferredRoles else emptyList()
 
                 val meetingAvailability = MeetingAvailability(
                     userId = currentUserId,
@@ -134,10 +135,10 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                         meeting
                     }
                 } ?: emptyList()
-                
+
                 // Update the single availability LiveData
                 _meetingAvailability.value = availability
-                
+
             } catch (e: Exception) {
                 _uiState.value = UpcomingMeetingsUiState.Error(
                     e.message ?: "Error checking availability"
@@ -158,10 +159,10 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                             isEditMode = false
                         )
                     }
-                    
+
                     _meetings.value = meetingsWithDefaultState
                     _uiState.value = UpcomingMeetingsUiState.Success(meetingsWithDefaultState)
-                    
+
                     // Check availability for each meeting
                     meetingsWithDefaultState.forEach { meeting ->
                         checkMeetingAvailability(meeting.id)

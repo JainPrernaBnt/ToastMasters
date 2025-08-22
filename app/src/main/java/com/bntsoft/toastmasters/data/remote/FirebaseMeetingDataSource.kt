@@ -18,5 +18,7 @@ interface FirebaseMeetingDataSource {
 
     suspend fun deleteMeeting(id: String): Result<Unit>
 
+    suspend fun completeMeeting(meetingId: String): Result<Unit>
+
     suspend fun sendMeetingNotification(meeting: Meeting): Result<Unit>
 }

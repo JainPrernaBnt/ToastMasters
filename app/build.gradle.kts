@@ -106,4 +106,9 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+
+    // For scalable DP
+    implementation("com.intuit.sdp:sdp-android:1.1.1")
+    // For scalable SP (text sizes)
+    implementation("com.intuit.ssp:ssp-android:1.1.1")
 }

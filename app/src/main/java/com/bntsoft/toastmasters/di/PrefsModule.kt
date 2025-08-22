@@ -1,7 +1,7 @@
 package com.bntsoft.toastmasters.di
 
 import android.content.Context
-import com.bntsoft.toastmasters.utils.PrefsManager
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ object PrefsModule {
 
     @Provides
     @Singleton
-    fun providePrefsManager(@ApplicationContext context: Context): PrefsManager {
-        return PrefsManager(context)
+    fun providePrefsManager(@ApplicationContext context: Context): PreferenceManager {
+        return PreferenceManager(context)
     }
 }

@@ -13,7 +13,7 @@ import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.FcmTokenManager
 import com.bntsoft.toastmasters.utils.NotificationHelper
-import com.bntsoft.toastmasters.utils.PrefsManager
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -35,7 +35,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
     lateinit var firebaseAuth: FirebaseAuth
 
     @Inject
-    lateinit var prefsManager: PrefsManager
+    lateinit var prefsManager: PreferenceManager
 
     @Inject
     lateinit var userRepository: UserRepository
@@ -200,6 +200,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                     // No need to update token here as it's unrelated to meeting creation
                 }
             }
+
             else -> {
                 // Handle other notification types or unknown types
                 Timber.d(TAG, "Received unknown message type: $type")

@@ -12,11 +12,9 @@ data class MemberResponse(
 
     enum class AvailabilityStatus {
         AVAILABLE,
-
         NOT_AVAILABLE,
-
         NOT_CONFIRMED,
-        NOT_RESPONDED ;
+        NOT_RESPONDED;
 
         companion object {
             fun fromString(value: String): AvailabilityStatus {
@@ -25,14 +23,4 @@ data class MemberResponse(
         }
     }
 
-    companion object {
-        fun defaultForMeeting(meetingId: String, memberId: String): MemberResponse {
-            return MemberResponse(
-                meetingId = meetingId,
-                memberId = memberId,
-                availability = AvailabilityStatus.NOT_CONFIRMED,
-                preferredRoles = emptyList()
-            )
-        }
-    }
 }

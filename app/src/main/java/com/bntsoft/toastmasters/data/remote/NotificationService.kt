@@ -30,12 +30,13 @@ class NotificationService @Inject constructor(
         try {
             // Save notification to Firestore
             val notificationWithReceiver = notification.copy(receiverId = userId)
-            notificationsCollection.document(notification.id).set(notificationWithReceiver.toMap()).await()
+            notificationsCollection.document(notification.id).set(notificationWithReceiver.toMap())
+                .await()
 
             // Get user's FCM token and send push notification
             val userDoc = usersCollection.document(userId).get().await()
             val fcmToken = userDoc.getString("fcmToken")
-            
+
             fcmToken?.let {
                 // Here you would typically use Firebase Cloud Functions or a server to send FCM messages
                 // For now, we'll just store the notification in Firestore
@@ -49,7 +50,8 @@ class NotificationService @Inject constructor(
         try {
             // Save notification to Firestore with topic
             val notificationWithTopic = notification.copy(topic = topic)
-            notificationsCollection.document(notification.id).set(notificationWithTopic.toMap()).await()
+            notificationsCollection.document(notification.id).set(notificationWithTopic.toMap())
+                .await()
 
             // Subscribe to topic and send notification
             firebaseMessaging.subscribeToTopic(topic).await()
@@ -79,7 +81,7 @@ class NotificationService @Inject constructor(
     suspend fun getUserNotifications(limit: Int): List<NotificationData> {
         return try {
             val currentUser = firebaseAuth.currentUser ?: return emptyList()
-            
+
             val querySnapshot = notificationsCollection
                 .whereEqualTo("receiverId", currentUser.uid)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
@@ -110,7 +112,7 @@ class NotificationService @Inject constructor(
     suspend fun markAllNotificationsAsRead() {
         try {
             val currentUser = firebaseAuth.currentUser ?: return
-            
+
             val userNotifications = notificationsCollection
                 .whereEqualTo("receiverId", currentUser.uid)
                 .whereEqualTo("isRead", false)
@@ -119,10 +121,12 @@ class NotificationService @Inject constructor(
 
             val batch = firestore.batch()
             userNotifications.documents.forEach { document ->
-                batch.update(document.reference, mapOf(
-                    "isRead" to true,
-                    "readAt" to FieldValue.serverTimestamp()
-                ))
+                batch.update(
+                    document.reference, mapOf(
+                        "isRead" to true,
+                        "readAt" to FieldValue.serverTimestamp()
+                    )
+                )
             }
             batch.commit().await()
         } catch (e: Exception) {
@@ -141,7 +145,7 @@ class NotificationService @Inject constructor(
     suspend fun deleteAllNotifications() {
         try {
             val currentUser = firebaseAuth.currentUser ?: return
-            
+
             val userNotifications = notificationsCollection
                 .whereEqualTo("receiverId", currentUser.uid)
                 .get()
@@ -180,13 +184,15 @@ class NotificationService @Inject constructor(
                 "updatedAt" to FieldValue.serverTimestamp()
             )
             usersCollection.document(userId).update(updates).await()
-            
+
             // Also store in separate FCM tokens collection for easier management
-            fcmTokensCollection.document(userId).set(mapOf(
-                "token" to token,
-                "userId" to userId,
-                "updatedAt" to FieldValue.serverTimestamp()
-            )).await()
+            fcmTokensCollection.document(userId).set(
+                mapOf(
+                    "token" to token,
+                    "userId" to userId,
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+            ).await()
         } catch (e: Exception) {
             throw e
         }
@@ -199,7 +205,7 @@ class NotificationService @Inject constructor(
                 "updatedAt" to FieldValue.serverTimestamp()
             )
             usersCollection.document(userId).update(updates).await()
-            
+
             // Also remove from FCM tokens collection
             fcmTokensCollection.document(userId).delete().await()
         } catch (e: Exception) {

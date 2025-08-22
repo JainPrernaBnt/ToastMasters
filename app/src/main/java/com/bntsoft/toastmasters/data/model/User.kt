@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.data.model
 
 import android.os.Parcelable
+import com.bntsoft.toastmasters.domain.models.UserRole
 import kotlinx.parcelize.Parcelize
 import java.util.Date
 

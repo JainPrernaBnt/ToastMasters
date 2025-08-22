@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +18,7 @@ import kotlin.math.pow
 class FcmTokenManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val firebaseAuth: FirebaseAuth,
-    private val prefsManager: PrefsManager,
+    private val prefsManager: PreferenceManager,
     private val userRepository: UserRepository
 ) {
     companion object {
@@ -42,10 +41,10 @@ class FcmTokenManager @Inject constructor(
             try {
                 // Get the current token
                 val token = FirebaseMessaging.getInstance().token.await()
-                
+
                 // Get the last saved token
                 val savedToken = prefsManager.fcmToken
-                
+
                 // Check if token is valid and different from the saved one
                 if (token.isNotBlank() && token != savedToken) {
                     Timber.d("New FCM token generated")
@@ -65,7 +64,7 @@ class FcmTokenManager @Inject constructor(
             }
         }
     }
-    
+
     /**
      * Update the FCM token in local storage and on the server
      */
@@ -73,12 +72,12 @@ class FcmTokenManager @Inject constructor(
         try {
             // Save to shared preferences
             prefsManager.fcmToken = token
-            
+
             // Update on server if user is logged in
             firebaseAuth.currentUser?.uid?.let { userId ->
                 updateFcmTokenOnServer(userId, token)
             }
-            
+
             Timber.d("FCM token updated successfully")
         } catch (e: Exception) {
             Timber.e(e, "Failed to update FCM token")
@@ -97,7 +96,7 @@ class FcmTokenManager @Inject constructor(
             throw e
         }
     }
-    
+
     /**
      * Verify if the token is still valid on the server
      */
@@ -119,21 +118,21 @@ class FcmTokenManager @Inject constructor(
     private fun queueTokenForRetry(userId: String, token: String) {
         // Store in SharedPreferences for retry
         prefsManager.pendingTokenUpdate = "$userId:$token"
-        
+
         // Schedule a retry
         ioScope.launch {
             kotlinx.coroutines.delay(5 * 60 * 1000) // Retry after 5 minutes
             retryPendingTokenUpdate()
         }
     }
-    
+
     /**
      * Retry any pending token updates
      */
     private suspend fun retryPendingTokenUpdate() {
         val pendingUpdate = prefsManager.pendingTokenUpdate ?: return
         val (userId, token) = pendingUpdate.split(":", limit = 2)
-        
+
         try {
             userRepository.updateFcmToken(userId, token)
             prefsManager.pendingTokenUpdate = null
@@ -143,7 +142,7 @@ class FcmTokenManager @Inject constructor(
             // Will retry on next app launch
         }
     }
-    
+
     /**
      * Retry token fetch with exponential backoff
      */
@@ -152,16 +151,16 @@ class FcmTokenManager @Inject constructor(
             Timber.w("Max retry attempts reached for FCM token fetch")
             return
         }
-        
+
         val delayMs = (2.0.pow(attempt.toDouble()) * 1000).toLong()
-        
+
         ioScope.launch {
             kotlinx.coroutines.delay(delayMs)
             Timber.d("Retrying FCM token fetch (attempt $attempt)")
             getFcmToken()
         }
     }
-    
+
     /**
      * Delete the FCM token when user logs out
      */
@@ -170,22 +169,22 @@ class FcmTokenManager @Inject constructor(
             try {
                 // Delete the token from Firebase
                 FirebaseMessaging.getInstance().deleteToken().await()
-                
+
                 // Clear from shared preferences
                 prefsManager.fcmToken = ""
-                
+
                 // If user is logged in, remove the token from the server
                 firebaseAuth.currentUser?.let { user ->
                     removeFcmTokenFromServer(user.uid)
                 }
-                
+
                 Timber.d("FCM token deleted successfully")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to delete FCM token")
             }
         }
     }
-    
+
     private suspend fun removeFcmTokenFromServer(userId: String) {
         try {
             userRepository.removeFcmToken(userId)

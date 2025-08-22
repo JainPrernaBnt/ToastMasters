@@ -14,7 +14,10 @@ interface FirebaseMemberResponseDataSource {
 
     suspend fun deleteResponse(meetingId: String, memberId: String)
 
-    fun observeResponse(meetingId: String, memberId: String): kotlinx.coroutines.flow.Flow<MemberResponseDto?>
+    fun observeResponse(
+        meetingId: String,
+        memberId: String
+    ): kotlinx.coroutines.flow.Flow<MemberResponseDto?>
 
     fun observeResponsesForMeeting(meetingId: String): kotlinx.coroutines.flow.Flow<List<MemberResponseDto>>
 }

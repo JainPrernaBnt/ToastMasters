@@ -3,7 +3,7 @@ package com.bntsoft.toastmasters.utils
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.bntsoft.toastmasters.data.model.UserRole
+import com.bntsoft.toastmasters.domain.models.UserRole
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -12,28 +12,69 @@ import javax.inject.Singleton
 class PreferenceManager @Inject constructor(
     @ApplicationContext context: Context
 ) {
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("ToastmastersPrefs", Context.MODE_PRIVATE)
-
     companion object {
+        private const val PREFS_NAME = "ToastMastersPrefs"
+
         private const val KEY_USER_ROLE = "user_role"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
+        private const val KEY_AUTH_TOKEN = "auth_token"
+        private const val KEY_USER_ID = "user_id"
+        private const val KEY_USER_EMAIL = "user_email"
+        private const val KEY_USER_NAME = "user_name"
+        private const val KEY_FCM_TOKEN = "fcm_token"
+        private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        private const val KEY_PENDING_TOKEN_UPDATE = "pending_token_update"
     }
 
-    var isLoggedIn: Boolean
-        get() = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false)
-        set(value) = sharedPreferences.edit().putBoolean(KEY_IS_LOGGED_IN, value).apply()
+    private val prefs: SharedPreferences = context.getSharedPreferences(
+        PREFS_NAME,
+        Context.MODE_PRIVATE
+    )
 
+    var authToken: String?
+        get() = prefs.getString(KEY_AUTH_TOKEN, null)
+        set(value) = prefs.edit { putString(KEY_AUTH_TOKEN, value) }
+
+    var userId: String?
+        get() = prefs.getString(KEY_USER_ID, null)
+        set(value) = prefs.edit { putString(KEY_USER_ID, value) }
+
+    var userEmail: String?
+        get() = prefs.getString(KEY_USER_EMAIL, null)
+        set(value) = prefs.edit { putString(KEY_USER_EMAIL, value) }
+
+    var userName: String?
+        get() = prefs.getString(KEY_USER_NAME, null)
+        set(value) = prefs.edit { putString(KEY_USER_NAME, value) }
+
+    var fcmToken: String?
+        get() = prefs.getString(KEY_FCM_TOKEN, null)
+        set(value) = prefs.edit { putString(KEY_FCM_TOKEN, value) }
+
+    var areNotificationsEnabled: Boolean
+        get() = prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true)
+        set(value) = prefs.edit { putBoolean(KEY_NOTIFICATIONS_ENABLED, value) }
+
+    var pendingTokenUpdate: String?
+        get() = prefs.getString(KEY_PENDING_TOKEN_UPDATE, null)
+        set(value) = prefs.edit {
+            if (value == null) {
+                remove(KEY_PENDING_TOKEN_UPDATE)
+            } else {
+                putString(KEY_PENDING_TOKEN_UPDATE, value)
+            }
+        }
+
+    var isLoggedIn: Boolean
+        get() = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+        set(value) = prefs.edit { putBoolean(KEY_IS_LOGGED_IN, value) }
 
     fun saveUserRole(role: UserRole) {
-        sharedPreferences.edit {
-            putString(KEY_USER_ROLE, role.name)
-            apply()
-        }
+        prefs.edit { putString(KEY_USER_ROLE, role.name) }
     }
 
     fun getUserRole(): UserRole? {
-        val roleName = sharedPreferences.getString(KEY_USER_ROLE, null)
+        val roleName = prefs.getString(KEY_USER_ROLE, null)
         return roleName?.let {
             try {
                 UserRole.valueOf(it)
@@ -44,10 +85,13 @@ class PreferenceManager @Inject constructor(
     }
 
     fun clearUserData() {
-        sharedPreferences.edit {
+        prefs.edit {
             remove(KEY_USER_ROLE)
             remove(KEY_IS_LOGGED_IN)
-            apply()
         }
+    }
+
+    fun clearAll() {
+        prefs.edit().clear().apply()
     }
 }

@@ -33,7 +33,11 @@
             app:destination="@id/reportsFragment" />
         <action
             android:id="@+id/action_dashboardFragment_to_memberResponseFragment"
-            app:destination="@id/memberResponseFragment" />
+            app:destination="@id/memberResponseFragment">
+            <argument
+                android:name="extra_meeting_id"
+                app:argType="string" />
+        </action>
     </fragment>
 
     <fragment
@@ -88,7 +92,7 @@
         tools:layout="@layout/fragment_settings" />
     <fragment
         android:id="@+id/memberApprovalFragment"
-        android:name="com.bntsoft.toastmasters.presentation.member.MemberApprovalFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.memberapproval.MemberApprovalFragment"
         android:label="@string/approve_member"
         tools:layout="@layout/fragment_member_approval">
         <action

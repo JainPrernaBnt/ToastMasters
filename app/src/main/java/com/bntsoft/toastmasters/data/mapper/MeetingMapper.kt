@@ -19,7 +19,8 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
             recurringStartTime = entity.recurringStartTime,
             recurringEndTime = entity.recurringEndTime,
             startTime = entity.startTime,
-            endTime = entity.endTime
+            endTime = entity.endTime,
+            status = entity.status
         )
     }
 
@@ -36,7 +37,8 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
             recurringStartTime = dto.recurringStartTime,
             recurringEndTime = dto.recurringEndTime,
             startTime = dto.startTime,
-            endTime = dto.endTime
+            endTime = dto.endTime,
+            status = dto.status
         )
     }
 

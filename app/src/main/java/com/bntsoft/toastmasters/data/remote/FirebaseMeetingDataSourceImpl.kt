@@ -196,6 +196,27 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun completeMeeting(meetingId: String): Result<Unit> {
+        return try {
+            val updates = hashMapOf<String, Any>(
+                "status" to "COMPLETED"
+            )
+            val query =
+                meetingsCollection.whereEqualTo("meetingID", meetingId).limit(1).get().await()
+            val document = query.documents.firstOrNull()
+
+            if (document != null) {
+                document.reference.update(updates).await()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Meeting not found"))
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error completing meeting $meetingId")
+            Result.failure(e)
+        }
+    }
+
     override suspend fun sendMeetingNotification(meeting: Meeting): Result<Unit> {
         return try {
             // Get all approved members who should receive the notification

@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.ui.vp.dashboard
+package com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter
 class MeetingAdapter(
     private val onEdit: (meetingId: String) -> Unit = {},
     private val onDelete: (meetingId: String) -> Unit = {},
+    private val onComplete: (meetingId: String) -> Unit = {},
     private val onItemClick: (meetingId: String) -> Unit = {}
 ) :
     ListAdapter<MeetingWithCounts, MeetingAdapter.MeetingViewHolder>(MeetingDiffCallback()) {
@@ -61,25 +62,29 @@ class MeetingAdapter(
 
             // Overflow menu for edit/delete
             binding.btnOverflow.setOnClickListener { view ->
-                PopupMenu(view.context, view).apply {
-                    inflate(R.menu.menu_meeting_item)
-                    setOnMenuItemClickListener { item ->
-                        when (item.itemId) {
-                            R.id.action_edit -> {
-                                onEdit(meeting.id)
-                                true
-                            }
-
-                            R.id.action_delete -> {
-                                onDelete(meeting.id)
-                                true
-                            }
-
-                            else -> false
+                val popupMenu = PopupMenu(view.context, view)
+                popupMenu.menuInflater.inflate(R.menu.menu_meeting_item, popupMenu.menu)
+                popupMenu.setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.action_edit -> {
+                            onEdit(meeting.id)
+                            true
                         }
+
+                        R.id.action_delete -> {
+                            onDelete(meeting.id)
+                            true
+                        }
+
+                        R.id.action_complete -> {
+                            onComplete(meeting.id)
+                            true
+                        }
+
+                        else -> false
                     }
-                    show()
                 }
+                popupMenu.show()
             }
         }
     }

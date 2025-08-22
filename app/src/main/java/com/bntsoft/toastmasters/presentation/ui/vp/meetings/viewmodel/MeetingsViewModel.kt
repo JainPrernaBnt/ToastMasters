@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.ui.vp.meetings
+package com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +9,11 @@ import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CompleteMeetingState
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.MeetingsUiState
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.UpcomingMeetingsState
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.UpcomingMeetingsStateWithCounts
 import com.bntsoft.toastmasters.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +51,10 @@ class MeetingsViewModel @Inject constructor(
 
     private val _createMeetingState = MutableStateFlow<CreateMeetingState>(CreateMeetingState.Idle)
     val createMeetingState: StateFlow<CreateMeetingState> = _createMeetingState.asStateFlow()
+
+    private val _completeMeetingState =
+        MutableStateFlow<CompleteMeetingState>(CompleteMeetingState.Idle)
+    val completeMeetingState: StateFlow<CompleteMeetingState> = _completeMeetingState.asStateFlow()
 
     init {
         loadMeetings()
@@ -97,7 +106,8 @@ class MeetingsViewModel @Inject constructor(
                 Timber.d("Found ${meetings.size} upcoming meetings")
                 val flows = meetings.map { meeting ->
                     if (!meeting.id.isNullOrBlank()) {
-                        val responseFlow = memberResponseRepository.getResponsesForMeeting(meeting.id)
+                        val responseFlow =
+                            memberResponseRepository.getResponsesForMeeting(meeting.id)
                         responseFlow.collect { responses ->
                             Timber.d("Meeting ${meeting.id} has ${responses.size} responses")
                             responses.take(3).forEach { response ->
@@ -125,10 +135,12 @@ class MeetingsViewModel @Inject constructor(
                         val notRespondedCount = (totalMembers - totalResponses).coerceAtLeast(0)
 
                         // Debug logging
-                        Timber.d("Meeting ${meeting.id} - Available: $availableCount, " +
-                                "Not Available: $notAvailableCount, " +
-                                "Not Confirmed: $notConfirmedCount, " +
-                                "Not Responded: $notRespondedCount (Total members: $totalMembers, Responses: $totalResponses)")
+                        Timber.d(
+                            "Meeting ${meeting.id} - Available: $availableCount, " +
+                                    "Not Available: $notAvailableCount, " +
+                                    "Not Confirmed: $notConfirmedCount, " +
+                                    "Not Responded: $notRespondedCount (Total members: $totalMembers, Responses: $totalResponses)"
+                        )
 
                         // Log the first few responses for debugging
                         responses.take(3).forEach { response ->
@@ -220,33 +232,28 @@ class MeetingsViewModel @Inject constructor(
     fun resetCreateMeetingState() {
         _createMeetingState.value = CreateMeetingState.Idle
     }
-}
 
-// UI States
-sealed class MeetingsUiState {
-    object Loading : MeetingsUiState()
-    object Empty : MeetingsUiState()
-    data class Error(val message: String) : MeetingsUiState()
-    data class Success(val meetings: List<Meeting>) : MeetingsUiState()
-}
+    fun completeMeeting(meetingId: String) {
+        viewModelScope.launch {
+            _completeMeetingState.value = CompleteMeetingState.Loading
+            when (val result = meetingRepository.completeMeeting(meetingId)) {
+                is Resource.Success -> {
+                    _completeMeetingState.value = CompleteMeetingState.Success
+                    // Refresh the meetings list to reflect the change
+                    loadUpcomingMeetings()
+                }
 
-sealed class UpcomingMeetingsState {
-    object Loading : UpcomingMeetingsState()
-    object Empty : UpcomingMeetingsState()
-    data class Error(val message: String) : UpcomingMeetingsState()
-    data class Success(val meetings: List<Meeting>) : UpcomingMeetingsState()
-}
+                is Resource.Error -> {
+                    _completeMeetingState.value =
+                        CompleteMeetingState.Error(result.message ?: "Failed to complete meeting")
+                }
 
-sealed class UpcomingMeetingsStateWithCounts {
-    object Loading : UpcomingMeetingsStateWithCounts()
-    object Empty : UpcomingMeetingsStateWithCounts()
-    data class Error(val message: String) : UpcomingMeetingsStateWithCounts()
-    data class Success(val meetings: List<MeetingWithCounts>) : UpcomingMeetingsStateWithCounts()
-}
+                is Resource.Loading -> _completeMeetingState.value = CompleteMeetingState.Loading
+            }
+        }
+    }
 
-sealed class CreateMeetingState {
-    object Idle : CreateMeetingState()
-    object Loading : CreateMeetingState()
-    data class Success(val meeting: Meeting) : CreateMeetingState()
-    data class Error(val message: String) : CreateMeetingState()
+    fun resetCompleteMeetingState() {
+        _completeMeetingState.value = CompleteMeetingState.Idle
+    }
 }

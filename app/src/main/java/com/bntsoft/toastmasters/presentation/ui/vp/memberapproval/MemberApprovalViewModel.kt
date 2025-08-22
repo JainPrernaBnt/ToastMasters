@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.member
+package com.bntsoft.toastmasters.presentation.ui.vp.memberapproval
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -84,7 +84,7 @@ class MemberApprovalViewModel @Inject constructor(
             _isLoading.value = true
             try {
                 // Ensure we have the latest mentor names from the UI
-                val mentorNames = member.mentorNames ?: emptyList()
+                val mentorNames = member.mentorNames
 
                 // First update the member with the mentor names
                 if (mentorNames.isNotEmpty()) {

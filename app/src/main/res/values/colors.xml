@@ -98,5 +98,8 @@
     <color name="chip_text_checked">#2E7D32</color>
     <color name="chip_text_unchecked">#212121</color>
     <color name="chip_stroke_checked">#81C784</color>
+    
+    <!-- Warning color for help icon -->
+    <color name="warning">#FFA000</color>
     <color name="chip_stroke_unchecked">#E0E0E0</color>
 </resources>

@@ -189,6 +189,19 @@
     <string name="your_availability">Your Availability</string>
     <string name="not_confirmed">Not \nConfirm</string>
     <string name="no_roles_available">No roles available</string>
+    
+    <!-- Member Response Fragment -->
+    <string name="empty_state">No data available</string>
+    <string name="available_member">Available Members</string>
+    <string name="not_available_members">Not Available</string>
+    <string name="not_confirmed_member">Not Confirmed</string>
+    <string name="not_responded_members">Not Responded</string>
+    <string name="no_member_responses">No Member Responses</string>
+    <string name="no_member_responses_subtitle">No members have responded to the meeting yet.</string>
+    <string name="available_members_count">%d</string>
+    <string name="not_available_members_count">%d</string>
+    <string name="not_confirmed_members_count">%d</string>
+    <string name="not_responded_members_count">%d</string>
     <string name="edit">Edit</string>
     <string name="done">Done</string>
 
@@ -336,4 +349,5 @@
     <string name="venue_not_specified">Venue not specified</string>
     <string name="error_saving_availability">Error saving availabiility</string>
     <string name="availability_saved_successfully">Availability saved successfully</string>
+    <string name="complete">Complete</string>
 </resources>

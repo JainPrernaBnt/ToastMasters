@@ -17,9 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
-import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.databinding.FragmentSignUpBinding
 import com.bntsoft.toastmasters.domain.model.User
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.bntsoft.toastmasters.utils.UiUtils
 import dagger.hilt.android.AndroidEntryPoint
@@ -46,8 +46,6 @@ class SignUpFragment : Fragment() {
     private val calendar = Calendar.getInstance()
 
     private var selectedGender: String? = null
-    private var selectedMentorId: String? = null
-    private var mentorsList: List<Pair<String, String>> = emptyList() // Pair of (id, name)
 
     private var formSubmitted: Boolean = false
 
@@ -75,14 +73,6 @@ class SignUpFragment : Fragment() {
         val adapter =
             ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, genders)
         (binding.genderAutoCompleteTextView as? AutoCompleteTextView)?.setAdapter(adapter)
-
-        // Setup mentor dropdown (will be populated later)
-        val mentorAdapter = ArrayAdapter<String>(
-            requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            mutableListOf()
-        )
-        (binding.mentorInputLayout.editText as? AutoCompleteTextView)?.setAdapter(mentorAdapter)
 
         // Setup text change listeners for form validation
         val textWatcher = object : TextWatcher {
@@ -112,13 +102,6 @@ class SignUpFragment : Fragment() {
             validateForm()
         }
 
-        // Setup mentor selection
-        (binding.mentorInputLayout.editText as? AutoCompleteTextView)?.setOnItemClickListener { _, _, position, _ ->
-            if (position < mentorsList.size) {
-                selectedMentorId = mentorsList[position].first
-            }
-        }
-
         // Setup joined date picker
         binding.joinedDateEditText.setOnClickListener {
             showDatePicker()
@@ -128,12 +111,11 @@ class SignUpFragment : Fragment() {
         binding.hasMentorSwitch.setOnCheckedChangeListener { _, isChecked ->
             binding.mentorInputLayout.isVisible = isChecked
             if (!isChecked) {
-                selectedMentorId = null
+                binding.mentorEditText.text?.clear()
             }
             validateForm()
         }
 
-        // Setup role selection - no navigation needed here, just handle the selection
     }
 
     private fun setupClickListeners() {
@@ -174,27 +156,6 @@ class SignUpFragment : Fragment() {
             }
         }
 
-        // Observe mentors list when implemented
-        /*
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.mentors.collect { mentors ->
-                    updateMentorsList(mentors)
-                }
-            }
-        }
-        */
-    }
-
-    private fun updateMentorsList(mentors: List<Pair<String, String>>) {
-        mentorsList = mentors
-        val mentorNames = mentors.map { it.second }
-        val mentorAdapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            mentorNames
-        )
-        (binding.mentorInputLayout.editText as? AutoCompleteTextView)?.setAdapter(mentorAdapter)
     }
 
     private fun showDatePicker() {
@@ -280,7 +241,9 @@ class SignUpFragment : Fragment() {
         if (binding.emailEditText.text.isNullOrEmpty()) {
             binding.emailInputLayout.error = getString(R.string.error_field_required)
             isValid = false
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(binding.emailEditText.text.toString()).matches()) {
+        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(binding.emailEditText.text.toString())
+                .matches()
+        ) {
             binding.emailInputLayout.error = getString(R.string.error_invalid_email)
             isValid = false
         } else {
@@ -300,7 +263,8 @@ class SignUpFragment : Fragment() {
 
         // Confirm Password validation
         if (binding.confirmPasswordEditText.text.toString() != binding.passwordEditText.text.toString()) {
-            binding.confirmPasswordInputLayout.error = getString(R.string.error_passwords_dont_match)
+            binding.confirmPasswordInputLayout.error =
+                getString(R.string.error_passwords_dont_match)
             isValid = false
         } else {
             binding.confirmPasswordInputLayout.error = null
@@ -333,8 +297,8 @@ class SignUpFragment : Fragment() {
         }
 
         // Mentor validation (if has mentor is selected)
-        if (binding.hasMentorSwitch.isChecked && selectedMentorId.isNullOrEmpty()) {
-            binding.mentorInputLayout.error = getString(R.string.error_select_mentor)
+        if (binding.hasMentorSwitch.isChecked && binding.mentorEditText.text.isNullOrEmpty()) {
+            binding.mentorInputLayout.error = getString(R.string.error_field_required)
             isValid = false
         } else {
             binding.mentorInputLayout.error = null

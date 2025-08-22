@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.data.model
+package com.bntsoft.toastmasters.domain.models
 
 enum class UserRole {
     VP_EDUCATION,

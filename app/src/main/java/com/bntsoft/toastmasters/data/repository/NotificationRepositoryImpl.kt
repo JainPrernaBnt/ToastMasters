@@ -13,7 +13,10 @@ class NotificationRepositoryImpl @Inject constructor(
     private val notificationService: NotificationService
 ) : NotificationRepository {
 
-    override suspend fun sendNotificationToUser(userId: String, notification: NotificationData): Boolean {
+    override suspend fun sendNotificationToUser(
+        userId: String,
+        notification: NotificationData
+    ): Boolean {
         return try {
             notificationService.sendNotificationToUser(userId, notification)
             true
@@ -22,7 +25,10 @@ class NotificationRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendNotificationToTopic(topic: String, notification: NotificationData): Boolean {
+    override suspend fun sendNotificationToTopic(
+        topic: String,
+        notification: NotificationData
+    ): Boolean {
         return try {
             notificationService.sendNotificationToTopic(topic, notification)
             true
@@ -31,7 +37,10 @@ class NotificationRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendNotificationToRole(role: String, notification: NotificationData): Boolean {
+    override suspend fun sendNotificationToRole(
+        role: String,
+        notification: NotificationData
+    ): Boolean {
         return try {
             notificationService.sendNotificationToRole(role, notification)
             true

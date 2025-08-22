@@ -2,10 +2,10 @@ package com.bntsoft.toastmasters.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.domain.model.AuthResult
 import com.bntsoft.toastmasters.domain.model.SignupResult
 import com.bntsoft.toastmasters.domain.model.User
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -70,7 +70,8 @@ class AuthViewModel @Inject constructor(
                     is AuthResult.Success -> {
                         val signupResult: SignupResult = result.data
                         val signedUpUser = signupResult.user
-                        val userRole = if (signedUpUser.isVpEducation) UserRole.VP_EDUCATION else UserRole.MEMBER
+                        val userRole =
+                            if (signedUpUser.isVpEducation) UserRole.VP_EDUCATION else UserRole.MEMBER
                         _uiState.value = AuthUiState.SignUpSuccess(
                             user = signedUpUser,
                             userRole = userRole,
@@ -96,17 +97,17 @@ class AuthViewModel @Inject constructor(
         _uiState.value = AuthUiState.Initial
     }
 
-    fun sendPasswordResetEmail(email: String, onComplete: (kotlin.Result<Boolean>) -> Unit) {
+    fun sendPasswordResetEmail(email: String, onComplete: (Result<Boolean>) -> Unit) {
         viewModelScope.launch {
             try {
                 val success = authRepository.sendPasswordResetEmail(email)
                 if (success) {
-                    onComplete(kotlin.Result.success(true))
+                    onComplete(Result.success(true))
                 } else {
-                    onComplete(kotlin.Result.failure(Exception("Failed to send password reset email")))
+                    onComplete(Result.failure(Exception("Failed to send password reset email")))
                 }
             } catch (e: Exception) {
-                onComplete(kotlin.Result.failure(e))
+                onComplete(Result.failure(e))
             }
         }
     }
@@ -116,6 +117,10 @@ class AuthViewModel @Inject constructor(
         object Loading : AuthUiState()
         data class Error(val message: String) : AuthUiState()
         data class Success(val user: User, val userRole: UserRole) : AuthUiState()
-        data class SignUpSuccess(val user: User, val userRole: UserRole, val requiresApproval: Boolean) : AuthUiState()
+        data class SignUpSuccess(
+            val user: User,
+            val userRole: UserRole,
+            val requiresApproval: Boolean
+        ) : AuthUiState()
     }
 }

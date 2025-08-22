@@ -1,7 +1,7 @@
 package com.bntsoft.toastmasters.domain.model
 
-import com.bntsoft.toastmasters.data.model.UserRole
-import java.util.*
+import com.bntsoft.toastmasters.domain.models.UserRole
+import java.util.Date
 
 data class User(
     val id: String = "",
@@ -14,7 +14,7 @@ data class User(
     val joinedDate: Date = Date(),
     val toastmastersId: String = "",
     val clubId: String = "",
-    val password:String = "",
+    val password: String = "",
     val role: UserRole = UserRole.MEMBER,
     val isApproved: Boolean = false,
     val mentorNames: List<String> = emptyList(),

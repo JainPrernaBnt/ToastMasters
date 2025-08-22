@@ -8,6 +8,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -126,6 +127,27 @@ class FirestoreService @Inject constructor(
             .await()
         emit(snapshot.documents)
     }
+
+    fun getApprovedMembers(): Flow<List<DocumentSnapshot>> =
+        flow {
+            val snapshot = firestore.collection(USERS_COLLECTION)
+                .whereEqualTo("isApproved", true)
+                .get()
+                .await()
+            emit(snapshot.documents)
+        }.catch { e ->
+            // fallback logic
+            try {
+                val snapshot = firestore.collection(USERS_COLLECTION)
+                    .whereEqualTo("approved", true)
+                    .get()
+                    .await()
+                emit(snapshot.documents)
+            } catch (inner: Exception) {
+                inner.printStackTrace()
+                emit(emptyList())
+            }
+        }
 
     // Member operations
     suspend fun approveMember(

@@ -1,5 +1,7 @@
 package com.bntsoft.toastmasters.data.model.dto
 
+import com.bntsoft.toastmasters.domain.models.MeetingStatus
+
 data class MeetingDto(
     val meetingID: String,
     val date: String = "",
@@ -12,5 +14,6 @@ data class MeetingDto(
     val isRecurring: Boolean = false,
     val recurringDayOfWeek: Int? = null,
     val recurringStartTime: String? = null,
-    val recurringEndTime: String? = null
+    val recurringEndTime: String? = null,
+    val status: MeetingStatus = MeetingStatus.NOT_COMPLETED
 )

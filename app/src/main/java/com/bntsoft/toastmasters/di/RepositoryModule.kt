@@ -34,7 +34,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
 
-
     @Provides
     @Singleton
     fun provideFirebaseAuthService(

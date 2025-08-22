@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.member.adapter
+package com.bntsoft.toastmasters.presentation.ui.vp.memberapproval.adapter
 
 import android.view.LayoutInflater
 import android.view.View

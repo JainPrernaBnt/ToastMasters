@@ -7,7 +7,6 @@ import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.bntsoft.toastmasters.utils.Result
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
-import java.lang.Exception
 
 class NotificationUseCase @Inject constructor(
     private val notificationRepository: NotificationRepository,
@@ -29,7 +28,7 @@ class NotificationUseCase @Inject constructor(
                 receiverId = userId,
                 data = data
             )
-            
+
             val success = notificationRepository.sendNotificationToUser(userId, notification)
             if (!success) {
                 throw Exception("Failed to send notification to user")
@@ -51,7 +50,7 @@ class NotificationUseCase @Inject constructor(
                 type = type,
                 data = data
             )
-            
+
             val success = notificationRepository.sendNotificationToRole(role, notification)
             if (!success) {
                 throw Exception("Failed to send notification to role")
@@ -74,7 +73,7 @@ class NotificationUseCase @Inject constructor(
                 topic = topic,
                 data = data
             )
-            
+
             val success = notificationRepository.sendNotificationToTopic(topic, notification)
             if (!success) {
                 throw Exception("Failed to send notification to topic")
@@ -121,6 +120,7 @@ class NotificationUseCase @Inject constructor(
             }
         }
     }
+
     suspend fun subscribeToTopic(topic: String): Result<Unit> {
         return Result.runCatching {
             val success = notificationRepository.subscribeToTopic(topic)
@@ -129,7 +129,7 @@ class NotificationUseCase @Inject constructor(
             }
         }
     }
-    
+
 
     suspend fun unsubscribeFromTopic(topic: String): Result<Unit> {
         return Result.runCatching {

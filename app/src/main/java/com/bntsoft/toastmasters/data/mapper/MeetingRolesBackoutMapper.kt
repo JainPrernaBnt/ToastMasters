@@ -4,7 +4,8 @@ import com.bntsoft.toastmasters.data.local.entity.MeetingRolesBackout
 import com.bntsoft.toastmasters.data.model.dto.MeetingRolesBackoutDto
 import javax.inject.Inject
 
-class MeetingRolesBackoutMapper @Inject constructor() : Mapper<MeetingRolesBackoutDto, MeetingRolesBackout> {
+class MeetingRolesBackoutMapper @Inject constructor() :
+    Mapper<MeetingRolesBackoutDto, MeetingRolesBackout> {
 
     override fun mapFromEntity(entity: MeetingRolesBackout): MeetingRolesBackoutDto {
         return MeetingRolesBackoutDto(

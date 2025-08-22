@@ -3,12 +3,12 @@ package com.bntsoft.toastmasters.data.repository
 import android.util.Log
 import com.bntsoft.toastmasters.data.model.NotificationData
 import com.bntsoft.toastmasters.data.model.UserDeserializer
-import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.data.remote.FirebaseAuthService
 import com.bntsoft.toastmasters.data.remote.FirestoreService
 import com.bntsoft.toastmasters.domain.model.AuthResult
 import com.bntsoft.toastmasters.domain.model.SignupResult
 import com.bntsoft.toastmasters.domain.model.User
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
 import com.bntsoft.toastmasters.utils.NotificationHelper
@@ -57,7 +57,7 @@ class AuthRepositoryImpl @Inject constructor(
                         // Log user details for debugging
                         Timber.tag("AuthRepositoryImpl")
                             .d("User role: ${user.role}, isApproved: ${user.isApproved}, isVpEducation: ${user.isVpEducation}")
-                        
+
                         // Check if user is VP Education (always allow login) or an approved member
                         if (user.isVpEducation) {
                             Timber.tag("AuthRepositoryImpl")

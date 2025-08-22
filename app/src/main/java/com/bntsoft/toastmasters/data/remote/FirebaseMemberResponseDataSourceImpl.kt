@@ -14,27 +14,41 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMemberResponseDataSource {
+class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
+    FirebaseMemberResponseDataSource {
 
     companion object {
-        private const val COLLECTION_RESPONSES = "meeting_responses"
+        private const val FIELD_AVAILABILITY = "status"
+        private const val FIELD_LAST_UPDATED = "lastUpdated"
         private const val FIELD_MEETING_ID = "meetingId"
         private const val FIELD_MEMBER_ID = "memberId"
-        private const val FIELD_LAST_UPDATED = "lastUpdated"
     }
+
     private val db: FirebaseFirestore = Firebase.firestore
-    private val responsesCollection = db.collection(COLLECTION_RESPONSES)
 
     override suspend fun getResponse(meetingId: String, memberId: String): MemberResponseDto? {
         return try {
-            val querySnapshot = responsesCollection
-                .whereEqualTo(FIELD_MEETING_ID, meetingId)
-                .whereEqualTo(FIELD_MEMBER_ID, memberId)
-                .limit(1)
+            val doc = db.collection("meetings")
+                .document(meetingId)
+                .collection("availability")
+                .document(memberId)
                 .get()
                 .await()
 
-            querySnapshot.documents.firstOrNull()?.toObject(MemberResponseDto::class.java)
+            if (doc.exists()) {
+                val status = doc.getString(FIELD_AVAILABILITY) ?: return null
+                val preferredRoles = doc.get("preferredRoles") as? List<*>
+                MemberResponseDto(
+                    id = "${meetingId}_$memberId",
+                    meetingId = meetingId,
+                    memberId = memberId,
+                    availability = status,
+                    preferredRoles = preferredRoles?.filterIsInstance<String>() ?: emptyList(),
+                    lastUpdated = doc.getLong(FIELD_LAST_UPDATED) ?: System.currentTimeMillis()
+                )
+            } else {
+                null
+            }
         } catch (e: Exception) {
             Timber.e(e, "Error getting response for meeting $meetingId and member $memberId")
             null
@@ -43,12 +57,25 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
 
     override suspend fun getResponsesForMeeting(meetingId: String): List<MemberResponseDto> {
         return try {
-            val querySnapshot = responsesCollection
-                .whereEqualTo(FIELD_MEETING_ID, meetingId)
+            val querySnapshot = db.collection("meetings")
+                .document(meetingId)
+                .collection("availability")
                 .get()
                 .await()
 
-            querySnapshot.documents.mapNotNull { it.toObject(MemberResponseDto::class.java) }
+            querySnapshot.documents.mapNotNull { doc ->
+                val status = doc.getString(FIELD_AVAILABILITY) ?: return@mapNotNull null
+                val memberId = doc.id
+                val preferredRoles = doc.get("preferredRoles") as? List<*>
+                MemberResponseDto(
+                    id = "${meetingId}_$memberId",
+                    meetingId = meetingId,
+                    memberId = memberId,
+                    availability = status,
+                    preferredRoles = preferredRoles?.filterIsInstance<String>() ?: emptyList(),
+                    lastUpdated = doc.getLong(FIELD_LAST_UPDATED) ?: System.currentTimeMillis()
+                )
+            }
         } catch (e: Exception) {
             Timber.e(e, "Error getting responses for meeting $meetingId")
             emptyList()
@@ -57,7 +84,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
 
     override suspend fun getResponsesByMember(memberId: String): List<MemberResponseDto> {
         return try {
-            val querySnapshot = responsesCollection
+            val querySnapshot = db.collectionGroup("availability")
                 .whereEqualTo(FIELD_MEMBER_ID, memberId)
                 .get()
                 .await()
@@ -71,82 +98,142 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() : FirebaseMembe
 
     override suspend fun saveResponse(response: MemberResponseDto) {
         try {
-            val responseWithTimestamp = response.copy(
-                lastUpdated = System.currentTimeMillis()
+            val data = hashMapOf(
+                FIELD_AVAILABILITY to response.availability,
+                FIELD_LAST_UPDATED to System.currentTimeMillis(),
+                "preferredRoles" to response.preferredRoles,
+                "memberId" to response.memberId,
+                "meetingId" to response.meetingId
             )
-            
-            val documentId = "${response.meetingId}_${response.memberId}"
-            responsesCollection.document(documentId).set(responseWithTimestamp).await()
-            
-            // Update the last updated timestamp in the meeting document
-            // Find the meeting document with matching meetingID field
-            val meetingQuery = db.collection("meetings")
-                .whereEqualTo("meetingID", response.meetingId)
-                .limit(1)
-                .get()
+
+            db.collection("meetings")
+                .document(response.meetingId)
+                .collection("availability")
+                .document(response.memberId)
+                .set(data)
                 .await()
-            
-            meetingQuery.documents.firstOrNull()?.reference
-                ?.update("lastUpdated", Timestamp.now())
-                ?.await()
-                
+
+            // Update the last updated timestamp in the meeting document
+            db.collection("meetings")
+                .document(response.meetingId)
+                .update("lastUpdated", Timestamp.now())
+                .await()
+
         } catch (e: Exception) {
-            Timber.e(e, "Error saving response for meeting ${response.meetingId} and member ${response.memberId}")
+            Timber.e(
+                e,
+                "Error saving response for meeting ${response.meetingId} and member ${response.memberId}"
+            )
             throw e
         }
     }
 
     override suspend fun deleteResponse(meetingId: String, memberId: String) {
         try {
-            val querySnapshot = responsesCollection
-                .whereEqualTo(FIELD_MEETING_ID, meetingId)
-                .whereEqualTo(FIELD_MEMBER_ID, memberId)
-                .limit(1)
-                .get()
+            db.collection("meetings")
+                .document(meetingId)
+                .collection("availability")
+                .document(memberId)
+                .delete()
                 .await()
-
-            querySnapshot.documents.firstOrNull()?.reference?.delete()?.await()
         } catch (e: Exception) {
             Timber.e(e, "Error deleting response for meeting $meetingId and member $memberId")
             throw e
         }
     }
 
-    override fun observeResponse(meetingId: String, memberId: String): Flow<MemberResponseDto?> = callbackFlow {
-        val listener = responsesCollection
-            .whereEqualTo(FIELD_MEETING_ID, meetingId)
-            .whereEqualTo(FIELD_MEMBER_ID, memberId)
-            .addSnapshotListener { snapshot, e ->
+    override fun observeResponse(meetingId: String, memberId: String): Flow<MemberResponseDto?> =
+        callbackFlow {
+            val docRef = db.collection("meetings")
+                .document(meetingId)
+                .collection("availability")
+                .document(memberId)
+
+            val listener = docRef.addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Timber.e(e, "Error observing response for meeting $meetingId and member $memberId")
+                    Timber.e(
+                        e,
+                        "Error observing response for meeting $meetingId and member $memberId"
+                    )
                     return@addSnapshotListener
                 }
 
-                val response = snapshot?.documents
-                    ?.firstOrNull()
-                    ?.toObject(MemberResponseDto::class.java)
+                val response = if (snapshot != null && snapshot.exists()) {
+                    val status =
+                        snapshot.getString(FIELD_AVAILABILITY) ?: return@addSnapshotListener
+                    val preferredRoles = snapshot.get("preferredRoles") as? List<*>
+                    MemberResponseDto(
+                        id = "${meetingId}_$memberId",
+                        meetingId = meetingId,
+                        memberId = memberId,
+                        availability = status,
+                        preferredRoles = preferredRoles?.filterIsInstance<String>() ?: emptyList(),
+                        lastUpdated = snapshot.getLong(FIELD_LAST_UPDATED)
+                            ?: System.currentTimeMillis()
+                    )
+                } else {
+                    null
+                }
 
                 trySend(response)
             }
 
-        awaitClose { listener.remove() }
-    }
+            awaitClose {
+                try {
+                    listener.remove()
+                } catch (e: Exception) {
+                    Timber.e(e, "Error removing listener")
+                }
+            }
+        }
 
-    override fun observeResponsesForMeeting(meetingId: String): Flow<List<MemberResponseDto>> = callbackFlow {
-        val listener = responsesCollection
-            .whereEqualTo(FIELD_MEETING_ID, meetingId)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Timber.e(e, "Error observing responses for meeting $meetingId")
-                    trySend(emptyList())
-                    return@addSnapshotListener
+    override fun observeResponsesForMeeting(meetingId: String): Flow<List<MemberResponseDto>> =
+        callbackFlow {
+            val listener = db.collection("meetings")
+                .document(meetingId)
+                .collection("availability")
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        Timber.e(e, "Error observing responses for meeting $meetingId")
+                        try {
+                            trySend(emptyList())
+                        } catch (sendException: Exception) {
+                            // Ignore send exception - channel might be closed
+                            Timber.d("Failed to send empty list: ${sendException.message}")
+                        }
+                        return@addSnapshotListener
+                    }
+
+                    val responses = snapshot?.documents?.mapNotNull { doc ->
+                        val status = doc.getString(FIELD_AVAILABILITY) ?: return@mapNotNull null
+                        val memberId = doc.id
+                        val preferredRoles = doc.get("preferredRoles") as? List<*>
+                        MemberResponseDto(
+                            id = "${meetingId}_$memberId",
+                            meetingId = meetingId,
+                            memberId = memberId,
+                            availability = status,
+                            preferredRoles = preferredRoles?.filterIsInstance<String>()
+                                ?: emptyList(),
+                            lastUpdated = doc.getLong(FIELD_LAST_UPDATED)
+                                ?: System.currentTimeMillis()
+                        )
+                    } ?: emptyList()
+
+                    try {
+                        trySend(responses).isSuccess
+                    } catch (sendException: Exception) {
+                        // Ignore send exception - channel might be closed
+                        Timber.d("Failed to send responses: ${sendException.message}")
+                    }
                 }
 
-                val responses = snapshot?.documents?.mapNotNull { it.toObject(MemberResponseDto::class.java) } ?: emptyList()
-                trySend(responses)
+            awaitClose {
+                try {
+                    listener.remove()
+                } catch (e: Exception) {
+                    Timber.e(e, "Error removing listener")
+                }
             }
-
-        // Remove the listener when the flow is no longer collected
-        awaitClose { listener.remove() }
-    }
+        }
 }

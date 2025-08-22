@@ -1,8 +1,8 @@
-package com.bntsoft.toastmasters.presentation.viewmodel
+package com.bntsoft.toastmasters
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bntsoft.toastmasters.data.model.UserRole
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

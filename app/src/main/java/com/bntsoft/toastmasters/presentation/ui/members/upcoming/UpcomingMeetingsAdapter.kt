@@ -8,9 +8,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.ItemUpcomingMeetingBinding
-import com.bntsoft.toastmasters.domain.model.AvailabilityStatus
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingAvailability
+import com.bntsoft.toastmasters.domain.models.AvailabilityStatus
 import com.google.android.material.chip.Chip
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -57,7 +57,7 @@ class UpcomingMeetingsAdapter :
                 tvAvailabilityStatus.visibility = View.GONE
                 tvSelectedRoles.visibility = View.GONE
                 cgRoles.visibility = View.GONE
-                
+
                 // Set meeting details
                 tvMeetingTitle.text = meeting.theme.ifEmpty {
                     itemView.context.getString(R.string.meeting_title)
@@ -77,7 +77,7 @@ class UpcomingMeetingsAdapter :
                 }
                 // Check if user has already submitted availability for this meeting
                 val userAvailability = meeting.availability?.takeIf { it.userId == currentUserId }
-                
+
                 // Show form if:
                 // 1. No availability is set yet (userAvailability is null) OR
                 // 2. We're in edit mode
@@ -88,7 +88,7 @@ class UpcomingMeetingsAdapter :
                     btnEdit.visibility = View.GONE
                     tvAvailabilityStatus.visibility = View.GONE
                     tvSelectedRoles.visibility = View.GONE
-                    
+
                     // Set initial selection based on current availability
                     rgAvailability.clearCheck()
                     when (userAvailability?.status) {
@@ -121,7 +121,7 @@ class UpcomingMeetingsAdapter :
                     cgRoles.visibility = View.GONE
                     btnEdit.visibility = View.VISIBLE
                     tvAvailabilityStatus.visibility = View.VISIBLE
-                    
+
                     // Show current status
                     val statusText = when (userAvailability.status) {
                         AvailabilityStatus.AVAILABLE -> "Available"
@@ -129,15 +129,16 @@ class UpcomingMeetingsAdapter :
                         AvailabilityStatus.NOT_AVAILABLE -> "Not Available"
                     }
                     tvAvailabilityStatus.text = "Your Availability: $statusText"
-                    
+
                     // Show preferred roles if available
                     if (userAvailability.status == AvailabilityStatus.AVAILABLE && userAvailability.preferredRoles.isNotEmpty()) {
                         tvSelectedRoles.visibility = View.VISIBLE
-                        tvSelectedRoles.text = "Preferred Roles: ${userAvailability.preferredRoles.joinToString(", ")}"
+                        tvSelectedRoles.text =
+                            "Preferred Roles: ${userAvailability.preferredRoles.joinToString(", ")}"
                     } else {
                         tvSelectedRoles.visibility = View.GONE
                     }
-                    
+
                     // Setup edit button
                     btnEdit.visibility = View.VISIBLE
                     btnEdit.setOnClickListener {
@@ -146,7 +147,7 @@ class UpcomingMeetingsAdapter :
 
                     // Reset current status if needed
                     if (currentStatus == null) {
-                        currentStatus = userAvailability?.status ?: AvailabilityStatus.NOT_AVAILABLE
+                        currentStatus = userAvailability.status ?: AvailabilityStatus.NOT_AVAILABLE
                     }
 
                     // Clear any previous selections
@@ -154,7 +155,7 @@ class UpcomingMeetingsAdapter :
                     cgRoles.removeAllViews()
 
                     // If availability exists, pre-select the radio button and preferred roles
-                    userAvailability?.let { availability ->
+                    userAvailability.let { availability ->
                         currentStatus = availability.status
                         // Pre-select the radio button based on current availability
                         when (availability.status) {
@@ -163,6 +164,7 @@ class UpcomingMeetingsAdapter :
                                 setupPreferredRoles(meeting.preferredRoles)
                                 selectedRoles.addAll(availability.preferredRoles)
                             }
+
                             AvailabilityStatus.NOT_CONFIRMED -> rgAvailability.check(R.id.rbNotConfirmed)
                             AvailabilityStatus.NOT_AVAILABLE -> rgAvailability.check(R.id.rbNotAvailable)
                         }
@@ -197,7 +199,7 @@ class UpcomingMeetingsAdapter :
                         R.id.rbNotConfirmed -> AvailabilityStatus.NOT_CONFIRMED
                         else -> AvailabilityStatus.NOT_AVAILABLE
                     }
-                    
+
                     onAvailabilitySubmitted?.invoke(
                         meeting.id,
                         status,
@@ -213,13 +215,13 @@ class UpcomingMeetingsAdapter :
                 cgRoles.visibility = View.GONE
                 tvNoRoles.visibility = View.GONE
                 selectedRoles.clear()
-                
+
                 // Set default selection to Not Available if nothing is selected
                 if (rgAvailability.checkedRadioButtonId == -1) {
                     rgAvailability.check(R.id.rbNotAvailable)
                     currentStatus = AvailabilityStatus.NOT_AVAILABLE
                 }
-                
+
                 // Clear any existing chips
                 cgRoles.removeAllViews()
             }
@@ -228,7 +230,7 @@ class UpcomingMeetingsAdapter :
         private fun updatePreferredRolesVisibility() {
             binding.apply {
                 val showRoles = currentStatus == AvailabilityStatus.AVAILABLE
-                
+
                 if (showRoles) {
                     // Show preferred roles only when Available is selected
                     if (cgRoles.childCount > 0) {
@@ -242,7 +244,7 @@ class UpcomingMeetingsAdapter :
                     // Clear selection and hide for Not Available or Not Confirmed
                     cgRoles.visibility = View.GONE
                     tvNoRoles.visibility = View.GONE
-                    
+
                     // Clear any selected roles when not in Available state
                     selectedRoles.clear()
                     cgRoles.clearCheck()

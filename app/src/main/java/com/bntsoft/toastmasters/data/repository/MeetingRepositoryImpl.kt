@@ -32,6 +32,7 @@ class MeetingRepositoryImpl @Inject constructor(
             }.sortedBy { it.dateTime }
         }
     }
+
     override suspend fun getMeetingById(id: String): Meeting? {
         Timber.d("Looking for meeting with id: $id")
         // First try direct lookup by ID
@@ -40,7 +41,7 @@ class MeetingRepositoryImpl @Inject constructor(
             Timber.d("Found meeting directly: $meeting")
             return meeting
         }
-        
+
         // Fallback to fetching all meetings if direct lookup fails
         Timber.d("Meeting not found directly, checking all meetings...")
         val allMeetings = firebaseDataSource.getAllMeetings().first()
@@ -57,7 +58,9 @@ class MeetingRepositoryImpl @Inject constructor(
                 firebaseDataSource.sendMeetingNotification(newMeeting)
                 Resource.Success(newMeeting)
             } else {
-                Resource.Error(result.exceptionOrNull()?.message ?: "Failed to create meeting in Firebase")
+                Resource.Error(
+                    result.exceptionOrNull()?.message ?: "Failed to create meeting in Firebase"
+                )
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
@@ -82,7 +85,29 @@ class MeetingRepositoryImpl @Inject constructor(
             firebaseDataSource.deleteMeeting(id)
             Resource.Success(Unit)
         } catch (e: Exception) {
+            Timber.e(e, "Error deleting meeting $id")
             Resource.Error(e.message ?: "Failed to delete meeting")
+        }
+    }
+
+    override suspend fun completeMeeting(meetingId: String): Resource<Unit> {
+        return try {
+            // First, get the meeting to check if it exists
+            val meeting = getMeetingById(meetingId)
+            if (meeting == null) {
+                return Resource.Error("Meeting not found")
+            }
+
+            // Mark the meeting as completed in the data source
+            val result = firebaseDataSource.completeMeeting(meetingId)
+            if (result.isSuccess) {
+                Resource.Success(Unit)
+            } else {
+                Resource.Error("Failed to mark meeting as completed")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error completing meeting $meetingId")
+            Resource.Error(e.message ?: "Failed to complete meeting")
         }
     }
 
@@ -93,12 +118,16 @@ class MeetingRepositoryImpl @Inject constructor(
                     // Get all responses for this meeting
                     val responses = memberResponseRepository.getResponsesForMeeting(meeting.id)
                         .first()
-                    
+
                     // Count responses by status
-                    val availableCount = responses.count { it.availability == MemberResponse.AvailabilityStatus.AVAILABLE }
-                    val notAvailableCount = responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE }
-                    val notConfirmedCount = responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED }
-                    val notResponded = responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED }
+                    val availableCount =
+                        responses.count { it.availability == MemberResponse.AvailabilityStatus.AVAILABLE }
+                    val notAvailableCount =
+                        responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE }
+                    val notConfirmedCount =
+                        responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED }
+                    val notResponded =
+                        responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED }
                     MeetingWithCounts(
                         meeting = meeting,
                         availableCount = availableCount,

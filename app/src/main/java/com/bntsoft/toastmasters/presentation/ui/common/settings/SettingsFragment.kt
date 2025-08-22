@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentSettingsBinding
 import com.bntsoft.toastmasters.utils.PreferenceManager

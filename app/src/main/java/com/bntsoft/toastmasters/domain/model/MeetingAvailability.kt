@@ -1,10 +1,6 @@
 package com.bntsoft.toastmasters.domain.model
 
-enum class AvailabilityStatus {
-    AVAILABLE,
-    NOT_AVAILABLE,
-    NOT_CONFIRMED
-}
+import com.bntsoft.toastmasters.domain.models.AvailabilityStatus
 
 data class MeetingAvailability(
     val userId: String = "",

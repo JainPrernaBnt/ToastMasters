@@ -13,13 +13,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.bntsoft.toastmasters.MainActivity
 import com.bntsoft.toastmasters.R
+import com.bntsoft.toastmasters.domain.models.NotificationAudience
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
-import java.util.*
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,63 +28,60 @@ import javax.inject.Singleton
 class NotificationHelper @Inject constructor(
     private val context: Context,
     private val firebaseMessaging: FirebaseMessaging,
-    private val prefsManager: PrefsManager
+    private val prefsManager: PreferenceManager
 ) {
-    
+
     companion object {
         // Notification channel IDs
         const val CHANNEL_ID_DEFAULT = "default_channel"
         const val CHANNEL_ID_IMPORTANT = "important_channel"
         const val CHANNEL_ID_MEETINGS = "meetings_channel"
-        
+
         // Notification IDs
         const val NOTIFICATION_ID_MEMBER_APPROVED = 1001
         const val NOTIFICATION_ID_MENTOR_ASSIGNED = 1002
         const val NOTIFICATION_ID_MEETING_CREATED = 1003
         const val NOTIFICATION_ID_MEETING_UPDATED = 1004
         const val NOTIFICATION_ID_MEETING_REMINDER = 1005
-        
+
         // Notification types
 
         // Topic for all users
         private const val TOPIC_ALL = "all_users"
-        
+
         // Topic for members
         private const val TOPIC_MEMBERS = "members"
-        
+
         // Topic for VP Education
         private const val TOPIC_VP_EDUCATION = "vp_education"
-        
+
         // Intent extras
         const val EXTRA_FRAGMENT = "fragment"
         const val FRAGMENT_MEETING_DETAILS = "meeting_details"
-        
+
         // Topic for club officers
         private const val TOPIC_OFFICERS = "officers"
-        
+
         // Notification types
         const val TYPE_MEMBER_APPROVAL = "member_approval"
         const val TYPE_MENTOR_ASSIGNMENT = "mentor_assignment"
         const val TYPE_MEETING_CREATED = "meeting_created"
         const val TYPE_MEETING_REMINDER = "meeting_reminder"
-        
+
         // Intent extras
         const val EXTRA_NOTIFICATION_TYPE = "notification_type"
         const val EXTRA_NOTIFICATION_ID = "notification_id"
         const val EXTRA_MEETING_ID = "meeting_id"
         const val EXTRA_USER_ID = "user_id"
     }
-    
+
     private val notificationManager = NotificationManagerCompat.from(context)
     private val ioScope = CoroutineScope(Dispatchers.IO)
-    
+
     init {
         createNotificationChannels()
     }
 
-    /**
-     * Initialize notification channels
-     */
     fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val defaultChannel = NotificationChannel(
@@ -103,7 +101,7 @@ class NotificationHelper @Inject constructor(
                 setShowBadge(true)
                 enableVibration(true)
             }
-            
+
             val meetingsChannel = NotificationChannel(
                 CHANNEL_ID_MEETINGS,
                 context.getString(R.string.meetings_notification_channel_name),
@@ -128,19 +126,20 @@ class NotificationHelper @Inject constructor(
         try {
             // All users are subscribed to the general topic
             firebaseMessaging.subscribeToTopic(TOPIC_ALL).await()
-            
+
             // Subscribe to role-specific topics
             when (role.lowercase(Locale.getDefault())) {
                 "member" -> {
                     firebaseMessaging.subscribeToTopic(TOPIC_MEMBERS).await()
                 }
+
                 "vp_education" -> {
                     firebaseMessaging.subscribeToTopic(TOPIC_VP_EDUCATION).await()
                     firebaseMessaging.subscribeToTopic(TOPIC_OFFICERS).await()
                 }
                 // Add other roles as needed
             }
-            
+
             // Save the subscription state
             prefsManager.areNotificationsEnabled = true
         } catch (e: Exception) {
@@ -156,28 +155,23 @@ class NotificationHelper @Inject constructor(
             firebaseMessaging.unsubscribeFromTopic(TOPIC_MEMBERS).await()
             firebaseMessaging.unsubscribeFromTopic(TOPIC_VP_EDUCATION).await()
             firebaseMessaging.unsubscribeFromTopic(TOPIC_OFFICERS).await()
-            
+
             // Save the subscription state
             prefsManager.areNotificationsEnabled = false
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
-    
+
 
     fun getTopicForAudience(audience: NotificationAudience): String {
         return when (audience) {
             NotificationAudience.ALL -> TOPIC_ALL
             NotificationAudience.MEMBERS -> TOPIC_MEMBERS
             NotificationAudience.VP_EDUCATION -> TOPIC_VP_EDUCATION
-            NotificationAudience.OFFICERS -> TOPIC_OFFICERS
         }
     }
-    
 
-    /**
-     * Show a notification
-     */
     fun showNotification(
         title: String,
         message: String,
@@ -215,7 +209,7 @@ class NotificationHelper @Inject constructor(
     fun handleRemoteMessage(remoteMessage: RemoteMessage) {
         val notification = remoteMessage.notification
         val data = remoteMessage.data
-        
+
         if (notification != null) {
             // Handle notification message
             showNotification(
@@ -228,18 +222,21 @@ class NotificationHelper @Inject constructor(
             val title = data["title"] ?: context.getString(R.string.app_name)
             val message = data["message"] ?: ""
             val type = data["type"]
-            
+
             // Handle different notification types
             when (type) {
                 TYPE_MEMBER_APPROVAL -> {
                     handleMemberApprovalNotification(title, message, data)
                 }
+
                 TYPE_MENTOR_ASSIGNMENT -> {
                     handleMentorAssignmentNotification(title, message, data)
                 }
+
                 TYPE_MEETING_CREATED -> {
                     handleMeetingCreatedNotification(title, message, data)
                 }
+
                 else -> {
                     // Default notification
                     showNotification(title, message, data = data)
@@ -247,10 +244,7 @@ class NotificationHelper @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Handle member approval notification
-     */
+
     private fun handleMemberApprovalNotification(
         title: String,
         message: String,
@@ -265,14 +259,9 @@ class NotificationHelper @Inject constructor(
             priority = NotificationCompat.PRIORITY_HIGH,
             data = data
         )
-        
-        // You can also update the UI or perform other actions here
-        // For example, refresh the member list in the MemberApprovalFragment
+
     }
-    
-    /**
-     * Handle mentor assignment notification
-     */
+
     private fun handleMentorAssignmentNotification(
         title: String,
         message: String,
@@ -287,10 +276,7 @@ class NotificationHelper @Inject constructor(
             data = data
         )
     }
-    
-    /**
-     * Handle meeting created notification
-     */
+
     private fun handleMeetingCreatedNotification(
         title: String,
         message: String,
@@ -306,24 +292,15 @@ class NotificationHelper @Inject constructor(
             data = data
         )
     }
-    
-    /**
-     * Cancel a specific notification
-     */
+
     fun cancelNotification(notificationId: Int) {
         notificationManager.cancel(notificationId)
     }
-    
-    /**
-     * Cancel all notifications
-     */
+
     fun cancelAllNotifications() {
         notificationManager.cancelAll()
     }
-    
-    /**
-     * Show a meeting notification with appropriate styling and actions
-     */
+
     fun showMeetingNotification(
         meetingId: String,
         title: String,
@@ -337,16 +314,17 @@ class NotificationHelper @Inject constructor(
             // Build the notification content
             val notificationId = System.currentTimeMillis().toInt()
             val channelId = if (isReminder) CHANNEL_ID_IMPORTANT else CHANNEL_ID_MEETINGS
-            val priority = if (isReminder) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT
-            
+            val priority =
+                if (isReminder) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT
+
             // Create the notification style
             val style = NotificationCompat.BigTextStyle()
                 .setBigContentTitle(title)
                 .bigText(buildMeetingNotificationText(message, date, location))
-            
+
             // Create the pending intent for the notification
             val pendingIntent = createMeetingPendingIntent(meetingId)
-            
+
             // Build and show the notification
             showNotification(
                 title = title,
@@ -365,16 +343,13 @@ class NotificationHelper @Inject constructor(
                 ),
                 data = data
             )
-            
+
             Timber.d("Meeting notification shown: $title")
         } catch (e: Exception) {
             Timber.e(e, "Failed to show meeting notification")
         }
     }
-    
-    /**
-     * Create a pending intent for opening meeting details
-     */
+
     fun createMeetingPendingIntent(meetingId: String): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -388,10 +363,7 @@ class NotificationHelper @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
-    
-    /**
-     * Build the notification text with meeting details
-     */
+
     private fun buildMeetingNotificationText(
         message: String,
         date: String?,
@@ -405,12 +377,3 @@ class NotificationHelper @Inject constructor(
     }
 }
 
-/**
- * Represents the target audience for a notification
- */
-enum class NotificationAudience {
-    ALL,          // All users
-    MEMBERS,      // Regular members
-    VP_EDUCATION, // VP Education only
-    OFFICERS      // All club officers
-}

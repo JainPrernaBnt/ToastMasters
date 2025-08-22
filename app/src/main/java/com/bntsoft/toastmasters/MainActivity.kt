@@ -10,9 +10,8 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.bntsoft.toastmasters.data.model.UserRole
 import com.bntsoft.toastmasters.databinding.ActivityMainBinding
-import com.bntsoft.toastmasters.presentation.viewmodel.MainViewModel
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
@@ -166,7 +165,8 @@ class MainActivity : BaseActivity() {
     private fun setupNavigationListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             // Show/hide toolbar based on destination (hide for auth screens)
-            val isAuth = destination.id == R.id.loginFragment || destination.id == R.id.signUpFragment
+            val isAuth =
+                destination.id == R.id.loginFragment || destination.id == R.id.signUpFragment
             if (isAuth) {
                 supportActionBar?.hide()
                 window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -180,11 +180,12 @@ class MainActivity : BaseActivity() {
             }
 
             // Handle back button visibility
-            val isTopLevelDestination = appBarConfiguration.topLevelDestinations.contains(destination.id)
+            val isTopLevelDestination =
+                appBarConfiguration.topLevelDestinations.contains(destination.id)
             supportActionBar?.let { actionBar ->
                 actionBar.setDisplayHomeAsUpEnabled(!isTopLevelDestination)
             }
-            
+
             // Invalidate options menu to update status bar menu visibility
             invalidateOptionsMenu()
         }
