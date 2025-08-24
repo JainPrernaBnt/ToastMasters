@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.gms.services)
     id("kotlin-parcelize")
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -70,6 +71,9 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-dynamic-features-fragment:2.7.7")
 
     // Hilt
     implementation("com.google.dagger:hilt-android:2.56.2")

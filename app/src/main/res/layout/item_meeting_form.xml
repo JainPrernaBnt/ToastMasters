@@ -168,19 +168,43 @@
                 android:textAppearance="?attr/textAppearanceSubtitle1"
                 android:textStyle="bold" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/addRoleButton"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/add_role"
-                android:textColor="?attr/colorPrimary"
-                app:icon="@drawable/ic_add"
-                app:iconGravity="textStart"
-                app:iconTint="?attr/colorPrimary" />
 
         </LinearLayout>
 
+        <!-- Role Dropdown -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/roleDropdownLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="@string/select_role"
+            app:startIconDrawable="@drawable/ic_work"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeColor="?attr/colorOnSurface">
+
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/roleDropdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:inputType="none"
+                android:completionThreshold="1"
+                android:dropDownWidth="match_parent"
+                android:dropDownVerticalOffset="4dp"
+                android:dropDownHorizontalOffset="0dp"
+                android:dropDownSelector="?attr/selectableItemBackground"
+                android:singleLine="true"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:focusable="false"
+                android:clickable="true"
+                android:background="@null"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Manual Role Input (Hidden by default) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -196,7 +220,7 @@
                 android:layout_weight="1"
                 android:hint="@string/role_name"
                 android:visibility="gone"
-                tools:visibility="visible">
+                app:startIconDrawable="@drawable/ic_add">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/roleInput"

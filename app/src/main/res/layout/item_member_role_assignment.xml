@@ -36,16 +36,6 @@
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipPreferred"
-                style="@style/Widget.MaterialComponents.Chip.Choice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="@string/preferred"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-                app:chipBackgroundColor="@color/teal_200"
-                app:chipMinHeight="24dp" />
         </LinearLayout>
 
         <!-- Preferred Roles -->

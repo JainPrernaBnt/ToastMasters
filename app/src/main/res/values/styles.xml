@@ -10,5 +10,4 @@
         <item name="android:textSize">14sp</item>
     </style>
 
-    <color name="chip_background">#E0E0E0</color>
 </resources>

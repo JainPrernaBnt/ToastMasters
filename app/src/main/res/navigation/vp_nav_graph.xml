@@ -57,6 +57,23 @@
         <action
             android:id="@+id/action_assignRolesFragment_to_dashboardFragment"
             app:destination="@id/dashboardFragment" />
+        <action
+            android:id="@+id/action_assignRolesToMemberRoles"
+            app:destination="@id/memberRoleAssignmentFragment">
+            <argument
+                android:name="meeting"
+                app:argType="com.bntsoft.toastmasters.domain.model.Meeting" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/memberRoleAssignmentFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.roles.MemberRoleAssignmentFragment"
+        android:label="Assign Member Roles"
+        tools:layout="@layout/fragment_member_role_assignment">
+        <argument
+            android:name="meeting"
+            app:argType="com.bntsoft.toastmasters.data.model.Meeting" />
     </fragment>
 
     <fragment

@@ -111,7 +111,7 @@ class NotificationHelper @Inject constructor(
                 setShowBadge(true)
                 enableVibration(true)
                 enableLights(true)
-                lightColor = context.getColor(R.color.colorPrimary)
+                lightColor = context.getColor(R.color.primary)
                 lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
             }
 

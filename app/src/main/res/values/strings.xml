@@ -36,6 +36,9 @@
     <string name="venue">Venue</string>
     <string name="theme">Theme</string>
     <string name="preferred_roles">Preferred Roles</string>
+    <string name="select_role">Select a role</string>
+    <string name="role_name">Role name</string>
+    <string name="add_role">Add Role</string>
     <string name="add_another_meeting">Add Another Meeting</string>
     <string name="create_meetings">Create Meeting(s)</string>
     <string name="meeting_form_helper_text">Select the roles you need to fill for this meeting. You can assign members to these roles later.</string>
@@ -109,7 +112,6 @@
     <string name="preferred_roles_label">Preferred Roles</string>
     <string name="preferred">Preferred</string>
     <string name="assign_role">Assign Role</string>
-    <string name="select_role">Select Role</string>
     <string name="assign_backup">Assign Backup</string>
 
     <!-- Meetings -->
@@ -130,8 +132,6 @@
     <string name="ic_work">Work icon</string>
 
     <!-- Role Management -->
-    <string name="add_role">Add Role</string>
-    <string name="role_name">Role Name</string>
     <string name="add_custom_role">Add Custom Role</string>
     <string name="remove_role">Remove</string>
     <string name="select_roles">Select or Add Roles</string>

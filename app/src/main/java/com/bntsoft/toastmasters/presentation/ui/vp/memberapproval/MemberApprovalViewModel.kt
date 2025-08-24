@@ -170,23 +170,31 @@ class MemberApprovalViewModel @Inject constructor(
                     com.bntsoft.toastmasters.domain.models.UserRole.MEMBER
                 }
                 
+                // Create updated member with new role
                 val updatedMember = member.copy(role = newRole)
-                memberRepository.updateMember(updatedMember)  // save in Firebase
                 
-                _successMessages.value = if (isPromoting) {
-                    "${member.name} is now VP Education"
+                // Save to Firebase
+                val updateSuccess = memberRepository.updateMember(updatedMember)
+                
+                if (updateSuccess) {
+                    // Refresh the member data from Firebase to ensure consistency
+                    val refreshedMember = memberRepository.getMemberById(member.id) ?: member
+                    
+                    _successMessages.value = if (isPromoting) {
+                        "${member.name} is now VP Education"
+                    } else {
+                        "${member.name} is now a regular member"
+                    }
+                    
+                    // Update local list with refreshed data
+                    val updatedList = _members.value.toMutableList().map { 
+                        if (it.id == member.id) refreshedMember else it 
+                    }
+                    _members.value = updatedList
+                    applyFilter(currentFilter, updatedList)
                 } else {
-                    "${member.name} is now a regular member"
+                    _errorMessages.value = "Failed to update member role. Please try again."
                 }
-
-                // update local list
-                val updatedList = _members.value.toMutableList().apply {
-                    val index = indexOfFirst { it.id == member.id }
-                    if (index != -1) set(index, updatedMember)
-                }
-                _members.value = updatedList
-                applyFilter(currentFilter, updatedList)
-
             } catch (e: Exception) {
                 _errorMessages.value = e.message ?: "Failed to update member role"
             } finally {

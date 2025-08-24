@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -177,17 +179,63 @@ class CreateMeetingFragment : Fragment() {
     }
 
     private fun setupRoleManagement(formBinding: ItemMeetingFormBinding) {
-        formBinding.addRoleButton.setOnClickListener {
-            formBinding.roleInputLayout.visibility = View.VISIBLE
-            formBinding.saveRoleButton.visibility = View.VISIBLE
-            formBinding.roleInput.requestFocus()
+        // Hide the manual input initially
+        formBinding.roleInputLayout.visibility = View.GONE
+        formBinding.saveRoleButton.visibility = View.GONE
+
+        // Get preferred roles from string array
+        val roles = resources.getStringArray(R.array.Preferred_roles).toList()
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            roles
+        )
+        
+        // Set up the dropdown
+        formBinding.apply {
+            val dropdown = roleDropdown as MaterialAutoCompleteTextView
+            dropdown.apply {
+                setAdapter(adapter)
+                setOnClickListener {
+                    if (adapter.count > 0) {
+                        showDropDown()
+                    }
+                }
+                setOnFocusChangeListener { _, hasFocus ->
+                    if (hasFocus && adapter.count > 0) {
+                        showDropDown()
+                    }
+                }
+                setOnItemClickListener { _, _, position, _ ->
+                    val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
+                    
+                    if (position == 0) { // "+ Add new role" option
+                        roleInputLayout.visibility = View.VISIBLE
+                        saveRoleButton.visibility = View.VISIBLE
+                        roleInput.requestFocus()
+                        setText("", false) // Clear the text
+                    } else {
+                        addRoleChip(formBinding, selectedRole)
+                        setText("", false) // Clear the text
+                    }
+                    clearFocus()
+                }
+                keyListener = null // Disable text input
+            }
+            
+            // Make sure the TextInputLayout doesn't steal focus
+            roleDropdownLayout.isFocusable = false
+            roleDropdownLayout.isFocusableInTouchMode = false
         }
 
+        // Handle manual role addition
         formBinding.saveRoleButton.setOnClickListener {
             val role = formBinding.roleInput.text.toString().trim()
             if (role.isNotEmpty()) {
                 addRoleChip(formBinding, role)
                 formBinding.roleInput.text?.clear()
+                formBinding.roleInputLayout.visibility = View.GONE
+                formBinding.saveRoleButton.visibility = View.GONE
             }
         }
 
@@ -197,6 +245,8 @@ class CreateMeetingFragment : Fragment() {
                 if (role.isNotEmpty()) {
                     addRoleChip(formBinding, role)
                     formBinding.roleInput.text?.clear()
+                    formBinding.roleInputLayout.visibility = View.GONE
+                    formBinding.saveRoleButton.visibility = View.GONE
                 }
                 true
             } else {

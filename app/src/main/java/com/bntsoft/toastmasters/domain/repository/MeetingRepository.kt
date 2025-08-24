@@ -1,36 +1,47 @@
 package com.bntsoft.toastmasters.domain.repository
 
+import com.bntsoft.toastmasters.utils.Result
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
+import com.bntsoft.toastmasters.domain.model.role.AssignRoleRequest
+import com.bntsoft.toastmasters.domain.model.role.MemberRole
+import com.bntsoft.toastmasters.domain.model.role.Role
+import com.bntsoft.toastmasters.domain.model.role.RoleAssignmentResponse
 import com.bntsoft.toastmasters.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 interface MeetingRepository {
-    // Get all meetings
+    // Basic meeting operations
     fun getAllMeetings(): Flow<List<Meeting>>
-
-    // Get upcoming meetings (after or equal to the given date)
     fun getUpcomingMeetings(afterDate: LocalDate = LocalDate.now()): Flow<List<Meeting>>
-
-    // Get a meeting by ID
     suspend fun getMeetingById(id: String): Meeting?
-
-    // Create a new meeting
     suspend fun createMeeting(meeting: Meeting): Resource<Meeting>
-
-    // Update an existing meeting
     suspend fun updateMeeting(meeting: Meeting): Resource<Unit>
-
-    // Delete a meeting
     suspend fun deleteMeeting(id: String): Resource<Unit>
-
-    // Mark a meeting as completed
     suspend fun completeMeeting(meetingId: String): Resource<Unit>
-
-    // Get upcoming meetings with response counts
     fun getUpcomingMeetingsWithCounts(afterDate: LocalDate = LocalDate.now()): Flow<List<MeetingWithCounts>>
-
-    // Sync meetings with remote data source
     suspend fun syncMeetings(): Resource<Unit>
+    
+    // Role assignment operations
+    suspend fun assignRole(request: AssignRoleRequest): Result<RoleAssignmentResponse>
+    suspend fun getAssignedRoles(meetingId: String): Result<List<MemberRole>>
+    suspend fun getAssignedRole(meetingId: String, memberId: String): Result<MemberRole?>
+    suspend fun removeRoleAssignment(assignmentId: String): Result<Unit>
+    suspend fun updateRoleAssignment(assignment: MemberRole): Result<Unit>
+    
+    // Role availability
+    suspend fun getAvailableRoles(meetingId: String): Result<List<Role>>
+    suspend fun getMembersForRole(meetingId: String, roleId: String): Result<List<String>>
+    
+    // Batch operations
+    suspend fun assignMultipleRoles(requests: List<AssignRoleRequest>): Result<List<RoleAssignmentResponse>>
+    suspend fun getMeetingRoleAssignments(meetingId: String): Result<Map<String, MemberRole>>
+    
+    // Role statistics
+    suspend fun getMeetingRoleStatistics(meetingId: String): Result<Map<String, Any>>
+    
+    // Role templates
+    suspend fun applyRoleTemplate(meetingId: String, templateId: String): Result<Unit>
+    suspend fun getAvailableRoleTemplates(): Result<Map<String, String>>
 }

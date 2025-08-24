@@ -4,8 +4,13 @@ import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.MemberResponse
+import com.bntsoft.toastmasters.domain.model.role.AssignRoleRequest
+import com.bntsoft.toastmasters.domain.model.role.MemberRole
+import com.bntsoft.toastmasters.domain.model.role.Role
+import com.bntsoft.toastmasters.domain.model.role.RoleAssignmentResponse
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
+import com.bntsoft.toastmasters.utils.Result
 import com.bntsoft.toastmasters.utils.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -53,14 +58,20 @@ class MeetingRepositoryImpl @Inject constructor(
     override suspend fun createMeeting(meeting: Meeting): Resource<Meeting> {
         return try {
             val result = firebaseDataSource.createMeeting(meeting)
-            if (result.isSuccess) {
-                val newMeeting = result.getOrThrow()
-                firebaseDataSource.sendMeetingNotification(newMeeting)
-                Resource.Success(newMeeting)
-            } else {
-                Resource.Error(
-                    result.exceptionOrNull()?.message ?: "Failed to create meeting in Firebase"
-                )
+            when (result) {
+                is Result.Success -> {
+                    val newMeeting = result.data
+                    firebaseDataSource.sendMeetingNotification(newMeeting)
+                    Resource.Success(newMeeting)
+                }
+                is Result.Error -> {
+                    Resource.Error(
+                        result.exception.message ?: "Failed to create meeting in Firebase"
+                    )
+                }
+                Result.Loading -> {
+                    Resource.Error("Unexpected loading state while creating meeting")
+                }
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
@@ -70,10 +81,10 @@ class MeetingRepositoryImpl @Inject constructor(
     override suspend fun updateMeeting(meeting: Meeting): Resource<Unit> {
         return try {
             val result = firebaseDataSource.updateMeeting(meeting)
-            if (result.isSuccess) {
-                Resource.Success(Unit)
-            } else {
-                Resource.Error("Failed to update meeting in Firebase")
+            when (result) {
+                is Result.Success -> Resource.Success(Unit)
+                is Result.Error -> Resource.Error("Failed to update meeting in Firebase: ${result.exception.message}")
+                Result.Loading -> Resource.Error("Unexpected loading state while updating meeting")
             }
         } catch (e: Exception) {
             Resource.Error(e.message ?: "An unknown error occurred")
@@ -100,10 +111,10 @@ class MeetingRepositoryImpl @Inject constructor(
 
             // Mark the meeting as completed in the data source
             val result = firebaseDataSource.completeMeeting(meetingId)
-            if (result.isSuccess) {
-                Resource.Success(Unit)
-            } else {
-                Resource.Error("Failed to mark meeting as completed")
+            when (result) {
+                is Result.Success -> Resource.Success(Unit)
+                is Result.Error -> Resource.Error("Failed to mark meeting as completed: ${result.exception.message}")
+                Result.Loading -> Resource.Error("Unexpected loading state while completing meeting")
             }
         } catch (e: Exception) {
             Timber.e(e, "Error completing meeting $meetingId")
@@ -153,6 +164,59 @@ class MeetingRepositoryImpl @Inject constructor(
     // Sync function is no longer needed as we are not using a local cache
     override suspend fun syncMeetings(): Resource<Unit> {
         return Resource.Success(Unit) // Does nothing now
+    }
+
+    // Role assignment operations
+    override suspend fun assignRole(request: AssignRoleRequest): Result<RoleAssignmentResponse> {
+        return firebaseDataSource.assignRole(request)
+    }
+    
+    override suspend fun getAssignedRoles(meetingId: String): Result<List<MemberRole>> {
+        return firebaseDataSource.getAssignedRoles(meetingId)
+    }
+    
+    override suspend fun getAssignedRole(meetingId: String, memberId: String): Result<MemberRole?> {
+        return firebaseDataSource.getAssignedRole(meetingId, memberId)
+    }
+    
+    override suspend fun removeRoleAssignment(assignmentId: String): Result<Unit> {
+        return firebaseDataSource.removeRoleAssignment(assignmentId)
+    }
+
+    override suspend fun updateRoleAssignment(assignment: MemberRole): Result<Unit> {
+        return firebaseDataSource.updateRoleAssignment(assignment)
+    }
+    
+    // Role availability
+    override suspend fun getAvailableRoles(meetingId: String): Result<List<Role>> {
+        return firebaseDataSource.getAvailableRoles(meetingId)
+    }
+    
+    override suspend fun getMembersForRole(meetingId: String, roleId: String): Result<List<String>> {
+        return firebaseDataSource.getMembersForRole(meetingId, roleId)
+    }
+
+    // Batch operations
+    override suspend fun assignMultipleRoles(requests: List<AssignRoleRequest>): Result<List<RoleAssignmentResponse>> {
+        return firebaseDataSource.assignMultipleRoles(requests)
+    }
+    
+    override suspend fun getMeetingRoleAssignments(meetingId: String): Result<Map<String, MemberRole>> {
+        return firebaseDataSource.getMeetingRoleAssignments(meetingId)
+    }
+    
+    // Role statistics
+    override suspend fun getMeetingRoleStatistics(meetingId: String): Result<Map<String, Any>> {
+        return firebaseDataSource.getMeetingRoleStatistics(meetingId)
+    }
+    
+    // Role templates
+    override suspend fun applyRoleTemplate(meetingId: String, templateId: String): Result<Unit> {
+        return firebaseDataSource.applyRoleTemplate(meetingId, templateId)
+    }
+    
+    override suspend fun getAvailableRoleTemplates(): Result<Map<String, String>> {
+        return firebaseDataSource.getAvailableRoleTemplates()
     }
 }
 
