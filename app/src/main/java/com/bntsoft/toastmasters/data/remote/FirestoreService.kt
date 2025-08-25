@@ -51,6 +51,13 @@ class FirestoreService @Inject constructor(
             .get()
             .await()
     }
+    
+    /**
+     * Get a reference to a Firestore collection
+     * @param collectionPath The path to the collection (e.g., "meetings", "users")
+     * @return CollectionReference for the specified path
+     */
+    fun getCollection(collectionPath: String) = firestore.collection(collectionPath)
 
     fun getAllUsers(): Flow<List<DocumentSnapshot>> = callbackFlow {
         val subscription = firestore.collection(USERS_COLLECTION)

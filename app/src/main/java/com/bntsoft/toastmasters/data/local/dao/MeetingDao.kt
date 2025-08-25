@@ -43,11 +43,4 @@ interface MeetingDao {
     @Query("SELECT * FROM meetings WHERE meetingID = :id")
     suspend fun getMeetingById(id: String): MeetingEntity?
 
-    // Get all recurring meetings (e.g., every Saturday)
-    @Query("SELECT * FROM meetings WHERE isRecurring = 1 ORDER BY date ASC")
-    fun getRecurringMeetings(): Flow<List<MeetingEntity>>
-
-    // Delete all recurring meetings
-    @Query("DELETE FROM meetings WHERE isRecurring = 1")
-    suspend fun deleteAllRecurringMeetings()
 }

@@ -33,10 +33,18 @@ class MeetingAdapter(
 
         fun bind(meeting: MeetingListItem) {
             with(binding) {
+                // Theme
                 tvMeetingTheme.text = meeting.theme
-                tvMeetingVenue.text = meeting.venue
-                tvMeetingDate.text = meeting.dateTime
                 
+                // Venue with icon
+                tvMeetingVenue.text = meeting.venue
+                
+                // Date and time in separate fields
+                tvMeetingDay.text = meeting.dayOfWeek
+                tvMeetingDate.text = meeting.formattedDate
+                tvMeetingTime.text = meeting.formattedTime
+                
+                // Set click listener
                 root.setOnClickListener { onItemClick(meeting) }
             }
         }

@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardMember"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
-    app:cardElevation="1dp"
-    app:cardCornerRadius="8dp">
-
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp">
+    <!--    Also, add a Assign role button, -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,7 +26,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="16dp"
                 android:textColor="@color/on_surface"
                 tools:text="John Doe" />
 
@@ -46,27 +44,35 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/preferred_roles"
-            android:textColor="@color/on_surface_medium" />
+            android:textColor="@color/on_surface_medium"
+            android:textSize="@dimen/_13ssp" />
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupPreferredRoles"
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            app:singleLine="true"
-            app:singleSelection="false">
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
-            <com.google.android.material.chip.Chip
-                style="@style/Widget.MaterialComponents.Chip.Choice"
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupPreferredRoles"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Toastmaster"
-                app:chipMinHeight="24dp"
-                app:chipMinTouchTargetSize="0dp"
-                app:chipStartPadding="8dp" />
+                android:layout_marginTop="4dp"
+                app:layout_scrollFlags="scroll"
+                app:singleLine="true"
+                app:singleSelection="false">
 
+                <com.google.android.material.chip.Chip
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Toastmaster"
+                    app:chipMinHeight="24dp"
+                    app:chipMinTouchTargetSize="0dp"
+                    app:chipStartPadding="8dp" />
 
-        </com.google.android.material.chip.ChipGroup>
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
 
         <TextView
             android:id="@+id/tvRecentRolesLabel"
@@ -75,16 +81,40 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/recent_roles"
-            android:textColor="@color/on_surface_medium" />
+            android:textColor="@color/on_surface_medium"
+            android:textSize="@dimen/_13ssp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvRecentRoles"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:orientation="horizontal"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_recent_role" />
+            android:layout_marginTop="4dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRecentRoles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:listitem="@layout/item_recent_role" />
+
+            <TextView
+                android:id="@+id/tvNoRecentRoles"
+                style="@style/TextAppearance.MaterialComponents.Caption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="@string/no_recent_roles"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
             style="@style/TextAppearance.MaterialComponents.Caption"
@@ -92,7 +122,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/assign_role"
-            android:textColor="@color/on_surface_medium" />
+            android:textColor="@color/on_surface_medium"
+            android:textSize="@dimen/_13ssp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilRole"
@@ -111,6 +142,17 @@
                 tools:text="Toastmaster" />
 
         </com.google.android.material.textfield.TextInputLayout>
+        <!-- Selected Roles -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupSelectedRoles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:chipSpacing="4dp"
+            app:chipSpacingHorizontal="4dp"
+            app:chipSpacingVertical="4dp"
+            app:singleLine="true"
+            app:singleSelection="false" />
 
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/cbAssignBackup"
@@ -126,8 +168,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:visibility="gone"
             android:hint="@string/select_backup_member"
+            android:visibility="gone"
             app:startIconDrawable="@drawable/ic_person">
 
             <AutoCompleteTextView
@@ -138,25 +180,6 @@
                 tools:text="Jane Smith" />
 
         </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/tvAssignedRolesLabel"
-            style="@style/TextAppearance.MaterialComponents.Caption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/assigned_roles"
-            android:textColor="@color/on_surface_medium"
-            android:visibility="gone" />
-
-        <LinearLayout
-            android:id="@+id/layoutAssignedRoles"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-        </LinearLayout>
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

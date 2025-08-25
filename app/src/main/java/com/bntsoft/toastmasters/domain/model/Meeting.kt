@@ -1,8 +1,11 @@
 package com.bntsoft.toastmasters.domain.model
 
+import android.os.Parcelable
 import com.bntsoft.toastmasters.domain.models.MeetingStatus
+import kotlinx.parcelize.Parcelize
 import java.time.LocalDateTime
 
+@Parcelize
 data class Meeting(
     val id: String = "",
     val dateTime: LocalDateTime,
@@ -17,7 +20,7 @@ data class Meeting(
     val availability: MeetingAvailability? = null,
     val isEditMode: Boolean = false,
     val status: MeetingStatus = MeetingStatus.NOT_COMPLETED
-) {
+): Parcelable {
     // For backward compatibility
     val preferredRoles: List<String> get() = availableRoles
 

@@ -7,6 +7,7 @@ import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.bntsoft.toastmasters.utils.UserManager
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.Module
 import dagger.Provides
@@ -48,7 +49,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideUserManager(userRepository: UserRepository): UserManager {
-        return UserManager(userRepository)
-    }
+    fun provideUserManager(
+        userRepository: UserRepository,
+    ) = UserManager(userRepository)
+
+    @Provides
+    @Singleton
+    fun provideCurrentUserId(
+        firebaseAuth: FirebaseAuth
+    ): String = firebaseAuth.currentUser?.uid ?: ""
 }

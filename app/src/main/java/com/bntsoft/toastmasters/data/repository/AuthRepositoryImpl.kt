@@ -3,7 +3,6 @@ package com.bntsoft.toastmasters.data.repository
 import android.util.Log
 import com.bntsoft.toastmasters.data.model.NotificationData
 import com.bntsoft.toastmasters.data.model.UserDeserializer
-import com.bntsoft.toastmasters.data.remote.FirebaseAuthService
 import com.bntsoft.toastmasters.data.remote.FirestoreService
 import com.bntsoft.toastmasters.domain.model.AuthResult
 import com.bntsoft.toastmasters.domain.model.SignupResult
@@ -28,7 +27,6 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firebaseAuthService: FirebaseAuthService,
     private val firestoreService: FirestoreService,
     private val notificationRepository: NotificationRepository
 ) : AuthRepository {

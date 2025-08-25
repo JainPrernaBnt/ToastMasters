@@ -4,14 +4,10 @@ import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.MemberResponse
-import com.bntsoft.toastmasters.domain.model.role.AssignRoleRequest
-import com.bntsoft.toastmasters.domain.model.role.MemberRole
-import com.bntsoft.toastmasters.domain.model.role.Role
-import com.bntsoft.toastmasters.domain.model.role.RoleAssignmentResponse
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
-import com.bntsoft.toastmasters.utils.Result
 import com.bntsoft.toastmasters.utils.Resource
+import com.bntsoft.toastmasters.utils.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -161,62 +157,27 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
-    // Sync function is no longer needed as we are not using a local cache
-    override suspend fun syncMeetings(): Resource<Unit> {
-        return Resource.Success(Unit) // Does nothing now
+    override suspend fun getPreferredRoles(meetingId: String, userId: String): List<String> {
+        return try {
+            // Fetch user's preferred roles for this meeting
+            // Path: meetings/{meetingId}/availability/{userId}/preferredRoles
+            firebaseDataSource.getUserPreferredRoles(meetingId, userId) ?: emptyList()
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching preferred roles for user $userId in meeting $meetingId")
+            emptyList()
+        }
     }
 
-    // Role assignment operations
-    override suspend fun assignRole(request: AssignRoleRequest): Result<RoleAssignmentResponse> {
-        return firebaseDataSource.assignRole(request)
-    }
-    
-    override suspend fun getAssignedRoles(meetingId: String): Result<List<MemberRole>> {
-        return firebaseDataSource.getAssignedRoles(meetingId)
-    }
-    
-    override suspend fun getAssignedRole(meetingId: String, memberId: String): Result<MemberRole?> {
-        return firebaseDataSource.getAssignedRole(meetingId, memberId)
-    }
-    
-    override suspend fun removeRoleAssignment(assignmentId: String): Result<Unit> {
-        return firebaseDataSource.removeRoleAssignment(assignmentId)
+    override suspend fun getMeetingRoles(meetingId: String): List<String> {
+        return try {
+            // Fetch meeting's preferred roles list
+            // Path: meetings/{meetingId}/preferredRoles
+            firebaseDataSource.getMeetingPreferredRoles(meetingId) ?: emptyList()
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching meeting roles for meeting $meetingId")
+            emptyList()
+        }
     }
 
-    override suspend fun updateRoleAssignment(assignment: MemberRole): Result<Unit> {
-        return firebaseDataSource.updateRoleAssignment(assignment)
-    }
-    
-    // Role availability
-    override suspend fun getAvailableRoles(meetingId: String): Result<List<Role>> {
-        return firebaseDataSource.getAvailableRoles(meetingId)
-    }
-    
-    override suspend fun getMembersForRole(meetingId: String, roleId: String): Result<List<String>> {
-        return firebaseDataSource.getMembersForRole(meetingId, roleId)
-    }
-
-    // Batch operations
-    override suspend fun assignMultipleRoles(requests: List<AssignRoleRequest>): Result<List<RoleAssignmentResponse>> {
-        return firebaseDataSource.assignMultipleRoles(requests)
-    }
-    
-    override suspend fun getMeetingRoleAssignments(meetingId: String): Result<Map<String, MemberRole>> {
-        return firebaseDataSource.getMeetingRoleAssignments(meetingId)
-    }
-    
-    // Role statistics
-    override suspend fun getMeetingRoleStatistics(meetingId: String): Result<Map<String, Any>> {
-        return firebaseDataSource.getMeetingRoleStatistics(meetingId)
-    }
-    
-    // Role templates
-    override suspend fun applyRoleTemplate(meetingId: String, templateId: String): Result<Unit> {
-        return firebaseDataSource.applyRoleTemplate(meetingId, templateId)
-    }
-    
-    override suspend fun getAvailableRoleTemplates(): Result<Map<String, String>> {
-        return firebaseDataSource.getAvailableRoleTemplates()
-    }
 }
 

@@ -1,10 +1,11 @@
 package com.bntsoft.toastmasters.utils
 
 sealed class Result<out T> {
+    open val exception: Exception? = null
 
     data class Success<out T>(val data: T) : Result<T>()
 
-    data class Error(val exception: Exception) : Result<Nothing>()
+    data class Error(override val exception: Exception) : Result<Nothing>()
 
     object Loading : Result<Nothing>()
 

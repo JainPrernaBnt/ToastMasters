@@ -46,13 +46,19 @@ class MeetingAdapter(
         fun bind(meetingWithCounts: MeetingWithCounts) {
             val meeting = meetingWithCounts.meeting
             binding.tvMeetingTitle.text = meeting.theme
-            val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
-            binding.tvMeetingDate.text = meeting.dateTime.format(formatter)
+            
+            // Format date (e.g., "Aug 25, 2024")
+            val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+            binding.tvMeetingDate.text = meeting.dateTime.format(dateFormatter)
+            
+            // Format times in 12-hour format with AM/PM
             val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-            val time = "${meeting.dateTime.format(timeFormatter)} - ${
-                meeting.endDateTime?.format(timeFormatter)
-            }"
-            binding.tvMeetingTime.text = time
+            val startTime = meeting.dateTime.format(timeFormatter).replace(" ", " ").lowercase()
+            val endTime = meeting.endDateTime?.format(timeFormatter)?.replace(" ", " ")?.lowercase() ?: ""
+            
+            // Ensure we show the time range only if end time is available
+            val timeDisplay = if (endTime.isNotEmpty()) "$startTime - $endTime" else startTime
+            binding.tvMeetingTime.text = timeDisplay
             binding.tvMeetingVenue.text = meeting.location
 
             binding.tvAvailableCount.text = meetingWithCounts.availableCount.toString()

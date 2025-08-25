@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.util
+package com.bntsoft.toastmasters.utils
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -12,7 +12,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 

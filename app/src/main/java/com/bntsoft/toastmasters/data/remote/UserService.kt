@@ -15,6 +15,7 @@ class UserService @Inject constructor(
 ) {
     companion object {
         private const val USERS_COLLECTION = "users"
+        private const val MEETING_AVAILABILITY = "meeting_availability"
     }
 
     private val usersCollection = firestore.collection(USERS_COLLECTION)
@@ -161,4 +162,84 @@ class UserService @Inject constructor(
             throw e
         }
     }
+    
+    suspend fun getAvailableMembersForMeeting(meetingId: String): List<User> {
+        return try {
+            // Get all members who marked themselves as available for this meeting
+            val availabilityRef = firestore
+                .collection("meetings")
+                .document(meetingId)
+                .collection("availability")
+            
+            println("DEBUG: Querying availability for meeting: $meetingId")
+            val querySnapshot = availabilityRef
+                .whereEqualTo("status", "AVAILABLE")
+                .get()
+                .await()
+            
+            val availabilityDocs = querySnapshot.documents
+            println("DEBUG: Found ${availabilityDocs.size} available members")
+            
+            if (availabilityDocs.isEmpty()) {
+                println("DEBUG: No available members found for meeting $meetingId")
+                return emptyList()
+            }
+            
+            // Get user IDs from the availability documents (document ID is the memberId)
+            val memberIds = availabilityDocs.map { it.id }
+            println("DEBUG: Found member IDs: $memberIds")
+            
+            // Fetch user details in batches to avoid too many requests
+            val users = mutableListOf<User>()
+            for (batch in memberIds.chunked(10)) { // Process 10 users at a time
+                println("DEBUG: Fetching users for batch: $batch")
+                val querySnapshot = usersCollection
+                    .whereIn(com.google.firebase.firestore.FieldPath.documentId(), batch)
+                    .get()
+                    .await()
+                
+                val batchUsers = querySnapshot.documents.mapNotNull { doc ->
+                    try {
+                        UserDeserializer.fromDocument(doc)
+                    } catch (e: Exception) {
+                        println("DEBUG: Error parsing user ${doc.id}: ${e.message}")
+                        null
+                    }
+                }
+                users.addAll(batchUsers)
+            }
+            
+            println("DEBUG: Successfully fetched ${users.size} users")
+            users
+        } catch (e: Exception) {
+            println("DEBUG: Error in getAvailableMembersForMeeting: ${e.message}")
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+    
+    suspend fun getUserRecentRoles(userId: String, limit: Int): List<String> {
+        return try {
+            // Query the user's role assignments, ordered by date descending
+            val querySnapshot = firestore
+                .collection("role_assignments")
+                .whereEqualTo("userId", userId)
+                .whereNotEqualTo("role", "") // Exclude empty roles if any
+                .orderBy("assignedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .limit(limit.toLong())
+                .get()
+                .await()
+            
+            // Extract and return the role names
+            querySnapshot.documents.mapNotNull { doc ->
+                doc.getString("role")
+            }.distinct() // Ensure we don't have duplicate roles
+            
+        } catch (e: Exception) {
+            println("DEBUG: Error fetching recent roles for user $userId: ${e.message}")
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
 }

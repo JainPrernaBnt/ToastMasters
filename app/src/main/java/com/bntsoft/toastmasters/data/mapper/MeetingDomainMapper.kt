@@ -15,10 +15,14 @@ class MeetingDomainMapper @Inject constructor() {
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+    private val displayTimeFormatter = DateTimeFormatter.ofPattern("h:mm a")
 
     fun mapToDomain(entity: MeetingEntity): Meeting {
         val dateTime = try {
-            LocalDateTime.parse("${entity.date}T${entity.startTime}", dateTimeFormatter)
+            // Parse date and time separately and then combine
+            val date = LocalDate.parse(entity.date, dateFormatter)
+            val startTime = LocalTime.parse(entity.startTime, timeFormatter)
+            LocalDateTime.of(date, startTime)
         } catch (e: Exception) {
             Timber.e(
                 e,
@@ -26,9 +30,12 @@ class MeetingDomainMapper @Inject constructor() {
             )
             throw IllegalArgumentException("Invalid date/time format in database for meeting ${entity.meetingID}")
         }
+        
         val endDateTime = if (entity.endTime.isNotEmpty() && entity.endTime.isNotBlank()) {
             try {
-                LocalDateTime.parse("${entity.date}T${entity.endTime}", dateTimeFormatter)
+                val date = LocalDate.parse(entity.date, dateFormatter)
+                val endTime = LocalTime.parse(entity.endTime, timeFormatter)
+                LocalDateTime.of(date, endTime)
             } catch (e: Exception) {
                 Timber.e(e, "Error parsing entity end time: ${entity.endTime}")
                 null
@@ -42,7 +49,6 @@ class MeetingDomainMapper @Inject constructor() {
             endDateTime = endDateTime,
             location = entity.venue,
             availableRoles = entity.preferredRoles,
-            isRecurring = entity.isRecurring,
             createdAt = entity.createdAt,
             updatedAt = entity.createdAt, // Using created time as updated time if not available
             status = entity.status
@@ -50,33 +56,34 @@ class MeetingDomainMapper @Inject constructor() {
     }
 
     fun mapToDomain(dto: MeetingDto): Meeting {
-        // Use current time as fallback
-        val fallbackTime = LocalDateTime.now()
-
-        val dateTime = try {
-            val datePart = if (dto.date.isNotBlank()) {
-                LocalDate.parse(dto.date, dateFormatter)
-            } else {
-                fallbackTime.toLocalDate()
-            }
-
+        // First try to use the pre-parsed dateTime and endDateTime if available
+        val dateTime = dto.dateTime ?: try {
+            // Fall back to parsing date and time separately
+            val datePart = LocalDate.parse(dto.date, dateFormatter)
             val timePart = if (dto.startTime.isNotBlank()) {
-                try {
-                    LocalTime.parse(dto.startTime, timeFormatter)
-                } catch (e: Exception) {
-                    LocalTime.NOON // Default to noon if time parsing fails
-                }
+                LocalTime.parse(dto.startTime, timeFormatter)
             } else {
                 LocalTime.NOON // Default to noon if no time provided
             }
-
             LocalDateTime.of(datePart, timePart)
         } catch (e: Exception) {
-            fallbackTime
+            Timber.e(e, "Error parsing date/time from dto: date=${dto.date}, time=${dto.startTime}")
+            LocalDateTime.now()
         }
 
-        // Don't care about end time for now, just use start time + 1 hour
-        val endDateTime = dateTime.plusHours(1)
+        // Parse endDateTime if available, otherwise use start time + 2 hours as default
+        val endDateTime = dto.endDateTime ?: try {
+            if (dto.endTime.isNotBlank()) {
+                val datePart = LocalDate.parse(dto.date, dateFormatter)
+                val endTime = LocalTime.parse(dto.endTime, timeFormatter)
+                LocalDateTime.of(datePart, endTime)
+            } else {
+                dateTime.plusHours(2) // Default to 2 hours after start time
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error parsing end time from dto: ${dto.endTime}")
+            dateTime.plusHours(2) // Default to 2 hours after start time
+        }
 
         return Meeting(
             id = dto.meetingID,
@@ -85,7 +92,6 @@ class MeetingDomainMapper @Inject constructor() {
             endDateTime = endDateTime,
             location = dto.venue,
             availableRoles = dto.preferredRoles,
-            isRecurring = dto.isRecurring,
             createdAt = dto.createdAt,
             updatedAt = dto.createdAt, // Using created time as updated time if not available
             status = dto.status
@@ -102,10 +108,6 @@ class MeetingDomainMapper @Inject constructor() {
             theme = meeting.theme,
             preferredRoles = meeting.preferredRoles,
             createdAt = meeting.createdAt,
-            isRecurring = meeting.isRecurring,
-            recurringDayOfWeek = if (meeting.isRecurring) meeting.dateTime.dayOfWeek.value else null,
-            recurringStartTime = if (meeting.isRecurring) meeting.dateTime.format(timeFormatter) else null,
-            recurringEndTime = if (meeting.isRecurring) meeting.endDateTime?.format(timeFormatter) else null,
             status = meeting.status
         )
     }
@@ -120,10 +122,6 @@ class MeetingDomainMapper @Inject constructor() {
             theme = meeting.theme,
             preferredRoles = meeting.preferredRoles,
             createdAt = meeting.createdAt,
-            isRecurring = meeting.isRecurring,
-            recurringDayOfWeek = if (meeting.isRecurring) meeting.dateTime.dayOfWeek.value else null,
-            recurringStartTime = if (meeting.isRecurring) meeting.dateTime.format(timeFormatter) else null,
-            recurringEndTime = if (meeting.isRecurring) meeting.endDateTime?.format(timeFormatter) else null,
             status = meeting.status
         )
     }

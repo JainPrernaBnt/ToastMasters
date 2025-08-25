@@ -58,23 +58,10 @@
             android:id="@+id/action_assignRolesFragment_to_dashboardFragment"
             app:destination="@id/dashboardFragment" />
         <action
-            android:id="@+id/action_assignRolesToMemberRoles"
-            app:destination="@id/memberRoleAssignmentFragment">
-            <argument
-                android:name="meeting"
-                app:argType="com.bntsoft.toastmasters.domain.model.Meeting" />
-        </action>
+            android:id="@+id/action_assignRolesFragment_to_memberRoleAssignFragment"
+            app:destination="@id/memberRoleAssignFragment" />
     </fragment>
 
-    <fragment
-        android:id="@+id/memberRoleAssignmentFragment"
-        android:name="com.bntsoft.toastmasters.presentation.ui.vp.roles.MemberRoleAssignmentFragment"
-        android:label="Assign Member Roles"
-        tools:layout="@layout/fragment_member_role_assignment">
-        <argument
-            android:name="meeting"
-            app:argType="com.bntsoft.toastmasters.data.model.Meeting" />
-    </fragment>
 
     <fragment
         android:id="@+id/leaderboardFragment"
@@ -124,5 +111,19 @@
         <action
             android:id="@+id/action_memberResponseFragment_to_dashboardFragment"
             app:destination="@id/dashboardFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/memberRoleAssignFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.roles.MemberRoleAssignFragment"
+        android:label="Role Assignment"
+        tools:layout="@layout/fragment_member_role_assign">
+        <argument
+            android:name="meeting_id"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_memberRoleAssignFragment_to_assignRolesFragment"
+            app:destination="@id/assignRolesFragment"
+            app:popUpTo="@id/memberRoleAssignFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>

@@ -32,7 +32,6 @@ class DashboardFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("DashboardFragment", "onCreate called")
     }
 
     override fun onCreateView(
@@ -40,7 +39,6 @@ class DashboardFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d("DashboardFragment", "onCreateView called")
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         setupRecyclerView()
         observeUpcomingMeetings()
@@ -74,7 +72,7 @@ class DashboardFragment : Fragment() {
     private fun setupRecyclerView() {
         meetingAdapter = MeetingAdapter(
             onEdit = { meetingId ->
-                val bundle = bundleOf(EXTRA_MEETING_ID to meetingId)
+                val bundle = bundleOf("meeting_id" to meetingId)
                 findNavController().navigate(
                     R.id.action_dashboardFragment_to_editMeetingFragment,
                     bundle

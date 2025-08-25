@@ -127,12 +127,16 @@ class CreateMeetingFragment : Fragment() {
 
         // Set default start time (5:30 PM)
         val startTime = (calendar.clone() as Calendar).apply {
-            set(Calendar.HOUR_OF_DAY, 17)
-            set(Calendar.MINUTE, 30)
+            set(Calendar.HOUR_OF_DAY, 17) // 5 PM
+            set(Calendar.MINUTE, 30)      // 30 minutes
+            set(Calendar.SECOND, 0)       // 0 seconds
+            set(Calendar.MILLISECOND, 0)  // 0 milliseconds
         }
         val endTime = (calendar.clone() as Calendar).apply {
-            set(Calendar.HOUR_OF_DAY, 19)
-            set(Calendar.MINUTE, 30)
+            set(Calendar.HOUR_OF_DAY, 19) // 7 PM
+            set(Calendar.MINUTE, 30)      // 30 minutes
+            set(Calendar.SECOND, 0)       // 0 seconds
+            set(Calendar.MILLISECOND, 0)  // 0 milliseconds
         }
 
         val meetingFormData = MeetingFormData(formBinding, startTime, endTime)

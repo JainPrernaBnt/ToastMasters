@@ -18,11 +18,5 @@ data class MeetingEntity(
     val theme: String,
     val preferredRoles: List<String>,
     val createdAt: Long,
-
-    // New fields to handle recurring pattern
-    val isRecurring: Boolean = true,
-    val recurringDayOfWeek: Int? = null,
-    val recurringStartTime: String? = null,
-    val recurringEndTime: String? = null,
     val status: MeetingStatus
 )

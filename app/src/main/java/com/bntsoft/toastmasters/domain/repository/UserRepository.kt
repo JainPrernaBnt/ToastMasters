@@ -16,4 +16,8 @@ interface UserRepository {
     suspend fun updateUserStatus(userId: String, isActive: Boolean): Result<Unit>
     suspend fun updateFcmToken(userId: String, token: String): Result<Unit>
     suspend fun removeFcmToken(userId: String): Result<Unit>
+
+//    Assign roles
+    suspend fun getAvailableMembers(meetingId: String): List<com.bntsoft.toastmasters.data.model.User>
+    suspend fun getRecentRoles(userId: String, limit: Int): List<String>
 }

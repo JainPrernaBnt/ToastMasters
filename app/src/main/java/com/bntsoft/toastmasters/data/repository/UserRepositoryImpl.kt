@@ -6,6 +6,7 @@ import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -119,4 +120,49 @@ class UserRepositoryImpl @Inject constructor(
             Result.Error(e)
         }
     }
+
+    override suspend fun getAvailableMembers(meetingId: String): List<com.bntsoft.toastmasters.data.model.User> {
+        return try {
+            // Fetch all users who marked themselves as available for this meeting
+            userService.getAvailableMembersForMeeting(meetingId).map { domainUser ->
+                com.bntsoft.toastmasters.data.model.User(
+                    id = domainUser.id,
+                    name = domainUser.name,
+                    email = domainUser.email,
+                    phoneNumber = domainUser.phoneNumber,
+                    address = "",
+                    gender = domainUser.gender,
+                    joinedDate = domainUser.joinedDate,
+                    toastmastersId = domainUser.toastmastersId,
+                    clubId = domainUser.clubId,
+                    profileImageUrl = "",
+                    fcmToken = domainUser.fcmToken ?: "",
+                    mentorNames = domainUser.mentorNames,
+                    roles = listOf(domainUser.role),
+                    status = if (domainUser.isApproved) 
+                        com.bntsoft.toastmasters.data.model.User.Status.APPROVED 
+                        else com.bntsoft.toastmasters.data.model.User.Status.PENDING_APPROVAL,
+                    lastLogin = null,
+                    createdAt = domainUser.createdAt,
+                    updatedAt = domainUser.updatedAt
+                )
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error fetching available members for meeting $meetingId")
+            emptyList()
+        }
+    }
+
+    override suspend fun getRecentRoles(userId: String, limit: Int): List<String> {
+        return try {
+            // Fetch user's recent roles from past meetings
+            // Path: users/{userId}/recentRoles (limited by the 'limit' parameter)
+            userService.getUserRecentRoles(userId, limit) ?: emptyList()
+        } catch (e: Exception) {
+            // Log the error and return empty list
+            Timber.e(e, "Error fetching recent roles for user $userId")
+            emptyList()
+        }
+    }
+
 }

@@ -8,7 +8,6 @@ import android.os.Build
 import com.bntsoft.toastmasters.service.ToastMastersMessagingService
 import com.bntsoft.toastmasters.utils.FcmTokenManager
 import com.google.firebase.FirebaseApp
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.BuildConfig
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.HiltAndroidApp
@@ -28,7 +27,7 @@ class ToastmasterApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
-        FirebaseFirestore.setLoggingEnabled(true)
+//        FirebaseFirestore.setLoggingEnabled(true)
         // Initialize logging
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

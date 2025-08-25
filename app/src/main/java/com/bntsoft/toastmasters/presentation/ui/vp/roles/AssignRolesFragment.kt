@@ -4,29 +4,23 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentAssignRolesBinding
-import com.bntsoft.toastmasters.presentation.ui.vp.roles.model.MeetingListItem
 import com.bntsoft.toastmasters.presentation.ui.vp.roles.adapter.MeetingAdapter
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AssignRolesFragment : Fragment() {
     private var _binding: FragmentAssignRolesBinding? = null
     private val binding get() = _binding!!
-    
+
     private val viewModel: AssignRolesViewModel by viewModels()
     private lateinit var meetingAdapter: MeetingAdapter
 
@@ -47,13 +41,18 @@ class AssignRolesFragment : Fragment() {
 
     private fun setupRecyclerView() {
         meetingAdapter = MeetingAdapter { meeting ->
-            navigateToMemberRoles(meeting)
+            navigateToMemberRoles(meeting.id)
         }
+
         binding.rvMeetings.apply {
             adapter = meetingAdapter
             layoutManager = LinearLayoutManager(requireContext())
             setHasFixedSize(true)
             itemAnimator = null // Disable animations to prevent flickering
+        }
+
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.loadMeetings()
         }
     }
 
@@ -97,8 +96,9 @@ class AssignRolesFragment : Fragment() {
         }
     }
 
-    private fun navigateToMemberRoles(meeting: MeetingListItem) {
-        val action = AssignRolesFragmentDirections.actionAssignRolesToMemberRoles(meeting.meeting)
+    private fun navigateToMemberRoles(meetingId: String) {
+        val action = AssignRolesFragmentDirections
+            .actionAssignRolesFragmentToMemberRoleAssignFragment(meetingId)
         findNavController().navigate(action)
     }
 

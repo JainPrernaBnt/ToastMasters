@@ -365,4 +365,6 @@
     <string name="error_saving_availability">Error saving availabiility</string>
     <string name="availability_saved_successfully">Availability saved successfully</string>
     <string name="complete">Complete</string>
+    <string name="no_previous_roles">No recent or previous roles</string>
+    <string name="no_recent_roles">No recent roles</string>
 </resources>
