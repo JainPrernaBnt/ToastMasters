@@ -34,6 +34,20 @@
                 android:layout_height="0dp"
                 android:layout_weight="1" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEdit"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/edit"
+                android:textAllCaps="false"
+                android:visibility="gone"
+                app:icon="@drawable/ic_edit"
+                app:iconGravity="textStart"
+                app:iconTint="@color/purple_500"
+                app:strokeColor="@color/purple_500" />
+
         </LinearLayout>
 
         <!-- Preferred Roles -->
@@ -143,16 +157,24 @@
 
         </com.google.android.material.textfield.TextInputLayout>
         <!-- Selected Roles -->
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupSelectedRoles"
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:chipSpacing="4dp"
-            app:chipSpacingHorizontal="4dp"
-            app:chipSpacingVertical="4dp"
-            app:singleLine="true"
-            app:singleSelection="false" />
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupSelectedRoles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:chipSpacing="4dp"
+                app:chipSpacingHorizontal="4dp"
+                app:chipSpacingVertical="4dp"
+                app:singleLine="true"
+                app:singleSelection="false" />
+        </HorizontalScrollView>
+
 
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/cbAssignBackup"
@@ -181,5 +203,18 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAssignRole"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/assign_role"
+            android:textAllCaps="false"
+            app:cornerRadius="12dp"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconTint="@android:color/white" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
+

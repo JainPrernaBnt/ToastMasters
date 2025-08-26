@@ -36,6 +36,7 @@ class MemberRoleAssignFragment : Fragment() {
 
         setupRecyclerView()
         observeViewModel()
+        viewModel.loadRoleAssignments()
 
         // Log the current state
         Log.d("MemberRoleAssignFrag", "View binding root visibility: ${binding.root.visibility}")
@@ -61,40 +62,41 @@ class MemberRoleAssignFragment : Fragment() {
                 }
             },
             onBackupMemberSelected = { userId, backupMemberId ->
-                Log.d(
-                    "MemberRoleAssignFrag",
-                    "Backup member selected - UserId: $userId, BackupId: $backupMemberId"
-                )
+                Log.d("MemberRoleAssignFrag", "Backup member selected - UserId: $userId, BackupId: $backupMemberId")
                 viewModel.setBackupMember(userId, backupMemberId)
             },
-            availableMembers = viewModel.availableMembers.value ?: emptyList()
+            availableMembers = viewModel.availableMembers.value ?: emptyList(),
+            onSaveRole = { userId, role ->
+                Log.d("MemberRoleAssignFrag", "Saving role - UserId: $userId, Role: $role")
+                viewModel.saveRoleAssignments()
+            },
+            onToggleEditMode = { userId, isEditable ->
+                Log.d("MemberRoleAssignFrag", "Toggling edit mode - UserId: $userId, isEditable: $isEditable")
+                viewModel.toggleEditMode(userId, isEditable)
+            }
         )
 
         binding.rvMembers.adapter = adapter
         binding.rvMembers.layoutManager = LinearLayoutManager(requireContext())
 
-        Log.d(
-            "MemberRoleAssignFrag",
-            "RecyclerView setup complete. Adapter: $adapter, ItemCount: ${adapter.itemCount}"
-        )
+        Log.d("MemberRoleAssignFrag", "RecyclerView setup complete. Adapter: $adapter, ItemCount: ${adapter.itemCount}")
     }
 
     private fun observeViewModel() {
         Log.d("MemberRoleAssignFrag", "Setting up ViewModel observers")
 
         viewModel.roleAssignments.observe(viewLifecycleOwner) { assignments ->
+            if (assignments == null) {
+                Log.d("MemberRoleAssignFrag", "Role assignments are null. Waiting for data...")
+                return@observe
+            }
+
             Log.d("MemberRoleAssignFrag", "Role assignments updated. Count: ${assignments.size}")
             if (assignments.isEmpty()) {
-                Log.d(
-                    "MemberRoleAssignFrag",
-                    "No role assignments received. Check if data is loading or if there was an error."
-                )
+                Log.d("MemberRoleAssignFrag", "No role assignments received. Check if data is loading or if there was an error.")
             }
             adapter.submitList(assignments) {
-                Log.d(
-                    "MemberRoleAssignFrag",
-                    "Adapter list updated. New item count: ${adapter.itemCount}"
-                )
+                Log.d("MemberRoleAssignFrag", "Adapter list updated. New item count: ${adapter.itemCount}")
                 if (adapter.itemCount == 0) {
                     Log.d("MemberRoleAssignFrag", "WARNING: Adapter list is empty after submission")
                 }
@@ -129,7 +131,15 @@ class MemberRoleAssignFragment : Fragment() {
                 onBackupMemberSelected = { userId, backupMemberId ->
                     viewModel.setBackupMember(userId, backupMemberId)
                 },
-                availableMembers = members
+                availableMembers = members,
+                onSaveRole = { userId, role ->
+                    Log.d("MemberRoleAssignFrag", "Saving role - UserId: $userId, Role: $role")
+                    viewModel.saveRoleAssignments()
+                },
+                onToggleEditMode = { userId, isEditable ->
+                    Log.d("MemberRoleAssignFrag", "Toggling edit mode - UserId: $userId, isEditable: $isEditable")
+                    viewModel.toggleEditMode(userId, isEditable)
+                }
             )
             binding.rvMembers.adapter = adapter
         }

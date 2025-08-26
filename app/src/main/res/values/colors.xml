@@ -43,7 +43,7 @@
     <color name="on_surface">#FF121212</color>
     <color name="on_surface_medium">#99000000</color>
     <color name="on_surface_low">#61000000</color>
-    <color name="status_bar_color">#FF3700B3</color>
+    <color name="status_bar_color">#BB86FC</color>
 
     <!-- State colors -->
     <color name="outline">#1F000000</color>

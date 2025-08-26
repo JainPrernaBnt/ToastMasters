@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.data.remote
 
 import com.bntsoft.toastmasters.utils.Result
 import com.bntsoft.toastmasters.domain.model.Meeting
+import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -26,4 +27,6 @@ interface FirebaseMeetingDataSource {
     suspend fun getUserPreferredRoles(meetingId: String, userId: String): List<String>?
 
     suspend fun getMeetingPreferredRoles(meetingId: String): List<String>?
+    
+    suspend fun saveRoleAssignments(meetingId: String, assignments: List<RoleAssignmentItem>): Result<Unit>
 }

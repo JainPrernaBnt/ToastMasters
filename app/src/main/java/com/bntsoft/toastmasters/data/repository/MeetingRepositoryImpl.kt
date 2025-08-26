@@ -4,6 +4,7 @@ import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.MemberResponse
+import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.utils.Resource
@@ -176,6 +177,16 @@ class MeetingRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error fetching meeting roles for meeting $meetingId")
             emptyList()
+        }
+    }
+    
+    override suspend fun saveRoleAssignments(meetingId: String, assignments: List<RoleAssignmentItem>): Result<Unit> {
+        return try {
+            firebaseDataSource.saveRoleAssignments(meetingId, assignments)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Error saving role assignments for meeting $meetingId")
+            Result.Error(e)
         }
     }
 

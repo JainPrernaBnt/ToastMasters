@@ -3,8 +3,9 @@ package com.bntsoft.toastmasters.data.remote
 import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
 import com.bntsoft.toastmasters.data.model.dto.MeetingDto
 import com.bntsoft.toastmasters.domain.model.Meeting
+import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.bntsoft.toastmasters.utils.Result
-import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -15,7 +16,6 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -49,20 +49,20 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         val dateString = document.getString("date") ?: ""
                         val startTimeString = document.getString("startTime") ?: "00:00"
                         val endTimeString = document.getString("endTime") ?: ""
-                        
+
                         // Parse date and times
                         val date = try {
                             LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
                         } catch (e: Exception) {
                             LocalDate.now()
                         }
-                        
+
                         val startTime = try {
                             LocalTime.parse(startTimeString)
                         } catch (e: Exception) {
                             LocalTime.NOON
                         }
-                        
+
                         val endTime = try {
                             if (endTimeString.isNotBlank()) {
                                 LocalTime.parse(endTimeString)
@@ -72,11 +72,11 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         } catch (e: Exception) {
                             startTime.plusHours(2)
                         }
-                        
+
                         // Create LocalDateTime objects
                         val dateTime = LocalDateTime.of(date, startTime)
                         val endDateTime = LocalDateTime.of(date, endTime)
-                        
+
                         val dto = MeetingDto(
                             meetingID = document.getString("meetingID") ?: document.id,
                             date = dateString,
@@ -89,7 +89,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
                                 ?: emptyList(),
                             createdAt = document.getLong("createdAt") ?: 0,
-                            status = document.getString("status")?.let { 
+                            status = document.getString("status")?.let {
                                 try {
                                     com.bntsoft.toastmasters.domain.models.MeetingStatus.valueOf(it)
                                 } catch (e: Exception) {
@@ -97,7 +97,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                                 }
                             } ?: com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED
                         )
-                        
+
                         Timber.d("Mapped meeting in getAllMeetings: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime}")
                         meetingMapper.mapToDomain(dto)
                     } catch (e: Exception) {
@@ -153,7 +153,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
                                 ?: emptyList(),
                             createdAt = document.getLong("createdAt") ?: 0,
-                            status = document.getString("status")?.let { 
+                            status = document.getString("status")?.let {
                                 try {
                                     com.bntsoft.toastmasters.domain.models.MeetingStatus.valueOf(it)
                                 } catch (e: Exception) {
@@ -161,7 +161,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                                 }
                             } ?: com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED
                         )
-                        
+
                         Timber.d("Mapped meeting: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime} (${dto.dateTime} to ${dto.endDateTime})")
 
                         val meeting = meetingMapper.mapToDomain(dto)
@@ -199,7 +199,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 .await()
 
             // Return the preferred roles if they exist, otherwise empty list
-            (preferenceDoc.get("preferredRoles") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            (preferenceDoc.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
+                ?: emptyList()
         } catch (e: Exception) {
             Timber.e(e, "Error fetching preferred roles for user $userId in meeting $meetingId")
             emptyList()
@@ -216,7 +217,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 .await()
 
             // Return the meeting's preferred roles if they exist, otherwise empty list
-            (meetingDoc.get("preferredRoles") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            (meetingDoc.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
+                ?: emptyList()
         } catch (e: Exception) {
             Timber.e(e, "Error fetching preferred roles for meeting $meetingId")
             emptyList()
@@ -327,6 +329,66 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun saveRoleAssignments(
+        meetingId: String,
+        assignments: List<RoleAssignmentItem>
+    ): Result<Unit> {
+        return try {
+            val batch = firestore.batch()
+            val assignmentsRef = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+
+            // First, get all existing assignments for this meeting
+            val existingAssignments = assignmentsRef
+                .whereEqualTo("meetingId", meetingId)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { doc ->
+                    val userId = doc.getString("userId") ?: return@mapNotNull null
+                    userId to doc
+                }
+                .toMap()
+                .filterValues { it != null } as Map<String, com.google.firebase.firestore.DocumentSnapshot>
+
+            // Process each assignment
+            assignments.forEach { assignment ->
+                // If user has existing assignment, update it
+                if (existingAssignments.containsKey(assignment.userId)) {
+                    val docRef = existingAssignments[assignment.userId]!!.reference
+                    val updateData = hashMapOf<String, Any>(
+                        "roles" to assignment.selectedRoles,
+                        "backupMemberId" to (assignment.backupMemberId ?: ""),
+                        "backupMemberName" to (assignment.backupMemberName ?: ""),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                    batch.update(docRef, updateData)
+                } else {
+                    // Create new assignment if it doesn't exist
+                    val newDocRef = assignmentsRef.document()
+                    val assignmentData = hashMapOf(
+                        "meetingId" to meetingId,
+                        "userId" to assignment.userId,
+                        "memberName" to assignment.memberName,
+                        "roles" to assignment.selectedRoles,
+                        "backupMemberId" to (assignment.backupMemberId ?: ""),
+                        "backupMemberName" to (assignment.backupMemberName ?: ""),
+                        "assignedAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                    batch.set(newDocRef, assignmentData)
+                }
+            }
+
+            batch.commit().await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Error saving role assignments for meeting: $meetingId")
+            Result.Error(e)
+        }
+    }
+
     override suspend fun sendMeetingNotification(meeting: Meeting): Result<Unit> {
         return try {
             // Get all members assigned to roles in this meeting
@@ -343,7 +405,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             // In a real implementation, we would send notifications to each member
             // For now, we'll just log the notification details
             Timber.d("Sending notification for meeting ${meeting.id} to members: $memberIds")
-            
+
             // Simulate notification sending
             memberIds.forEach { memberId ->
                 // In a real app, this would use a notification service

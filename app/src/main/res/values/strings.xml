@@ -1,4 +1,5 @@
 <resources>
+    <string name="save_changes">Save changes</string>
     <string name="app_name">ToastMasters</string>
     <string name="title_sign_up">Sign Up</string>
     <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
@@ -367,4 +368,5 @@
     <string name="complete">Complete</string>
     <string name="no_previous_roles">No recent or previous roles</string>
     <string name="no_recent_roles">No recent roles</string>
+    <string name="backout">Backout</string>
 </resources>

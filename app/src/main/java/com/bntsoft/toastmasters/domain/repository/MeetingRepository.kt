@@ -2,8 +2,10 @@ package com.bntsoft.toastmasters.domain.repository
 
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
+import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.bntsoft.toastmasters.utils.Resource
 import kotlinx.coroutines.flow.Flow
+import com.bntsoft.toastmasters.utils.Result
 import java.time.LocalDate
 
 interface MeetingRepository {
@@ -20,4 +22,5 @@ interface MeetingRepository {
 //    Assign Roles
     suspend fun getPreferredRoles(meetingId: String, userId: String): List<String>
     suspend fun getMeetingRoles(meetingId: String): List<String>
+    suspend fun saveRoleAssignments(meetingId: String, assignments: List<RoleAssignmentItem>): Result<Unit>
 }

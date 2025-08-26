@@ -8,20 +8,13 @@ data class RoleAssignmentItem(
     val assignableRoles: List<String> = emptyList(),
     val selectedRoles: MutableList<String> = mutableListOf(),
     var backupMemberId: String = "",
-    var backupMemberName: String = ""
+    var backupMemberName: String = "",
+    var isEditable: Boolean = true
 ) {
-    fun addSelectedRole(role: String) {
-        if (!selectedRoles.contains(role)) {
-            selectedRoles.add(role)
-        }
-    }
-    
-    fun removeSelectedRole(role: String) {
-        selectedRoles.remove(role)
-    }
-    
-    fun setBackupMember(id: String, name: String) {
-        backupMemberId = id
-        backupMemberName = name
+    fun copyWithEditMode(editable: Boolean): RoleAssignmentItem {
+        return this.copy(
+            isEditable = editable,
+            selectedRoles = selectedRoles.toMutableList()
+        )
     }
 }
