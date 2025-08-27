@@ -210,11 +210,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/assign_role"
-            android:textAllCaps="false"
-            app:cornerRadius="12dp"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
+            android:visibility="gone"
+            app:backgroundTint="@color/purple_500"
+            app:icon="@drawable/ic_add"
+            app:iconGravity="start"
             app:iconTint="@android:color/white" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
-

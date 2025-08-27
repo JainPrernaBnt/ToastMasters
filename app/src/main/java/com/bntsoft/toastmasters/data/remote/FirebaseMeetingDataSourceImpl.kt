@@ -335,49 +335,44 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     ): Result<Unit> {
         return try {
             val batch = firestore.batch()
-            val assignmentsRef = firestore.collection("meetings")
-                .document(meetingId)
-                .collection("assignedRole")
-
-            // First, get all existing assignments for this meeting
-            val existingAssignments = assignmentsRef
-                .whereEqualTo("meetingId", meetingId)
-                .get()
-                .await()
-                .documents
-                .mapNotNull { doc ->
-                    val userId = doc.getString("userId") ?: return@mapNotNull null
-                    userId to doc
-                }
-                .toMap()
-                .filterValues { it != null } as Map<String, com.google.firebase.firestore.DocumentSnapshot>
+            val assignmentsRef = firestore.collection(ROLE_ASSIGNMENTS_COLLECTION)
+            val meetingRef = firestore.collection("meetings").document(meetingId)
 
             // Process each assignment
             assignments.forEach { assignment ->
-                // If user has existing assignment, update it
-                if (existingAssignments.containsKey(assignment.userId)) {
-                    val docRef = existingAssignments[assignment.userId]!!.reference
-                    val updateData = hashMapOf<String, Any>(
-                        "roles" to assignment.selectedRoles,
-                        "backupMemberId" to (assignment.backupMemberId ?: ""),
-                        "backupMemberName" to (assignment.backupMemberName ?: ""),
-                        "updatedAt" to FieldValue.serverTimestamp()
-                    )
-                    batch.update(docRef, updateData)
-                } else {
-                    // Create new assignment if it doesn't exist
-                    val newDocRef = assignmentsRef.document()
-                    val assignmentData = hashMapOf(
-                        "meetingId" to meetingId,
-                        "userId" to assignment.userId,
+                // Get the selected roles (now supporting multiple roles)
+                val roles = assignment.selectedRoles.toList()
+                
+                // Save to the assignedRole subcollection
+                val assignedRoleRef = meetingRef
+                    .collection("assignedRole")
+                    .document(assignment.userId)
+                
+                if (roles.isNotEmpty()) {
+                    // Save roles as an array in assignedRole subcollection
+                    val roleData = hashMapOf<String, Any>(
+                        "roles" to roles,  // Always save as array
+                        "primaryRole" to roles.first(),  // Keep first role as primary for backward compatibility
                         "memberName" to assignment.memberName,
-                        "roles" to assignment.selectedRoles,
-                        "backupMemberId" to (assignment.backupMemberId ?: ""),
-                        "backupMemberName" to (assignment.backupMemberName ?: ""),
                         "assignedAt" to FieldValue.serverTimestamp(),
                         "updatedAt" to FieldValue.serverTimestamp()
                     )
-                    batch.set(newDocRef, assignmentData)
+                    batch.set(assignedRoleRef, roleData)
+                    
+                    // Also update the legacy location for backward compatibility
+                    val legacyDocRef = assignmentsRef.document("${meetingId}_${assignment.userId}")
+                    val legacyData = hashMapOf<String, Any>(
+                        "meetingId" to meetingId,
+                        "userId" to assignment.userId,
+                        "memberName" to assignment.memberName,
+                        "roles" to roles,  // Array of roles
+                        "assignedAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                    batch.set(legacyDocRef, legacyData)
+                } else {
+                    // If no roles are selected, remove from assignedRole
+                    batch.delete(assignedRoleRef)
                 }
             }
 
@@ -386,6 +381,72 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error saving role assignments for meeting: $meetingId")
             Result.Error(e)
+        }
+    }
+
+    override suspend fun getAssignedRole(meetingId: String, userId: String): String? {
+        return try {
+            // First check the assigned roles collection
+            val assignedRoleDoc = firestore
+                .collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .document(userId)
+                .get()
+                .await()
+
+            if (assignedRoleDoc.exists()) {
+                // First try to get roles as an array (preferred format)
+                val roles = assignedRoleDoc.get("roles") as? List<*>
+                if (!roles.isNullOrEmpty()) {
+                    // Return the first role from the array
+                    val role = roles.first()?.toString()
+                    Timber.d("Found assigned roles array in assignedRole subcollection: $roles. Using first role: $role")
+                    return role
+                }
+                
+                // Fall back to single role field for backward compatibility
+                val role = assignedRoleDoc.getString("role")
+                Timber.d("Found single assigned role in assignedRole subcollection: $role")
+                return role
+            } else {
+                // Fallback to checking the old location for backward compatibility
+                val snapshot = firestore
+                    .collection(ROLE_ASSIGNMENTS_COLLECTION)
+                    .whereEqualTo("meetingId", meetingId)
+                    .whereEqualTo("userId", userId)
+                    .limit(1)
+                    .get()
+                    .await()
+
+                if (!snapshot.isEmpty) {
+                    // Get the first document (should only be one due to limit(1))
+                    val doc = snapshot.documents[0]
+                    
+                    // First try to get roles as an array
+                    val roles = doc.get("roles") as? List<*>
+                    if (!roles.isNullOrEmpty()) {
+                        Timber.d("Found roles array in legacy location: $roles")
+                        return roles.firstOrNull()?.toString()
+                    }
+                    
+                    // Fall back to single role field if array not found
+                    val role = doc.getString("role")
+                    if (!role.isNullOrEmpty()) {
+                        Timber.d("Found single role in legacy location: $role")
+                        return role
+                    }
+                    
+                    Timber.d("No role found in legacy location")
+                    null
+                } else {
+                    Timber.d("No role assignment found in any location")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting assigned role for user $userId in meeting $meetingId")
+            null
         }
     }
 

@@ -24,6 +24,9 @@ class MemberRoleAssignViewModel @Inject constructor(
 
     private val _assignableRoles = MutableLiveData<List<String>>()
     val assignableRoles: LiveData<List<String>> = _assignableRoles
+    
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
 
     private val _availableMembers = MutableLiveData<List<Pair<String, String>>>()
     val availableMembers: LiveData<List<Pair<String, String>>> = _availableMembers
@@ -45,10 +48,16 @@ class MemberRoleAssignViewModel @Inject constructor(
     fun loadRoleAssignments(meetingId: String) {
         viewModelScope.launch {
             try {
-                Log.d("MemberRoleAssignVM", "Fetching available members for meeting: $meetingId")
+                Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Starting for meeting: $meetingId")
                 val availableMembers = userRepository.getAvailableMembers(meetingId)
                 _availableMembers.value = availableMembers.map { it.id to it.name }
-                Log.d("MemberRoleAssignVM", "Found ${availableMembers.size} available members")
+                Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Found ${availableMembers.size} available members")
+                
+                // Load assignable roles first
+                Log.d("MemberRoleAssignVM", "Fetching meeting roles...")
+                val roles = meetingRepository.getMeetingRoles(meetingId)
+                Log.d("MemberRoleAssignVM", "Found ${roles.size} meeting roles")
+                _assignableRoles.value = roles
 
                 // Create role assignments for available members
                 val assignments = availableMembers.map { member ->
@@ -68,22 +77,44 @@ class MemberRoleAssignViewModel @Inject constructor(
                         emptyList<String>()
                     }
 
-                    RoleAssignmentItem(
+                    // Get assigned role for this member if any
+                    val assignedRole = try {
+                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Checking assigned role for member: ${member.name} (${member.id})")
+                        val role = meetingRepository.getAssignedRole(meetingId, member.id)
+                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Assigned role for ${member.name}: $role")
+                        role ?: ""
+                    } catch (e: Exception) {
+                        Log.e("MemberRoleAssignVM", "Error getting assigned role for ${member.name}: ${e.message}")
+                        ""
+                    }
+
+                    val selectedRoles = if (assignedRole.isNotBlank()) {
+                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Member ${member.name} has role: $assignedRole")
+                        mutableListOf(assignedRole)
+                    } else {
+                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] No role assigned for ${member.name}")
+                        mutableListOf()
+                    }
+                    
+                    // Set isEditable based on whether there's an assigned role
+                    val isEditable = assignedRole.isBlank()
+
+                    val roleItem = RoleAssignmentItem(
                         userId = member.id,
                         memberName = member.name,
                         preferredRoles = preferredRoles,
                         recentRoles = emptyList(),
-                        assignableRoles = emptyList(),
-                        selectedRoles = mutableListOf()
+                        assignableRoles = roles, // Use the loaded meeting roles
+                        selectedRoles = selectedRoles,
+                        assignedRole = assignedRole,
+                        isEditable = isEditable // Set editable state based on assigned role
                     )
+                    Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Created RoleAssignmentItem for ${member.name}: " +
+                            "assignedRole=$assignedRole, selectedRoles=$selectedRoles, isEditable=$isEditable")
+                    roleItem
                 }
 
-                Log.d("MemberRoleAssignVM", "Fetching meeting roles...")
-                val roles = meetingRepository.getMeetingRoles(meetingId)
-                Log.d("MemberRoleAssignVM", "Found ${roles.size} meeting roles")
-
                 _roleAssignments.value = assignments
-                _assignableRoles.value = roles
 
                 // Log if either list is empty
                 if (assignments.isEmpty()) {
@@ -103,11 +134,16 @@ class MemberRoleAssignViewModel @Inject constructor(
     fun assignRole(userId: String, role: String) {
         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
             if (assignment.userId == userId) {
+                // Check if the role is already in the list
                 val updatedRoles = assignment.selectedRoles.toMutableList()
                 if (!updatedRoles.contains(role)) {
                     updatedRoles.add(role)
                 }
-                assignment.copy(selectedRoles = updatedRoles)
+                assignment.copy(
+                    selectedRoles = updatedRoles,
+                    assignedRole = role,  // Set the assigned role
+                    isEditable = assignment.isEditable // Maintain edit mode
+                )
             } else {
                 assignment
             }
@@ -119,7 +155,15 @@ class MemberRoleAssignViewModel @Inject constructor(
             if (assignment.userId == userId) {
                 val updatedRoles = assignment.selectedRoles.toMutableList()
                 updatedRoles.remove(role)
-                assignment.copy(selectedRoles = updatedRoles)
+                
+                // If no roles left, clear the assigned role
+                val newAssignedRole = if (updatedRoles.isEmpty()) "" else assignment.assignedRole
+                
+                assignment.copy(
+                    selectedRoles = updatedRoles,
+                    assignedRole = newAssignedRole,
+                    isEditable = updatedRoles.isEmpty() // Make editable if no roles left
+                )
             } else {
                 assignment
             }
@@ -169,51 +213,58 @@ class MemberRoleAssignViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val currentAssignments = _roleAssignments.value ?: run {
-                    Log.e(
-                        "MemberRoleAssignVM",
-                        "No assignments to save - currentAssignments is null"
-                    )
+                    Log.e("MemberRoleAssignVM", "No assignments to save - currentAssignments is null")
                     return@launch
                 }
 
                 if (currentAssignments.isEmpty()) {
-                    Log.w(
-                        "MemberRoleAssignVM",
-                        "No role assignments to save - assignments list is empty"
-                    )
+                    Log.w("MemberRoleAssignVM", "No role assignments to save - assignments list is empty")
                     return@launch
                 }
 
-                Log.d(
-                    "MemberRoleAssignVM",
-                    "Saving ${currentAssignments.size} role assignments for meeting: $meetingId"
-                )
-                currentAssignments.forEach { assignment ->
+                Log.d("MemberRoleAssignVM", "Saving role assignments for meeting: $meetingId")
+                
+                // Filter out assignments without roles
+                val validAssignments = currentAssignments.filter { it.assignedRole.isNotBlank() }
+                
+                if (validAssignments.isEmpty()) {
+                    Log.w("MemberRoleAssignVM", "No valid role assignments to save")
+                    return@launch
+                }
+
+                validAssignments.forEach { assignment ->
                     Log.d(
                         "MemberRoleAssignVM",
-                        "User: ${assignment.memberName} (${assignment.userId}), " +
-                                "Selected Roles: ${assignment.selectedRoles.joinToString()}, " +
+                        "Saving assignment - User: ${assignment.memberName} (${assignment.userId}), " +
+                                "Role: ${assignment.assignedRole}, " +
                                 "Backup Member ID: ${assignment.backupMemberId}"
                     )
                 }
 
-                when (val result =
-                    meetingRepository.saveRoleAssignments(meetingId, currentAssignments)) {
-                    is com.bntsoft.toastmasters.utils.Result.Error -> Log.e(
-                        "MemberRoleAssignVM",
-                        "Failed to save role assignments: ${result.exception?.message}"
-                    )
-
-                    com.bntsoft.toastmasters.utils.Result.Loading -> TODO()
-                    is com.bntsoft.toastmasters.utils.Result.Success ->
-                        Log.d(
-                            "MemberRoleAssignVM",
-                            "Successfully saved role assignments for meeting: $meetingId"
-                        )
-
+                when (val result = meetingRepository.saveRoleAssignments(meetingId, validAssignments)) {
+                    is com.bntsoft.toastmasters.utils.Result.Success -> {
+                        Log.d("MemberRoleAssignVM", "Successfully saved role assignments")
+                        // Update the UI to reflect the saved state
+                        _roleAssignments.value = _roleAssignments.value?.map { assignment ->
+                            if (validAssignments.any { it.userId == assignment.userId }) {
+                                assignment.copy(isEditable = false)
+                            } else {
+                                assignment
+                            }
+                        }
+                    }
+                    is com.bntsoft.toastmasters.utils.Result.Error -> {
+                        Log.e("MemberRoleAssignVM", "Failed to save role assignments: ${result.exception?.message}")
+                        // Optionally show error to user
+                        _errorMessage.value = "Failed to save role assignments: ${result.exception?.message}"
+                    }
+                    com.bntsoft.toastmasters.utils.Result.Loading -> {
+                        // Handle loading state if needed
+                    }
                 }
             } catch (e: Exception) {
-                Log.e("MemberRoleAssignVM", "Error saving role assignments: ${e.message}", e)
+                Log.e("MemberRoleAssignVM", "Error saving role assignments", e)
+                _errorMessage.value = "Error saving role assignments: ${e.message}"
             }
         }
     }

@@ -23,4 +23,6 @@ interface MeetingRepository {
     suspend fun getPreferredRoles(meetingId: String, userId: String): List<String>
     suspend fun getMeetingRoles(meetingId: String): List<String>
     suspend fun saveRoleAssignments(meetingId: String, assignments: List<RoleAssignmentItem>): Result<Unit>
+    
+    suspend fun getAssignedRole(meetingId: String, userId: String): String?
 }

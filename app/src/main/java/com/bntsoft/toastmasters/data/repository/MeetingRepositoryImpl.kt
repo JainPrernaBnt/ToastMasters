@@ -190,5 +190,13 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAssignedRole(meetingId: String, userId: String): String? {
+        return try {
+            firebaseDataSource.getAssignedRole(meetingId, userId)
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting assigned role for user $userId in meeting $meetingId")
+            null
+        }
+    }
 }
 

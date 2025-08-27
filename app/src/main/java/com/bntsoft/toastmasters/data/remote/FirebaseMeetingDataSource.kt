@@ -29,4 +29,6 @@ interface FirebaseMeetingDataSource {
     suspend fun getMeetingPreferredRoles(meetingId: String): List<String>?
     
     suspend fun saveRoleAssignments(meetingId: String, assignments: List<RoleAssignmentItem>): Result<Unit>
+    
+    suspend fun getAssignedRole(meetingId: String, userId: String): String?
 }

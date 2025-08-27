@@ -47,27 +47,18 @@ class MemberRoleAssignFragment : Fragment() {
         Log.d("MemberRoleAssignFrag", "Setting up RecyclerView")
 
         adapter = MemberRoleAssignAdapter(
-            assignableRoles = emptyList(),
+            assignableRoles = viewModel.assignableRoles.value ?: emptyList(),
             onRoleSelected = { userId, role ->
                 Log.d("MemberRoleAssignFrag", "Role selected - UserId: $userId, Role: $role")
-                val currentAssignments =
-                    viewModel.roleAssignments.value ?: return@MemberRoleAssignAdapter
-                val userAssignment = currentAssignments.find { it.userId == userId }
-                    ?: return@MemberRoleAssignAdapter
-
-                if (userAssignment.selectedRoles.contains(role)) {
-                    viewModel.removeRole(userId, role)
-                } else {
-                    viewModel.assignRole(userId, role)
-                }
+                viewModel.assignRole(userId, role)
             },
             onBackupMemberSelected = { userId, backupMemberId ->
                 Log.d("MemberRoleAssignFrag", "Backup member selected - UserId: $userId, BackupId: $backupMemberId")
                 viewModel.setBackupMember(userId, backupMemberId)
             },
             availableMembers = viewModel.availableMembers.value ?: emptyList(),
-            onSaveRole = { userId, role ->
-                Log.d("MemberRoleAssignFrag", "Saving role - UserId: $userId, Role: $role")
+            onSaveRole = { userId, _ ->
+                Log.d("MemberRoleAssignFrag", "Saving role for user: $userId")
                 viewModel.saveRoleAssignments()
             },
             onToggleEditMode = { userId, isEditable ->
@@ -79,7 +70,7 @@ class MemberRoleAssignFragment : Fragment() {
         binding.rvMembers.adapter = adapter
         binding.rvMembers.layoutManager = LinearLayoutManager(requireContext())
 
-        Log.d("MemberRoleAssignFrag", "RecyclerView setup complete. Adapter: $adapter, ItemCount: ${adapter.itemCount}")
+        Log.d("MemberRoleAssignFrag", "RecyclerView setup complete. Adapter: $adapter")
     }
 
     private fun observeViewModel() {
@@ -114,34 +105,14 @@ class MemberRoleAssignFragment : Fragment() {
         viewModel.availableMembers.observe(viewLifecycleOwner) { members ->
             Log.d("MemberRoleAssignFrag", "Available members updated. Count: ${members.size}")
             // Update the adapter with the new list of available members
-            adapter = MemberRoleAssignAdapter(
-                assignableRoles = viewModel.assignableRoles.value ?: emptyList(),
-                onRoleSelected = { userId, role ->
-                    val currentAssignments =
-                        viewModel.roleAssignments.value ?: return@MemberRoleAssignAdapter
-                    val userAssignment = currentAssignments.find { it.userId == userId }
-                        ?: return@MemberRoleAssignAdapter
+            adapter.updateAvailableMembers(members)
+        }
 
-                    if (userAssignment.selectedRoles.contains(role)) {
-                        viewModel.removeRole(userId, role)
-                    } else {
-                        viewModel.assignRole(userId, role)
-                    }
-                },
-                onBackupMemberSelected = { userId, backupMemberId ->
-                    viewModel.setBackupMember(userId, backupMemberId)
-                },
-                availableMembers = members,
-                onSaveRole = { userId, role ->
-                    Log.d("MemberRoleAssignFrag", "Saving role - UserId: $userId, Role: $role")
-                    viewModel.saveRoleAssignments()
-                },
-                onToggleEditMode = { userId, isEditable ->
-                    Log.d("MemberRoleAssignFrag", "Toggling edit mode - UserId: $userId, isEditable: $isEditable")
-                    viewModel.toggleEditMode(userId, isEditable)
-                }
-            )
-            binding.rvMembers.adapter = adapter
+        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                // Show error message to user
+                android.widget.Toast.makeText(requireContext(), it, android.widget.Toast.LENGTH_LONG).show()
+            }
         }
     }
 
