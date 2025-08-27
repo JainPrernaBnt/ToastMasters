@@ -286,7 +286,11 @@
     <string name="loading_meetings">Loading meetings…</string>
 
     <string name="empty_meetings_title">No Meetings Found</string>
-    <string name="empty_meetings_message">There are no meetings scheduled yet.</string>
+    <string name="empty_meetings_message">You don\'t have any upcoming meetings with assigned roles</string>
+    
+    <!-- Error State Strings -->
+    <string name="error_occurred">Error occurred</string>
+    <string name="error_loading_meetings">Failed to load meetings. Please try again.</string>
     <string name="empty_responses_title">No Responses Yet</string>
     <string name="empty_responses_message">No members have responded to this meeting yet.</string>
     <string name="empty_roles_title">No Roles Assigned</string>
@@ -361,7 +365,6 @@
     <string name="notification">notification</string>
     <string name="mentors">Mentors</string>
     <string name="assign">Assign\n</string>
-    <string name="error_loading_meetings">Error loading meetings</string>
     <string name="venue_not_specified">Venue not specified</string>
     <string name="error_saving_availability">Error saving availabiility</string>
     <string name="availability_saved_successfully">Availability saved successfully</string>

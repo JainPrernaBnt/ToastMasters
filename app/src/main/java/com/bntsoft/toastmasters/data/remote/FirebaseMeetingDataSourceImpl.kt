@@ -449,6 +449,72 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             null
         }
     }
+    
+    override suspend fun getAssignedRoles(meetingId: String, userId: String): List<String> {
+        return try {
+            // First check the assigned roles collection
+            val assignedRoleDoc = firestore
+                .collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .document(userId)
+                .get()
+                .await()
+
+            if (assignedRoleDoc.exists()) {
+                // First try to get roles as an array (preferred format)
+                val roles = assignedRoleDoc.get("roles") as? List<*>
+                if (!roles.isNullOrEmpty()) {
+                    val roleStrings = roles.mapNotNull { it?.toString() }.filter { it.isNotBlank() }
+                    Timber.d("Found assigned roles array in assignedRole subcollection: $roleStrings")
+                    return roleStrings
+                }
+                
+                // Fall back to single role field for backward compatibility
+                val role = assignedRoleDoc.getString("role")?.takeIf { it.isNotBlank() }
+                if (role != null) {
+                    Timber.d("Found single assigned role in assignedRole subcollection: $role")
+                    return listOf(role)
+                }
+            }
+            
+            // Fallback to checking the old location for backward compatibility
+            val snapshot = firestore
+                .collection(ROLE_ASSIGNMENTS_COLLECTION)
+                .whereEqualTo("meetingId", meetingId)
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+
+            if (!snapshot.isEmpty) {
+                // Get the first document (should only be one due to limit(1))
+                val doc = snapshot.documents[0]
+                
+                // First try to get roles as an array
+                val roles = doc.get("roles") as? List<*>
+                if (!roles.isNullOrEmpty()) {
+                    val roleStrings = roles.mapNotNull { it?.toString() }.filter { it.isNotBlank() }
+                    Timber.d("Found roles array in legacy location: $roleStrings")
+                    return roleStrings
+                }
+                
+                // Fall back to single role field if array not found
+                val role = doc.getString("role")?.takeIf { it.isNotBlank() }
+                if (role != null) {
+                    Timber.d("Found single role in legacy location: $role")
+                    return listOf(role)
+                }
+            }
+            
+            Timber.d("No roles found for user $userId in meeting $meetingId")
+            emptyList()
+            
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting assigned roles for user $userId in meeting $meetingId")
+            emptyList()
+        }
+    }
 
     override suspend fun sendMeetingNotification(meeting: Meeting): Result<Unit> {
         return try {

@@ -12,14 +12,30 @@ import com.bntsoft.toastmasters.databinding.ItemMemberRoleAssignmentBinding
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.google.android.material.chip.Chip
 
-class MemberRoleAssignAdapter(
-    private var assignableRoles: List<String>,
-    private val onRoleSelected: (String, String) -> Unit,
-    private val onBackupMemberSelected: (String, String) -> Unit,
-    private var availableMembers: List<Pair<String, String>>,
-    private val onSaveRole: (userId: String, role: String) -> Unit,
-    private val onToggleEditMode: (String, Boolean) -> Unit
-) : ListAdapter<RoleAssignmentItem, MemberRoleAssignAdapter.ViewHolder>(DiffCallback()) {
+class MemberRoleAssignAdapter :
+    ListAdapter<RoleAssignmentItem, MemberRoleAssignAdapter.ViewHolder>(DiffCallback()) {
+    private var assignableRoles: List<String> = emptyList()
+    private var availableMembers: List<Pair<String, String>> = emptyList()
+    private var onRoleSelected: ((String, String) -> Unit)? = null
+    private var onRoleRemoved: ((String, String) -> Unit)? = null
+    private var onBackupMemberSelected: ((String, String) -> Unit)? = null
+    private var onSaveRoles: ((String, List<String>) -> Unit)? = null
+    private var onToggleEditMode: ((String, Boolean) -> Unit)? = null
+
+
+    fun setCallbacks(
+        onRoleSelected: (String, String) -> Unit,
+        onRoleRemoved: (String, String) -> Unit,
+        onBackupMemberSelected: (String, String) -> Unit,
+        onSaveRoles: (String, List<String>) -> Unit,
+        onToggleEditMode: (String, Boolean) -> Unit
+    ) {
+        this.onRoleSelected = onRoleSelected
+        this.onRoleRemoved = onRoleRemoved
+        this.onBackupMemberSelected = onBackupMemberSelected
+        this.onSaveRoles = onSaveRoles
+        this.onToggleEditMode = onToggleEditMode
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemMemberRoleAssignmentBinding.inflate(
@@ -32,17 +48,20 @@ class MemberRoleAssignAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)
-        android.util.Log.d("MemberRoleAssignAdapter", "[onBindViewHolder] Binding item at position $position: " +
-                "member=${item.memberName}, assignedRole=${item.assignedRole}, " +
-                "selectedRoles=${item.selectedRoles}, isEditable=${item.isEditable}")
-        
+        android.util.Log.d(
+            "MemberRoleAssignAdapter", "[onBindViewHolder] Binding item at position $position: " +
+                    "member=${item.memberName}, assignedRole=${item.assignedRole}, " +
+                    "selectedRoles=${item.selectedRoles}, isEditable=${item.isEditable}"
+        )
+
         holder.bind(
             item,
             assignableRoles,
             onRoleSelected,
+            onRoleRemoved,
             onBackupMemberSelected,
             availableMembers,
-            onSaveRole,
+            onSaveRoles,
             onToggleEditMode
         )
     }
@@ -52,51 +71,100 @@ class MemberRoleAssignAdapter(
         assignableRoles = newRoles
         notifyDataSetChanged()
     }
-    
+
     fun updateAvailableMembers(newMembers: List<Pair<String, String>>) {
         availableMembers = newMembers
         notifyDataSetChanged()
     }
 
-    class ViewHolder(
+    inner class ViewHolder(
         private val binding: ItemMemberRoleAssignmentBinding
     ) : RecyclerView.ViewHolder(binding.root) {
+        private var currentItem: RoleAssignmentItem? = null
+        private var currentRoles: List<String> = emptyList()
+        private var availableMembers: List<Pair<String, String>> = emptyList()
         private var isSettingChecked = false
+
+        private fun addRoleFromInput(
+            binding: ItemMemberRoleAssignmentBinding,
+            item: RoleAssignmentItem
+        ) {
+            val role = binding.actvRole.text.toString().trim()
+            if (role.isNotEmpty()) {
+                addRoleToChipGroup(binding, role, item)
+                binding.actvRole.text.clear()
+            }
+        }
+
+        private fun addRoleToChipGroup(
+            binding: ItemMemberRoleAssignmentBinding,
+            role: String,
+            item: RoleAssignmentItem
+        ) {
+            // Check if role already exists in chip group
+            for (i in 0 until binding.chipGroupSelectedRoles.childCount) {
+                val chip = binding.chipGroupSelectedRoles.getChildAt(i) as? Chip
+                if (chip?.text.toString() == role) {
+                    // Role already exists, don't add again
+                    return
+                }
+            }
+
+            // Add new role chip
+            val chip = createChip(
+                role,
+                isCloseable = true,
+                onClose = {
+                    binding.chipGroupSelectedRoles.removeView(it)
+                    this@MemberRoleAssignAdapter.onRoleRemoved?.invoke(item.userId, role)
+                }
+            )
+            binding.chipGroupSelectedRoles.addView(chip)
+
+            // Notify ViewModel about the new role
+            this@MemberRoleAssignAdapter.onRoleSelected?.invoke(item.userId, role)
+        }
 
         private fun createChip(
             text: String,
-            isCloseable: Boolean,
-            onClose: (() -> Unit)? = null,
+            isCloseable: Boolean = true,
+            onClose: ((View) -> Unit)? = null,
             isCheckable: Boolean = false
         ): Chip {
-            return Chip(binding.root.context, null, com.google.android.material.R.style.Widget_MaterialComponents_Chip_Choice).apply {
-                this.text = text
-                this.isCheckable = isCheckable
-                this.isChecked = false
-                this.chipBackgroundColor = context.getColorStateList(com.google.android.material.R.color.mtrl_chip_background_color)
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_MaterialComponents_Chip)
+            val chip = Chip(binding.root.context)
+            chip.text = text
+            chip.isCloseIconVisible = isCloseable
+            chip.isCheckable = isCheckable
 
-                if (isCloseable && onClose != null) {
-                    isCloseIconVisible = true
-                    setOnCloseIconClickListener {
-                        onClose()
-                    }
-                }
+            if (isCloseable && onClose != null) {
+                chip.setOnCloseIconClickListener { onClose(chip) }
             }
+            return chip
         }
 
         fun bind(
             item: RoleAssignmentItem,
             roles: List<String>,
-            onRoleSelected: (String, String) -> Unit,
-            onBackupMemberSelected: (String, String) -> Unit,
+            onRoleSelected: ((String, String) -> Unit)?,
+            onRoleRemoved: ((String, String) -> Unit)?,
+            onBackupMemberSelected: ((String, String) -> Unit)?,
             availableMembers: List<Pair<String, String>>,
-            onSaveRole: (String, String) -> Unit,
-            onToggleEditMode: (String, Boolean) -> Unit
+            onSaveRoles: ((String, List<String>) -> Unit)?,
+            onToggleEditMode: ((String, Boolean) -> Unit)?
         ) {
-            android.util.Log.d("MemberRoleAssignAdapter", "[bind] Binding member: ${item.memberName}")
-            android.util.Log.d("MemberRoleAssignAdapter", "[bind] Current state - assignedRole: ${item.assignedRole}, " +
-                    "selectedRoles: ${item.selectedRoles}, isEditable: ${item.isEditable}")
+            this.currentItem = item
+            this.currentRoles = roles
+            this.availableMembers = availableMembers
+            // Initialize bindings
+            android.util.Log.d(
+                "MemberRoleAssignAdapter",
+                "[bind] Binding member: ${item.memberName}"
+            )
+            android.util.Log.d(
+                "MemberRoleAssignAdapter",
+                "[bind] Current state - assignedRole: ${item.assignedRole}, " +
+                        "selectedRoles: ${item.selectedRoles}, isEditable: ${item.isEditable}"
+            )
             android.util.Log.d("MemberRoleAssignAdapter", "[bind] Available roles: $roles")
             // Filter out current member from available members
             val otherMembers = availableMembers.filter { it.first != item.userId }
@@ -105,7 +173,10 @@ class MemberRoleAssignAdapter(
 
                 // Set up preferred roles chips
                 binding.chipGroupPreferredRoles.removeAllViews()
-                android.util.Log.d("MemberRoleAssignAdapter", "[bind] Adding ${item.preferredRoles.size} preferred roles")
+                android.util.Log.d(
+                    "MemberRoleAssignAdapter",
+                    "[bind] Adding ${item.preferredRoles.size} preferred roles"
+                )
                 item.preferredRoles.forEach { role ->
                     val chip = createChip(role, false)
                     binding.chipGroupPreferredRoles.addView(chip)
@@ -113,30 +184,62 @@ class MemberRoleAssignAdapter(
 
                 // Set up selected roles chips
                 binding.chipGroupSelectedRoles.removeAllViews()
-                android.util.Log.d("MemberRoleAssignAdapter", "[bind] Adding ${item.selectedRoles.size} selected roles, isEditable=${item.isEditable}")
+                android.util.Log.d(
+                    "MemberRoleAssignAdapter",
+                    "[bind] Adding ${item.selectedRoles.size} selected roles, isEditable=${item.isEditable}"
+                )
                 
+                // Add all selected roles as chips
                 item.selectedRoles.forEach { role ->
                     val chip = createChip(
                         text = role,
                         isCloseable = item.isEditable,
                         onClose = {
+                            onRoleRemoved?.invoke(item.userId, role)
+                        }
+                    )
+                    binding.chipGroupSelectedRoles.addView(chip)
+                }
+
+                // Set up edit/cancel button
+                binding.btnEdit.visibility = View.VISIBLE
+                binding.btnEdit.text = if (item.isEditable) "Cancel" else "Edit"
+                binding.btnEdit.setOnClickListener {
+                    if (item.isEditable) {
+                        // Cancel edit mode - revert changes
+                        onToggleEditMode?.invoke(item.userId, false)
+                    } else {
+                        // Enter edit mode
+                        onToggleEditMode?.invoke(item.userId, true)
+                    }
+                }
+
+                item.selectedRoles.forEach { role ->
+                    val chip = createChip(
+                        text = role,
+                        isCloseable = item.isEditable, // Show close button only in edit mode
+                        onClose = {
                             // On close icon click, remove the role
-                            android.util.Log.d("MemberRoleAssignAdapter", "[onClose] Removing role: $role from ${item.memberName}")
-                            onRoleSelected(item.userId, role)
+                            android.util.Log.d(
+                                "MemberRoleAssignAdapter",
+                                "[onClose] Removing role: $role from ${item.memberName}"
+                            )
+                            onRoleRemoved?.invoke(item.userId, role)
                         },
                         isCheckable = true
                     )
-                    
+
                     // Set the chip as checked if it's the assigned role
                     chip.isChecked = role == item.assignedRole
-                    
+
                     // Handle chip selection
                     chip.setOnClickListener {
                         if (!isSettingChecked) {
                             isSettingChecked = true
                             // Uncheck all other chips
                             for (i in 0 until binding.chipGroupSelectedRoles.childCount) {
-                                val otherChip = binding.chipGroupSelectedRoles.getChildAt(i) as? Chip
+                                val otherChip =
+                                    binding.chipGroupSelectedRoles.getChildAt(i) as? Chip
                                 if (otherChip != chip) {
                                     otherChip?.isChecked = false
                                 } else {
@@ -147,7 +250,7 @@ class MemberRoleAssignAdapter(
                             isSettingChecked = false
                         }
                     }
-                    
+
                     binding.chipGroupSelectedRoles.addView(chip)
                 }
 
@@ -174,7 +277,7 @@ class MemberRoleAssignAdapter(
                 binding.actvRole.setOnItemClickListener { _, _, position, _ ->
                     if (item.isEditable) {
                         val selectedRole = roles[position]
-                        
+
                         // Check if this role is already selected
                         if (item.selectedRoles.contains(selectedRole)) {
                             Toast.makeText(
@@ -184,10 +287,10 @@ class MemberRoleAssignAdapter(
                             ).show()
                             return@setOnItemClickListener
                         }
-                        
+
                         // Notify the ViewModel about the role selection
-                        onRoleSelected(item.userId, selectedRole)
-                        
+                        onRoleSelected?.invoke(item.userId, selectedRole)
+
                         // Clear the AutoCompleteTextView
                         binding.actvRole.text.clear()
                     } else {
@@ -213,7 +316,7 @@ class MemberRoleAssignAdapter(
                 if (item.isEditable) {
                     binding.actvBackupMember.setOnItemClickListener { _, _, position, _ ->
                         val selectedMember = otherMembers[position]
-                        onBackupMemberSelected(item.userId, selectedMember.first)
+                        onBackupMemberSelected?.invoke(item.userId, selectedMember.first)
                     }
                 } else {
                     binding.actvBackupMember.setOnItemClickListener(null)
@@ -232,7 +335,7 @@ class MemberRoleAssignAdapter(
                 // Handle backup member selection
                 binding.actvBackupMember.setOnItemClickListener { _, _, position, _ ->
                     val selectedMember = otherMembers[position]
-                    onBackupMemberSelected(item.userId, selectedMember.first)
+                    onBackupMemberSelected?.invoke(item.userId, selectedMember.first)
                 }
 
                 // Toggle backup member visibility
@@ -242,76 +345,84 @@ class MemberRoleAssignAdapter(
                 binding.cbAssignBackup.setOnCheckedChangeListener { _, isChecked ->
                     binding.tilBackupMember.visibility = if (isChecked) View.VISIBLE else View.GONE
                     if (!isChecked) {
-                        onBackupMemberSelected(item.userId, "")
+                        onBackupMemberSelected?.invoke(item.userId, "")
                         binding.actvBackupMember.setText("", false)
                     }
                 }
 
-                // Set up edit button - only show if there's an assigned role and it's not already editable
-                binding.btnEdit.visibility = if (item.assignedRole.isNotBlank() && !item.isEditable) View.VISIBLE else View.GONE
-                binding.btnEdit.setOnClickListener {
-                    onToggleEditMode(item.userId, true)
-                }
-                
-                // Set up assign role button - only show if editable
+                // Set up assign role button - only show if in edit mode
                 binding.btnAssignRole.visibility = if (item.isEditable) View.VISIBLE else View.GONE
                 binding.actvRole.isEnabled = item.isEditable
 
-                // Set initial edit state based on whether role is assigned
-                val isEditMode = item.assignedRole.isBlank()
-
-                // Disable/enable input fields based on edit mode
-                binding.actvRole.isEnabled = item.isEditable
-                binding.actvBackupMember.isEnabled = item.isEditable
-                binding.cbAssignBackup.isEnabled = item.isEditable
-
-                // Handle Assign Role button click
+                // Set up assign roles button click
                 binding.btnAssignRole.setOnClickListener {
-                    if (!item.isEditable) {
-                        Toast.makeText(
-                            binding.root.context,
-                            "Role is already assigned and cannot be modified",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@setOnClickListener
-                    }
+                    if (!item.isEditable) return@setOnClickListener
 
-                    // Get all selected roles from the chip group
+                    // Get all selected roles from chips
                     val selectedRoles = mutableListOf<String>()
                     for (i in 0 until binding.chipGroupSelectedRoles.childCount) {
                         val chip = binding.chipGroupSelectedRoles.getChildAt(i) as? Chip
                         chip?.text?.toString()?.let { role ->
-                            selectedRoles.add(role)
+                            if (!selectedRoles.contains(role)) {
+                                selectedRoles.add(role)
+                            }
                         }
                     }
 
                     if (selectedRoles.isEmpty()) {
                         Toast.makeText(
                             binding.root.context,
-                            "Please select at least one role",
+                            "Please add at least one role",
                             Toast.LENGTH_SHORT
                         ).show()
                         return@setOnClickListener
                     }
 
-                    // Call onSaveRole with the first selected role
-                    onSaveRole(item.userId, selectedRoles.first())
+                    // Save all selected roles
+                    onSaveRoles?.invoke(item.userId, selectedRoles)
+
+                    // Exit edit mode
+                    onToggleEditMode?.invoke(item.userId, false)
+
+                    val message = if (selectedRoles.size == 1) {
+                        "1 role assigned successfully"
+                    } else {
+                        "${selectedRoles.size} roles assigned successfully"
+                    }
                     
-                    // Clear the input and chip group
-                    binding.actvRole.text.clear()
+                    // Update the UI to show assigned roles
                     binding.chipGroupSelectedRoles.removeAllViews()
+                    selectedRoles.forEach { role ->
+                        val chip = createChip(
+                            text = role,
+                            isCloseable = false
+                        )
+                        binding.chipGroupSelectedRoles.addView(chip)
+                    }
+
+                    Toast.makeText(
+                        binding.root.context,
+                        message,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
 
-                // Handle Edit button click
-                binding.btnEdit.setOnClickListener {
-                    // Make fields editable
-                    binding.actvRole.isEnabled = true
-                    binding.actvBackupMember.isEnabled = true
-                    binding.cbAssignBackup.isEnabled = true
-                    binding.btnEdit.visibility = View.GONE
-                    binding.btnAssignRole.visibility = View.VISIBLE
+                // Handle dropdown item selection
+                binding.actvRole.setOnItemClickListener { _, _, position, _ ->
+                    val selected = binding.actvRole.adapter?.getItem(position) as? String
+                    selected?.let { role ->
+                        if (!item.selectedRoles.contains(role)) {
+                            addRoleToChipGroup(binding, role, item)
+                            binding.actvRole.text.clear()
+                        } else {
+                            Toast.makeText(
+                                binding.root.context,
+                                "This role is already selected",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 }
-
 
                 // Make the AutoCompleteTextView clickable to show dropdown
                 binding.actvRole.setOnClickListener {
@@ -319,15 +430,37 @@ class MemberRoleAssignAdapter(
                         binding.actvRole.showDropDown()
                     }
                 }
+
+                // Update chip group based on selected roles
+                binding.chipGroupSelectedRoles.removeAllViews()
+                item.selectedRoles.forEach { role ->
+                    val chip = createChip(
+                        text = role,
+                        isCloseable = item.isEditable,
+                        onClose = { onRoleRemoved?.invoke(item.userId, role) },
+                        isCheckable = true
+                    )
+                    chip.isChecked = role == item.assignedRole
+                    binding.chipGroupSelectedRoles.addView(chip)
+                }
             }
         }
     }
-
-    class DiffCallback : DiffUtil.ItemCallback<RoleAssignmentItem>() {
-        override fun areItemsTheSame(oldItem: RoleAssignmentItem, newItem: RoleAssignmentItem) =
-            oldItem.userId == newItem.userId
-
-        override fun areContentsTheSame(oldItem: RoleAssignmentItem, newItem: RoleAssignmentItem) =
-            oldItem == newItem
-    }
 }
+
+
+class DiffCallback : DiffUtil.ItemCallback<RoleAssignmentItem>() {
+    override fun areItemsTheSame(
+        oldItem: RoleAssignmentItem,
+        newItem: RoleAssignmentItem
+    ) =
+        oldItem.userId == newItem.userId
+
+    override fun areContentsTheSame(
+        oldItem: RoleAssignmentItem,
+        newItem: RoleAssignmentItem
+    ) =
+        oldItem == newItem
+}
+
+

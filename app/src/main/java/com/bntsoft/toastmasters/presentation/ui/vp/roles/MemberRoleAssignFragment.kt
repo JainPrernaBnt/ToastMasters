@@ -46,26 +46,32 @@ class MemberRoleAssignFragment : Fragment() {
     private fun setupRecyclerView() {
         Log.d("MemberRoleAssignFrag", "Setting up RecyclerView")
 
-        adapter = MemberRoleAssignAdapter(
-            assignableRoles = viewModel.assignableRoles.value ?: emptyList(),
-            onRoleSelected = { userId, role ->
-                Log.d("MemberRoleAssignFrag", "Role selected - UserId: $userId, Role: $role")
-                viewModel.assignRole(userId, role)
-            },
-            onBackupMemberSelected = { userId, backupMemberId ->
-                Log.d("MemberRoleAssignFrag", "Backup member selected - UserId: $userId, BackupId: $backupMemberId")
-                viewModel.setBackupMember(userId, backupMemberId)
-            },
-            availableMembers = viewModel.availableMembers.value ?: emptyList(),
-            onSaveRole = { userId, _ ->
-                Log.d("MemberRoleAssignFrag", "Saving role for user: $userId")
-                viewModel.saveRoleAssignments()
-            },
-            onToggleEditMode = { userId, isEditable ->
-                Log.d("MemberRoleAssignFrag", "Toggling edit mode - UserId: $userId, isEditable: $isEditable")
-                viewModel.toggleEditMode(userId, isEditable)
-            }
-        )
+        adapter = MemberRoleAssignAdapter().apply {
+            setCallbacks(
+                onRoleSelected = { userId, role ->
+                    Log.d("MemberRoleAssignFrag", "Role selected - UserId: $userId, Role: $role")
+                    viewModel.assignRole(userId, role)
+                },
+                onRoleRemoved = { userId, role ->
+                    Log.d("MemberRoleAssignFrag", "Role removed - UserId: $userId, Role: $role")
+                    viewModel.removeRole(userId, role)
+                },
+                onBackupMemberSelected = { userId, backupMemberId ->
+                    Log.d("MemberRoleAssignFrag", "Backup member selected - UserId: $userId, BackupId: $backupMemberId")
+                    viewModel.setBackupMember(userId, backupMemberId)
+                },
+                onSaveRoles = { userId, _ ->
+                    Log.d("MemberRoleAssignFrag", "Saving role for user: $userId")
+                    viewModel.saveRoleAssignments()
+                },
+                onToggleEditMode = { userId, isEditable ->
+                    Log.d("MemberRoleAssignFrag", "Toggling edit mode - UserId: $userId, isEditable: $isEditable")
+                    viewModel.toggleEditMode(userId, isEditable)
+                }
+            )
+            updateAssignableRoles(viewModel.assignableRoles.value ?: emptyList())
+            updateAvailableMembers(viewModel.availableMembers.value ?: emptyList())
+        }
 
         binding.rvMembers.adapter = adapter
         binding.rvMembers.layoutManager = LinearLayoutManager(requireContext())

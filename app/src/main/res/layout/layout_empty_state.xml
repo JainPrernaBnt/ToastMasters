@@ -15,6 +15,7 @@
         android:contentDescription="@string/empty_meetings_title" />
 
     <TextView
+        android:id="@+id/emptyTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -24,6 +25,7 @@
         android:textAlignment="center" />
 
     <TextView
+        android:id="@+id/emptyMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"

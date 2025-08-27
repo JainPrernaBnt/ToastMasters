@@ -132,38 +132,27 @@ class MemberRoleAssignViewModel @Inject constructor(
     }
 
     fun assignRole(userId: String, role: String) {
+        Log.d("MemberRoleAssignVM", "Assigning role: $role to user: $userId")
         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
             if (assignment.userId == userId) {
-                // Check if the role is already in the list
-                val updatedRoles = assignment.selectedRoles.toMutableList()
-                if (!updatedRoles.contains(role)) {
-                    updatedRoles.add(role)
-                }
-                assignment.copy(
-                    selectedRoles = updatedRoles,
-                    assignedRole = role,  // Set the assigned role
-                    isEditable = assignment.isEditable // Maintain edit mode
-                )
+                val updated = assignment.withRoleAdded(role)
+                Log.d("MemberRoleAssignVM", "Role assigned. Updated assignment: $updated")
+                updated
             } else {
+                // Just return the assignment as-is for other users
+                // Multiple users can have the same role
                 assignment
             }
         }
     }
 
     fun removeRole(userId: String, role: String) {
+        Log.d("MemberRoleAssignVM", "Removing role: $role from user: $userId")
         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
             if (assignment.userId == userId) {
-                val updatedRoles = assignment.selectedRoles.toMutableList()
-                updatedRoles.remove(role)
-                
-                // If no roles left, clear the assigned role
-                val newAssignedRole = if (updatedRoles.isEmpty()) "" else assignment.assignedRole
-                
-                assignment.copy(
-                    selectedRoles = updatedRoles,
-                    assignedRole = newAssignedRole,
-                    isEditable = updatedRoles.isEmpty() // Make editable if no roles left
-                )
+                val updated = assignment.withRoleRemoved(role)
+                Log.d("MemberRoleAssignVM", "Role removed. Updated assignment: $updated")
+                updated
             } else {
                 assignment
             }
@@ -186,11 +175,21 @@ class MemberRoleAssignViewModel @Inject constructor(
     }
     
     fun toggleEditMode(userId: String, isEditable: Boolean) {
+        Log.d("MemberRoleAssignVM", "Toggling edit mode for user: $userId, isEditable: $isEditable")
         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
             if (assignment.userId == userId) {
-                assignment.copyWithEditMode(isEditable)
+                val updated = assignment.copyWithEditMode(isEditable)
+                Log.d("MemberRoleAssignVM", "Updated assignment: $updated")
+                updated
             } else {
-                assignment
+                // If we're enabling edit mode for one user, ensure others are not in edit mode
+                if (isEditable && assignment.isEditable) {
+                    val updated = assignment.copyWithEditMode(false)
+                    Log.d("MemberRoleAssignVM", "Disabled edit mode for ${assignment.userId} as user $userId is now in edit mode")
+                    updated
+                } else {
+                    assignment
+                }
             }
         }
     }
