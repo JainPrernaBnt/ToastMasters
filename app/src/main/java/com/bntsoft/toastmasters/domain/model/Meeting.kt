@@ -13,6 +13,7 @@ data class Meeting(
     val location: String = "",
     val theme: String = "",
     val availableRoles: List<String> = emptyList(),
+    val roleCounts: Map<String, Int> = emptyMap(),
     val isRecurring: Boolean = false,
     val createdBy: String = "",
     val createdAt: Long = System.currentTimeMillis(),

@@ -1,12 +1,16 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.meetings
 
 import android.os.Bundle
+import android.text.InputFilter
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ArrayAdapter
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import android.widget.Toast
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -20,7 +24,9 @@ import com.bntsoft.toastmasters.domain.model.MeetingFormData
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
 import com.google.android.material.chip.Chip
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -89,6 +95,11 @@ class CreateMeetingFragment : Fragment() {
                         )
                     }
 
+                    is CreateMeetingState.Duplicate -> {
+                        showDuplicateMeetingDialog(state.meeting)
+                        viewModel.resetCreateMeetingState()
+                    }
+
                     is CreateMeetingState.Error -> {
                         Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
                         viewModel.resetCreateMeetingState()
@@ -110,53 +121,91 @@ class CreateMeetingFragment : Fragment() {
         val formBinding =
             ItemMeetingFormBinding.inflate(layoutInflater, binding.meetingFormsContainer, false)
 
-        // Set default date to next Saturday
+        // Initialize with default values
         val calendar = Calendar.getInstance()
-        if (meetingForms.isNotEmpty()) {
-            val lastMeetingCalendar = meetingForms.last().startCalendar
-            calendar.time = lastMeetingCalendar.time
-            calendar.add(Calendar.DAY_OF_MONTH, 7)
-        } else {
-            val today = calendar.get(Calendar.DAY_OF_WEEK)
-            val daysUntilSaturday = (Calendar.SATURDAY - today + 7) % 7
-            calendar.add(
-                Calendar.DAY_OF_MONTH,
+        val startTime = Calendar.getInstance()
+        val endTime = Calendar.getInstance()
+
+        // Calculate the base date (next Saturday after last meeting or today)
+        lifecycleScope.launch {
+            val lastMeetingDate = viewModel.getLastMeetingDate()
+            val baseCalendar = if (lastMeetingDate != null) {
+                // Start from the last meeting date
+                Calendar.getInstance().apply { time = lastMeetingDate }
+            } else {
+                // No meetings exist, start from today
+                Calendar.getInstance()
+            }
+            
+            // Move to the next Saturday from the base date
+            val dayOfWeek = baseCalendar.get(Calendar.DAY_OF_WEEK)
+            val daysUntilSaturday = (Calendar.SATURDAY - dayOfWeek + 7) % 7
+            baseCalendar.add(Calendar.DAY_OF_MONTH, 
                 if (daysUntilSaturday == 0) 7 else daysUntilSaturday
             )
-        }
+            
+            // For subsequent forms, add 7 days for each form after the first one
+            val formIndex = meetingForms.size
+            if (formIndex > 0) {
+                baseCalendar.add(Calendar.DAY_OF_MONTH, 7 * formIndex)
+            }
+            
+            // Update the working calendar
+            calendar.time = baseCalendar.time
 
-        // Set default start time (5:30 PM)
-        val startTime = (calendar.clone() as Calendar).apply {
-            set(Calendar.HOUR_OF_DAY, 17) // 5 PM
-            set(Calendar.MINUTE, 30)      // 30 minutes
-            set(Calendar.SECOND, 0)       // 0 seconds
-            set(Calendar.MILLISECOND, 0)  // 0 milliseconds
-        }
-        val endTime = (calendar.clone() as Calendar).apply {
-            set(Calendar.HOUR_OF_DAY, 19) // 7 PM
-            set(Calendar.MINUTE, 30)      // 30 minutes
-            set(Calendar.SECOND, 0)       // 0 seconds
-            set(Calendar.MILLISECOND, 0)  // 0 milliseconds
-        }
+            // Set the times
+            startTime.time = calendar.time
+            startTime.set(Calendar.HOUR_OF_DAY, 17)
+            startTime.set(Calendar.MINUTE, 30)
+            startTime.set(Calendar.SECOND, 0)
+            startTime.set(Calendar.MILLISECOND, 0)
 
-        val meetingFormData = MeetingFormData(formBinding, startTime, endTime)
+            endTime.time = calendar.time
+            endTime.set(Calendar.HOUR_OF_DAY, 19)
+            endTime.set(Calendar.MINUTE, 30)
+            endTime.set(Calendar.SECOND, 0)
+            endTime.set(Calendar.MILLISECOND, 0)
+
+            // Update the UI with the calculated date and times
+            formBinding.apply {
+                meetingDateInput.setText(dateFormat.format(calendar.time))
+                startTimeInput.setText(timeFormat.format(startTime.time))
+                endTimeInput.setText(timeFormat.format(endTime.time))
+            }
+
+            // Store the calendar instances in the form data
+            val meetingFormData = MeetingFormData(formBinding, startTime, endTime)
+            meetingForms.add(meetingFormData)
+
+            // Add the view to the container after the form data is created
+            activity?.runOnUiThread {
+                binding.meetingFormsContainer.addView(formBinding.root)
+            }
+        }
 
         formBinding.apply {
-            meetingDateInput.setText(dateFormat.format(calendar.time))
-            startTimeInput.setText(timeFormat.format(startTime.time))
-            endTimeInput.setText(timeFormat.format(endTime.time))
 
             // Setup date picker
             meetingDateInput.setOnClickListener {
-                showDatePicker(startTime, meetingDateInput) // startTime keeps track of the date
+                // Find the meeting form data for this binding
+                val formData = meetingForms.find { it.binding === formBinding }
+                formData?.let {
+                    showDatePicker(it.startCalendar, meetingDateInput)
+                }
             }
 
             // Setup time pickers
             startTimeInput.setOnClickListener {
-                showTimePicker(startTime, startTimeInput)
+                val formData = meetingForms.find { it.binding === formBinding }
+                formData?.let {
+                    showTimePicker(it.startCalendar, startTimeInput)
+                }
             }
             endTimeInput.setOnClickListener {
-                showTimePicker(endTime, endTimeInput)
+                val formData = meetingForms.find { it.binding === formBinding }
+                formData?.let {
+                    showTimePicker(it.endCalendar, endTimeInput)
+                }
             }
 
             // Remove button visibility and action
@@ -165,16 +214,16 @@ class CreateMeetingFragment : Fragment() {
             } else {
                 removeMeetingButton.visibility = View.VISIBLE
                 removeMeetingButton.setOnClickListener {
-                    binding.meetingFormsContainer.removeView(root)
-                    meetingForms.remove(meetingFormData)
+                    val formData = meetingForms.find { it.binding === formBinding }
+                    formData?.let {
+                        binding.meetingFormsContainer.removeView(root)
+                        meetingForms.remove(it)
+                    }
                 }
             }
 
             setupRoleManagement(formBinding)
         }
-
-        binding.meetingFormsContainer.addView(formBinding.root)
-        meetingForms.add(meetingFormData)
 
         // Scroll to the bottom
         binding.scrollView.post {
@@ -194,7 +243,7 @@ class CreateMeetingFragment : Fragment() {
             android.R.layout.simple_dropdown_item_1line,
             roles
         )
-        
+
         // Set up the dropdown
         formBinding.apply {
             val dropdown = roleDropdown as MaterialAutoCompleteTextView
@@ -212,7 +261,7 @@ class CreateMeetingFragment : Fragment() {
                 }
                 setOnItemClickListener { _, _, position, _ ->
                     val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
-                    
+
                     if (position == 0) { // "+ Add new role" option
                         roleInputLayout.visibility = View.VISIBLE
                         saveRoleButton.visibility = View.VISIBLE
@@ -226,7 +275,7 @@ class CreateMeetingFragment : Fragment() {
                 }
                 keyListener = null // Disable text input
             }
-            
+
             // Make sure the TextInputLayout doesn't steal focus
             roleDropdownLayout.isFocusable = false
             roleDropdownLayout.isFocusableInTouchMode = false
@@ -260,14 +309,62 @@ class CreateMeetingFragment : Fragment() {
     }
 
     private fun addRoleChip(formBinding: ItemMeetingFormBinding, role: String) {
-        val chip = Chip(context).apply {
-            text = role
-            isCloseIconVisible = true
-            setOnCloseIconClickListener {
-                formBinding.roleChipGroup.removeView(this)
-            }
+        val dialogView = layoutInflater.inflate(R.layout.dialog_role_count, null)
+        val input = dialogView.findViewById<TextInputEditText>(R.id.roleCountInput).apply {
+            setText("1")  // Default to 1
+            setSelectAllOnFocus(true)
+            requestFocus()
         }
-        formBinding.roleChipGroup.addView(chip)
+        
+        val textInputLayout = dialogView.findViewById<TextInputLayout>(R.id.roleCountLayout)
+        textInputLayout.hint = "Number of $role"
+        
+        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_ToastMasters_Dialog)
+            .setTitle("Add $role")
+            .setView(dialogView)
+            .setPositiveButton("Add") { dialogInterface, _ ->
+                val count = input.text.toString().toIntOrNull() ?: 0
+                if (count > 0) {
+                    for (i in 1..count) {
+                        val chip = Chip(context).apply {
+                            text = "$role $i"
+                            isCloseIconVisible = true
+                            setOnCloseIconClickListener {
+                                formBinding.roleChipGroup.removeView(this)
+                            }
+                            tag = role
+                            setChipBackgroundColorResource(R.color.chip_background)
+                            setTextAppearance(R.style.ChipTextAppearance)
+                        }
+                        formBinding.roleChipGroup.addView(chip)
+                    }
+                }
+                dialogInterface.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+            }
+            .create()
+            
+        // Show keyboard when dialog appears
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        dialog.show()
+        
+        // Set input filter to allow only numbers 1-99
+        input.filters = arrayOf<InputFilter>(InputFilter.LengthFilter(2), InputFilter { source, _, _, _, _, _ ->
+            if (source.isNotEmpty() && source.toString().matches("[0-9]+".toRegex())) {
+                val value = source.toString().toInt()
+                if (value in 1..99) {
+                    null // Accept the input
+                } else {
+                    "" // Reject the input
+                }
+            } else if (source.isEmpty()) {
+                null // Allow empty input (for backspace)
+            } else {
+                "" // Reject non-numeric input
+            }
+        })
     }
 
     private fun validateForms(): Boolean {
@@ -319,7 +416,7 @@ class CreateMeetingFragment : Fragment() {
         timePicker.show(childFragmentManager, "TIME_PICKER")
     }
 
-    private fun createMeetings() {
+    private fun createMeetings(forceCreate: Boolean = false) {
         meetingForms.forEach { formData ->
             val theme = formData.binding.themeInput.text.toString()
             val venue = formData.binding.venueInput.text.toString()
@@ -352,18 +449,38 @@ class CreateMeetingFragment : Fragment() {
             val endLocalDateTime =
                 LocalDateTime.ofInstant(finalEndCalendar.toInstant(), ZoneId.systemDefault())
 
-            val roles = formData.binding.roleChipGroup.children.map { (it as Chip).text.toString() }
-                .toList()
-
+            // Extract roles and their counts from chips
+            val roleCounts = mutableMapOf<String, Int>()
+            formData.binding.roleChipGroup.children.forEach { view ->
+                val chip = view as Chip
+                val role = chip.tag?.toString() ?: return@forEach
+                roleCounts[role] = roleCounts.getOrDefault(role, 0) + 1
+            }
+            
+            // Get unique role names for backward compatibility
+            val roles = roleCounts.keys.toList()
+            
             val meeting = Meeting(
-                theme = theme, // Using theme as title
+                theme = theme,
                 dateTime = startLocalDateTime,
                 endDateTime = endLocalDateTime,
                 location = venue,
-                availableRoles = roles
+                availableRoles = roles,
+                roleCounts = roleCounts
             )
-            viewModel.createMeeting(meeting)
+            viewModel.createMeeting(meeting, forceCreate)
         }
+    }
+
+    private fun showDuplicateMeetingDialog(meeting: Meeting) {
+        android.app.AlertDialog.Builder(requireContext())
+            .setTitle("Meeting already exists")
+            .setMessage("A meeting is already scheduled on this date and time. Do you want to create it again?")
+            .setPositiveButton("Yes") { _, _ ->
+                createMeetings(forceCreate = true)
+            }
+            .setNegativeButton("No", null)
+            .show()
     }
 
     override fun onDestroyView() {

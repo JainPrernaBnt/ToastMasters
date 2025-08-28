@@ -1,4 +1,5 @@
 <resources>
+    <!-- Bottom Navigation -->
     <style name="BottomNavigationView.Text" parent="TextAppearance.AppCompat.Small">
         <item name="android:textSize">12sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
@@ -8,6 +9,25 @@
     <style name="ChipTextAppearance" parent="TextAppearance.MaterialComponents.Chip">
         <item name="android:textColor">@color/on_surface</item>
         <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
+    <style name="ChipStyle" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="chipBackgroundColor">@color/chip_background</item>
+        <item name="chipStrokeColor">@color/outline_variant</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="android:textAppearance">@style/ChipTextAppearance</item>
+        <item name="android:checkable">true</item>
+    </style>
+
+    <!-- Dialog Theme -->
+    <style name="Theme.ToastMasters.Dialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryDark">@color/purple_700</item>
+        <item name="colorAccent">@color/teal_200</item>
+        <item name="android:textColorPrimary">@color/on_surface</item>
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowMinWidthMajor">@dimen/dialog_min_width</item>
+        <item name="android:windowMinWidthMinor">@dimen/dialog_min_width</item>
+    </style>
 </resources>

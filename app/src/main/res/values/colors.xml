@@ -65,7 +65,7 @@
     <color name="cardBackgroundColor">#FFFFFFFF</color>
 
     <!-- Chip colors -->
-    <color name="chip_background">#F1F1F1</color>
+    <color name="chip_background">#E3F2FD</color>
     <color name="chip_background_selected">#E3F2FD</color>
     <color name="chip_background_checked">#E8F5E9</color>
     <color name="chip_background_unchecked">#FFFFFF</color>

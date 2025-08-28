@@ -180,18 +180,31 @@ class MeetingsViewModel @Inject constructor(
         }
     }
 
-    fun createMeeting(meeting: Meeting) {
-        Timber.d("createMeeting called with: ${meeting}")
+    private suspend fun isDuplicateMeeting(meeting: Meeting): Boolean {
+        val existingMeetings = meetingRepository.getAllMeetings().first()
+        return existingMeetings.any { existing ->
+            existing.dateTime.toLocalDate() == meeting.dateTime.toLocalDate() &&
+            existing.dateTime.toLocalTime() == meeting.dateTime.toLocalTime() &&
+            existing.endDateTime?.toLocalTime() == meeting.endDateTime?.toLocalTime()
+        }
+    }
+
+    fun createMeeting(meeting: Meeting, forceCreate: Boolean = false) {
         viewModelScope.launch {
             _createMeetingState.value = CreateMeetingState.Loading
             Timber.d("CreateMeetingState set to Loading")
+
+            if (!forceCreate && isDuplicateMeeting(meeting)) {
+                _createMeetingState.value = CreateMeetingState.Duplicate(meeting)
+                return@launch
+            }
 
             when (val result = meetingRepository.createMeeting(meeting)) {
                 is Resource.Success -> {
                     Timber.d("Meeting creation successful: ${result.data}")
                     _createMeetingState.value = CreateMeetingState.Success(result.data!!)
-                    loadMeetings() // Refresh the meetings list
-                    loadUpcomingMeetings() // Refresh upcoming meetings
+                    loadMeetings()
+                    loadUpcomingMeetings()
                 }
 
                 is Resource.Error -> {
@@ -202,6 +215,13 @@ class MeetingsViewModel @Inject constructor(
 
                 else -> {}
             }
+        }
+    }
+
+    suspend fun getLastMeetingDate(): java.util.Date? {
+        val meetings = meetingRepository.getAllMeetings().first()
+        return meetings.maxByOrNull { it.dateTime }?.dateTime?.let { 
+            java.util.Date.from(it.atZone(java.time.ZoneId.systemDefault()).toInstant()) 
         }
     }
 

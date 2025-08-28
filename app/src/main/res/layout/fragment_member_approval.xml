@@ -55,10 +55,8 @@
                 android:layout_marginBottom="@dimen/space_large"
                 android:contentDescription="@string/no_pending_approvals"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_group"
+                android:src="@drawable/ic_people"
                 app:shapeAppearanceOverlay="@style/CircleImageView"
-                app:strokeColor="?attr/colorOutline"
-                app:strokeWidth="1dp"
                 app:tint="?attr/colorPrimary" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -69,16 +67,6 @@
                 android:textAppearance="?attr/textAppearanceHeadlineSmall"
                 android:textColor="?android:attr/textColorPrimary"
                 android:textStyle="bold" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_small"
-                android:gravity="center"
-                android:text="@string/no_pending_approvals"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?android:attr/textColorSecondary"
-                tools:ignore="HardcodedText" />
 
         </LinearLayout>
 

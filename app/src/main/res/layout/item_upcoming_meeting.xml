@@ -120,6 +120,16 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tvRoleInstructions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:lineSpacingMultiplier="1.2"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:visibility="gone"
+            tools:text="Select your preferred roles in order of priority.The first role you select will be your highest priority." />
+
+        <TextView
             android:id="@+id/tvNoRoles"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

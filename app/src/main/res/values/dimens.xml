@@ -40,4 +40,9 @@
     
     <!-- Bottom Navigation -->
     <dimen name="bottom_nav_padding">8dp</dimen>
+    
+    <!-- Dialog dimensions -->
+    <dimen name="dialog_min_width">280dp</dimen>
+    <dimen name="dialog_padding">24dp</dimen>
+    <dimen name="dialog_button_padding">8dp</dimen>
 </resources>
