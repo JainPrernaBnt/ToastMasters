@@ -141,7 +141,7 @@ class MemberApprovalAdapter(
             }
 
             assignVP.setOnCheckedChangeListener(null)
-            assignVP.isChecked = member.role == UserRole.VP_EDUCATION
+            assignVP.isChecked = member.isVpEducation
 
             assignVP.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked && member.role != UserRole.VP_EDUCATION) {
@@ -150,8 +150,7 @@ class MemberApprovalAdapter(
                         .setTitle("Assign VP Education")
                         .setMessage("Do you want to give ${member.name} the same permissions as VP Education?")
                         .setPositiveButton("Yes") { _, _ ->
-                            val updatedMember = member.copy(role = UserRole.VP_EDUCATION)
-                            onAssignVp(updatedMember)
+                            onAssignVp(member)
                         }
                         .setNegativeButton("No") { dialog, _ ->
                             dialog.dismiss()
