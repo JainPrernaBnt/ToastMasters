@@ -115,4 +115,8 @@ dependencies {
     implementation("com.intuit.sdp:sdp-android:1.1.1")
     // For scalable SP (text sizes)
     implementation("com.intuit.ssp:ssp-android:1.1.1")
+
+
+    implementation("com.google.code.gson:gson:2.10.1")
+
 }

@@ -86,8 +86,13 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             endDateTime = endDateTime,
                             venue = document.getString("venue") ?: "",
                             theme = document.getString("theme") ?: "No Theme",
-                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
-                                ?: emptyList(),
+                            roleCounts = (document.get("roleCounts") as? Map<String, *>)?.mapValues { (_, value) ->
+                                when (value) {
+                                    is Long -> value.toInt()
+                                    is Int -> value
+                                    else -> 1
+                                }
+                            } ?: emptyMap(),
                             createdAt = document.getLong("createdAt") ?: 0,
                             status = document.getString("status")?.let {
                                 try {
@@ -150,8 +155,13 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             endDateTime = endDateTime,  // Set the parsed endDateTime
                             venue = document.getString("venue") ?: "",
                             theme = document.getString("theme") ?: "No Theme",
-                            preferredRoles = (document.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
-                                ?: emptyList(),
+                            roleCounts = (document.get("roleCounts") as? Map<String, *>)?.mapValues { (_, value) ->
+                                when (value) {
+                                    is Long -> value.toInt()
+                                    is Int -> value
+                                    else -> 1
+                                }
+                            } ?: emptyMap(),
                             createdAt = document.getLong("createdAt") ?: 0,
                             status = document.getString("status")?.let {
                                 try {
@@ -209,17 +219,11 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     override suspend fun getMeetingPreferredRoles(meetingId: String): List<String> {
         return try {
-            // Get the meeting document
-            val meetingDoc = firestore
-                .collection("meetings")
-                .document(meetingId)
-                .get()
-                .await()
-
-            // Return the meeting's preferred roles if they exist, otherwise empty list
-            (meetingDoc.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
-                ?: emptyList()
+            val document = meetingsCollection.document(meetingId).get().await()
+            val roleCounts = document.get("roleCounts") as? Map<String, *> ?: emptyMap<String, Any>()
+            roleCounts.keys.toList()
         } catch (e: Exception) {
+            Timber.e(e, "Error getting meeting preferred roles")
             Timber.e(e, "Error fetching preferred roles for meeting $meetingId")
             emptyList()
         }
@@ -249,7 +253,19 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         return try {
             val document = meetingsCollection.document()
             val dto = meetingMapper.mapToDto(meeting).copy(meetingID = document.id)
-            document.set(dto).await()
+            // Convert the MeetingDto to a map and set it in Firestore
+            val meetingMap = hashMapOf(
+                "meetingID" to dto.meetingID,
+                "date" to dto.date,
+                "startTime" to dto.startTime,
+                "endTime" to dto.endTime,
+                "venue" to dto.venue,
+                "theme" to dto.theme,
+                "roleCounts" to dto.roleCounts,
+                "createdAt" to dto.createdAt,
+                "status" to dto.status.name
+            )
+            document.set(meetingMap).await()
             val newMeeting = meetingMapper.mapToDomain(dto)
 
             // Send notification about the new meeting
@@ -278,7 +294,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         "endTime" to dto.endTime,
                         "venue" to dto.venue,
                         "theme" to dto.theme,
-                        "preferredRoles" to dto.preferredRoles,
+                        "roleCounts" to dto.roleCounts
                     )
                 ).await()
                 Result.Success(Unit)
@@ -335,8 +351,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     ): Result<Unit> {
         return try {
             val batch = firestore.batch()
-            val assignmentsRef = firestore.collection(ROLE_ASSIGNMENTS_COLLECTION)
-            val meetingRef = firestore.collection("meetings").document(meetingId)
+            val meetingRef = firestore.collection("meetings").document(meetingId) 
 
             // Process each assignment
             assignments.forEach { assignment ->
@@ -358,18 +373,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         "updatedAt" to FieldValue.serverTimestamp()
                     )
                     batch.set(assignedRoleRef, roleData)
-                    
-                    // Also update the legacy location for backward compatibility
-                    val legacyDocRef = assignmentsRef.document("${meetingId}_${assignment.userId}")
-                    val legacyData = hashMapOf<String, Any>(
-                        "meetingId" to meetingId,
-                        "userId" to assignment.userId,
-                        "memberName" to assignment.memberName,
-                        "roles" to roles,  // Array of roles
-                        "assignedAt" to FieldValue.serverTimestamp(),
-                        "updatedAt" to FieldValue.serverTimestamp()
-                    )
-                    batch.set(legacyDocRef, legacyData)
                 } else {
                     // If no roles are selected, remove from assignedRole
                     batch.delete(assignedRoleRef)

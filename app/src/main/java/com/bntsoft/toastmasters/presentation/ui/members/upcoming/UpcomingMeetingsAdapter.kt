@@ -36,7 +36,7 @@ class UpcomingMeetingsAdapter :
 
     private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
     private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-    
+
     private fun canEditAvailability(meetingTime: java.time.LocalDateTime): Boolean {
         val currentTime = java.time.LocalDateTime.now()
         val deadline = meetingTime.minusMinutes(30)
@@ -67,6 +67,7 @@ class UpcomingMeetingsAdapter :
 
         fun bind(meeting: Meeting, availability: MeetingAvailability? = null) {
             val canEdit = canEditAvailability(meeting.dateTime)
+            itemView.tag = meeting // Store meeting in the view's tag
             binding.apply {
                 // Reset views to default state
                 rgAvailability.visibility = View.GONE
@@ -100,7 +101,7 @@ class UpcomingMeetingsAdapter :
                 // 1. Editing is allowed AND
                 // 2. (No availability is set yet OR we're in edit mode)
                 val showForm = canEdit && (userAvailability == null || meeting.isEditMode)
-                
+
                 if (showForm) {
                     // Edit mode - show form
                     rgAvailability.visibility = View.VISIBLE
@@ -108,7 +109,11 @@ class UpcomingMeetingsAdapter :
                     btnEdit.visibility = View.GONE
                     tvAvailabilityStatus.visibility = View.GONE
                     tvSelectedRoles.visibility = View.GONE
-
+                    tvRoleInstructions.visibility = View.VISIBLE
+                    tvRoleInstructions.text =
+                        "Select your preferred roles in order of priority.\nThe first role you select will be your highest priority."
+                    tvYourAvailability.visibility = View.VISIBLE
+                    tvPreferredRoles.visibility = View.VISIBLE
                     // Set initial selection based on current availability
                     rgAvailability.clearCheck()
                     when (userAvailability?.status) {
@@ -140,13 +145,16 @@ class UpcomingMeetingsAdapter :
                     btnSubmit.visibility = View.GONE
                     cgRoles.visibility = View.GONE
                     tvAvailabilityStatus.visibility = View.VISIBLE
-                    
+                    tvRoleInstructions.visibility = View.GONE
+                    tvYourAvailability.visibility = View.GONE
+                    tvPreferredRoles.visibility = View.GONE
                     // Show edit button only if editing is allowed
                     btnEdit.visibility = if (canEdit) View.VISIBLE else View.GONE
-                    
+
                     // Show message about editing deadline if applicable
                     if (!canEdit) {
-                        tvAvailabilityStatus.text = "You can no longer change your availability.\nUpdates are only allowed up to 30 minutes before the meeting."
+                        tvAvailabilityStatus.text =
+                            "You can no longer change your availability.\nUpdates are only allowed up to 30 minutes before the meeting."
                     }
 
                     // Show current status
@@ -174,19 +182,24 @@ class UpcomingMeetingsAdapter :
                         btnEdit.setOnClickListener {
                             onEditClicked?.invoke(meeting)
                         }
-                        
+
                         val deadlineTime = meeting.dateTime.minusMinutes(30)
-                        val deadlineText = "You can update your availability for this meeting until ${deadlineTime.format(timeFormatter)}."
-                        tvAvailabilityStatus.text = deadlineText
-                        tvAvailabilityStatus.visibility = View.VISIBLE
+                        tvDeadline.text =
+                            "You can update your availability for this meeting until ${
+                                deadlineTime.format(timeFormatter)
+                            }."
+                        tvDeadline.visibility = View.VISIBLE
                     } else {
                         btnEdit.visibility = View.GONE
+                        tvDeadline.text = "You can no longer change your availability."
+                        tvDeadline.visibility = View.VISIBLE
                     }
 
                     // Reset current status if needed
                     if (currentStatus == null) {
                         if (userAvailability != null) {
-                            currentStatus = userAvailability.status ?: AvailabilityStatus.NOT_AVAILABLE
+                            currentStatus =
+                                userAvailability.status ?: AvailabilityStatus.NOT_AVAILABLE
                         }
                     }
 
@@ -317,34 +330,57 @@ class UpcomingMeetingsAdapter :
         private fun setupPreferredRoles(roles: List<String>) {
             binding.apply {
                 cgRoles.removeAllViews()
-                binding.tvRoleInstructions.visibility = View.VISIBLE
-                binding.tvRoleInstructions.text =
-                    "Select your preferred roles in order of priority.\nThe first role you select will be your highest priority."
 
                 if (roles.isEmpty()) {
                     updatePreferredRolesVisibility()
                     return@apply
                 }
 
+                // Get the current meeting
+                val meeting = (itemView.tag as? Meeting) ?: return@apply
+                
+                // Get current user ID from the adapter
+                val currentUserId = this@UpcomingMeetingsAdapter.currentUserId
+                
+                // Group roles by base name (without number)
+                val roleGroups = roles.groupBy { role ->
+                    // Extract base role name (e.g., "Speaker" from "Speaker 1")
+                    role.replace("\\s+\\d+$".toRegex(), "")
+                }
+                
+                // Process each role
                 roles.forEach { role ->
+                    val isAssigned = meeting.assignedRoles[role] != null
+                    val isAssignedToCurrentUser = meeting.assignedRoles[role] == currentUserId
+                    
+                    // If role is assigned to current user, show it as assigned
+                    if (isAssignedToCurrentUser) {
+                        val chip = Chip(itemView.context).apply {
+                            text = "$role (Assigned to you)"
+                            isCheckable = false
+                            isClickable = false
+                            isEnabled = false
+                            alpha = 0.7f
+                            setChipBackgroundColorResource(R.color.chip_background_selected)
+                        }
+                        cgRoles.addView(chip)
+                        return@forEach
+                    }
+                    
+                    // Create chip for the role
                     val chip = Chip(itemView.context).apply {
-                        text = role
-                        isCheckable = true
-                        isClickable = true
+                        text = if (isAssigned) "$role (Assigned by VP)" else role
+                        isCheckable = !isAssigned
+                        isClickable = !isAssigned
+                        isEnabled = !isAssigned
+                        alpha = if (isAssigned) 0.5f else 1.0f
 
                         setOnClickListener {
                             if (selectedRoles.containsKey(role)) {
-                                // If already selected, remove it and update priorities
-                                val removedPriority = selectedRoles.remove(role)!!
-                                // Decrease priorities of roles with higher priority
-                                selectedRoles.entries.forEach { (r, p) ->
-                                    if (p > removedPriority) {
-                                        selectedRoles[r] = p - 1
-                                    }
-                                }
-                                nextPriority--
-                            } else {
-                                // Add new role with next priority
+                                // If already selected, remove it
+                                selectedRoles.remove(role)
+                            } else if (!isAssigned) {
+                                // Add to selected roles with next priority
                                 selectedRoles[role] = nextPriority++
                             }
                             updateRoleChips()

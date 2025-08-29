@@ -12,8 +12,8 @@ data class Meeting(
     val endDateTime: LocalDateTime? = null,
     val location: String = "",
     val theme: String = "",
-    val availableRoles: List<String> = emptyList(),
-    val roleCounts: Map<String, Int> = emptyMap(),
+    val roleCounts: Map<String, Int> = emptyMap(), // e.g. "Speaker" to 2, "General Evaluator" to 2
+    val assignedRoles: Map<String, String> = emptyMap(), // Map of role name to member ID
     val isRecurring: Boolean = false,
     val createdBy: String = "",
     val createdAt: Long = System.currentTimeMillis(),
@@ -23,7 +23,7 @@ data class Meeting(
     val status: MeetingStatus = MeetingStatus.NOT_COMPLETED
 ): Parcelable {
     // For backward compatibility
-    val preferredRoles: List<String> get() = availableRoles
+    val preferredRoles: List<String> get() = roleCounts.keys.toList()
 
     fun toggleEditMode() = copy(isEditMode = !isEditMode)
 }

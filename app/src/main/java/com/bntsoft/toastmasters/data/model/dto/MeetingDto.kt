@@ -13,7 +13,31 @@ data class MeetingDto(
     val endDateTime: LocalDateTime? = null,
     val venue: String = "",
     val theme: String = "No Theme",
-    val preferredRoles: List<String> = emptyList(),
+    val roleCounts: Map<String, Int> = emptyMap(),
     val createdAt: Long = 0,
     val status: MeetingStatus = MeetingStatus.NOT_COMPLETED
-)
+) {
+    constructor(
+        meetingID: String,
+        date: String = "",
+        startTime: String = "",
+        endTime: String = "",
+        venue: String = "",
+        theme: String = "No Theme",
+        roleCounts: Map<String, Int> = emptyMap(),
+        createdAt: Long = 0,
+        status: MeetingStatus = MeetingStatus.NOT_COMPLETED
+    ) : this(
+        meetingID = meetingID,
+        date = date,
+        startTime = startTime,
+        endTime = endTime,
+        dateTime = null,
+        endDateTime = null,
+        venue = venue,
+        theme = theme,
+        roleCounts = roleCounts,
+        createdAt = createdAt,
+        status = status
+    )
+}

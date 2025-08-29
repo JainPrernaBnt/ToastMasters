@@ -127,7 +127,7 @@ class CreateMeetingFragment : Fragment() {
         val endTime = Calendar.getInstance()
 
         // Calculate the base date (next Saturday after last meeting or today)
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             val lastMeetingDate = viewModel.getLastMeetingDate()
             val baseCalendar = if (lastMeetingDate != null) {
                 // Start from the last meeting date
@@ -177,9 +177,9 @@ class CreateMeetingFragment : Fragment() {
             val meetingFormData = MeetingFormData(formBinding, startTime, endTime)
             meetingForms.add(meetingFormData)
 
-            // Add the view to the container after the form data is created
-            activity?.runOnUiThread {
-                binding.meetingFormsContainer.addView(formBinding.root)
+            binding.meetingFormsContainer.addView(formBinding.root)
+            binding.scrollView.post {
+                binding.scrollView.fullScroll(View.FOCUS_DOWN)
             }
         }
 
@@ -201,6 +201,7 @@ class CreateMeetingFragment : Fragment() {
                     showTimePicker(it.startCalendar, startTimeInput)
                 }
             }
+
             endTimeInput.setOnClickListener {
                 val formData = meetingForms.find { it.binding === formBinding }
                 formData?.let {
@@ -457,15 +458,11 @@ class CreateMeetingFragment : Fragment() {
                 roleCounts[role] = roleCounts.getOrDefault(role, 0) + 1
             }
             
-            // Get unique role names for backward compatibility
-            val roles = roleCounts.keys.toList()
-            
             val meeting = Meeting(
                 theme = theme,
                 dateTime = startLocalDateTime,
                 endDateTime = endLocalDateTime,
                 location = venue,
-                availableRoles = roles,
                 roleCounts = roleCounts
             )
             viewModel.createMeeting(meeting, forceCreate)

@@ -22,8 +22,12 @@ class MemberRoleAssignViewModel @Inject constructor(
     private val _roleAssignments = MutableLiveData<List<RoleAssignmentItem>>()
     val roleAssignments: LiveData<List<RoleAssignmentItem>> = _roleAssignments
 
-    private val _assignableRoles = MutableLiveData<List<String>>()
-    val assignableRoles: LiveData<List<String>> = _assignableRoles
+    private val _assignableRoles = MutableLiveData<Map<String, Int>>()
+    val assignableRoles: LiveData<Map<String, Int>> = _assignableRoles
+    
+    // Track role counts and assignments
+    private var roleCounts: Map<String, Int> = emptyMap()
+    private var currentAssignments: Map<String, Int> = emptyMap()
     
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -41,7 +45,7 @@ class MemberRoleAssignViewModel @Inject constructor(
         } else {
             Log.e("MemberRoleAssignVM", "No meetingId provided in savedStateHandle")
             _roleAssignments.value = emptyList()
-            _assignableRoles.value = emptyList()
+            _assignableRoles.value = emptyMap()
         }
     }
 
@@ -54,9 +58,12 @@ class MemberRoleAssignViewModel @Inject constructor(
                 Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Found ${availableMembers.size} available members")
                 
                 // Load assignable roles first
+                // Load meeting roles with counts
                 Log.d("MemberRoleAssignVM", "Fetching meeting roles...")
-                val roles = meetingRepository.getMeetingRoles(meetingId)
-                Log.d("MemberRoleAssignVM", "Found ${roles.size} meeting roles")
+                val meeting = meetingRepository.getMeetingById(meetingId)
+                val roles = meeting?.roleCounts ?: emptyMap()
+                roleCounts = roles
+                Log.d("MemberRoleAssignVM", "Found ${roles.size} meeting roles with counts")
                 _assignableRoles.value = roles
 
                 // Create role assignments for available members
@@ -99,15 +106,20 @@ class MemberRoleAssignViewModel @Inject constructor(
                     // Set isEditable based on whether there's an assigned role
                     val isEditable = assignedRole.isBlank()
 
+                    // Calculate assigned role counts for this member's roles
+                    val assignedRoleCounts = selectedRoles.groupingBy { it }.eachCount()
+                    
                     val roleItem = RoleAssignmentItem(
                         userId = member.id,
                         memberName = member.name,
                         preferredRoles = preferredRoles,
                         recentRoles = emptyList(),
-                        assignableRoles = roles, // Use the loaded meeting roles
+                        assignableRoles = roles.keys.toList(),
                         selectedRoles = selectedRoles,
                         assignedRole = assignedRole,
-                        isEditable = isEditable // Set editable state based on assigned role
+                        isEditable = isEditable,
+                        roleCounts = roles,
+                        assignedRoleCounts = assignedRoleCounts
                     )
                     Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Created RoleAssignmentItem for ${member.name}: " +
                             "assignedRole=$assignedRole, selectedRoles=$selectedRoles, isEditable=$isEditable")
@@ -126,35 +138,157 @@ class MemberRoleAssignViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("MemberRoleAssignVM", "Error loading role assignments: ${e.message}", e)
                 _roleAssignments.value = emptyList()
-                _assignableRoles.value = emptyList()
+                _assignableRoles.value = emptyMap()
             }
+        }
+    }
+
+    fun getAvailableRoles(userId: String): List<RoleDisplayItem> {
+        val currentAssignments = _roleAssignments.value ?: return emptyList()
+        val userAssignment = currentAssignments.find { it.userId == userId } ?: return emptyList()
+        
+        val result = mutableListOf<RoleDisplayItem>()
+        
+        roleCounts.forEach { (baseRole, maxCount) ->
+            // Get all instances of this role that are already assigned
+            val assignedInstances = currentAssignments
+                .flatMap { it.selectedRoles }
+                .filter { it.startsWith(baseRole) }
+                .toSet()
+            
+            // Get all possible instances of this role (e.g., "Speaker 1", "Speaker 2")
+            val allInstances = (1..maxCount).map { "$baseRole $it" }
+            
+            // Find which instances are assigned to the current user
+            val userAssignedInstances = userAssignment.selectedRoles
+                .filter { it.startsWith(baseRole) }
+                .toSet()
+            
+            // Check if this role is in the user's preferred roles
+            val isPreferred = userAssignment.preferredRoles.any { 
+                it.equals(baseRole, ignoreCase = true) || 
+                it.startsWith(baseRole, ignoreCase = true)
+            }
+            
+            if (!isPreferred) return@forEach
+            
+            // Add each role instance to the result
+            allInstances.forEach { roleInstance ->
+                val isAssigned = assignedInstances.contains(roleInstance)
+                val isAssignedToUser = userAssignedInstances.contains(roleInstance)
+                
+                // Only show if it's available or assigned to this user
+                if (!isAssigned || isAssignedToUser) {
+                    val displayName = when {
+                        isAssignedToUser -> "$roleInstance (Assigned to you)"
+                        isAssigned -> "$roleInstance (Assigned to another member)"
+                        else -> roleInstance
+                    }
+                    
+                    result.add(
+                        RoleDisplayItem(
+                            role = roleInstance,
+                            displayName = displayName,
+                            isAvailable = !isAssigned || isAssignedToUser,
+                            isAssignedToUser = isAssignedToUser,
+                            maxCount = maxCount,
+                            remainingSlots = maxCount - assignedInstances.size
+                        )
+                    )
+                }
+            }
+        }
+        
+        // If no roles are available but user has preferred roles, show them with 0 remaining slots
+        if (result.isEmpty() && userAssignment.preferredRoles.isNotEmpty()) {
+            userAssignment.preferredRoles.forEach { preferredRole ->
+                val baseRole = preferredRole.split(" ")[0]
+                val maxCount = roleCounts[baseRole] ?: 0
+                
+                result.add(
+                    RoleDisplayItem(
+                        role = preferredRole,
+                        displayName = "$preferredRole (No slots available)",
+                        isAvailable = false,
+                        isAssignedToUser = false,
+                        maxCount = maxCount,
+                        remainingSlots = 0
+                    )
+                )
+            }
+        }
+        
+        // Sort with user's assigned roles first, then by role name
+        return result.sortedWith(
+            compareByDescending<RoleDisplayItem> { it.isAssignedToUser }
+                .thenBy { it.role }
+        )
+    }
+    
+    fun isRoleAvailable(role: String, userId: String): Boolean {
+        val currentAssignments = _roleAssignments.value ?: return false
+        val maxCount = roleCounts[role] ?: 1
+        val assignedCount = currentAssignments.flatMap { it.selectedRoles }.count { it == role }
+        
+        // Allow if there are available slots or the user already has this role
+        return assignedCount < maxCount || currentAssignments.any { 
+            it.userId == userId && it.selectedRoles.contains(role) 
         }
     }
 
     fun assignRole(userId: String, role: String) {
         Log.d("MemberRoleAssignVM", "Assigning role: $role to user: $userId")
-        _roleAssignments.value = _roleAssignments.value?.map { assignment ->
-            if (assignment.userId == userId) {
-                val updated = assignment.withRoleAdded(role)
-                Log.d("MemberRoleAssignVM", "Role assigned. Updated assignment: $updated")
-                updated
-            } else {
-                // Just return the assignment as-is for other users
-                // Multiple users can have the same role
-                assignment
+        
+        // Get current assignments to check role counts
+        val currentAssignments = _roleAssignments.value ?: return
+        val roleMaxCount = roleCounts[role] ?: 1
+        val currentRoleCount = currentAssignments.flatMap { it.selectedRoles }.count { it == role }
+        
+        if (currentRoleCount >= roleMaxCount) {
+            _errorMessage.value = "All $role slots are already assigned"
+            return
+        }
+        
+        _roleAssignments.value = currentAssignments.map { assignment ->
+            when {
+                assignment.userId == userId -> {
+                    val updated = assignment.withRoleAdded(role)
+                    Log.d("MemberRoleAssignVM", "Role assigned. Updated assignment: $updated")
+                    updated
+                }
+                else -> {
+                    // For other users, update their assigned role counts
+                    val updatedAssignedCounts = assignment.assignedRoleCounts.toMutableMap()
+                    val currentCount = updatedAssignedCounts[role] ?: 0
+                    updatedAssignedCounts[role] = currentCount + 1
+                    assignment.copy(assignedRoleCounts = updatedAssignedCounts)
+                }
             }
         }
     }
 
     fun removeRole(userId: String, role: String) {
         Log.d("MemberRoleAssignVM", "Removing role: $role from user: $userId")
+        
         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
-            if (assignment.userId == userId) {
-                val updated = assignment.withRoleRemoved(role)
-                Log.d("MemberRoleAssignVM", "Role removed. Updated assignment: $updated")
-                updated
-            } else {
-                assignment
+            when {
+                assignment.userId == userId -> {
+                    val updated = assignment.withRoleRemoved(role)
+                    Log.d("MemberRoleAssignVM", "Role removed. Updated assignment: $updated")
+                    updated
+                }
+                else -> {
+                    // For other users, update their assigned role counts
+                    val updatedAssignedCounts = assignment.assignedRoleCounts.toMutableMap()
+                    val currentCount = updatedAssignedCounts[role] ?: 0
+                    if (currentCount > 0) {
+                        updatedAssignedCounts[role] = currentCount - 1
+                        if (updatedAssignedCounts[role] == 0) {
+                            updatedAssignedCounts.remove(role)
+                        }
+                    }
+                    assignment.copy(assignedRoleCounts = updatedAssignedCounts)
+                }
             }
         }
     }
@@ -267,4 +401,17 @@ class MemberRoleAssignViewModel @Inject constructor(
             }
         }
     }
+
+    fun setError(message: String) {
+        _errorMessage.value = message
+    }
+
+    data class RoleDisplayItem(
+        val role: String,
+        val displayName: String,
+        val isAvailable: Boolean,
+        val isAssignedToUser: Boolean,
+        val maxCount: Int,
+        val remainingSlots: Int
+    )
 }

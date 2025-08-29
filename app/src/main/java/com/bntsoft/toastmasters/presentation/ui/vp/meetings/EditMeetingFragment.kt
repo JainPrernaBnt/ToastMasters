@@ -293,7 +293,6 @@ class EditMeetingFragment : Fragment() {
                 endDateTime = endLdt,
                 location = venue,
                 theme = theme,
-                availableRoles = preferredRoles.toList(),
                 isRecurring = current.isRecurring,
                 createdBy = current.createdBy,
                 createdAt = current.createdAt,

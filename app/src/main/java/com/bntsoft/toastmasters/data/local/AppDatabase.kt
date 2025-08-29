@@ -3,6 +3,7 @@ package com.bntsoft.toastmasters.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.bntsoft.toastmasters.data.local.converters.MapConverter
 import com.bntsoft.toastmasters.data.local.converters.MeetingStatusConverter
 import com.bntsoft.toastmasters.data.local.converters.PreferredRoleConverter
 import com.bntsoft.toastmasters.data.local.converters.ReportTypeConverter
@@ -44,7 +45,8 @@ import com.bntsoft.toastmasters.data.local.entity.Winners
 @TypeConverters(
     PreferredRoleConverter::class,
     ReportTypeConverter::class,
-    MeetingStatusConverter::class
+    MeetingStatusConverter::class,
+    MapConverter::class
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun meetingDao(): MeetingDao

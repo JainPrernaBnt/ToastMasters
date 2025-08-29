@@ -70,6 +70,7 @@
 
         <!-- Availability Section -->
         <TextView
+            android:id="@+id/tvYourAvailability"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
@@ -111,6 +112,7 @@
 
         <!-- Preferred Roles Section -->
         <TextView
+            android:id="@+id/tvPreferredRoles"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -147,10 +149,19 @@
             app:singleLine="false"
             app:singleSelection="false">
 
-            <!-- Chips will be added programmatically -->
-
         </com.google.android.material.chip.ChipGroup>
         <!-- Add these inside your CardView's LinearLayout -->
+
+        <TextView
+            android:id="@+id/tvDeadline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            tools:text="You can update your availability until 5:00 PM." />
+
         <TextView
             android:id="@+id/tvAvailabilityStatus"
             android:layout_width="match_parent"
@@ -166,6 +177,7 @@
             android:layout_marginTop="4dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:visibility="gone" />
+
         <!-- Buttons -->
         <LinearLayout
             android:layout_width="match_parent"

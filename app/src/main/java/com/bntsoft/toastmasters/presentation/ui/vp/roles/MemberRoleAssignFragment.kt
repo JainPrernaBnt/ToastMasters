@@ -7,10 +7,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.databinding.FragmentMemberRoleAssignBinding
 import com.bntsoft.toastmasters.presentation.ui.vp.roles.adapter.MemberRoleAssignAdapter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MemberRoleAssignFragment : Fragment() {
@@ -20,6 +24,7 @@ class MemberRoleAssignFragment : Fragment() {
 
     private val viewModel: MemberRoleAssignViewModel by viewModels()
     private lateinit var adapter: MemberRoleAssignAdapter
+    private var currentMeetingId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,9 +39,18 @@ class MemberRoleAssignFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         Log.d("MemberRoleAssignFrag", "onViewCreated: Fragment view created")
 
+        arguments?.let { args ->
+            currentMeetingId = args.getString("meeting_id") ?: ""
+        }
+
+        if (currentMeetingId.isBlank()) {
+            Log.e("MemberRoleAssignFrag", "No meeting ID provided")
+            return@onViewCreated
+        }
+
         setupRecyclerView()
         observeViewModel()
-        viewModel.loadRoleAssignments()
+        viewModel.loadRoleAssignments(currentMeetingId)
 
         // Log the current state
         Log.d("MemberRoleAssignFrag", "View binding root visibility: ${binding.root.visibility}")
@@ -50,11 +64,11 @@ class MemberRoleAssignFragment : Fragment() {
             setCallbacks(
                 onRoleSelected = { userId, role ->
                     Log.d("MemberRoleAssignFrag", "Role selected - UserId: $userId, Role: $role")
-                    viewModel.assignRole(userId, role)
+                    handleRoleSelected(userId, role)
                 },
                 onRoleRemoved = { userId, role ->
                     Log.d("MemberRoleAssignFrag", "Role removed - UserId: $userId, Role: $role")
-                    viewModel.removeRole(userId, role)
+                    handleRoleRemoved(userId, role)
                 },
                 onBackupMemberSelected = { userId, backupMemberId ->
                     Log.d("MemberRoleAssignFrag", "Backup member selected - UserId: $userId, BackupId: $backupMemberId")
@@ -69,7 +83,8 @@ class MemberRoleAssignFragment : Fragment() {
                     viewModel.toggleEditMode(userId, isEditable)
                 }
             )
-            updateAssignableRoles(viewModel.assignableRoles.value ?: emptyList())
+            // Initial setup with empty lists, will be updated in observeViewModel
+            updateAssignableRoles(emptyList())
             updateAvailableMembers(viewModel.availableMembers.value ?: emptyList())
         }
 
@@ -79,44 +94,48 @@ class MemberRoleAssignFragment : Fragment() {
         Log.d("MemberRoleAssignFrag", "RecyclerView setup complete. Adapter: $adapter")
     }
 
+    private fun handleRoleSelected(userId: String, role: String) {
+        viewModel.assignRole(userId, role)
+        // Refresh the role list to update availability
+        val roleItems = viewModel.getAvailableRoles(userId)
+        adapter.updateAssignableRoles(roleItems)
+    }
+
+    private fun handleRoleRemoved(userId: String, role: String) {
+        viewModel.removeRole(userId, role)
+        // Refresh the role list to update availability
+        val roleItems = viewModel.getAvailableRoles(userId)
+        adapter.updateAssignableRoles(roleItems)
+    }
+
     private fun observeViewModel() {
-        Log.d("MemberRoleAssignFrag", "Setting up ViewModel observers")
-
         viewModel.roleAssignments.observe(viewLifecycleOwner) { assignments ->
-            if (assignments == null) {
-                Log.d("MemberRoleAssignFrag", "Role assignments are null. Waiting for data...")
-                return@observe
-            }
-
-            Log.d("MemberRoleAssignFrag", "Role assignments updated. Count: ${assignments.size}")
-            if (assignments.isEmpty()) {
-                Log.d("MemberRoleAssignFrag", "No role assignments received. Check if data is loading or if there was an error.")
-            }
-            adapter.submitList(assignments) {
-                Log.d("MemberRoleAssignFrag", "Adapter list updated. New item count: ${adapter.itemCount}")
-                if (adapter.itemCount == 0) {
-                    Log.d("MemberRoleAssignFrag", "WARNING: Adapter list is empty after submission")
-                }
+            adapter.submitList(assignments)
+            // Update available roles for each user when assignments change
+            assignments.forEach { assignment ->
+                val roleItems = viewModel.getAvailableRoles(assignment.userId)
+                adapter.updateAssignableRoles(roleItems)
             }
         }
 
         viewModel.assignableRoles.observe(viewLifecycleOwner) { roles ->
-            Log.d("MemberRoleAssignFrag", "Assignable roles updated. Count: ${roles.size}")
-            if (roles.isEmpty()) {
-                Log.d("MemberRoleAssignFrag", "WARNING: No assignable roles received")
+            roles?.let { roleMap ->
+                Log.d("MemberRoleAssignFrag", "Assignable roles updated. Count: ${roleMap.size}")
+                // Update roles for all users in the adapter
+                viewModel.roleAssignments.value?.forEach { assignment ->
+                    val availableRoles = viewModel.getAvailableRoles(assignment.userId)
+                    adapter.updateAssignableRoles(availableRoles)
+                }
             }
-            adapter.updateAssignableRoles(roles)
         }
 
         viewModel.availableMembers.observe(viewLifecycleOwner) { members ->
             Log.d("MemberRoleAssignFrag", "Available members updated. Count: ${members.size}")
-            // Update the adapter with the new list of available members
             adapter.updateAvailableMembers(members)
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             error?.let {
-                // Show error message to user
                 android.widget.Toast.makeText(requireContext(), it, android.widget.Toast.LENGTH_LONG).show()
             }
         }

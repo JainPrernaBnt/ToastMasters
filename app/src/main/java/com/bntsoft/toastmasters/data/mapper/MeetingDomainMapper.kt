@@ -48,7 +48,7 @@ class MeetingDomainMapper @Inject constructor() {
             dateTime = dateTime,
             endDateTime = endDateTime,
             location = entity.venue,
-            availableRoles = entity.preferredRoles,
+            roleCounts = entity.roleCounts ?: emptyMap(),
             createdAt = entity.createdAt,
             updatedAt = entity.createdAt, // Using created time as updated time if not available
             status = entity.status
@@ -91,7 +91,7 @@ class MeetingDomainMapper @Inject constructor() {
             dateTime = dateTime,
             endDateTime = endDateTime,
             location = dto.venue,
-            availableRoles = dto.preferredRoles,
+            roleCounts = dto.roleCounts ?: emptyMap(),
             createdAt = dto.createdAt,
             updatedAt = dto.createdAt, // Using created time as updated time if not available
             status = dto.status
@@ -106,7 +106,7 @@ class MeetingDomainMapper @Inject constructor() {
             endTime = meeting.endDateTime?.format(timeFormatter) ?: "",
             venue = meeting.location,
             theme = meeting.theme,
-            preferredRoles = meeting.preferredRoles,
+            roleCounts = meeting.roleCounts,
             createdAt = meeting.createdAt,
             status = meeting.status
         )
@@ -120,7 +120,7 @@ class MeetingDomainMapper @Inject constructor() {
             endTime = meeting.endDateTime?.format(timeFormatter) ?: "",
             venue = meeting.location,
             theme = meeting.theme,
-            preferredRoles = meeting.preferredRoles,
+            roleCounts = meeting.roleCounts,
             createdAt = meeting.createdAt,
             status = meeting.status
         )
