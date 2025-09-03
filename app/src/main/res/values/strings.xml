@@ -372,4 +372,6 @@
     <string name="no_previous_roles">No recent or previous roles</string>
     <string name="no_recent_roles">No recent roles</string>
     <string name="backout">Backout</string>
+    <string name="fill_details">Fill Details</string>
+    <string name="your_name">Name</string>
 </resources>

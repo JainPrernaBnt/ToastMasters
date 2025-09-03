@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.domain.repository
 
+import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
@@ -27,4 +28,9 @@ interface MeetingRepository {
     suspend fun getAssignedRole(meetingId: String, userId: String): String?
     suspend fun getAssignedRoles(meetingId: String, userId: String): List<String>
     suspend fun getAllAssignedRoles(meetingId: String): Map<String, String>
+    
+    // Speaker details
+    suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit>
+    suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails?
+    fun getSpeakerDetailsForMeeting(meetingId: String): Flow<List<SpeakerDetails>>
 }

@@ -23,7 +23,9 @@ class MemberDashboardFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MemberDashboardViewModel by viewModels()
-    private val adapter = MeetingWithRoleAdapter()
+    private val adapter by lazy {
+        MeetingWithRoleAdapter(viewModel, viewModel.currentUserId ?: "")
+    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,14 +69,14 @@ class MemberDashboardFragment : Fragment() {
                     Log.d(TAG, "New UI State: ${state::class.simpleName}")
                     
                     when (state) {
-                        is MemberDashboardUiState.Loading -> {
+                        is MemberDashboardViewModel.MemberDashboardUiState.Loading -> {
                             Log.d(TAG, "Loading data...")
                             showLoading(true)
                             showErrorState(false)
                             showEmptyState(false)
                         }
 
-                        is MemberDashboardUiState.Success -> {
+                        is MemberDashboardViewModel.MemberDashboardUiState.Success -> {
                             Log.d(TAG, "Data loaded successfully. Meetings count: ${state.meetings.size}")
                             showLoading(false)
                             showErrorState(false)
@@ -82,14 +84,14 @@ class MemberDashboardFragment : Fragment() {
                             adapter.submitList(state.meetings)
                         }
 
-                        is MemberDashboardUiState.Empty -> {
+                        is MemberDashboardViewModel.MemberDashboardUiState.Empty -> {
                             Log.d(TAG, "No data available")
                             showLoading(false)
                             showErrorState(false)
                             showEmptyState(true)
                         }
 
-                        is MemberDashboardUiState.Error -> {
+                        is MemberDashboardViewModel.MemberDashboardUiState.Error -> {
                             Log.e(TAG, "Error loading data: ${state.message}")
                             showLoading(false)
                             showEmptyState(false)

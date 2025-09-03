@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.data.remote
 
+import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.utils.Result
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
@@ -35,4 +36,9 @@ interface FirebaseMeetingDataSource {
     suspend fun getAssignedRoles(meetingId: String, userId: String): List<String>
 
     suspend fun getAllAssignedRoles(meetingId: String): Map<String, String>
+    
+    // Speaker details methods
+    suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit>
+    suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails?
+    suspend fun getSpeakerDetailsForMeeting(meetingId: String): List<SpeakerDetails>
 }

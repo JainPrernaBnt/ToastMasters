@@ -106,20 +106,40 @@
                 tools:text="Assigned Role: " />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFillDetails"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/fill_details"
+                android:textAllCaps="false"
+                android:visibility="gone"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_edit"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:iconTint="@color/primary"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvMeetingRole" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAssignRole"
                 style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:text="@string/backout"
                 android:textAllCaps="false"
+                android:visibility="gone"
                 app:cornerRadius="12dp"
                 app:iconGravity="textStart"
                 app:iconPadding="8dp"
                 app:iconTint="@android:color/white"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvMeetingRole"
-                />
+                app:layout_constraintTop_toBottomOf="@id/btnFillDetails"
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.data.remote
 
 import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
+import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.data.model.dto.MeetingDto
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
@@ -234,7 +235,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     override suspend fun getMeetingPreferredRoles(meetingId: String): List<String> {
         return try {
             val document = meetingsCollection.document(meetingId).get().await()
-            val roleCounts = document.get("roleCounts") as? Map<String, *> ?: emptyMap<String, Any>()
+            val roleCounts =
+                document.get("roleCounts") as? Map<String, *> ?: emptyMap<String, Any>()
             roleCounts.keys.toList()
         } catch (e: Exception) {
             Timber.e(e, "Error getting meeting preferred roles")
@@ -313,14 +315,14 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     "theme" to dto.theme,
                     "roleCounts" to dto.roleCounts
                 )
-                
+
                 // Only update assignedCounts if it doesn't exist yet
                 val currentData = document.data ?: emptyMap()
                 if (!currentData.containsKey("assignedCounts")) {
                     // Initialize assignedCounts with all roles set to 0
                     updateMap["assignedCounts"] = dto.roleCounts.mapValues { 0 }
                 }
-                
+
                 document.reference.update(updateMap).await()
                 Result.Success(Unit)
             } else {
@@ -465,21 +467,21 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 if (!snapshot.isEmpty) {
                     // Get the first document (should only be one due to limit(1))
                     val doc = snapshot.documents[0]
-                    
+
                     // First try to get roles as an array
                     val roles = doc.get("roles") as? List<*>
                     if (!roles.isNullOrEmpty()) {
                         Timber.d("Found roles array in legacy location: $roles")
                         return roles.firstOrNull()?.toString()
                     }
-                    
+
                     // Fall back to single role field if array not found
                     val role = doc.getString("role")
                     if (!role.isNullOrEmpty()) {
                         Timber.d("Found single role in legacy location: $role")
                         return role
                     }
-                    
+
                     Timber.d("No role found in legacy location")
                     null
                 } else {
@@ -492,15 +494,22 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             null
         }
     }
-    
+
     override suspend fun getAssignedRoles(meetingId: String, userId: String): List<String> {
         return try {
             val assignedRolesRef = firestore.collection("meetings").document(meetingId)
-                .collection("assignedRoles")
+                .collection("assignedRole")
+                .document(userId)
+                .get()
+                .await()
 
-            val querySnapshot = assignedRolesRef.whereEqualTo("userId", userId).get().await()
-
-            querySnapshot.documents.map { it.id }
+            if (assignedRolesRef.exists()) {
+                // Get the roles from the document data
+                val roles = assignedRolesRef.get("roles") as? List<*>
+                roles?.filterIsInstance<String>() ?: emptyList()
+            } else {
+                emptyList()
+            }
         } catch (e: Exception) {
             Timber.e(e, "Error getting assigned roles for user $userId in meeting $meetingId")
             emptyList()
@@ -509,17 +518,70 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     override suspend fun getAllAssignedRoles(meetingId: String): Map<String, String> {
         return try {
-            val assignedRolesRef = firestore.collection("meetings").document(meetingId)
-                .collection("assignedRoles")
+            val assignedRolesRef = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
 
             val querySnapshot = assignedRolesRef.get().await()
 
-            querySnapshot.documents.associate {
-                it.id to (it.getString("userId") ?: "")
-            }
+            querySnapshot.documents.flatMap { doc ->
+                val userId = doc.id
+                val roles = doc.get("roles") as? List<*> ?: emptyList<Any>()
+                roles.filterIsInstance<String>().map { role -> role to userId }
+            }.toMap()
         } catch (e: Exception) {
             Timber.e(e, "Error getting all assigned roles for meeting $meetingId")
             emptyMap()
+        }
+    }
+
+    override suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit> {
+        return try {
+            val speakerRef = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("speakerDetails")
+                .document(userId)
+
+            speakerRef.set(speakerDetails).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Error saving speaker details for user $userId in meeting $meetingId")
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails? {
+        return try {
+            val doc = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("speakerDetails")
+                .document(userId)
+                .get()
+                .await()
+
+            if (doc.exists()) {
+                doc.toObject(SpeakerDetails::class.java)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting speaker details for user $userId in meeting $meetingId")
+            null
+        }
+    }
+
+    override suspend fun getSpeakerDetailsForMeeting(meetingId: String): List<SpeakerDetails> {
+        return try {
+            val snapshot = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("speakerDetails")
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { it.toObject(SpeakerDetails::class.java) }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting speaker details for meeting $meetingId")
+            emptyList()
         }
     }
 

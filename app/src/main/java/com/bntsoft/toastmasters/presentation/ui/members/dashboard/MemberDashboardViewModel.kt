@@ -1,10 +1,13 @@
 package com.bntsoft.toastmasters.presentation.ui.members.dashboard
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.domain.model.MeetingWithRole
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.utils.Result
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -13,8 +16,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.util.Log
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -26,8 +29,20 @@ class MemberDashboardViewModel @Inject constructor(
 ) : ViewModel() {
     private val TAG = "MemberDashboardVM"
 
+    val currentUserId: String?
+        get() = auth.currentUser?.uid
+
     private val _uiState = MutableStateFlow<MemberDashboardUiState>(MemberDashboardUiState.Loading)
     val uiState: StateFlow<MemberDashboardUiState> = _uiState.asStateFlow()
+    
+    private val _speakerDetailsState = MutableStateFlow(SpeakerDetailsState())
+    val speakerDetailsState = _speakerDetailsState.asStateFlow()
+    
+    data class SpeakerDetailsState(
+        val speakerDetails: Map<String, SpeakerDetails> = emptyMap(),
+        val isLoading: Boolean = false,
+        val error: String? = null
+    )
 
     init {
         Log.d(TAG, "ViewModel initialized")
@@ -63,7 +78,8 @@ class MemberDashboardViewModel @Inject constructor(
                 val meetingsWithRolesResult = meetings.map { meeting ->
                     async {
                         try {
-                            val roles = meetingRepository.getAssignedRoles(meeting.id, currentUser.uid)
+                            val roles =
+                                meetingRepository.getAssignedRoles(meeting.id, currentUser.uid)
                             if (roles.isNotEmpty()) {
                                 MeetingWithRole(
                                     meeting = meeting,
@@ -83,20 +99,153 @@ class MemberDashboardViewModel @Inject constructor(
                     _uiState.value = MemberDashboardUiState.Empty
                 } else {
                     val sortedMeetings = meetingsWithRolesResult.sortedBy { it.meeting.dateTime }
-                    Log.d(TAG, "Successfully loaded ${sortedMeetings.size} meetings with assigned roles")
+                    Log.d(
+                        TAG,
+                        "Successfully loaded ${sortedMeetings.size} meetings with assigned roles"
+                    )
                     _uiState.value = MemberDashboardUiState.Success(sortedMeetings)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading assigned meetings: ${e.message}", e)
-                _uiState.value = MemberDashboardUiState.Error("Failed to load meetings: ${e.message}")
+                _uiState.value =
+                    MemberDashboardUiState.Error("Failed to load meetings: ${e.message}")
             }
         }
     }
-}
 
-sealed class MemberDashboardUiState {
-    object Loading : MemberDashboardUiState()
-    object Empty : MemberDashboardUiState()
-    data class Success(val meetings: List<MeetingWithRole>) : MemberDashboardUiState()
-    data class Error(val message: String) : MemberDashboardUiState()
+    fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails) {
+        viewModelScope.launch {
+            _speakerDetailsState.update { it.copy(isLoading = true, error = null) }
+            try {
+                when (val result =
+                    meetingRepository.saveSpeakerDetails(meetingId, userId, speakerDetails)) {
+                    is Result.Success -> {
+                        // Update the local state with the new details
+                        val currentDetails =
+                            _speakerDetailsState.value.speakerDetails.toMutableMap()
+                        currentDetails[userId] = speakerDetails
+                        _speakerDetailsState.update {
+                            it.copy(
+                                isLoading = false,
+                                speakerDetails = currentDetails
+                            )
+                        }
+                        // Also update the UI state if needed
+                        updateUiStateWithSpeakerDetails(currentDetails)
+                    }
+
+                    is Result.Error -> {
+                        _speakerDetailsState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = result.exception.message ?: "Failed to save speaker details"
+                            )
+                        }
+                    }
+
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                _speakerDetailsState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "An unexpected error occurred"
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadSpeakerDetails(meetingId: String, userId: String) {
+        viewModelScope.launch {
+            _speakerDetailsState.update { currentState -> 
+                currentState.copy(isLoading = true, error = null) 
+            }
+            try {
+                val details = meetingRepository.getSpeakerDetails(meetingId, userId)
+                if (details != null) {
+                    val currentDetails = _speakerDetailsState.value.speakerDetails.toMutableMap<String, SpeakerDetails>()
+                    currentDetails[userId] = details
+                    val newState = _speakerDetailsState.value.copy(
+                        isLoading = false,
+                        speakerDetails = currentDetails
+                    )
+                    _speakerDetailsState.value = newState
+                    updateUiStateWithSpeakerDetails(currentDetails)
+                } else {
+                    _speakerDetailsState.update { it.copy(isLoading = false) }
+                }
+            } catch (e: Exception) {
+                _speakerDetailsState.update { currentState ->
+                    currentState.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load speaker details"
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadAllSpeakerDetailsForMeeting(meetingId: String) {
+        viewModelScope.launch {
+            _speakerDetailsState.update { currentState ->
+                currentState.copy(isLoading = true, error = null)
+            }
+            try {
+                meetingRepository.getSpeakerDetailsForMeeting(meetingId).collect { detailsList ->
+                    val detailsMap = detailsList.associateBy { it.userId }
+                    val newState = _speakerDetailsState.value.copy(
+                        isLoading = false,
+                        speakerDetails = detailsMap
+                    )
+                    _speakerDetailsState.value = newState
+                    updateUiStateWithSpeakerDetails(detailsMap)
+                }
+            } catch (e: Exception) {
+                _speakerDetailsState.update { currentState ->
+                    currentState.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load speaker details"
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearError() {
+        _speakerDetailsState.update { it.copy(error = null) }
+    }
+
+    suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails? {
+        return try {
+            meetingRepository.getSpeakerDetails(meetingId, userId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting speaker details", e)
+            null
+        }
+    }
+
+    private fun updateUiStateWithSpeakerDetails(details: Map<String, SpeakerDetails>) {
+        _uiState.update { currentState ->
+            if (currentState is MemberDashboardUiState.Success) {
+                // Create a new Success state with updated speaker details
+                MemberDashboardUiState.Success(
+                    meetings = currentState.meetings,
+                    speakerDetails = details
+                )
+            } else {
+                currentState
+            }
+        }
+    }
+
+    sealed class MemberDashboardUiState {
+        object Loading : MemberDashboardUiState()
+        object Empty : MemberDashboardUiState()
+        data class Success(
+            val meetings: List<MeetingWithRole>,
+            val speakerDetails: Map<String, SpeakerDetails> = emptyMap()
+        ) : MemberDashboardUiState()
+        data class Error(val message: String) : MemberDashboardUiState()
+    }
 }

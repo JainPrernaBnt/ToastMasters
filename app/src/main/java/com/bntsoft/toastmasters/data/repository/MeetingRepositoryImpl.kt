@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.data.repository
 
+import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
@@ -11,6 +12,7 @@ import com.bntsoft.toastmasters.utils.Resource
 import com.bntsoft.toastmasters.utils.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.time.LocalDate
@@ -205,6 +207,35 @@ class MeetingRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error getting assigned roles for user $userId in meeting $meetingId")
             emptyList()
+        }
+    }
+    
+    override suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit> {
+        return try {
+            firebaseDataSource.saveSpeakerDetails(meetingId, userId, speakerDetails)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Error saving speaker details for user $userId in meeting $meetingId")
+            Result.Error(e)
+        }
+    }
+    
+    override suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails? {
+        return try {
+            firebaseDataSource.getSpeakerDetails(meetingId, userId)
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting speaker details for user $userId in meeting $meetingId")
+            null
+        }
+    }
+    
+    override fun getSpeakerDetailsForMeeting(meetingId: String): Flow<List<SpeakerDetails>> = flow {
+        try {
+            val details = firebaseDataSource.getSpeakerDetailsForMeeting(meetingId)
+            emit(details)
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting speaker details for meeting $meetingId")
+            emit(emptyList())
         }
     }
 
