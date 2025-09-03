@@ -6,13 +6,14 @@ data class RoleAssignmentItem(
     val preferredRoles: List<String> = emptyList(),
     val recentRoles: List<String> = emptyList(),
     val assignableRoles: List<String> = emptyList(),
-    val selectedRoles: MutableList<String> = mutableListOf(),
+    var selectedRoles: MutableList<String> = mutableListOf(),
     val assignedRole: String = "",
     val backupMemberId: String = "",
     val backupMemberName: String = "",
     val isEditable: Boolean = false,
     val roleCounts: Map<String, Int> = emptyMap(),
-    val assignedRoleCounts: Map<String, Int> = emptyMap()
+    val assignedRoleCounts: Map<String, Int> = emptyMap(),
+    val allAssignedRoles: Map<String, String> = emptyMap()
 ) {
     fun copyWithEditMode(editable: Boolean): RoleAssignmentItem {
         val newSelectedRoles = if (editable && selectedRoles.isEmpty() && assignedRole.isNotBlank()) {
@@ -26,20 +27,20 @@ data class RoleAssignmentItem(
             selectedRoles = newSelectedRoles
         )
     }
-    
-    /**
-     * Creates a copy of this item with the specified role removed
-     */
+
     fun withRoleRemoved(role: String): RoleAssignmentItem {
         val updatedRoles = selectedRoles.toMutableList().apply { remove(role) }
         
-        // Update assigned role counts
+        // Get the base role name (e.g., "Speaker" from "Speaker 1")
+        val baseRole = role.split(" ")[0]
+        
+        // Update assigned role counts using base role name
         val updatedAssignedCounts = assignedRoleCounts.toMutableMap()
-        val currentCount = updatedAssignedCounts[role] ?: 0
+        val currentCount = updatedAssignedCounts[baseRole] ?: 0
         if (currentCount > 0) {
-            updatedAssignedCounts[role] = currentCount - 1
-            if (updatedAssignedCounts[role] == 0) {
-                updatedAssignedCounts.remove(role)
+            updatedAssignedCounts[baseRole] = currentCount - 1
+            if (updatedAssignedCounts[baseRole] == 0) {
+                updatedAssignedCounts.remove(baseRole)
             }
         }
         
@@ -54,19 +55,19 @@ data class RoleAssignmentItem(
             assignedRoleCounts = updatedAssignedCounts
         )
     }
-    
-    /**
-     * Creates a copy of this item with the specified role added
-     */
+
     fun withRoleAdded(role: String): RoleAssignmentItem {
         val updatedRoles = selectedRoles.toMutableList().apply { 
             if (!contains(role)) add(role) 
         }
         
-        // Update assigned role counts
+        // Get the base role name (e.g., "Speaker" from "Speaker 1")
+        val baseRole = role.split(" ")[0]
+        
+        // Update assigned role counts using base role name
         val updatedAssignedCounts = assignedRoleCounts.toMutableMap()
-        val currentCount = updatedAssignedCounts[role] ?: 0
-        updatedAssignedCounts[role] = currentCount + 1
+        val currentCount = updatedAssignedCounts[baseRole] ?: 0
+        updatedAssignedCounts[baseRole] = currentCount + 1
         
         return this.copy(
             selectedRoles = updatedRoles,
@@ -74,31 +75,30 @@ data class RoleAssignmentItem(
             assignedRoleCounts = updatedAssignedCounts
         )
     }
-    
-    /**
-     * Check if a role can be assigned based on available slots
-     */
+
     fun canAssignRole(role: String): Boolean {
         val maxCount = roleCounts[role] ?: 1 // Default to 1 if no count specified
         val assignedCount = assignedRoleCounts[role] ?: 0
         return assignedCount < maxCount
     }
-    
-    /**
-     * Get the remaining slots for a role
-     */
+
     fun getRemainingSlots(role: String): Int {
         val maxCount = roleCounts[role] ?: 1 // Default to 1 if no count specified
         val assignedCount = assignedRoleCounts[role] ?: 0
         return maxOf(0, maxCount - assignedCount)
     }
-    
-    /**
-     * Get display name for a role with count info (e.g., "Speaker (1/2)")
-     */
+
     fun getRoleDisplayName(role: String): String {
-        val maxCount = roleCounts[role] ?: return role
-        val assignedCount = assignedRoleCounts[role] ?: 0
-        return if (maxCount > 1) "$role (${assignedCount + 1}/$maxCount)" else role
+        // Get the base role name (e.g., "Speaker" from "Speaker 1")
+        val baseRole = role.split(" ")[0]
+        val maxCount = roleCounts[baseRole] ?: return role
+        
+        // Get the count of currently assigned instances of this role
+        val assignedCount = assignedRoleCounts[baseRole] ?: 0
+        return if (maxCount > 1) {
+            "$role (${assignedCount}/$maxCount)"
+        } else {
+            role
+        }
     }
 }

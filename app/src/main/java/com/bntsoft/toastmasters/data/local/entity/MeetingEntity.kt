@@ -18,6 +18,7 @@ data class MeetingEntity(
     val venue: String,
     val theme: String,
     val roleCounts: Map<String, Int>,
+    val assignedCounts: Map<String, Int>,
     val createdAt: Long,
     val status: MeetingStatus
 )

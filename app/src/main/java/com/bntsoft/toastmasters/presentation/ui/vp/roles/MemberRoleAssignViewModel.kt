@@ -66,6 +66,8 @@ class MemberRoleAssignViewModel @Inject constructor(
                 Log.d("MemberRoleAssignVM", "Found ${roles.size} meeting roles with counts")
                 _assignableRoles.value = roles
 
+                val allAssignedRoles = meetingRepository.getAllAssignedRoles(meetingId)
+
                 // Create role assignments for available members
                 val assignments = availableMembers.map { member ->
                     // Get preferred roles for this member
@@ -84,31 +86,26 @@ class MemberRoleAssignViewModel @Inject constructor(
                         emptyList<String>()
                     }
 
-                    // Get assigned role for this member if any
-                    val assignedRole = try {
-                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Checking assigned role for member: ${member.name} (${member.id})")
-                        val role = meetingRepository.getAssignedRole(meetingId, member.id)
-                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Assigned role for ${member.name}: $role")
-                        role ?: ""
+                    // Get assigned roles for this member if any
+                    val selectedRoles = try {
+                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Checking assigned roles for member: ${member.name} (${member.id})")
+                        val roles = meetingRepository.getAssignedRoles(meetingId, member.id)
+                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Assigned roles for ${member.name}: $roles")
+                        roles.toMutableList()
                     } catch (e: Exception) {
-                        Log.e("MemberRoleAssignVM", "Error getting assigned role for ${member.name}: ${e.message}")
-                        ""
+                        Log.e("MemberRoleAssignVM", "Error getting assigned roles for ${member.name}: ${e.message}")
+                        mutableListOf<String>()
                     }
 
-                    val selectedRoles = if (assignedRole.isNotBlank()) {
-                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Member ${member.name} has role: $assignedRole")
-                        mutableListOf(assignedRole)
-                    } else {
-                        Log.d("MemberRoleAssignVM", "[loadRoleAssignments] No role assigned for ${member.name}")
-                        mutableListOf()
-                    }
-                    
-                    // Set isEditable based on whether there's an assigned role
-                    val isEditable = assignedRole.isBlank()
+                    // The primary assigned role can be the first in the list, or empty if none are assigned
+                    val assignedRole = selectedRoles.firstOrNull() ?: ""
+
+                    // Set isEditable based on whether there are any assigned roles
+                    val isEditable = selectedRoles.isEmpty()
 
                     // Calculate assigned role counts for this member's roles
                     val assignedRoleCounts = selectedRoles.groupingBy { it }.eachCount()
-                    
+
                     val roleItem = RoleAssignmentItem(
                         userId = member.id,
                         memberName = member.name,
@@ -119,7 +116,8 @@ class MemberRoleAssignViewModel @Inject constructor(
                         assignedRole = assignedRole,
                         isEditable = isEditable,
                         roleCounts = roles,
-                        assignedRoleCounts = assignedRoleCounts
+                        assignedRoleCounts = assignedRoleCounts,
+                        allAssignedRoles = allAssignedRoles
                     )
                     Log.d("MemberRoleAssignVM", "[loadRoleAssignments] Created RoleAssignmentItem for ${member.name}: " +
                             "assignedRole=$assignedRole, selectedRoles=$selectedRoles, isEditable=$isEditable")
@@ -244,7 +242,7 @@ class MemberRoleAssignViewModel @Inject constructor(
         val roleMaxCount = roleCounts[role] ?: 1
         val currentRoleCount = currentAssignments.flatMap { it.selectedRoles }.count { it == role }
         
-        if (currentRoleCount >= roleMaxCount) {
+        if (currentRoleCount > roleMaxCount) {
             _errorMessage.value = "All $role slots are already assigned"
             return
         }
@@ -327,20 +325,6 @@ class MemberRoleAssignViewModel @Inject constructor(
             }
         }
     }
-    
-    fun loadRoleAssignments() {
-        viewModelScope.launch {
-            try {
-                // Load your assignments here
-                // After loading, ensure all assignments are in read-only mode initially
-                _roleAssignments.value = _roleAssignments.value?.map { 
-                    it.copyWithEditMode(false)
-                }
-            } catch (e: Exception) {
-                // Handle error
-            }
-        }
-    }
 
     fun saveRoleAssignments() {
         viewModelScope.launch {
@@ -400,10 +384,6 @@ class MemberRoleAssignViewModel @Inject constructor(
                 _errorMessage.value = "Error saving role assignments: ${e.message}"
             }
         }
-    }
-
-    fun setError(message: String) {
-        _errorMessage.value = message
     }
 
     data class RoleDisplayItem(

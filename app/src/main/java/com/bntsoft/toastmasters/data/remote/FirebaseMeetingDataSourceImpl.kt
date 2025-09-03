@@ -100,7 +100,14 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                                 } catch (e: Exception) {
                                     com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED
                                 }
-                            } ?: com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED
+                            } ?: com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED,
+                            assignedCounts = (document.get("assignedCounts") as? Map<String, *>)?.mapValues { (_, value) ->
+                                when (value) {
+                                    is Long -> value.toInt()
+                                    is Int -> value
+                                    else -> 0
+                                }
+                            } ?: emptyMap()
                         )
 
                         Timber.d("Mapped meeting in getAllMeetings: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime}")
@@ -169,7 +176,14 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                                 } catch (e: Exception) {
                                     com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED
                                 }
-                            } ?: com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED
+                            } ?: com.bntsoft.toastmasters.domain.models.MeetingStatus.NOT_COMPLETED,
+                            assignedCounts = (document.get("assignedCounts") as? Map<String, *>)?.mapValues { (_, value) ->
+                                when (value) {
+                                    is Long -> value.toInt()
+                                    is Int -> value
+                                    else -> 0
+                                }
+                            } ?: emptyMap()
                         )
 
                         Timber.d("Mapped meeting: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime} (${dto.dateTime} to ${dto.endDateTime})")
@@ -262,6 +276,10 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 "venue" to dto.venue,
                 "theme" to dto.theme,
                 "roleCounts" to dto.roleCounts,
+                "assignedCounts" to dto.assignedCounts.ifEmpty {
+                    // Initialize with all roles set to 0
+                    dto.roleCounts.mapValues { 0 }
+                },
                 "createdAt" to dto.createdAt,
                 "status" to dto.status.name
             )
@@ -287,16 +305,23 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             val document = query.documents.firstOrNull()
 
             if (document != null) {
-                document.reference.update(
-                    mapOf(
-                        "date" to dto.date,
-                        "startTime" to dto.startTime,
-                        "endTime" to dto.endTime,
-                        "venue" to dto.venue,
-                        "theme" to dto.theme,
-                        "roleCounts" to dto.roleCounts
-                    )
-                ).await()
+                val updateMap = mutableMapOf<String, Any>(
+                    "date" to dto.date,
+                    "startTime" to dto.startTime,
+                    "endTime" to dto.endTime,
+                    "venue" to dto.venue,
+                    "theme" to dto.theme,
+                    "roleCounts" to dto.roleCounts
+                )
+                
+                // Only update assignedCounts if it doesn't exist yet
+                val currentData = document.data ?: emptyMap()
+                if (!currentData.containsKey("assignedCounts")) {
+                    // Initialize assignedCounts with all roles set to 0
+                    updateMap["assignedCounts"] = dto.roleCounts.mapValues { 0 }
+                }
+                
+                document.reference.update(updateMap).await()
                 Result.Success(Unit)
             } else {
                 Result.Error(NoSuchElementException("Meeting not found"))
@@ -350,36 +375,59 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         assignments: List<RoleAssignmentItem>
     ): Result<Unit> {
         return try {
-            val batch = firestore.batch()
-            val meetingRef = firestore.collection("meetings").document(meetingId) 
+            val meetingRef = firestore.collection("meetings").document(meetingId)
+            val assignedRolesRef = meetingRef.collection("assignedRole")
 
-            // Process each assignment
-            assignments.forEach { assignment ->
-                // Get the selected roles (now supporting multiple roles)
-                val roles = assignment.selectedRoles.toList()
-                
-                // Save to the assignedRole subcollection
-                val assignedRoleRef = meetingRef
-                    .collection("assignedRole")
-                    .document(assignment.userId)
-                
-                if (roles.isNotEmpty()) {
-                    // Save roles as an array in assignedRole subcollection
-                    val roleData = hashMapOf<String, Any>(
-                        "roles" to roles,  // Always save as array
-                        "primaryRole" to roles.first(),  // Keep first role as primary for backward compatibility
-                        "memberName" to assignment.memberName,
-                        "assignedAt" to FieldValue.serverTimestamp(),
-                        "updatedAt" to FieldValue.serverTimestamp()
-                    )
-                    batch.set(assignedRoleRef, roleData)
-                } else {
-                    // If no roles are selected, remove from assignedRole
-                    batch.delete(assignedRoleRef)
+            // Suspend call: Fetch documents to delete (outside transaction)
+            val userIds = assignments.map { it.userId }.distinct()
+            val existingDocs = if (userIds.isNotEmpty()) {
+                assignedRolesRef.whereIn("userId", userIds).get().await()
+            } else null
+
+            firestore.runTransaction { transaction ->
+                // Get current meeting data
+                val meetingDoc = transaction.get(meetingRef)
+                val currentAssignedCounts =
+                    (meetingDoc.get("assignedCounts") as? Map<*, *> ?: emptyMap<String, Int>())
+                        .mapValues { (_, value) -> (value as? Number)?.toInt() ?: 0 }
+                        .toMutableMap()
+
+                // Delete old assignments (no await, we already queried above)
+                existingDocs?.documents?.forEach { doc ->
+                    transaction.delete(doc.reference)
                 }
-            }
 
-            batch.commit().await()
+                // Add new assignments
+                assignments.forEach { assignment ->
+                    assignment.selectedRoles.forEach { role ->
+                        val roleDocRef = assignedRolesRef.document(role)
+                        val roleData = mapOf(
+                            "userId" to assignment.userId,
+                            "memberName" to assignment.memberName,
+                            "assignedAt" to FieldValue.serverTimestamp()
+                        )
+                        transaction.set(roleDocRef, roleData)
+                    }
+                }
+
+                // Update assignedCounts atomically
+                val allAssignedRoles =
+                    assignments.flatMap { it.selectedRoles }.groupingBy { it }.eachCount()
+                val updatedAssignedCounts = currentAssignedCounts.toMutableMap()
+                currentAssignedCounts.keys.forEach { role ->
+                    if (allAssignedRoles[role] == null) {
+                        updatedAssignedCounts[role] = 0
+                    }
+                }
+                allAssignedRoles.forEach { (role, count) ->
+                    updatedAssignedCounts[role] = count
+                }
+
+                transaction.update(meetingRef, "assignedCounts", updatedAssignedCounts)
+
+                null
+            }.await()
+
             Result.Success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Error saving role assignments for meeting: $meetingId")
@@ -390,28 +438,20 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     override suspend fun getAssignedRole(meetingId: String, userId: String): String? {
         return try {
             // First check the assigned roles collection
-            val assignedRoleDoc = firestore
+            val assignedRoleQuery = firestore
                 .collection("meetings")
                 .document(meetingId)
-                .collection("assignedRole")
-                .document(userId)
+                .collection("assignedRole") // Corrected subcollection name
+                .whereEqualTo("userId", userId)
+                .limit(1)
                 .get()
                 .await()
 
-            if (assignedRoleDoc.exists()) {
-                // First try to get roles as an array (preferred format)
-                val roles = assignedRoleDoc.get("roles") as? List<*>
-                if (!roles.isNullOrEmpty()) {
-                    // Return the first role from the array
-                    val role = roles.first()?.toString()
-                    Timber.d("Found assigned roles array in assignedRole subcollection: $roles. Using first role: $role")
-                    return role
-                }
-                
-                // Fall back to single role field for backward compatibility
-                val role = assignedRoleDoc.getString("role")
-                Timber.d("Found single assigned role in assignedRole subcollection: $role")
-                return role
+            val assignedRoleDoc = assignedRoleQuery.documents.firstOrNull()
+
+            if (assignedRoleDoc?.exists() == true) {
+                // The document ID is the role name
+                return assignedRoleDoc.id
             } else {
                 // Fallback to checking the old location for backward compatibility
                 val snapshot = firestore
@@ -455,67 +495,31 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     
     override suspend fun getAssignedRoles(meetingId: String, userId: String): List<String> {
         return try {
-            // First check the assigned roles collection
-            val assignedRoleDoc = firestore
-                .collection("meetings")
-                .document(meetingId)
-                .collection("assignedRole")
-                .document(userId)
-                .get()
-                .await()
+            val assignedRolesRef = firestore.collection("meetings").document(meetingId)
+                .collection("assignedRoles")
 
-            if (assignedRoleDoc.exists()) {
-                // First try to get roles as an array (preferred format)
-                val roles = assignedRoleDoc.get("roles") as? List<*>
-                if (!roles.isNullOrEmpty()) {
-                    val roleStrings = roles.mapNotNull { it?.toString() }.filter { it.isNotBlank() }
-                    Timber.d("Found assigned roles array in assignedRole subcollection: $roleStrings")
-                    return roleStrings
-                }
-                
-                // Fall back to single role field for backward compatibility
-                val role = assignedRoleDoc.getString("role")?.takeIf { it.isNotBlank() }
-                if (role != null) {
-                    Timber.d("Found single assigned role in assignedRole subcollection: $role")
-                    return listOf(role)
-                }
-            }
-            
-            // Fallback to checking the old location for backward compatibility
-            val snapshot = firestore
-                .collection(ROLE_ASSIGNMENTS_COLLECTION)
-                .whereEqualTo("meetingId", meetingId)
-                .whereEqualTo("userId", userId)
-                .limit(1)
-                .get()
-                .await()
+            val querySnapshot = assignedRolesRef.whereEqualTo("userId", userId).get().await()
 
-            if (!snapshot.isEmpty) {
-                // Get the first document (should only be one due to limit(1))
-                val doc = snapshot.documents[0]
-                
-                // First try to get roles as an array
-                val roles = doc.get("roles") as? List<*>
-                if (!roles.isNullOrEmpty()) {
-                    val roleStrings = roles.mapNotNull { it?.toString() }.filter { it.isNotBlank() }
-                    Timber.d("Found roles array in legacy location: $roleStrings")
-                    return roleStrings
-                }
-                
-                // Fall back to single role field if array not found
-                val role = doc.getString("role")?.takeIf { it.isNotBlank() }
-                if (role != null) {
-                    Timber.d("Found single role in legacy location: $role")
-                    return listOf(role)
-                }
-            }
-            
-            Timber.d("No roles found for user $userId in meeting $meetingId")
-            emptyList()
-            
+            querySnapshot.documents.map { it.id }
         } catch (e: Exception) {
             Timber.e(e, "Error getting assigned roles for user $userId in meeting $meetingId")
             emptyList()
+        }
+    }
+
+    override suspend fun getAllAssignedRoles(meetingId: String): Map<String, String> {
+        return try {
+            val assignedRolesRef = firestore.collection("meetings").document(meetingId)
+                .collection("assignedRoles")
+
+            val querySnapshot = assignedRolesRef.get().await()
+
+            querySnapshot.documents.associate {
+                it.id to (it.getString("userId") ?: "")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting all assigned roles for meeting $meetingId")
+            emptyMap()
         }
     }
 

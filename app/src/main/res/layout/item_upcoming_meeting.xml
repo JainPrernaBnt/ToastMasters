@@ -140,17 +140,31 @@
             android:visibility="gone"
             tools:visibility="visible" />
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/cgRoles"
+        <HorizontalScrollView
+            android:id="@+id/rolesScrollView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:selectionRequired="false"
-            app:singleLine="false"
-            app:singleSelection="false">
+            android:scrollbars="none"
+            android:fillViewport="true"
+            android:visibility="visible">
 
-        </com.google.android.material.chip.ChipGroup>
-        <!-- Add these inside your CardView's LinearLayout -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cgRoles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:minHeight="48dp"
+                android:padding="8dp"
+                android:orientation="horizontal"
+                android:visibility="visible"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
+                app:selectionRequired="false"
+                app:singleLine="false"
+                app:singleSelection="false" />
+
+        </HorizontalScrollView>
 
         <TextView
             android:id="@+id/tvDeadline"

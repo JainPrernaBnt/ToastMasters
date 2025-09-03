@@ -141,9 +141,9 @@ class UpcomingMeetingsAdapter :
                     }
                 } else {
                     // Read-only view - show current status and edit button if allowed
+                    displayRoleStatus(meeting) // Display role status chips
                     rgAvailability.visibility = View.GONE
                     btnSubmit.visibility = View.GONE
-                    cgRoles.visibility = View.GONE
                     tvAvailabilityStatus.visibility = View.VISIBLE
                     tvRoleInstructions.visibility = View.GONE
                     tvYourAvailability.visibility = View.GONE
@@ -248,8 +248,6 @@ class UpcomingMeetingsAdapter :
                     updatePreferredRolesVisibility()
                 }
 
-                // Setup preferred roles
-                setupPreferredRoles(meeting.preferredRoles)
 
                 // Setup submit button
                 btnSubmit.setOnClickListener {
@@ -336,55 +334,31 @@ class UpcomingMeetingsAdapter :
                     return@apply
                 }
 
-                // Get the current meeting
                 val meeting = (itemView.tag as? Meeting) ?: return@apply
-                
-                // Get current user ID from the adapter
-                val currentUserId = this@UpcomingMeetingsAdapter.currentUserId
-                
-                // Group roles by base name (without number)
-                val roleGroups = roles.groupBy { role ->
-                    // Extract base role name (e.g., "Speaker" from "Speaker 1")
-                    role.replace("\\s+\\d+$".toRegex(), "")
-                }
-                
-                // Process each role
-                roles.forEach { role ->
-                    val isAssigned = meeting.assignedRoles[role] != null
-                    val isAssignedToCurrentUser = meeting.assignedRoles[role] == currentUserId
-                    
-                    // If role is assigned to current user, show it as assigned
-                    if (isAssignedToCurrentUser) {
-                        val chip = Chip(itemView.context).apply {
-                            text = "$role (Assigned to you)"
-                            isCheckable = false
-                            isClickable = false
-                            isEnabled = false
-                            alpha = 0.7f
-                            setChipBackgroundColorResource(R.color.chip_background_selected)
-                        }
-                        cgRoles.addView(chip)
-                        return@forEach
-                    }
-                    
-                    // Create chip for the role
-                    val chip = Chip(itemView.context).apply {
-                        text = if (isAssigned) "$role (Assigned by VP)" else role
-                        isCheckable = !isAssigned
-                        isClickable = !isAssigned
-                        isEnabled = !isAssigned
-                        alpha = if (isAssigned) 0.5f else 1.0f
+                val roleCounts = meeting.roleCounts ?: return
+                val assignedCounts = meeting.assignedCounts ?: emptyMap()
 
-                        setOnClickListener {
-                            if (selectedRoles.containsKey(role)) {
-                                // If already selected, remove it
-                                selectedRoles.remove(role)
-                            } else if (!isAssigned) {
-                                // Add to selected roles with next priority
-                                selectedRoles[role] = nextPriority++
+                roleCounts.forEach { (baseRole, totalCount) ->
+                    val assigned = assignedCounts.filterKeys { it.startsWith(baseRole) }.values.sum()
+
+                    val isFullyAssigned = assigned >= totalCount
+
+                    val chip = Chip(itemView.context).apply {
+                        text = "$baseRole ($assigned/$totalCount)"
+                        isCheckable = !isFullyAssigned
+                        isClickable = !isFullyAssigned
+                        isEnabled = !isFullyAssigned
+
+                        if (!isFullyAssigned) {
+                            setOnClickListener {
+                                if (selectedRoles.containsKey(baseRole)) {
+                                    selectedRoles.remove(baseRole)
+                                } else {
+                                    selectedRoles[baseRole] = nextPriority++
+                                }
+                                updateRoleChips()
+                                updateSelectedRolesText()
                             }
-                            updateRoleChips()
-                            updateSelectedRolesText()
                         }
                     }
                     cgRoles.addView(chip)
@@ -397,10 +371,17 @@ class UpcomingMeetingsAdapter :
         private fun updateRoleChips() {
             for (i in 0 until binding.cgRoles.childCount) {
                 val chip = binding.cgRoles.getChildAt(i) as Chip
-                val role = chip.text.toString()
-                val priority = selectedRoles[role]
+                val currentText = chip.text.toString()
 
-                chip.text = if (priority != null) "$priority. $role" else role
+                // Strip any existing priority like "1. " to get the clean role text
+                val roleText = currentText.substringAfter(". ")
+                
+                // Extract the base role name, e.g., "Speaker" from "Speaker (1/2)"
+                val baseRole = roleText.substringBefore(" (")
+
+                val priority = selectedRoles[baseRole]
+
+                chip.text = if (priority != null) "$priority. $roleText" else roleText
                 updateChipAppearance(chip, priority != null)
             }
         }
@@ -413,6 +394,26 @@ class UpcomingMeetingsAdapter :
                     .sortedBy { it.value }
                     .joinToString("\n") { "${it.value}. ${it.key}" }
                 binding.tvSelectedRoles.text = "Your role preferences:\n$sortedRoles"
+            }
+        }
+
+        private fun displayRoleStatus(meeting: Meeting) {
+            binding.cgRoles.removeAllViews()
+
+            val roleCounts = meeting.roleCounts ?: return
+            val assignedCounts = meeting.assignedCounts ?: emptyMap()
+
+            roleCounts.forEach { (baseRole, totalCount) ->
+                val assigned = assignedCounts.filterKeys { it.startsWith(baseRole) }.values.sum()
+                val isFullyAssigned = assigned >= totalCount
+
+                val chip = Chip(itemView.context).apply {
+                    text = "$baseRole ($assigned/$totalCount)"
+                    isCheckable = false
+                    isClickable = false
+                    isEnabled = !isFullyAssigned
+                }
+                binding.cgRoles.addView(chip)
             }
         }
 

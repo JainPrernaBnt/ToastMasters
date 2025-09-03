@@ -14,8 +14,11 @@ data class MeetingDto(
     val venue: String = "",
     val theme: String = "No Theme",
     val roleCounts: Map<String, Int> = emptyMap(),
+    val assignedCounts: Map<String, Int> = emptyMap(),
     val createdAt: Long = 0,
-    val status: MeetingStatus = MeetingStatus.NOT_COMPLETED
+    val assignedRoles: Map<String, String> = emptyMap(),
+    val status: MeetingStatus = MeetingStatus.NOT_COMPLETED,
+    val updatedAt: Long = 0
 ) {
     constructor(
         meetingID: String,
@@ -25,8 +28,11 @@ data class MeetingDto(
         venue: String = "",
         theme: String = "No Theme",
         roleCounts: Map<String, Int> = emptyMap(),
+        assignedCounts: Map<String, Int>,
         createdAt: Long = 0,
-        status: MeetingStatus = MeetingStatus.NOT_COMPLETED
+        status: MeetingStatus = MeetingStatus.NOT_COMPLETED,
+        assignedRoles: Map<String, String> = emptyMap(),
+        updatedAt: Long = 0
     ) : this(
         meetingID = meetingID,
         date = date,
@@ -37,7 +43,10 @@ data class MeetingDto(
         venue = venue,
         theme = theme,
         roleCounts = roleCounts,
+        assignedCounts = assignedCounts,
         createdAt = createdAt,
-        status = status
+        status = status,
+        assignedRoles = assignedRoles,
+        updatedAt = updatedAt
     )
 }

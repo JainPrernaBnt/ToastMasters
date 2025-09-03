@@ -14,12 +14,10 @@ class MeetingDomainMapper @Inject constructor() {
 
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-    private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-    private val displayTimeFormatter = DateTimeFormatter.ofPattern("h:mm a")
 
+    // ---------------- Domain Mapping ----------------
     fun mapToDomain(entity: MeetingEntity): Meeting {
         val dateTime = try {
-            // Parse date and time separately and then combine
             val date = LocalDate.parse(entity.date, dateFormatter)
             val startTime = LocalTime.parse(entity.startTime, timeFormatter)
             LocalDateTime.of(date, startTime)
@@ -30,8 +28,8 @@ class MeetingDomainMapper @Inject constructor() {
             )
             throw IllegalArgumentException("Invalid date/time format in database for meeting ${entity.meetingID}")
         }
-        
-        val endDateTime = if (entity.endTime.isNotEmpty() && entity.endTime.isNotBlank()) {
+
+        val endDateTime = if (entity.endTime.isNotBlank()) {
             try {
                 val date = LocalDate.parse(entity.date, dateFormatter)
                 val endTime = LocalTime.parse(entity.endTime, timeFormatter)
@@ -49,41 +47,40 @@ class MeetingDomainMapper @Inject constructor() {
             endDateTime = endDateTime,
             location = entity.venue,
             roleCounts = entity.roleCounts ?: emptyMap(),
+            assignedCounts = entity.assignedCounts ?: emptyMap(),
             createdAt = entity.createdAt,
-            updatedAt = entity.createdAt, // Using created time as updated time if not available
+            updatedAt = entity.createdAt,
             status = entity.status
         )
     }
 
     fun mapToDomain(dto: MeetingDto): Meeting {
-        // First try to use the pre-parsed dateTime and endDateTime if available
         val dateTime = dto.dateTime ?: try {
-            // Fall back to parsing date and time separately
             val datePart = LocalDate.parse(dto.date, dateFormatter)
             val timePart = if (dto.startTime.isNotBlank()) {
                 LocalTime.parse(dto.startTime, timeFormatter)
-            } else {
-                LocalTime.NOON // Default to noon if no time provided
-            }
+            } else LocalTime.NOON
             LocalDateTime.of(datePart, timePart)
         } catch (e: Exception) {
             Timber.e(e, "Error parsing date/time from dto: date=${dto.date}, time=${dto.startTime}")
             LocalDateTime.now()
         }
 
-        // Parse endDateTime if available, otherwise use start time + 2 hours as default
         val endDateTime = dto.endDateTime ?: try {
             if (dto.endTime.isNotBlank()) {
                 val datePart = LocalDate.parse(dto.date, dateFormatter)
                 val endTime = LocalTime.parse(dto.endTime, timeFormatter)
                 LocalDateTime.of(datePart, endTime)
-            } else {
-                dateTime.plusHours(2) // Default to 2 hours after start time
-            }
+            } else dateTime.plusHours(2)
         } catch (e: Exception) {
             Timber.e(e, "Error parsing end time from dto: ${dto.endTime}")
-            dateTime.plusHours(2) // Default to 2 hours after start time
+            dateTime.plusHours(2)
         }
+
+        // recompute assigned counts from roles
+        val recomputedCounts = computeAssignedCounts(dto.assignedRoles ?: emptyMap())
+        val finalAssignedCounts = dto.assignedCounts?.toMutableMap() ?: mutableMapOf()
+        recomputedCounts.forEach { (role, count) -> finalAssignedCounts[role] = count }
 
         return Meeting(
             id = dto.meetingID,
@@ -92,13 +89,21 @@ class MeetingDomainMapper @Inject constructor() {
             endDateTime = endDateTime,
             location = dto.venue,
             roleCounts = dto.roleCounts ?: emptyMap(),
+            assignedRoles = dto.assignedRoles ?: emptyMap(),
+            assignedCounts = finalAssignedCounts,
             createdAt = dto.createdAt,
-            updatedAt = dto.createdAt, // Using created time as updated time if not available
+            updatedAt = dto.updatedAt,
             status = dto.status
         )
     }
 
+    // ---------------- Entity Mapping ----------------
     fun mapToEntity(meeting: Meeting): MeetingEntity {
+        val recomputedCounts = computeAssignedCounts(meeting.assignedRoles)
+        val finalCounts = meeting.assignedCounts.toMutableMap().apply {
+            recomputedCounts.forEach { (role, count) -> this[role] = count }
+        }
+
         return MeetingEntity(
             meetingID = meeting.id,
             date = meeting.dateTime.format(dateFormatter),
@@ -108,11 +113,18 @@ class MeetingDomainMapper @Inject constructor() {
             theme = meeting.theme,
             roleCounts = meeting.roleCounts,
             createdAt = meeting.createdAt,
-            status = meeting.status
+            status = meeting.status,
+            assignedCounts = finalCounts
         )
     }
 
+    // ---------------- DTO Mapping ----------------
     fun mapToDto(meeting: Meeting): MeetingDto {
+        val recomputedCounts = computeAssignedCounts(meeting.assignedRoles)
+        val finalCounts = meeting.assignedCounts.toMutableMap().apply {
+            recomputedCounts.forEach { (role, count) -> this[role] = count }
+        }
+
         return MeetingDto(
             meetingID = meeting.id,
             date = meeting.dateTime.format(dateFormatter),
@@ -122,7 +134,18 @@ class MeetingDomainMapper @Inject constructor() {
             theme = meeting.theme,
             roleCounts = meeting.roleCounts,
             createdAt = meeting.createdAt,
-            status = meeting.status
+            status = meeting.status,
+            assignedRoles = meeting.assignedRoles,
+            assignedCounts = finalCounts
         )
+    }
+
+    // ---------------- Helpers ----------------
+    private fun computeAssignedCounts(assignedRoles: Map<String, String>): Map<String, Int> {
+        val counts = mutableMapOf<String, Int>()
+        assignedRoles.forEach { (role, _) ->
+            counts[role] = (counts[role] ?: 0) + 1
+        }
+        return counts
     }
 }

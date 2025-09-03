@@ -13,6 +13,7 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
             venue = entity.venue,
             theme = entity.theme,
             roleCounts = entity.roleCounts,
+            assignedCounts = entity.assignedCounts,
             createdAt = entity.createdAt,
             startTime = entity.startTime,
             endTime = entity.endTime,
@@ -30,7 +31,8 @@ class MeetingMapper @Inject constructor() : Mapper<MeetingDto, MeetingEntity> {
             createdAt = dto.createdAt,
             startTime = dto.startTime,
             endTime = dto.endTime,
-            status = dto.status
+            status = dto.status,
+            assignedCounts = dto.assignedCounts
         )
     }
 

@@ -14,6 +14,7 @@ data class Meeting(
     val theme: String = "",
     val roleCounts: Map<String, Int> = emptyMap(), // e.g. "Speaker" to 2, "General Evaluator" to 2
     val assignedRoles: Map<String, String> = emptyMap(), // Map of role name to member ID
+    val assignedCounts: Map<String, Int> = emptyMap(), // Map of role name to count of assigned members
     val isRecurring: Boolean = false,
     val createdBy: String = "",
     val createdAt: Long = System.currentTimeMillis(),
