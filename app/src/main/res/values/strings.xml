@@ -291,6 +291,7 @@
     <!-- Error State Strings -->
     <string name="error_occurred">Error occurred</string>
     <string name="error_loading_meetings">Failed to load meetings. Please try again.</string>
+    <string name="error_loading_roles">Failed to load assigned roles. Please try again.</string>
     <string name="empty_responses_title">No Responses Yet</string>
     <string name="empty_responses_message">No members have responded to this meeting yet.</string>
     <string name="empty_roles_title">No Roles Assigned</string>
@@ -374,4 +375,8 @@
     <string name="backout">Backout</string>
     <string name="fill_details">Fill Details</string>
     <string name="your_name">Name</string>
+    <string name="close">Close</string>
+    <string name="role_details">Role Details</string>
+    <string name="speech_objectives">Speech Objective</string>
+    <string name="notes">Note</string>
 </resources>

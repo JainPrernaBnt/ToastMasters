@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +19,11 @@ import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.EditMeetingViewModel
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.chip.Chip
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import android.widget.ArrayAdapter
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -40,8 +46,7 @@ class EditMeetingFragment : Fragment() {
     private var meetingId: String = 0.toString()
     private var meeting: Meeting? = null
 
-    // Editable preferred roles for this screen
-    private val preferredRoles: MutableList<String> = mutableListOf()
+    // No separate list; we'll render chips directly and compute counts on save
 
     private val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
     private val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
@@ -65,6 +70,7 @@ class EditMeetingFragment : Fragment() {
             ?: 0).toString()
 
         setupClickListeners()
+        setupRoleManagement()
         observeViewModel()
 
         // Load meeting details
@@ -104,7 +110,7 @@ class EditMeetingFragment : Fragment() {
             }
         }
 
-        // Add role button
+        // Add role button via manual text -> count dialog -> chips
         binding.btnAddRole.setOnClickListener {
             val role = binding.roleEditText.text?.toString()?.trim().orEmpty()
             if (role.isEmpty()) {
@@ -112,38 +118,97 @@ class EditMeetingFragment : Fragment() {
                 return@setOnClickListener
             }
             binding.roleInputLayout.error = null
-
-            // Avoid duplicates (case-insensitive)
-            val exists = preferredRoles.any { it.equals(role, ignoreCase = true) }
-            if (!exists) {
-                preferredRoles.add(role)
-                addRoleChip(role)
-            } else {
-                binding.roleInputLayout.error = getString(R.string.error_duplicate)
-            }
+            showRoleCountDialog(role)
             binding.roleEditText.setText("")
+            // Hide manual input after adding
+            binding.roleInputLayout.visibility = View.GONE
+            binding.btnAddRole.visibility = View.GONE
         }
     }
 
-    private fun renderPreferredRoleChips() {
-        binding.roleChipGroup.removeAllViews()
-        preferredRoles.forEach { addRoleChip(it) }
+    private fun setupRoleManagement() {
+        // Populate dropdown with preferred roles
+        val roles = resources.getStringArray(R.array.Preferred_roles).toList()
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            roles
+        )
+
+        val dropdown = binding.roleDropdown as MaterialAutoCompleteTextView
+        dropdown.setAdapter(adapter)
+        dropdown.setOnClickListener { if (adapter.count > 0) dropdown.showDropDown() }
+        dropdown.setOnFocusChangeListener { _, hasFocus -> if (hasFocus && adapter.count > 0) dropdown.showDropDown() }
+        dropdown.setOnItemClickListener { _, _, position, _ ->
+            val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
+            if (position == 0) {
+                // "+ Add new role" selected: show manual input
+                binding.roleInputLayout.visibility = View.VISIBLE
+                binding.btnAddRole.visibility = View.VISIBLE
+                binding.roleEditText.requestFocus()
+                dropdown.setText("", false)
+            } else {
+                showRoleCountDialog(selectedRole)
+                dropdown.setText("", false)
+            }
+            dropdown.clearFocus()
+        }
+        // Prevent typing
+        dropdown.keyListener = null
+        binding.roleDropdownLayout.isFocusable = false
+        binding.roleDropdownLayout.isFocusableInTouchMode = false
+
+        // Hide manual input initially
+        binding.roleInputLayout.visibility = View.GONE
+        binding.btnAddRole.visibility = View.GONE
     }
 
-    private fun addRoleChip(role: String) {
-        val chip = com.google.android.material.chip.Chip(requireContext()).apply {
-            text = role
-            isCheckable = false
-            isClickable = true
-            isCloseIconVisible = true
-            setOnCloseIconClickListener {
-                // Remove role and chip
-                val index = preferredRoles.indexOfFirst { it.equals(role, ignoreCase = true) }
-                if (index >= 0) preferredRoles.removeAt(index)
-                binding.roleChipGroup.removeView(this)
+    private fun showRoleCountDialog(role: String) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_role_count, null)
+        val input = dialogView.findViewById<TextInputEditText>(R.id.roleCountInput).apply {
+            setText("1")
+            setSelectAllOnFocus(true)
+            requestFocus()
+        }
+        val til = dialogView.findViewById<TextInputLayout>(R.id.roleCountLayout)
+        til.hint = "Number of $role"
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Add $role")
+            .setView(dialogView)
+            .setPositiveButton("Add", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val count = input.text?.toString()?.toIntOrNull() ?: 0
+                if (count <= 0) {
+                    til.error = getString(R.string.error_required)
+                    return@setOnClickListener
+                }
+                til.error = null
+                addRoleChips(role, count)
+                dialog.dismiss()
             }
         }
-        binding.roleChipGroup.addView(chip)
+        dialog.show()
+    }
+
+    private fun addRoleChips(role: String, count: Int) {
+        // Determine current count for this role to continue numbering
+        val existingCount = binding.roleChipGroup.children.count { (it as? Chip)?.tag == role }
+        val startIndex = existingCount + 1
+        val endIndex = existingCount + count
+        for (i in startIndex..endIndex) {
+            val chip = Chip(requireContext()).apply {
+                text = "$role $i"
+                isCloseIconVisible = true
+                tag = role
+                setOnCloseIconClickListener { binding.roleChipGroup.removeView(this) }
+            }
+            binding.roleChipGroup.addView(chip)
+        }
     }
 
     private fun observeViewModel() {
@@ -200,10 +265,11 @@ class EditMeetingFragment : Fragment() {
             val endDt = meeting.endDateTime
             endTimeEditText.setText(endDt?.let { timeFormatter.format(it.toLocalTime()) } ?: "")
 
-            // Populate preferred roles chips (editable)
-            preferredRoles.clear()
-            preferredRoles.addAll(meeting.preferredRoles)
-            renderPreferredRoleChips()
+            // Populate role chips from roleCounts
+            roleChipGroup.removeAllViews()
+            meeting.roleCounts.forEach { (role, count) ->
+                addRoleChips(role, count)
+            }
         }
     }
 
@@ -287,12 +353,21 @@ class EditMeetingFragment : Fragment() {
                 binding.endTimeInputLayout.error = null
             }
 
+            // Build roleCounts from chips
+            val roleCounts = mutableMapOf<String, Int>()
+            binding.roleChipGroup.children.forEach { view ->
+                val chip = view as Chip
+                val role = chip.tag?.toString() ?: return@forEach
+                roleCounts[role] = (roleCounts[role] ?: 0) + 1
+            }
+
             val updated = Meeting(
                 id = (current.id.ifEmpty { meetingId }),
                 dateTime = startLdt,
                 endDateTime = endLdt,
                 location = venue,
                 theme = theme,
+                roleCounts = roleCounts,
                 isRecurring = current.isRecurring,
                 createdBy = current.createdBy,
                 createdAt = current.createdAt,

@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
+import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.domain.model.MeetingWithRole
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
@@ -34,12 +35,21 @@ class MemberDashboardViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<MemberDashboardUiState>(MemberDashboardUiState.Loading)
     val uiState: StateFlow<MemberDashboardUiState> = _uiState.asStateFlow()
-    
+
     private val _speakerDetailsState = MutableStateFlow(SpeakerDetailsState())
     val speakerDetailsState = _speakerDetailsState.asStateFlow()
-    
+
     data class SpeakerDetailsState(
         val speakerDetails: Map<String, SpeakerDetails> = emptyMap(),
+        val isLoading: Boolean = false,
+        val error: String? = null
+    )
+
+    private val _grammarianDetailsState = MutableStateFlow(GrammarianDetailsState())
+    val grammarianDetailsState = _grammarianDetailsState.asStateFlow()
+
+    data class GrammarianDetailsState(
+        val grammarianDetails: Map<String, GrammarianDetails> = emptyMap(),
         val isLoading: Boolean = false,
         val error: String? = null
     )
@@ -158,8 +168,8 @@ class MemberDashboardViewModel @Inject constructor(
 
     fun loadSpeakerDetails(meetingId: String, userId: String) {
         viewModelScope.launch {
-            _speakerDetailsState.update { currentState -> 
-                currentState.copy(isLoading = true, error = null) 
+            _speakerDetailsState.update { currentState ->
+                currentState.copy(isLoading = true, error = null)
             }
             try {
                 val details = meetingRepository.getSpeakerDetails(meetingId, userId)
@@ -214,6 +224,7 @@ class MemberDashboardViewModel @Inject constructor(
 
     fun clearError() {
         _speakerDetailsState.update { it.copy(error = null) }
+        _grammarianDetailsState.update { it.copy(error = null) }
     }
 
     suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails? {
@@ -231,10 +242,114 @@ class MemberDashboardViewModel @Inject constructor(
                 // Create a new Success state with updated speaker details
                 MemberDashboardUiState.Success(
                     meetings = currentState.meetings,
-                    speakerDetails = details
+                    speakerDetails = details,
+                    grammarianDetails = if (currentState.grammarianDetails.isNotEmpty()) currentState.grammarianDetails else emptyMap()
                 )
             } else {
                 currentState
+            }
+        }
+    }
+
+    private fun updateUiStateWithGrammarianDetails(details: Map<String, GrammarianDetails>) {
+        _uiState.update { currentState ->
+            if (currentState is MemberDashboardUiState.Success) {
+                MemberDashboardUiState.Success(
+                    meetings = currentState.meetings,
+                    speakerDetails = currentState.speakerDetails,
+                    grammarianDetails = details
+                )
+            } else {
+                currentState
+            }
+        }
+    }
+
+    fun saveGrammarianDetails(meetingId: String, userId: String, grammarianDetails: GrammarianDetails) {
+        viewModelScope.launch {
+            _grammarianDetailsState.update { it.copy(isLoading = true, error = null) }
+            try {
+                when (val result = meetingRepository.saveGrammarianDetails(meetingId, userId, grammarianDetails)) {
+                    is Result.Success -> {
+                        val currentDetails = _grammarianDetailsState.value.grammarianDetails.toMutableMap()
+                        currentDetails[userId] = grammarianDetails
+                        _grammarianDetailsState.update {
+                            it.copy(
+                                isLoading = false,
+                                grammarianDetails = currentDetails
+                            )
+                        }
+                        updateUiStateWithGrammarianDetails(currentDetails)
+                    }
+                    is Result.Error -> {
+                        _grammarianDetailsState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = result.exception.message ?: "Failed to save grammarian details"
+                            )
+                        }
+                    }
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                _grammarianDetailsState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "An unexpected error occurred"
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadGrammarianDetails(meetingId: String, userId: String) {
+        viewModelScope.launch {
+            _grammarianDetailsState.update { currentState -> currentState.copy(isLoading = true, error = null) }
+            try {
+                val details = meetingRepository.getGrammarianDetails(meetingId, userId)
+                if (details != null) {
+                    val current = _grammarianDetailsState.value.grammarianDetails.toMutableMap<String, GrammarianDetails>()
+                    current[userId] = details
+                    val newState = _grammarianDetailsState.value.copy(
+                        isLoading = false,
+                        grammarianDetails = current
+                    )
+                    _grammarianDetailsState.value = newState
+                    updateUiStateWithGrammarianDetails(current)
+                } else {
+                    _grammarianDetailsState.update { it.copy(isLoading = false) }
+                }
+            } catch (e: Exception) {
+                _grammarianDetailsState.update { currentState ->
+                    currentState.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load grammarian details"
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadAllGrammarianDetailsForMeeting(meetingId: String) {
+        viewModelScope.launch {
+            _grammarianDetailsState.update { currentState -> currentState.copy(isLoading = true, error = null) }
+            try {
+                meetingRepository.getGrammarianDetailsForMeeting(meetingId).collect { detailsList ->
+                    val detailsMap = detailsList.associateBy { it.userId }
+                    val newState = _grammarianDetailsState.value.copy(
+                        isLoading = false,
+                        grammarianDetails = detailsMap
+                    )
+                    _grammarianDetailsState.value = newState
+                    updateUiStateWithGrammarianDetails(detailsMap)
+                }
+            } catch (e: Exception) {
+                _grammarianDetailsState.update { currentState ->
+                    currentState.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load grammarian details"
+                    )
+                }
             }
         }
     }
@@ -244,7 +359,8 @@ class MemberDashboardViewModel @Inject constructor(
         object Empty : MemberDashboardUiState()
         data class Success(
             val meetings: List<MeetingWithRole>,
-            val speakerDetails: Map<String, SpeakerDetails> = emptyMap()
+            val speakerDetails: Map<String, SpeakerDetails> = emptyMap(),
+            val grammarianDetails: Map<String, GrammarianDetails> = emptyMap()
         ) : MemberDashboardUiState()
         data class Error(val message: String) : MemberDashboardUiState()
     }

@@ -1,6 +1,8 @@
 package com.bntsoft.toastmasters.data.repository
 
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
+import com.bntsoft.toastmasters.data.model.GrammarianDetails
+import com.bntsoft.toastmasters.data.model.MemberRole
 import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
@@ -236,6 +238,51 @@ class MeetingRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error getting speaker details for meeting $meetingId")
             emit(emptyList())
+        }
+    }
+
+    override suspend fun saveGrammarianDetails(meetingId: String, userId: String, grammarianDetails: GrammarianDetails): Result<Unit> {
+        return try {
+            firebaseDataSource.saveGrammarianDetails(meetingId, userId, grammarianDetails)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Error saving grammarian details for user $userId in meeting $meetingId")
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun getGrammarianDetails(meetingId: String, userId: String): GrammarianDetails? {
+        return try {
+            firebaseDataSource.getGrammarianDetails(meetingId, userId)
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting grammarian details for user $userId in meeting $meetingId")
+            null
+        }
+    }
+
+    override fun getGrammarianDetailsForMeeting(meetingId: String): Flow<List<GrammarianDetails>> = flow {
+        try {
+            val details = firebaseDataSource.getGrammarianDetailsForMeeting(meetingId)
+            emit(details)
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting grammarian details for meeting $meetingId")
+            emit(emptyList())
+        }
+    }
+
+    override suspend fun getMemberRolesForMeeting(meetingId: String): List<MemberRole> {
+        return try {
+            val memberRoles = firebaseDataSource.getMemberRolesForMeeting(meetingId)
+            memberRoles.map { (memberName, roles) ->
+                MemberRole(
+                    id = "", // We'll set this to empty as it's not used in the UI
+                    memberName = memberName,
+                    roles = roles
+                )
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting member roles for meeting $meetingId")
+            emptyList()
         }
     }
 

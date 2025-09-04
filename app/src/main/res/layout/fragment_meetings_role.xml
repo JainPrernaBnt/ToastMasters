@@ -43,7 +43,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:listitem="@layout/item_member_assigned_role" />
+                    tools:listitem="@layout/item_meetings_roles" />
 
                 <include
                     android:id="@+id/layoutEmptyState"

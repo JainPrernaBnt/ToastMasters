@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.data.remote
 
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
+import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.utils.Result
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
@@ -41,4 +42,12 @@ interface FirebaseMeetingDataSource {
     suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit>
     suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails?
     suspend fun getSpeakerDetailsForMeeting(meetingId: String): List<SpeakerDetails>
+
+    // Grammarian details methods
+    suspend fun saveGrammarianDetails(meetingId: String, userId: String, grammarianDetails: GrammarianDetails): Result<Unit>
+    suspend fun getGrammarianDetails(meetingId: String, userId: String): GrammarianDetails?
+    suspend fun getGrammarianDetailsForMeeting(meetingId: String): List<GrammarianDetails>
+    
+    // Member roles methods
+    suspend fun getMemberRolesForMeeting(meetingId: String): List<Pair<String, List<String>>>
 }

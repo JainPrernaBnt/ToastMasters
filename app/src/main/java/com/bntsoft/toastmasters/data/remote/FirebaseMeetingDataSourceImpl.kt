@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.data.remote
 
 import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
+import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.data.model.dto.MeetingDto
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
@@ -380,8 +381,10 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             val meetingRef = firestore.collection("meetings").document(meetingId)
             val assignedRolesRef = meetingRef.collection("assignedRole")
 
-            // Suspend call: Fetch documents to delete (outside transaction)
+            // Collect all userIds we are updating
             val userIds = assignments.map { it.userId }.distinct()
+
+            // Fetch existing docs for those users (to delete/reset before saving new)
             val existingDocs = if (userIds.isNotEmpty()) {
                 assignedRolesRef.whereIn("userId", userIds).get().await()
             } else null
@@ -394,33 +397,39 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         .mapValues { (_, value) -> (value as? Number)?.toInt() ?: 0 }
                         .toMutableMap()
 
-                // Delete old assignments (no await, we already queried above)
+                // Delete old user assignment docs
                 existingDocs?.documents?.forEach { doc ->
                     transaction.delete(doc.reference)
                 }
 
-                // Add new assignments
+                // Save new user assignment docs
                 assignments.forEach { assignment ->
-                    assignment.selectedRoles.forEach { role ->
-                        val roleDocRef = assignedRolesRef.document(role)
-                        val roleData = mapOf(
-                            "userId" to assignment.userId,
-                            "memberName" to assignment.memberName,
-                            "assignedAt" to FieldValue.serverTimestamp()
-                        )
-                        transaction.set(roleDocRef, roleData)
-                    }
+                    val userDocRef = assignedRolesRef.document(assignment.userId)
+
+                    val roleData = mapOf(
+                        "userId" to assignment.userId,
+                        "memberName" to assignment.memberName,
+                        "roles" to assignment.selectedRoles,
+                        "assignedAt" to FieldValue.serverTimestamp(),
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+
+                    transaction.set(userDocRef, roleData)
                 }
 
-                // Update assignedCounts atomically
+                // Recalculate assignedCounts
                 val allAssignedRoles =
                     assignments.flatMap { it.selectedRoles }.groupingBy { it }.eachCount()
+
                 val updatedAssignedCounts = currentAssignedCounts.toMutableMap()
+
+                // Reset roles that no longer exist
                 currentAssignedCounts.keys.forEach { role ->
                     if (allAssignedRoles[role] == null) {
                         updatedAssignedCounts[role] = 0
                     }
                 }
+                // Update with new counts
                 allAssignedRoles.forEach { (role, count) ->
                     updatedAssignedCounts[role] = count
                 }
@@ -436,6 +445,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             Result.Error(e)
         }
     }
+
 
     override suspend fun getAssignedRole(meetingId: String, userId: String): String? {
         return try {
@@ -581,6 +591,95 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             snapshot.documents.mapNotNull { it.toObject(SpeakerDetails::class.java) }
         } catch (e: Exception) {
             Timber.e(e, "Error getting speaker details for meeting $meetingId")
+            emptyList()
+        }
+    }
+
+    override suspend fun saveGrammarianDetails(meetingId: String, userId: String, grammarianDetails: GrammarianDetails): Result<Unit> {
+        return try {
+            val detailsRef = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("grammarianDetails")
+                .document(userId)
+
+            detailsRef.set(grammarianDetails).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Error saving grammarian details for user $userId in meeting $meetingId")
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun getGrammarianDetails(meetingId: String, userId: String): GrammarianDetails? {
+        return try {
+            val doc = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("grammarianDetails")
+                .document(userId)
+                .get()
+                .await()
+
+            if (doc.exists()) {
+                doc.toObject(GrammarianDetails::class.java)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting grammarian details for user $userId in meeting $meetingId")
+            null
+        }
+    }
+
+    override suspend fun getGrammarianDetailsForMeeting(meetingId: String): List<GrammarianDetails> {
+        return try {
+            val snapshot = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("grammarianDetails")
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { document ->
+                try {
+                    document.toObject(GrammarianDetails::class.java)?.copy(
+                        userId = document.id
+                    )
+                } catch (e: Exception) {
+                    Timber.e(e, "Error parsing grammarian details for document ${document.id}")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting grammarian details for meeting $meetingId")
+            emptyList()
+        }
+    }
+
+    override suspend fun getMemberRolesForMeeting(meetingId: String): List<Pair<String, List<String>>> {
+        return try {
+            val snapshot = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { document ->
+                try {
+                    val memberName = document.getString("memberName") ?: return@mapNotNull null
+                    val roles = document.get("roles") as? List<*> ?: emptyList<Any>()
+                    val roleStrings = roles.filterIsInstance<String>()
+
+                    if (roleStrings.isNotEmpty()) {
+                        memberName to roleStrings
+                    } else {
+                        null
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Error parsing member roles for document ${document.id}")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting member roles for meeting $meetingId")
             emptyList()
         }
     }

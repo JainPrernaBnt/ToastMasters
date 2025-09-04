@@ -1,6 +1,8 @@
 package com.bntsoft.toastmasters.domain.repository
 
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
+import com.bntsoft.toastmasters.data.model.GrammarianDetails
+import com.bntsoft.toastmasters.data.model.MemberRole
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
@@ -33,4 +35,12 @@ interface MeetingRepository {
     suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit>
     suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails?
     fun getSpeakerDetailsForMeeting(meetingId: String): Flow<List<SpeakerDetails>>
+
+    // Grammarian details
+    suspend fun saveGrammarianDetails(meetingId: String, userId: String, grammarianDetails: GrammarianDetails): Result<Unit>
+    suspend fun getGrammarianDetails(meetingId: String, userId: String): GrammarianDetails?
+    fun getGrammarianDetailsForMeeting(meetingId: String): Flow<List<GrammarianDetails>>
+
+    suspend fun getMemberRolesForMeeting(meetingId: String): List<MemberRole>
+
 }

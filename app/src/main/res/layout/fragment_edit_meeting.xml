@@ -112,6 +112,32 @@
                 app:layout_constraintTop_toBottomOf="@id/themeInputLayout"
                 app:layout_constraintStart_toStartOf="parent" />
 
+            <!-- Preferred Roles Dropdown -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/roleDropdownLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/preferred_roles"
+                app:endIconMode="dropdown_menu"
+                app:layout_constraintTop_toBottomOf="@id/labelPreferredRoles"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/roleDropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="56dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:inputType="none" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
             <!-- Role input and Add button -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/roleInputLayout"
@@ -121,7 +147,7 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="2dp"
                 android:hint="@string/role_name"
-                app:layout_constraintTop_toBottomOf="@id/labelPreferredRoles"
+                app:layout_constraintTop_toBottomOf="@id/roleDropdownLayout"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/btnAddRole">
 

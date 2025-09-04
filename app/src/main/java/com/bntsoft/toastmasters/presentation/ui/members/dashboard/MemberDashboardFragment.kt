@@ -10,8 +10,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
+import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentMemberDashboardBinding
-import com.bntsoft.toastmasters.presentation.ui.members.dashboard.adapter.MeetingWithRoleAdapter
+import com.bntsoft.toastmasters.presentation.ui.members.dashboard.adapter.MemberDashboardAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -24,7 +26,14 @@ class MemberDashboardFragment : Fragment() {
 
     private val viewModel: MemberDashboardViewModel by viewModels()
     private val adapter by lazy {
-        MeetingWithRoleAdapter(viewModel, viewModel.currentUserId ?: "")
+        MemberDashboardAdapter(viewModel, viewModel.currentUserId ?: ""){ meetingId ->
+            // Navigate with meetingId
+            val bundle = Bundle().apply { putString("meetingId", meetingId) }
+            findNavController().navigate(
+                R.id.meetings_role,
+                bundle
+            )
+        }
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +74,7 @@ class MemberDashboardFragment : Fragment() {
         Log.d(TAG, "Starting to observe ViewModel")
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Observe UI state for meetings list
                 viewModel.uiState.collect { state ->
                     Log.d(TAG, "New UI State: ${state::class.simpleName}")
                     
@@ -101,6 +111,7 @@ class MemberDashboardFragment : Fragment() {
                 }
             }
         }
+
     }
 
     private fun showLoading(isLoading: Boolean) {

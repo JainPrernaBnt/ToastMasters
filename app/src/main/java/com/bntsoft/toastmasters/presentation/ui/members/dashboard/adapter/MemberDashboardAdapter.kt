@@ -10,7 +10,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
+import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.databinding.DialogSpeakerDetailsBinding
+import com.bntsoft.toastmasters.databinding.DialogGrammarianDetailsBinding
 import com.bntsoft.toastmasters.databinding.ItemMemberAssignedRoleBinding
 import com.bntsoft.toastmasters.domain.model.MeetingWithRole
 import com.bntsoft.toastmasters.presentation.ui.members.dashboard.MemberDashboardViewModel
@@ -19,10 +21,11 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
-class MeetingWithRoleAdapter(
+class MemberDashboardAdapter(
     private val viewModel: MemberDashboardViewModel,
-    private val currentUserId: String
-) : ListAdapter<MeetingWithRole, MeetingWithRoleAdapter.MeetingWithRoleViewHolder>(
+    private val currentUserId: String,
+    private val onMeetingClick: (String) -> Unit
+) : ListAdapter<MeetingWithRole, MemberDashboardAdapter.MeetingWithRoleViewHolder>(
     MeetingWithRoleDiffCallback()
 ) {
     private val TAG = "MeetingRoleAdapter"
@@ -95,20 +98,38 @@ class MeetingWithRoleAdapter(
                     role.contains("Speaker", ignoreCase = true)
                 } || item.assignedRole.contains("Speaker", ignoreCase = true)
 
-                if (isSpeaker) {
+                // Show Fill Details button if user is assigned as a Grammarian
+                val isGrammarian = item.assignedRoles.any { role ->
+                    role.contains("Grammarian", ignoreCase = true)
+                } || item.assignedRole.contains("Grammarian", ignoreCase = true)
+
+                if (isSpeaker || isGrammarian) {
                     btnFillDetails.visibility = View.VISIBLE
                     btnFillDetails.setOnClickListener {
-                        showSpeakerDetailsDialog(binding.root.context, item.meeting.id)
+                        if (isSpeaker) {
+                            showSpeakerDetailsDialog(binding.root.context, item.meeting.id)
+                        } else if (isGrammarian) {
+                            showGrammarianDetailsDialog(binding.root.context, item.meeting.id)
+                        }
                     }
 
-                    // Load existing speaker details if any
-                    viewModel.loadSpeakerDetails(item.meeting.id, currentUserId)
+                    // Load existing details if any
+                    if (isSpeaker) {
+                        viewModel.loadSpeakerDetails(item.meeting.id, currentUserId)
+                    }
+                    if (isGrammarian) {
+                        viewModel.loadGrammarianDetails(item.meeting.id, currentUserId)
+                    }
                 } else {
                     btnFillDetails.visibility = View.GONE
                 }
 
                 // Hide the assign role button as it's not needed in the dashboard
                 btnAssignRole.visibility = View.GONE
+
+                root.setOnClickListener {
+                    onMeetingClick(item.meeting.id)
+                }
             }
         }
     }
@@ -178,6 +199,68 @@ class MeetingWithRoleAdapter(
 
                 // Save details via ViewModel
                 viewModel.saveSpeakerDetails(meetingId, currentUser.uid, speakerDetails)
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun showGrammarianDetailsDialog(context: Context, meetingId: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+
+        val dialogBinding = DialogGrammarianDetailsBinding.inflate(
+            LayoutInflater.from(context),
+            null,
+            false
+        )
+
+        val existing = viewModel.grammarianDetailsState.value.grammarianDetails[currentUser.uid]
+        existing?.let { details ->
+            dialogBinding.apply {
+                etWordOfTheDay.setText(details.wordOfTheDay)
+                etWordMeaning.setText(details.wordMeaning.joinToString("\n"))
+                etWordExamples.setText(details.wordExamples.joinToString("\n"))
+                etIdiomOfTheDay.setText(details.idiomOfTheDay)
+                etIdiomMeaning.setText(details.idiomMeaning)
+                etIdiomExamples.setText(details.idiomExamples.joinToString("\n"))
+            }
+        }
+
+        val dialog = AlertDialog.Builder(context)
+            .setTitle("Grammarian Details")
+            .setView(dialogBinding.root)
+            .setPositiveButton("Save", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.setOnClickListener {
+                if (dialogBinding.etWordOfTheDay.text.isNullOrBlank()) {
+                    dialogBinding.etWordOfTheDay.error = "WOD is required"
+                    return@setOnClickListener
+                }
+
+                val wordMeaning = dialogBinding.etWordMeaning.text.toString()
+                    .lines().map { it.trim() }.filter { it.isNotEmpty() }
+                val wordExamples = dialogBinding.etWordExamples.text.toString()
+                    .lines().map { it.trim() }.filter { it.isNotEmpty() }
+                val idiomExamples = dialogBinding.etIdiomExamples.text.toString()
+                    .lines().map { it.trim() }.filter { it.isNotEmpty() }
+
+                val details = GrammarianDetails(
+                    meetingID = meetingId,
+                    userId = currentUser.uid,
+                    wordOfTheDay = dialogBinding.etWordOfTheDay.text.toString().trim(),
+                    wordMeaning = wordMeaning,
+                    wordExamples = wordExamples,
+                    idiomOfTheDay = dialogBinding.etIdiomOfTheDay.text.toString().trim(),
+                    idiomMeaning = dialogBinding.etIdiomMeaning.text.toString().trim(),
+                    idiomExamples = idiomExamples
+                )
+
+                viewModel.saveGrammarianDetails(meetingId, currentUser.uid, details)
                 dialog.dismiss()
             }
         }
