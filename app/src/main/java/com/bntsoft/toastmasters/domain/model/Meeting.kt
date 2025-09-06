@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 @Parcelize
 data class Meeting(
     val id: String = "",
-    val dateTime: LocalDateTime,
+    val dateTime: LocalDateTime = LocalDateTime.now(),
     val endDateTime: LocalDateTime? = null,
     val location: String = "",
     val theme: String = "",

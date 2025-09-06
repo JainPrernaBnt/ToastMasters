@@ -5,6 +5,8 @@ import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
 import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSourceImpl
 import com.bntsoft.toastmasters.data.remote.FirebaseMemberResponseDataSource
 import com.bntsoft.toastmasters.data.remote.FirebaseMemberResponseDataSourceImpl
+import com.bntsoft.toastmasters.data.remote.FirebaseAgendaDataSource
+import com.bntsoft.toastmasters.data.remote.FirebaseAgendaDataSourceImpl
 import com.bntsoft.toastmasters.utils.NetworkMonitor
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -27,4 +29,9 @@ object DataSourceModule {
     fun provideFirebaseMemberResponseDataSource(): FirebaseMemberResponseDataSource =
         FirebaseMemberResponseDataSourceImpl()
 
+    @Provides
+    @Singleton
+    fun provideFirebaseAgendaDataSource(
+        firestore: FirebaseFirestore
+    ): FirebaseAgendaDataSource = FirebaseAgendaDataSourceImpl(firestore)
 }

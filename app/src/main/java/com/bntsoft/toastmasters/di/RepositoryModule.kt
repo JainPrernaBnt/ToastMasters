@@ -5,8 +5,10 @@ import com.bntsoft.toastmasters.data.repository.MeetingRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MemberRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MemberResponseRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.NotificationRepositoryImpl
+import com.bntsoft.toastmasters.data.repository.MeetingAgendaRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.UserRepositoryImpl
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
+import com.bntsoft.toastmasters.domain.repository.MeetingAgendaRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
@@ -57,4 +59,10 @@ abstract class RepositoryModule {
     abstract fun bindMemberResponseRepository(
         memberResponseRepositoryImpl: MemberResponseRepositoryImpl
     ): MemberResponseRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMeetingAgendaRepository(
+        meetingAgendaRepositoryImpl: MeetingAgendaRepositoryImpl
+    ): MeetingAgendaRepository
 }

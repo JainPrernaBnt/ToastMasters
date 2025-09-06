@@ -373,6 +373,13 @@
     <string name="no_previous_roles">No recent or previous roles</string>
     <string name="no_recent_roles">No recent roles</string>
     <string name="backout">Backout</string>
+    
+    <!-- Create Agenda Strings -->
+    <string name="create_agenda">Create Agenda</string>
+    <string name="meeting_theme">Meeting Theme</string>
+    <string name="officers">Officers</string>
+    <string name="saving">Saving...</string>
+    <string name="agenda_saved">Agenda saved successfully</string>
     <string name="fill_details">Fill Details</string>
     <string name="your_name">Name</string>
     <string name="close">Close</string>

@@ -13,11 +13,11 @@ import java.time.ZoneOffset
 data class MeetingAgenda(
     @DocumentId
     val id: String = "",
-    val meeting: Meeting,
+    val meeting: Meeting = Meeting(),
     val meetingDate: Timestamp? = null,
     val startTime: String = "",
     val endTime: String = "",
-    val officers: Map<String, String> = emptyMap(), // e.g., {"President":"TM John", "VP Education":"TM Jane"}
+    val officers: Map<String, String> = emptyMap(),
     val agendaStatus: AgendaStatus = AgendaStatus.DRAFT,
     @ServerTimestamp
     val createdAt: Timestamp? = null,
@@ -48,16 +48,16 @@ data class MeetingAgenda(
     )
 
     companion object {
-        fun default(meeting: Meeting, createdBy: String): MeetingAgenda = MeetingAgenda(
+        fun default(meeting: Meeting): MeetingAgenda = MeetingAgenda(
             id = meeting.id,
             meeting = meeting,
             meetingDate = Timestamp(meeting.dateTime.toEpochSecond(ZoneOffset.UTC), 0),
-            startTime = meeting.dateTime.hour.toString().padStart(2, '0') + 
-                       ":" + 
-                       meeting.dateTime.minute.toString().padStart(2, '0'),
+            startTime = meeting.dateTime.hour.toString().padStart(2, '0') +
+                    ":" +
+                    meeting.dateTime.minute.toString().padStart(2, '0'),
             endTime = meeting.endDateTime?.let { end ->
-                end.hour.toString().padStart(2, '0') + ":" + 
-                end.minute.toString().padStart(2, '0')
+                end.hour.toString().padStart(2, '0') + ":" +
+                        end.minute.toString().padStart(2, '0')
             } ?: "",
             agendaStatus = AgendaStatus.DRAFT,
             officers = emptyMap()

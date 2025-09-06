@@ -1,12 +1,14 @@
 package com.bntsoft.toastmasters.data.remote
 
+import android.util.Log
 import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
-import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.data.model.GrammarianDetails
+import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.data.model.dto.MeetingDto
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.bntsoft.toastmasters.utils.Result
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
@@ -20,6 +22,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,6 +39,27 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     private val firestore: FirebaseFirestore by lazy { Firebase.firestore }
     private val meetingsCollection by lazy { firestore.collection(MEETINGS_COLLECTION) }
+
+    private fun parseCreatedAtTimestamp(timestamp: Any?): Long {
+        return try {
+            when (timestamp) {
+                is Long -> timestamp
+                is String -> {
+                    // Parse the string timestamp to milliseconds
+                    val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy 'at' hh:mm:ss a z")
+                    val dateTime = LocalDateTime.parse(timestamp, formatter)
+                    dateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                }
+
+                is Timestamp -> timestamp.toDate().time
+                is Date -> timestamp.time
+                else -> System.currentTimeMillis()
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseDS", "Error parsing createdAt timestamp: $timestamp", e)
+            System.currentTimeMillis()
+        }
+    }
 
     override fun getAllMeetings(): Flow<List<Meeting>> = callbackFlow {
         val subscription = meetingsCollection
@@ -95,7 +119,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                                     else -> 1
                                 }
                             } ?: emptyMap(),
-                            createdAt = document.getLong("createdAt") ?: 0,
+                            createdAt = parseCreatedAtTimestamp(document.get("createdAt")),
                             status = document.getString("status")?.let {
                                 try {
                                     com.bntsoft.toastmasters.domain.models.MeetingStatus.valueOf(it)
@@ -112,10 +136,13 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             } ?: emptyMap()
                         )
 
-                        Timber.d("Mapped meeting in getAllMeetings: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime}")
+                        Log.d(
+                            "FirebaseDS",
+                            "Mapped meeting in getAllMeetings: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime}"
+                        )
                         meetingMapper.mapToDomain(dto)
                     } catch (e: Exception) {
-                        Timber.e(e, "Error parsing meeting document in getAllMeetings")
+                        Log.e("FirebaseDS", "Error parsing meeting document in getAllMeetings", e)
                         null
                     }
                 } ?: emptyList()
@@ -171,8 +198,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                                     else -> 1
                                 }
                             } ?: emptyMap(),
-                            createdAt = document.getLong("createdAt") ?: 0,
-                            status = document.getString("status")?.let {
+                            createdAt = parseCreatedAtTimestamp(document.get("createdAt")),                            status = document.getString("status")?.let {
                                 try {
                                     com.bntsoft.toastmasters.domain.models.MeetingStatus.valueOf(it)
                                 } catch (e: Exception) {
@@ -188,7 +214,10 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             } ?: emptyMap()
                         )
 
-                        Timber.d("Mapped meeting: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime} (${dto.dateTime} to ${dto.endDateTime})")
+                        Log.d(
+                            "FirebaseDS",
+                            "Mapped meeting: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime} (${dto.dateTime} to ${dto.endDateTime})"
+                        )
 
                         val meeting = meetingMapper.mapToDomain(dto)
                         // Ensure the meeting's date matches the filter
@@ -545,7 +574,11 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit> {
+    override suspend fun saveSpeakerDetails(
+        meetingId: String,
+        userId: String,
+        speakerDetails: SpeakerDetails
+    ): Result<Unit> {
         return try {
             val speakerRef = firestore.collection("meetings")
                 .document(meetingId)
@@ -595,7 +628,11 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveGrammarianDetails(meetingId: String, userId: String, grammarianDetails: GrammarianDetails): Result<Unit> {
+    override suspend fun saveGrammarianDetails(
+        meetingId: String,
+        userId: String,
+        grammarianDetails: GrammarianDetails
+    ): Result<Unit> {
         return try {
             val detailsRef = firestore.collection("meetings")
                 .document(meetingId)
@@ -610,7 +647,10 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun getGrammarianDetails(meetingId: String, userId: String): GrammarianDetails? {
+    override suspend fun getGrammarianDetails(
+        meetingId: String,
+        userId: String
+    ): GrammarianDetails? {
         return try {
             val doc = firestore.collection("meetings")
                 .document(meetingId)
@@ -710,7 +750,10 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
             Result.Success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to send notifications for meeting: ${meeting.id}")
+            Timber.e(
+                e, "Failed t" +
+                        "o send notifications for meeting: ${meeting.id}"
+            )
             Result.Error(e)
         }
     }

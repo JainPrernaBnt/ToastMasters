@@ -8,6 +8,7 @@ import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.MemberResponse
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
+import com.bntsoft.toastmasters.domain.models.MeetingStatus
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.utils.Resource
@@ -34,7 +35,8 @@ class MeetingRepositoryImpl @Inject constructor(
     override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> {
         return firebaseDataSource.getAllMeetings().map { meetings ->
             meetings.filter { meeting ->
-                !meeting.dateTime.isBefore(afterDate.atStartOfDay())
+//                !meeting.dateTime.isBefore(afterDate.atStartOfDay()) &&
+                meeting.status != MeetingStatus.COMPLETED
             }.sortedBy { it.dateTime }
         }
     }
@@ -295,4 +297,3 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 }
-

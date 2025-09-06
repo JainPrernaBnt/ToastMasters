@@ -10,8 +10,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentMemberRoleAssignBinding
+import com.bntsoft.toastmasters.domain.model.Meeting
+import com.bntsoft.toastmasters.presentation.ui.vp.agenda.CreateAgendaFragment
 import com.bntsoft.toastmasters.presentation.ui.vp.roles.adapter.MemberRoleAssignAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -49,6 +53,7 @@ class MemberRoleAssignFragment : Fragment() {
         }
 
         setupRecyclerView()
+        setupClickListeners()
         observeViewModel()
         viewModel.loadRoleAssignments(currentMeetingId)
 
@@ -92,6 +97,22 @@ class MemberRoleAssignFragment : Fragment() {
         binding.rvMembers.layoutManager = LinearLayoutManager(requireContext())
 
         Log.d("MemberRoleAssignFrag", "RecyclerView setup complete. Adapter: $adapter")
+    }
+
+    private fun setupClickListeners() {
+        binding.btnCreateAgenda.setOnClickListener {
+            navigateToCreateAgenda()
+        }
+    }
+
+    private fun navigateToCreateAgenda() {
+        // Get meeting ID from arguments
+        val meetingId = arguments?.getString("meeting_id") ?: return
+        
+        // Navigate to CreateAgendaFragment with just the meeting ID
+        val action = MemberRoleAssignFragmentDirections
+            .actionMemberRoleAssignFragmentToCreateAgendaFragment(meetingId)
+        findNavController().navigate(action)
     }
 
     private fun handleRoleSelected(userId: String, role: String) {
