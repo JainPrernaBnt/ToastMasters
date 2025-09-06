@@ -4,13 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/white"
     android:fitsSystemWindows="true">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
@@ -19,36 +21,74 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <ProgressBar
+            <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/progressBar"
-                style="?android:attr/progressBarStyleLarge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:layout_gravity="center"
-                android:visibility="gone" />
+                android:indeterminateTint="@color/purple_500"
+                android:visibility="gone"
+                app:indicatorSize="64dp"
+                app:trackThickness="4dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardCreateAgenda"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/grey_300"
+                app:strokeWidth="1dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCreateAgenda"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@android:color/transparent"
+                    android:drawablePadding="8dp"
+                    android:gravity="start|center_vertical"
+                    android:padding="16dp"
+                    android:text="@string/create_agenda"
+                    android:textAllCaps="false"
+                    android:textColor="@color/purple_700"
+                    android:textSize="16sp"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="start"
+                    app:iconTint="@color/purple_500"
+                    app:rippleColor="@color/purple_100"
+                    app:strokeColor="@android:color/transparent"
+                    app:strokeWidth="1dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/tvEmptyState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:padding="12dp"
+                android:text="@string/no_member_responses"
+                android:textColor="@color/on_surface_medium"
+                android:visibility="gone"
+                app:drawableTopCompat="@drawable/ic_person"
+                app:drawableTint="@color/grey_600"
+                tools:visibility="gone" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvMembers"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:clipToPadding="false"
-                android:paddingBottom="16dp"
-                tools:listitem="@layout/item_member_role_assignment" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCreateAgenda"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"
-                android:paddingVertical="12dp"
-                android:text="@string/create_agenda"
-                android:textAllCaps="false"
-                android:textSize="16sp"
-                app:backgroundTint="@color/purple_500"
-                app:icon="@drawable/ic_add"
-                app:iconGravity="textStart"
-                app:iconTint="@color/white" />
+                android:clipToPadding="true"
+                android:orientation="vertical"
+                android:paddingBottom="64dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:itemCount="3"
+                tools:listitem="@layout/item_member_role_assignment"
+                tools:visibility="visible" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

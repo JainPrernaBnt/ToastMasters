@@ -30,4 +30,5 @@
         <item name="android:windowMinWidthMajor">@dimen/dialog_min_width</item>
         <item name="android:windowMinWidthMinor">@dimen/dialog_min_width</item>
     </style>
+
 </resources>

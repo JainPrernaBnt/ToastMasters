@@ -7,7 +7,10 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="16dp"
     app:cardCornerRadius="8dp"
-    app:cardElevation="1dp">
+    app:cardElevation="0dp"
+    app:strokeColor="@color/gray_300"
+    app:strokeWidth="1dp">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,6 +29,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:textColor="@color/on_surface"
+                android:textSize="18sp"
                 tools:text="John Doe" />
 
             <View
@@ -55,10 +59,10 @@
             style="@style/TextAppearance.MaterialComponents.Caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:text="@string/preferred_roles"
-            android:textColor="@color/on_surface_medium"
-            android:textSize="@dimen/_13ssp" />
+            android:textColor="@color/grey_600"
+            android:textSize="@dimen/_12ssp" />
 
         <HorizontalScrollView
             android:layout_width="match_parent"
@@ -79,7 +83,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Choice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Toastmaster"
+                    android:text="@string/toastmaster"
                     app:chipMinHeight="24dp"
                     app:chipMinTouchTargetSize="0dp"
                     app:chipStartPadding="8dp" />
@@ -87,15 +91,22 @@
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/gray_300" />
+
         <TextView
             android:id="@+id/tvRecentRolesLabel"
             style="@style/TextAppearance.MaterialComponents.Caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:text="@string/recent_roles"
-            android:textColor="@color/on_surface_medium"
-            android:textSize="@dimen/_13ssp" />
+            android:textColor="@color/grey_600"
+            android:textSize="@dimen/_12ssp" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -121,6 +132,7 @@
                 android:gravity="center"
                 android:padding="8dp"
                 android:text="@string/no_recent_roles"
+                android:textColor="@color/gray_500"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -129,13 +141,20 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/gray_300" />
+
         <TextView
             style="@style/TextAppearance.MaterialComponents.Caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/assign_role"
-            android:textColor="@color/on_surface_medium"
+            android:textColor="@color/grey_600"
             android:textSize="@dimen/_13ssp" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -143,14 +162,19 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:hint="@string/select_role"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
             app:startIconDrawable="@drawable/ic_work">
 
             <AutoCompleteTextView
                 android:id="@+id/actvRole"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="@string/select_role"
                 android:inputType="none"
                 tools:text="Toastmaster" />
 
@@ -164,12 +188,12 @@
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupSelectedRoles"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                app:chipSpacing="4dp"
-                app:chipSpacingHorizontal="4dp"
-                app:chipSpacingVertical="4dp"
+                app:chipSpacing="8dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp"
                 app:singleLine="true"
                 app:singleSelection="false" />
         </HorizontalScrollView>
@@ -179,8 +203,11 @@
             android:id="@+id/cbAssignBackup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
+            android:contentDescription="@string/assign_backup"
             android:text="@string/assign_backup"
+            android:textColor="@color/purple_700"
+            android:textSize="15sp"
             app:buttonTint="@color/purple_500" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -191,12 +218,17 @@
             android:layout_marginTop="4dp"
             android:hint="@string/select_backup_member"
             android:visibility="gone"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusTopStart="12dp"
             app:startIconDrawable="@drawable/ic_person">
 
             <AutoCompleteTextView
                 android:id="@+id/actvBackupMember"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="@string/select_backup_member"
                 android:inputType="none"
                 tools:text="Jane Smith" />
 

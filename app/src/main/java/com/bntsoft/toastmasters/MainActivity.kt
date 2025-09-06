@@ -32,13 +32,15 @@ class MainActivity : BaseActivity() {
     private val appBarConfiguration = AppBarConfiguration(
         setOf(
             R.id.dashboardFragment,
-            R.id.navigation_dashboard,
-            R.id.navigation_meetings,
-            R.id.navigation_settings,
-            R.id.navigation_leaderboard,
             R.id.createMeetingFragment,
+            R.id.settingsFragment,
+            R.id.leaderboardFragment,
+            R.id.reportsFragment,
+            R.id.memberApprovalFragment,
+            R.id.loginFragment,
+            R.id.signUpFragment,
             R.id.assignRolesFragment,
-            R.id.leaderboardFragment
+            R.id.memberRoleAssignFragment
         )
     )
 
@@ -151,7 +153,7 @@ class MainActivity : BaseActivity() {
 
         // Initial visibility
         updateBottomNavVisibility()
-        
+
         // Handle destination changes
         navController.addOnDestinationChangedListener { _, destination, _ ->
             updateBottomNavVisibility()
@@ -160,9 +162,9 @@ class MainActivity : BaseActivity() {
 
     private fun setupNavigationListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            // Show/hide toolbar based on destination (hide for auth screens)
-            val isAuth = destination.id == R.id.loginFragment ||
-                        destination.id == R.id.signUpFragment
+            // List of auth fragments where we want to hide the toolbar and bottom nav
+            val isAuth = listOf(R.id.loginFragment, R.id.signUpFragment).contains(destination.id)
+
             if (isAuth) {
                 supportActionBar?.hide()
                 window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -170,13 +172,34 @@ class MainActivity : BaseActivity() {
             } else {
                 supportActionBar?.show()
                 window.decorView.systemUiVisibility = 0
-                // Bottom nav visibility is handled by setupBottomNavForUser
+                // Show bottom nav for all non-auth destinations except when in CreateAgendaFragment
+                bottomNav.visibility =
+                    if (destination.id == R.id.createAgendaFragment) View.GONE else View.VISIBLE
             }
 
-            // Handle back button visibility
-            val isTopLevelDestination = appBarConfiguration.topLevelDestinations.contains(destination.id)
+            // Handle back button visibility - show back button for all non-top-level destinations
+            // except for auth screens where we hide the action bar completely
+            val isTopLevelDestination =
+                appBarConfiguration.topLevelDestinations.contains(destination.id)
             supportActionBar?.let { actionBar ->
-                actionBar.setDisplayHomeAsUpEnabled(!isTopLevelDestination)
+                // Show back button for all fragments except auth fragments and top-level destinations
+                val shouldShowBackButton = !isAuth && !isTopLevelDestination
+                actionBar.setDisplayHomeAsUpEnabled(shouldShowBackButton)
+
+                // Set the title based on the current destination
+                actionBar.title = when (destination.id) {
+                    R.id.dashboardFragment -> getString(R.string.title_dashboard)
+                    R.id.createAgendaFragment -> getString(R.string.create_agenda)
+                    R.id.createMeetingFragment -> getString(R.string.meetings)
+                    R.id.settingsFragment -> getString(R.string.settings)
+                    R.id.leaderboardFragment -> getString(R.string.leaderboard)
+                    R.id.reportsFragment -> getString(R.string.title_reports)
+                    R.id.memberApprovalFragment -> getString(R.string.approve_member)
+                    R.id.assignRolesFragment -> getString(R.string.title_assign_roles)
+                    R.id.memberRoleAssignFragment -> getString(R.string.title_assign_roles)
+                    // Add more titles later
+                    else -> getString(R.string.app_name)
+                }
             }
 
             // Invalidate options menu to update status bar menu visibility
@@ -191,14 +214,14 @@ class MainActivity : BaseActivity() {
     fun navigateToRoleBasedScreen(role: UserRole) {
         setupBottomNavForUser(role)
     }
-    
+
     private fun updateBottomNavVisibility() {
         val currentDestination = navController.currentDestination?.id ?: return
-        val isAuthScreen = currentDestination == R.id.loginFragment || 
-                          currentDestination == R.id.signUpFragment
+        val isAuthScreen = currentDestination == R.id.loginFragment ||
+                currentDestination == R.id.signUpFragment
         // Hide bottom nav for auth screens
         bottomNav.visibility = if (isAuthScreen) View.GONE else View.VISIBLE
-        
+
         // Update system UI flags
         if (isAuthScreen) {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN

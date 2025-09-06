@@ -14,7 +14,17 @@
     <color name="gray_100">#F5F5F5</color>
     <color name="gray_300">#E0E0E0</color>
     <color name="gray_400">#BDBDBD</color>
+    <color name="gray_500">#9E9E9E</color>
+    <color name="gray_600">#757575</color>
     <color name="gray_800">#424242</color>
+    <color name="purple_100">#E1BEE7</color>
+    <color name="grey_300">#E0E0E0</color>
+    <color name="grey_600">#757575</color>
+
+    <!-- Material 3 color tokens -->
+    <color name="surface_container_highest">#E6E6E6</color>
+    <color name="primary_container">#EADDFF</color>
+    <color name="on_primary_container">#21005D</color>
 
     <!-- Material colors -->
     <color name="red_500">#FF4444</color>
@@ -67,8 +77,8 @@
     <!-- Chip colors -->
     <color name="chip_background">#E3F2FD</color>
     <color name="chip_background_selected">#E3F2FD</color>
-    <color name="chip_background_checked">#E8F5E9</color>
-    <color name="chip_background_unchecked">#FFFFFF</color>
+    <color name="chip_background_checked">#E1BEE7</color>
+    <color name="chip_background_unchecked">#F5F5F5</color>
     <color name="chip_text">#1F1F1F</color>
     <color name="chip_text_checked">#2E7D32</color>
     <color name="chip_text_unchecked">#212121</color>
@@ -82,4 +92,5 @@
     <color name="role_grammarian">#FF9800</color>
     <color name="role_timer">#00BCD4</color>
     <color name="role_ah_counter">#E91E63</color>
+    <color name="purple_50">#F3E5F5</color>
 </resources>

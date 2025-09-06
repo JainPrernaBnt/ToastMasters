@@ -52,6 +52,11 @@ class MemberRoleAssignFragment : Fragment() {
             return@onViewCreated
         }
 
+        // Show loading indicator, hide members and button initially
+        binding.progressBar.visibility = View.VISIBLE
+        binding.rvMembers.visibility = View.GONE
+        binding.btnCreateAgenda.visibility = View.GONE
+
         setupRecyclerView()
         setupClickListeners()
         observeViewModel()
@@ -153,6 +158,10 @@ class MemberRoleAssignFragment : Fragment() {
         viewModel.availableMembers.observe(viewLifecycleOwner) { members ->
             Log.d("MemberRoleAssignFrag", "Available members updated. Count: ${members.size}")
             adapter.updateAvailableMembers(members)
+            // Hide loading, show members and button when loaded
+            binding.progressBar.visibility = View.GONE
+            binding.rvMembers.visibility = View.VISIBLE
+            binding.btnCreateAgenda.visibility = View.VISIBLE
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->

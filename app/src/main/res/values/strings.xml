@@ -386,4 +386,5 @@
     <string name="role_details">Role Details</string>
     <string name="speech_objectives">Speech Objective</string>
     <string name="notes">Note</string>
+    <string name="toastmaster">Toastmaster</string>
 </resources>
