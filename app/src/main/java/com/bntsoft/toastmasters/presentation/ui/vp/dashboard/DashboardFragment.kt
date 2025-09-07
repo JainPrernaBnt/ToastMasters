@@ -47,14 +47,17 @@ class DashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Basic log to verify fragment is loading
-        Timber.tag("DashboardDebug").d("DashboardFragment loaded successfully")
-
-        // Debug: Print ViewModel and adapter state
+        Log.d("DashboardDebug", "onViewCreated: Fragment view created")
         Log.d("DashboardDebug", "ViewModel: $viewModel")
         Log.d("DashboardDebug", "Adapter initialized: ${::meetingAdapter.isInitialized}")
 
+        // Set up RecyclerView if not already done
+        if (!::meetingAdapter.isInitialized) {
+            setupRecyclerView()
+        }
+
         // Force refresh data
+        Log.d("DashboardDebug", "Loading upcoming meetings...")
         viewModel.loadUpcomingMeetings()
     }
 
@@ -99,10 +102,28 @@ class DashboardFragment : Fragment() {
 
     private fun observeUpcomingMeetings() {
         viewLifecycleOwner.lifecycleScope.launch {
+            Log.d("DashboardDebug", "Starting to observe upcoming meetings")
             viewModel.upcomingMeetingsStateWithCounts.collect { state ->
+                Log.d("DashboardDebug", "Received state: ${state.javaClass.simpleName}")
                 val message = when (state) {
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Success -> {
-                        meetingAdapter.submitList(state.meetings)
+                        Log.d("DashboardDebug", "Received ${state.meetings.size} meetings from ViewModel")
+                        if (state.meetings.isEmpty()) {
+                            Log.d("DashboardDebug", "No meetings received from ViewModel")
+                        } else {
+                            state.meetings.forEachIndexed { index, meeting ->
+                                Log.d("DashboardDebug", "Meeting #${index + 1}: ${meeting.meeting.theme} (${meeting.meeting.id}) - " +
+                                        "Status: ${meeting.meeting.status}, " +
+                                        "Date: ${meeting.meeting.dateTime}, " +
+                                        "Available: ${meeting.availableCount}, " +
+                                        "Not Available: ${meeting.notAvailableCount}")
+                            }
+                        }
+                        meetingAdapter.submitList(state.meetings) {
+                            Log.d("DashboardDebug", "Adapter updated with ${state.meetings.size} meetings")
+                            Log.d("DashboardDebug", "RecyclerView child count: ${binding.rvMeetings.childCount}")
+                            Log.d("DashboardDebug", "RecyclerView adapter item count: ${meetingAdapter.itemCount}")
+                        }
                         "Loaded ${state.meetings.size} meetings"
                     }
 

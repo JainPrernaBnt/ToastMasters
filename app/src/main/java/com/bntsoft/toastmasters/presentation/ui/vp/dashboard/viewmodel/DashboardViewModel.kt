@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.dashboard.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
@@ -41,25 +42,37 @@ class DashboardViewModel @Inject constructor(
 
     fun loadUpcomingMeetings() {
         viewModelScope.launch {
+            Log.d("DashboardDebug", "loadUpcomingMeetings: Starting to load meetings")
             _upcomingMeetingsStateWithCounts.value = UpcomingMeetingsStateWithCounts.Loading
-            Timber.d("Loading upcoming meetings...")
 
             try {
                 // Get all club members once (excluding VP Education)
                 val allMembers = try {
                     val members = memberRepository.getAllMembers(includePending = false).first()
                         .filter { !it.isVpEducation }
-                    Timber.d("Found ${members.size} active members (excluding VP Education)")
+                    Log.d("DashboardDebug", "Found ${members.size} active members (excluding VP Education)")
                     members
                 } catch (e: Exception) {
-                    Timber.e(e, "Error fetching members")
-                    emptyList()
+                    Log.e("DashboardDebug", "Error fetching members", e)
+                    _upcomingMeetingsStateWithCounts.value = 
+                        UpcomingMeetingsStateWithCounts.Error("Failed to load members: ${e.message}")
+                    return@launch
                 }
                 val totalMembers = allMembers.size
 
                 // Combine the meetings flow with the responses flow
+                Log.d("DashboardDebug", "Getting upcoming meetings from repository")
                 meetingRepository.getUpcomingMeetings(LocalDate.now()).collectLatest { meetings ->
-                    Timber.d("Retrieved ${meetings.size} meetings from repository")
+                    Log.d("DashboardDebug", "Retrieved ${meetings.size} meetings from repository")
+                    if (meetings.isEmpty()) {
+                        Log.d("DashboardDebug", "No meetings found in repository")
+                    } else {
+                        meetings.forEachIndexed { index, meeting ->
+                            Log.d("DashboardDebug", "Meeting #${index + 1}: ${meeting.theme} (${meeting.id}) - " +
+                                    "Status: ${meeting.status}, " +
+                                    "Date: ${meeting.dateTime}")
+                        }
+                    }
 
                     if (meetings.isEmpty()) {
                         Timber.d("No upcoming meetings found")
@@ -95,8 +108,13 @@ class DashboardViewModel @Inject constructor(
                     combine(meetingsFlow) { meetingCounts ->
                         meetingCounts.toList()
                     }.collect { meetingsWithCounts ->
+                        val sortedMeetings = meetingsWithCounts.sortedBy { it.meeting.dateTime }
+                        Timber.d("Sending ${sortedMeetings.size} meetings to UI")
+                        sortedMeetings.forEach { 
+                            Timber.d("Sending to UI: ${it.meeting.theme} - ${it.meeting.dateTime} - Status: ${it.meeting.status}")
+                        }
                         _upcomingMeetingsStateWithCounts.value =
-                            UpcomingMeetingsStateWithCounts.Success(meetingsWithCounts.sortedBy { it.meeting.dateTime })
+                            UpcomingMeetingsStateWithCounts.Success(sortedMeetings)
                     }
                 }
             } catch (e: Exception) {

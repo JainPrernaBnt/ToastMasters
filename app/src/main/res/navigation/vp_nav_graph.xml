@@ -128,6 +128,11 @@
         <action
             android:id="@+id/action_memberRoleAssignFragment_to_createAgendaFragment"
             app:destination="@id/createAgendaFragment" />
+        <action
+            android:id="@+id/action_memberRoleAssignFragment_to_agendaTableFragment"
+            app:destination="@id/agendaTableFragment"
+            app:popUpTo="@id/agendaTableFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -139,9 +144,22 @@
             android:name="meeting_id"
             app:argType="string" />
         <action
+            android:id="@+id/action_createAgendaFragment_to_agendaTableFragment"
+            app:destination="@id/agendaTableFragment" />
+        <action
             android:id="@+id/action_createAgendaFragment_to_memberRoleAssignFragment"
             app:destination="@id/memberRoleAssignFragment"
             app:popUpTo="@id/memberRoleAssignFragment"
             app:popUpToInclusive="false" />
+    </fragment>
+    
+    <fragment
+        android:id="@+id/agendaTableFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.agenda.AgendaTableFragment"
+        android:label="Agenda Table"
+        tools:layout="@layout/fragment_agenda_table" >
+        <action
+            android:id="@+id/action_agendaTableFragment_to_createAgendaFragment2"
+            app:destination="@id/createAgendaFragment" />
     </fragment>
 </navigation>

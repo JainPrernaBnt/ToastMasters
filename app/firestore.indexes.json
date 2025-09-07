@@ -1,0 +1,36 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "meetings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "createdAt", "order": "DESCENDING"},
+        {"fieldPath": "status", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "agenda",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "meetingId", "order": "ASCENDING"},
+        {"fieldPath": "orderIndex", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "agenda",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "presenterId", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "meetings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "createdBy", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    }
+  ]
+}

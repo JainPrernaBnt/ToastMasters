@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.roles
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.models.MeetingStatus
@@ -37,12 +38,34 @@ class AssignRolesViewModel @Inject constructor(
             _error.value = null
 
             try {
-                meetingRepository.getUpcomingMeetings(LocalDate.now())
+                val today = LocalDate.now()
+                Log.d("AssignRolesVM", "Loading meetings from repository for date: $today")
+                meetingRepository.getUpcomingMeetings(today)
                     .collectLatest { meetings ->
-                        _meetings.value = meetings
-                            .filter { it.status == MeetingStatus.NOT_COMPLETED }
-                            .map { MeetingListItem.fromMeeting(it) }
-                            .sortedBy { it.meeting.dateTime }
+                        Log.d("AssignRolesVM", "Raw meetings from repository: ${meetings.size}")
+                        meetings.forEach { 
+                            Log.d("AssignRolesVM", "Meeting: ${it.id} - ${it.theme} - Status: ${it.status}")
+                        }
+                        
+                        val filteredMeetings = meetings.filter { 
+                            val isNotCompleted = it.status == MeetingStatus.NOT_COMPLETED
+                            if (!isNotCompleted) {
+                                Log.d("AssignRolesVM", "Filtering out completed meeting: ${it.id} - Status: ${it.status}")
+                            }
+                            isNotCompleted
+                        }
+                        
+                        Log.d("AssignRolesVM", "After filtering: ${filteredMeetings.size} meetings")
+                        
+                        val meetingListItems = filteredMeetings.map { meeting ->
+                            Log.d("AssignRolesVM", "Mapping meeting: ${meeting.id} - ${meeting.theme}")
+                            MeetingListItem.fromMeeting(meeting).also {
+                                Log.d("AssignRolesVM", "Mapped to MeetingListItem: ${it.theme} - ${it.dateTime}")
+                            }
+                        }.sortedBy { it.meeting.dateTime }
+                        
+                        Log.d("AssignRolesVM", "Setting ${meetingListItems.size} meetings to UI")
+                        _meetings.value = meetingListItems
 
                         // Stop loading once data is received
                         _isLoading.value = false

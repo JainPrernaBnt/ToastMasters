@@ -156,10 +156,14 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
     override fun getUpcomingMeetings(afterDate: LocalDate): Flow<List<Meeting>> = callbackFlow {
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE
         val dateString = afterDate.format(formatter)
+        val now = com.google.firebase.Timestamp.now()
+
+        Log.d("FirebaseDS", "Fetching meetings after $dateString, current time: $now")
 
         val subscription = meetingsCollection
-            .whereGreaterThanOrEqualTo("date", dateString)
-            .orderBy("date")
+            .whereGreaterThanOrEqualTo("meetingDate", now)
+            .whereEqualTo("meeting.status", "NOT_COMPLETED")
+            .orderBy("meetingDate")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -168,37 +172,53 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
                 val meetings = snapshot?.documents?.mapNotNull { document ->
                     try {
-                        val dateString = document.getString("date") ?: ""
+                        Log.d("FirebaseDS", "Raw document data: ${document.data}")
+                        // Get meeting data, handling both nested and root level fields
+                        val meetingData = if (document.contains("meeting")) {
+                            document.get("meeting") as? Map<String, Any> ?: emptyMap()
+                        } else {
+                            // If no nested meeting object, use root document fields
+                            document.data ?: emptyMap()
+                        }
+
+                        val dateTime = (document.get("meetingDate") as? com.google.firebase.Timestamp)?.toDate()?.toInstant()
+                            ?.atZone(java.time.ZoneId.systemDefault())
+                            ?.toLocalDateTime() ?: LocalDateTime.now()
+
                         val startTimeString = document.getString("startTime") ?: "00:00"
                         val endTimeString = document.getString("endTime") ?: "23:59"
 
-                        // Parse date and times
-                        val date = LocalDate.parse(dateString, formatter)
-                        val startTime = LocalTime.parse(startTimeString)
-                        val endTime = LocalTime.parse(endTimeString)
+                        val startTime = try { LocalTime.parse(startTimeString) } catch (e: Exception) { LocalTime.NOON }
+                        val endTime = try { LocalTime.parse(endTimeString) } catch (e: Exception) { startTime.plusHours(2) }
 
-                        // Create LocalDateTime objects for both start and end times
-                        val dateTime = LocalDateTime.of(date, startTime)
+                        val date = dateTime.toLocalDate()
+                        val startDateTime = LocalDateTime.of(date, startTime)
                         val endDateTime = LocalDateTime.of(date, endTime)
+
+                        // Get officers map
+                        val officers = document.get("officers") as? Map<String, String> ?: emptyMap()
 
                         // Create the DTO with all fields
                         val dto = MeetingDto(
-                            meetingID = document.getString("meetingID") ?: document.id,
-                            date = dateString,
+                            meetingID = document.id,
+                            date = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
                             startTime = startTimeString,
                             endTime = endTimeString,
-                            dateTime = dateTime,  // Set the parsed dateTime
-                            endDateTime = endDateTime,  // Set the parsed endDateTime
-                            venue = document.getString("venue") ?: "",
-                            theme = document.getString("theme") ?: "No Theme",
-                            roleCounts = (document.get("roleCounts") as? Map<String, *>)?.mapValues { (_, value) ->
+                            dateTime = startDateTime,
+                            endDateTime = endDateTime,
+                            venue = document.getString("location") ?: "",
+                            // Try to get theme from meetingData first, then from root document
+                            theme = (meetingData["theme"] as? String) 
+                                ?: (document.getString("theme") ?: "No Theme"),
+                            roleCounts = (meetingData["roleCounts"] as? Map<String, *>)?.mapValues { (_, value) ->
                                 when (value) {
                                     is Long -> value.toInt()
                                     is Int -> value
                                     else -> 1
                                 }
                             } ?: emptyMap(),
-                            createdAt = parseCreatedAtTimestamp(document.get("createdAt")),                            status = document.getString("status")?.let {
+                            createdAt = parseCreatedAtTimestamp(document.get("createdAt")),
+                            status = (meetingData["status"] as? String)?.let {
                                 try {
                                     com.bntsoft.toastmasters.domain.models.MeetingStatus.valueOf(it)
                                 } catch (e: Exception) {
@@ -219,15 +239,18 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             "Mapped meeting: ${dto.meetingID} - ${dto.theme} - ${dto.startTime} to ${dto.endTime} (${dto.dateTime} to ${dto.endDateTime})"
                         )
 
-                        val meeting = meetingMapper.mapToDomain(dto)
-                        // Ensure the meeting's date matches the filter
-                        if (date.isAfter(afterDate) || date.isEqual(afterDate)) {
-                            meeting
-                        } else {
+                        val meeting = try {
+                            meetingMapper.mapToDomain(dto).also {
+                                Log.d("FirebaseDS", "Successfully mapped meeting: ${it.id} - ${it.theme}")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("FirebaseDS", "Error mapping meeting DTO to domain: ${dto}", e)
                             null
                         }
+
+                        meeting
                     } catch (e: Exception) {
-                        Timber.e(e, "Error parsing meeting document")
+                        Log.e("FirebaseDS", "Error parsing meeting document", e)
                         null
                     }
                 } ?: emptyList()

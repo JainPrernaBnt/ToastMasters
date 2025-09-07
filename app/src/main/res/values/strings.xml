@@ -190,6 +190,9 @@
 
     <!-- General -->
     <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm_save_title">Save Agenda</string>
+    <string name="confirm_save_message">Are you sure you want to save the agenda details and continue to agenda table?</string>
     <string name="no">No</string>
     <string name="loading">Loading...</string>
     <string name="error">Error</string>
@@ -327,7 +330,6 @@
     <string name="account_settings">Account Settings</string>
     <string name="logout_confirmation">Are you sure you want to logout?</string>
     <string name="yes">Yes</string>
-    <string name="cancel">Cancel</string>
 
     <!-- Notification Messages -->
     <string name="notification_member_approved_title">Membership Approved</string>
@@ -373,7 +375,7 @@
     <string name="no_previous_roles">No recent or previous roles</string>
     <string name="no_recent_roles">No recent roles</string>
     <string name="backout">Backout</string>
-    
+
     <!-- Create Agenda Strings -->
     <string name="create_agenda">Create Agenda</string>
     <string name="meeting_theme">Meeting Theme</string>

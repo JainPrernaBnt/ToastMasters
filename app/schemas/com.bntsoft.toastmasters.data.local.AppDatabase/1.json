@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "b5571b67ea610162f2f63d89a2af01a1",
+    "identityHash": "cd75a1b79b5b4950b16f6c979a59f95f",
     "entities": [
       {
         "tableName": "members",
@@ -118,7 +118,7 @@
       },
       {
         "tableName": "meetings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`meetingID` TEXT NOT NULL, `date` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `venue` TEXT NOT NULL, `theme` TEXT NOT NULL, `preferredRoles` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `isRecurring` INTEGER NOT NULL, `recurringDayOfWeek` INTEGER, `recurringStartTime` TEXT, `recurringEndTime` TEXT, PRIMARY KEY(`meetingID`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`meetingID` TEXT NOT NULL, `date` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `venue` TEXT NOT NULL, `theme` TEXT NOT NULL, `roleCounts` TEXT NOT NULL, `assignedCounts` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `status` TEXT NOT NULL, PRIMARY KEY(`meetingID`))",
         "fields": [
           {
             "fieldPath": "meetingID",
@@ -157,8 +157,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "preferredRoles",
-            "columnName": "preferredRoles",
+            "fieldPath": "roleCounts",
+            "columnName": "roleCounts",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "assignedCounts",
+            "columnName": "assignedCounts",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -169,25 +175,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "isRecurring",
-            "columnName": "isRecurring",
-            "affinity": "INTEGER",
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "recurringDayOfWeek",
-            "columnName": "recurringDayOfWeek",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "recurringStartTime",
-            "columnName": "recurringStartTime",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "recurringEndTime",
-            "columnName": "recurringEndTime",
-            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -1150,7 +1141,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b5571b67ea610162f2f63d89a2af01a1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cd75a1b79b5b4950b16f6c979a59f95f')"
     ]
   }
 }

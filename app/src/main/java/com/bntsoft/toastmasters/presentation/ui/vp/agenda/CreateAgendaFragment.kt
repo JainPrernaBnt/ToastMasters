@@ -1,25 +1,26 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.agenda
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentCreateAgendaBinding
 import com.bntsoft.toastmasters.domain.model.MeetingAgenda
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -47,18 +48,40 @@ class CreateAgendaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        meetingId = arguments?.getString(ARG_MEETING_ID) ?: return
+        meetingId = arguments?.getString(ARG_MEETING_ID) ?: run {
+            findNavController().navigateUp()
+            return
+        }
 
-        setupClickListeners()
-        setupMeetingDetails()
-        observeViewModel()
-        viewModel.loadMeeting(meetingId)
+        // Post the setup to ensure view hierarchy is ready
+        view.post {
+            setupClickListeners()
+            setupMeetingDetails()
+            observeViewModel()
+            viewModel.loadMeeting(meetingId)
+        }
     }
 
 
     private fun setupClickListeners() {
-        // No click listeners for read-only fields
-        binding.saveButton.setOnClickListener { viewModel.saveAgenda() }
+        binding.saveButton.setOnClickListener {
+            showConfirmationDialog()
+        }
+    }
+
+    private fun showConfirmationDialog() {
+        context?.let { ctx ->
+            MaterialAlertDialogBuilder(ctx)
+                .setTitle(getString(R.string.confirm_save_title))
+                .setMessage(getString(R.string.confirm_save_message))
+                .setPositiveButton(getString(R.string.ok)) { _, _ ->
+                    // User confirmed, proceed with save
+                    viewModel.saveAgenda()
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .setOnDismissListener {}
+                .show()
+        }
     }
 
     private fun observeViewModel() {
@@ -74,6 +97,13 @@ class CreateAgendaFragment : Fragment() {
 
                     if (state.isSaved) {
                         showMessage(getString(R.string.agenda_saved))
+                        // Post the navigation to ensure UI updates complete
+                        view?.postDelayed({
+                            if (isAdded && !isDetached) {
+                                // Navigate back to MemberRoleAssignFragment
+                                findNavController().navigateUp()
+                            }
+                        }, 300) // Small delay to ensure UI updates complete
                     }
 
                     state.error?.let { error ->
@@ -125,75 +155,115 @@ class CreateAgendaFragment : Fragment() {
         }
     }
 
-    private val officerRoles = listOf(
-        "President",
-        "VP Education",
-        "VP Membership",
-        "VP Public Relations",
-        "SAA",
-        "Secretary",
-        "Treasurer",
-        "Immediate Past President"
-    )
+
+    private var isInitialLoad = true
+    private var currentOfficers: Map<String, String> = emptyMap()
 
     private fun updateUi(agenda: MeetingAgenda) {
-        // Update meeting details
-        binding.themeEditText.setText(agenda.meeting.theme)
-        agenda.meetingDate?.let { timestamp ->
-            binding.dateEditText.setText(dateFormat.format(Date(timestamp.seconds * 1000)))
+        // Only update theme if it's changed
+        if (binding.themeEditText.text?.toString() != agenda.meeting.theme) {
+            binding.themeEditText.setText(agenda.meeting.theme)
         }
-        binding.startTimeEditText.setText(agenda.startTime)
-        binding.endTimeEditText.setText(agenda.endTime)
-        binding.venueEditText.setText(agenda.meeting.location)
+        
+        // Only update date if it's changed
+        val formattedDate = agenda.meetingDate?.let { timestamp ->
+            dateFormat.format(Date(timestamp.seconds * 1000))
+        } ?: ""
+        if (binding.dateEditText.text?.toString() != formattedDate) {
+            binding.dateEditText.setText(formattedDate)
+        }
+        
+        // Only update times if they're changed
+        if (binding.startTimeEditText.text?.toString() != agenda.startTime) {
+            binding.startTimeEditText.setText(agenda.startTime)
+        }
+        if (binding.endTimeEditText.text?.toString() != agenda.endTime) {
+            binding.endTimeEditText.setText(agenda.endTime)
+        }
+        
+        // Only update venue if it's changed
+        if (binding.venueEditText.text?.toString() != agenda.meeting.location) {
+            binding.venueEditText.setText(agenda.meeting.location)
+        }
 
-        // Update officers list
-        binding.officersContainer.removeAllViews()
-        officerRoles.forEach { role ->
-            val name = agenda.officers[role] ?: ""
-            addOfficerInput(role, name)
+        // Only update officer fields if they've actually changed
+        if (currentOfficers != agenda.officers) {
+            currentOfficers = agenda.officers
+            setupOfficerFields(agenda.officers)
         }
+        
+        isInitialLoad = false
     }
 
-    private fun addOfficerInput(role: String, name: String) {
-        // Create a new TextInputLayout programmatically
-        val inputLayout = TextInputLayout(requireContext()).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginStart = resources.getDimensionPixelSize(R.dimen.spacing_small)
-                marginEnd = resources.getDimensionPixelSize(R.dimen.spacing_small)
-                bottomMargin = resources.getDimensionPixelSize(R.dimen.spacing_medium)
+    private fun setupOfficerFields(officers: Map<String, String>) {
+        // Only set up text watchers once
+        if (isInitialLoad) {
+            binding.ippEditText.setupOfficerTextWatcher("Immediate Past President")
+            binding.presidentEditText.setupOfficerTextWatcher("President")
+            binding.secretaryEditText.setupOfficerTextWatcher("Secretary")
+            binding.saaEditText.setupOfficerTextWatcher("Sergeant at Arms")
+            binding.treasurerEditText.setupOfficerTextWatcher("Treasurer")
+            binding.vpEducationEditText.setupOfficerTextWatcher("VP Education")
+            binding.vpMembershipEditText.setupOfficerTextWatcher("VP Membership")
+        }
+        // Only update text if it's different from current text
+        fun updateField(editText: TextInputEditText, value: String?) {
+            if (editText.text?.toString() != value) {
+                editText.setText(value ?: "")
             }
-            hint = role
-            isHintEnabled = true
-            boxBackgroundMode =
-                com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE
-            boxBackgroundColor = Color.TRANSPARENT
-            setHintTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Medium)
+        }
 
-            // Add TextInputEditText
-            addView(TextInputEditText(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                setText(name)
-                setTextAppearance(android.R.style.TextAppearance_Medium)
-                textSize = 16f
+        // Update officer fields
+        updateField(binding.ippEditText, officers["Immediate Past President"])
+        updateField(binding.presidentEditText, officers["President"])
+        updateField(binding.secretaryEditText, officers["Secretary"])
+        updateField(binding.saaEditText, officers["Sergeant at Arms"])
+        updateField(binding.treasurerEditText, officers["Treasurer"])
+        updateField(binding.vpEducationEditText, officers["VP Education"])
+        updateField(binding.vpMembershipEditText, officers["VP Membership"])
+    }
 
-                // Update the officer name when focus is lost
-                setOnFocusChangeListener { _, hasFocus ->
-                    if (!hasFocus) {
-                        viewModel.updateOfficer(role, text.toString())
+    private fun TextInputEditText.setupOfficerTextWatcher(role: String) {
+        // Clear existing text watchers
+        this.tag?.let { oldWatcher ->
+            if (oldWatcher is android.text.TextWatcher) {
+                this.removeTextChangedListener(oldWatcher)
+            }
+        }
+
+        // Clear existing focus change listeners
+        this.onFocusChangeListener = null
+
+        // Add focus change listener
+        this.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                viewModel.updateOfficer(role, this.text.toString())
+            }
+        }
+
+        // Add text changed listener
+        val textWatcher = object : android.text.TextWatcher {
+            private var debounceJob: Job? = null
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                debounceJob?.cancel()
+                debounceJob = viewLifecycleOwner.lifecycleScope.launch {
+                    delay(500) // 500ms debounce
+                    if (isAttachedToWindow && isLaidOut) {
+                        viewModel.updateOfficer(role, s?.toString() ?: "")
                     }
                 }
-            })
+            }
+
+            override fun afterTextChanged(s: android.text.Editable?) {}
         }
 
-        binding.officersContainer.addView(inputLayout)
+        // Store the watcher in the view's tag to avoid leaks
+        this.tag = textWatcher
+        this.addTextChangedListener(textWatcher)
     }
-
 
     private fun showMessage(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
@@ -208,8 +278,13 @@ class CreateAgendaFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        // Clear all view references to prevent memory leaks
+        _binding?.let { binding ->
+            // Clear any listeners or callbacks here if needed
+            binding.saveButton.setOnClickListener(null)
+            _binding = null
+        }
         super.onDestroyView()
-        _binding = null
     }
 
     companion object {

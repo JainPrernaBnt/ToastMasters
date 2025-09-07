@@ -480,6 +480,12 @@ class CreateMeetingFragment : Fragment() {
             .show()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Button is now part of the scrollable content, no need to manage visibility
+        android.util.Log.d("CreateMeetingFragment", "onResume")
+    }
+    
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

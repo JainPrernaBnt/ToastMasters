@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.presentation.ui.vp.roles.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.util.Log
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -23,7 +24,14 @@ class MeetingAdapter(
     }
 
     override fun onBindViewHolder(holder: MeetingViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        Log.d("MeetingAdapter", "Binding item at position $position: ${item.theme} (ID: ${item.id})")
+        holder.bind(item)
+    }
+    
+    override fun onViewRecycled(holder: MeetingViewHolder) {
+        super.onViewRecycled(holder)
+        Log.d("MeetingAdapter", "View recycled for position ${holder.bindingAdapterPosition}")
     }
 
     class MeetingViewHolder(
@@ -32,7 +40,12 @@ class MeetingAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(meeting: MeetingListItem) {
+            Log.d("MeetingViewHolder", "Binding meeting: ${meeting.theme} (ID: ${meeting.id})")
             with(binding) {
+                Log.d("MeetingViewHolder", "Theme: ${meeting.theme}")
+                Log.d("MeetingViewHolder", "Venue: ${meeting.venue}")
+                Log.d("MeetingViewHolder", "Date: ${meeting.formattedDate}")
+                Log.d("MeetingViewHolder", "Time: ${meeting.formattedTime}")
                 // Theme
                 tvMeetingTheme.text = meeting.theme
                 
