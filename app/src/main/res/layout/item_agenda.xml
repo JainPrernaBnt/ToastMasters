@@ -220,4 +220,22 @@
             </com.google.android.material.textfield.TextInputLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
+    
+    <!-- Add Item FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addItemFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:contentDescription="Add new item"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/purple_500"
+        app:layout_constraintEnd_toEndOf="@id/agendaCard"
+        app:layout_constraintStart_toStartOf="@id/agendaCard"
+        app:layout_constraintTop_toBottomOf="@id/agendaCard"
+        app:tint="@color/white"
+        app:useCompatPadding="true"
+        app:maxImageSize="24dp"
+        app:fabSize="mini" />
+        
 </androidx.constraintlayout.widget.ConstraintLayout>
