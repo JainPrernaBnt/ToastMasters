@@ -25,7 +25,6 @@ data class AgendaItem(
     @ServerTimestamp
     val updatedAt: Timestamp? = null
 ) : Parcelable {
-    val totalTime: Int get() = greenTime + yellowTime + redTime
 
     fun withOrderIndex(newIndex: Int): AgendaItem = copy(orderIndex = newIndex)
 
@@ -34,9 +33,9 @@ data class AgendaItem(
             meetingId = meetingId,
             orderIndex = 0,
             time = "",
-            greenTime = 5,
-            yellowTime = 1,
-            redTime = 1,
+            greenTime = 0,
+            yellowTime = 0,
+            redTime = 0,
             activity = "",
             presenterId = "",
             presenterName = ""

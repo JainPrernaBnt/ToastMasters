@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="true"
+    android:background="@drawable/dialog_background"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="16dp">
+
+        <!-- Title -->
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_horizontal"
+            android:text="@string/add_agenda_item"
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+            android:textColor="@color/on_surface" />
+
+        <!-- Time Picker Button -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/timeInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Time"
+            app:boxStrokeColor="@color/purple_500"
+            app:startIconDrawable="@drawable/ic_access_time"
+            app:startIconTint="@color/purple_500">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/timeInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="time"
+                android:minHeight="48dp"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Card Sequence Label -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/cardSequenceLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Card Sequence"
+            android:textColor="@color/purple_700"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Card Inputs Row -->
+        <LinearLayout
+            android:id="@+id/cardInputsRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:weightSum="3">
+
+            <!-- Green Card Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/greenCardLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:hint="Green"
+                app:boxStrokeColor="@color/green_500"
+                app:endIconDrawable="@drawable/ic_time"
+                app:endIconTint="@color/green_500">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/greenCardInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number|time"
+                    android:maxLines="1"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Yellow Card Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/yellowCardLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="4dp"
+                android:layout_weight="1"
+                android:hint="Yellow"
+                app:boxStrokeColor="@color/yellow_500"
+                app:endIconDrawable="@drawable/ic_time"
+                app:endIconTint="@color/yellow_700">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/yellowCardInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number|time"
+                    android:maxLines="1"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Red Card Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/redCardLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:hint="Red"
+                app:boxStrokeColor="@color/red_500"
+                app:endIconDrawable="@drawable/ic_time"
+                app:endIconTint="@color/red_500">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/redCardInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number|time"
+                    android:maxLines="1"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Activity Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/activityLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Activity"
+            app:boxStrokeColor="@color/purple_500"
+            app:endIconDrawable="@drawable/ic_edit"
+            app:endIconTint="@color/purple_500">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/activityInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Presenter Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/presenterLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Presenter"
+            app:boxStrokeColor="@color/blue_500"
+            app:endIconDrawable="@drawable/ic_person"
+            app:endIconTint="@color/blue_500">
+
+            <AutoCompleteTextView
+                android:id="@+id/presenterInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:inputType="text"
+                android:maxLines="1"
+                android:minHeight="48dp"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Buttons -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@color/purple_500"
+            android:text="@string/save"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:cornerRadius="12dp"
+            app:rippleColor="@color/purple_200" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/cancel"
+            android:textAllCaps="false"
+            android:textColor="@color/purple_500"
+            app:cornerRadius="12dp"
+            app:rippleColor="@color/purple_100"
+            app:strokeColor="@color/purple_500"
+            app:strokeWidth="1dp" />
+
+    </LinearLayout>
+</ScrollView>

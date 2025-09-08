@@ -15,7 +15,6 @@ class UserService @Inject constructor(
 ) {
     companion object {
         private const val USERS_COLLECTION = "users"
-        private const val MEETING_AVAILABILITY = "meeting_availability"
     }
 
     private val usersCollection = firestore.collection(USERS_COLLECTION)

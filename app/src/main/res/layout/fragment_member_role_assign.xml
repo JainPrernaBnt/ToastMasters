@@ -31,39 +31,6 @@
                 app:indicatorSize="64dp"
                 app:trackThickness="4dp" />
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardCreateAgenda"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/grey_300"
-                app:strokeWidth="1dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCreateAgenda"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="@android:color/transparent"
-                    android:drawablePadding="8dp"
-                    android:gravity="start|center_vertical"
-                    android:padding="16dp"
-                    android:text="@string/create_agenda"
-                    android:textAllCaps="false"
-                    android:textColor="@color/purple_700"
-                    android:textSize="16sp"
-                    app:icon="@drawable/ic_add"
-                    app:iconGravity="start"
-                    app:iconTint="@color/purple_500"
-                    app:rippleColor="@color/purple_100"
-                    app:strokeColor="@android:color/transparent"
-                    app:strokeWidth="1dp" />
-
-            </com.google.android.material.card.MaterialCardView>
-
             <TextView
                 android:id="@+id/tvEmptyState"
                 android:layout_width="match_parent"

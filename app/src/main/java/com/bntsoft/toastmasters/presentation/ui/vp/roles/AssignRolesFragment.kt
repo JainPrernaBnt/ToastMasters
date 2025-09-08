@@ -40,9 +40,18 @@ class AssignRolesFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        meetingAdapter = MeetingAdapter { meeting ->
-            navigateToMemberRoles(meeting.id)
-        }
+        meetingAdapter = MeetingAdapter(
+            onItemClick = { meeting ->
+                // Card click → navigate to MemberRoles
+                navigateToMemberRoles(meeting.id)
+            },
+            onCreateAgendaClick = { meeting ->
+                // btnCreateAgenda click → navigate to CreateAgenda
+                val action = AssignRolesFragmentDirections
+                    .actionAssignRolesFragmentToCreateAgendaFragment(meeting.id)
+                findNavController().navigate(action)
+            }
+        )
 
         binding.rvMeetings.apply {
             adapter = meetingAdapter
@@ -55,6 +64,7 @@ class AssignRolesFragment : Fragment() {
             viewModel.loadMeetings()
         }
     }
+
 
     private fun loadMeetings() {
         viewModel.loadMeetings()

@@ -43,7 +43,8 @@
     <fragment
         android:id="@+id/createMeetingFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.meetings.CreateMeetingFragment"
-        android:label="Create Meeting">
+        android:label="Create Meeting"
+        tools:layout="@layout/fragment_create_meeting">
         <action
             android:id="@+id/action_createMeetingFragment_to_dashboardFragment"
             app:destination="@id/dashboardFragment" />
@@ -60,6 +61,9 @@
         <action
             android:id="@+id/action_assignRolesFragment_to_memberRoleAssignFragment"
             app:destination="@id/memberRoleAssignFragment" />
+        <action
+            android:id="@+id/action_assignRolesFragment_to_createAgendaFragment"
+            app:destination="@id/createAgendaFragment" />
     </fragment>
 
 
@@ -137,7 +141,7 @@
 
     <fragment
         android:id="@+id/createAgendaFragment"
-        android:name="com.bntsoft.toastmasters.presentation.ui.vp.agenda.CreateAgendaFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.agenda.front.CreateAgendaFragment"
         android:label="Create Agenda"
         tools:layout="@layout/fragment_create_agenda">
         <argument
@@ -145,21 +149,33 @@
             app:argType="string" />
         <action
             android:id="@+id/action_createAgendaFragment_to_agendaTableFragment"
-            app:destination="@id/agendaTableFragment" />
+            app:destination="@id/agendaTableFragment"
+            app:popUpTo="@id/createAgendaFragment"
+            app:popUpToInclusive="false">
+            <argument
+                android:name="meetingId"
+                android:defaultValue="@null"
+                app:argType="string"
+                app:nullable="true" />
+        </action>
         <action
             android:id="@+id/action_createAgendaFragment_to_memberRoleAssignFragment"
             app:destination="@id/memberRoleAssignFragment"
             app:popUpTo="@id/memberRoleAssignFragment"
             app:popUpToInclusive="false" />
     </fragment>
-    
+
     <fragment
         android:id="@+id/agendaTableFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.agenda.AgendaTableFragment"
         android:label="Agenda Table"
-        tools:layout="@layout/fragment_agenda_table" >
+        tools:layout="@layout/fragment_agenda_table">
+        <argument
+            android:name="meetingId"
+            android:defaultValue=""
+            app:argType="string" />
         <action
-            android:id="@+id/action_agendaTableFragment_to_createAgendaFragment2"
+            android:id="@+id/action_agendaTableFragment_to_createAgendaFragment"
             app:destination="@id/createAgendaFragment" />
     </fragment>
 </navigation>

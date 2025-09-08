@@ -31,6 +31,7 @@
 
     <!-- ===== Material Colors ===== -->
     <color name="red_500">#FF4444</color>
+    <color name="red_100">#FFCDD2</color>
     <color name="red_700">#D32F2F</color>
     <color name="green_500">#4CAF50</color>
     <color name="green_700">#388E3C</color>
@@ -43,6 +44,8 @@
 
     <!-- ===== Material 3 Tokens ===== -->
     <color name="surface_container_highest">#E6E6E6</color>
+    <color name="surface_container_high">#EBE6ED</color>
+    <color name="on_surface_variant">#49454F</color>
     <color name="primary_container">#EADDFF</color>
     <color name="on_primary_container">#21005D</color>
 

@@ -25,4 +25,5 @@ interface FirebaseAgendaDataSource {
     
     // Status updates
     fun observeAgendaStatus(meetingId: String): Flow<AgendaStatus>
+
 }

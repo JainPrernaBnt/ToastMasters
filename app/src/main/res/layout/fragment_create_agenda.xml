@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
@@ -23,6 +21,7 @@
             android:paddingBottom="88dp">
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/meetingDetailsCard"
                 style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -153,8 +152,8 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/venue"
                         android:layout_marginTop="8dp"
+                        android:hint="@string/venue"
                         app:boxStrokeColor="@color/purple_200"
                         app:endIconTint="@color/purple_500"
                         app:hintTextColor="@color/purple_500">
@@ -168,10 +167,160 @@
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="16dp"
+                        android:background="@color/purple_200" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Club Information"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+                            android:textColor="@color/purple_700"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/editClubInfoButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/edit"
+                            android:textColor="@color/purple_500"
+                            app:icon="@drawable/ic_edit"
+                            app:iconGravity="textEnd"
+                            app:iconTint="@color/purple_500" />
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/clubNameInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:hint="Club Name"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/clubNameEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:text="Pimpri Toastmasters Club"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/clubNumberInputLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:hint="Club Number"
+                            app:boxStrokeColor="@color/purple_200"
+                            app:hintTextColor="@color/purple_500">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/clubNumberEditText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:maxLines="1"
+                                android:text="5965350"
+                                android:textColor="@color/black"
+                                android:textSize="16sp" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/areaInputLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="Area"
+                            app:boxStrokeColor="@color/purple_200"
+                            app:hintTextColor="@color/purple_500">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/areaEditText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="text"
+                                android:maxLines="1"
+                                android:text="C3"
+                                android:textColor="@color/black"
+                                android:textSize="16sp" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/districtInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:hint="District"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/districtEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:maxLines="1"
+                            android:text="125"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/missionInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Our Club Mission"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/missionEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="top"
+                            android:inputType="textMultiLine"
+                            android:minLines="3"
+                            android:paddingTop="16dp"
+                            android:paddingBottom="16dp"
+                            android:text="We provide a supportive and positive learning experience in which members are empowered to develop communication and leadership skills, resulting in greater self-confidence and personal growth."
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/officersCard"
                 style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -186,14 +335,33 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:text="@string/officers"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                        android:textColor="@color/purple_700"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/officers"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                            android:textColor="@color/purple_700"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/editOfficersButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/edit"
+                            android:textColor="@color/purple_500"
+                            app:icon="@drawable/ic_edit"
+                            app:iconGravity="textEnd"
+                            app:iconTint="@color/purple_500" />
+                    </LinearLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/presidentInputLayout"
@@ -210,11 +378,13 @@
                             android:id="@+id/presidentEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
+                            android:text="TM Raghvendra Tiwari"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:imeOptions="actionNext" />
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -232,11 +402,13 @@
                             android:id="@+id/vpEducationEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
+                            android:text="TM Sanchit Hundare"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:imeOptions="actionNext" />
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -254,11 +426,13 @@
                             android:id="@+id/vpMembershipEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
+                            android:text="TM Harshada Pandure"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:imeOptions="actionNext" />
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -276,11 +450,13 @@
                             android:id="@+id/secretaryEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
+                            android:text="TM Manuel Tholath"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:imeOptions="actionNext" />
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -298,11 +474,13 @@
                             android:id="@+id/treasurerEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
+                            android:text="TM Sushant Ulavi"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:imeOptions="actionNext" />
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -320,11 +498,13 @@
                             android:id="@+id/saaEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
+                            android:text="TM Vaishali Menon"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:imeOptions="actionNext" />
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -342,11 +522,13 @@
                             android:id="@+id/ippEditText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionDone"
                             android:inputType="textPersonName"
                             android:maxLines="1"
+                            android:text="TM Kiran Nawale"
                             android:textColor="@color/black"
-                            android:textSize="16sp"
-                            android:imeOptions="actionDone" />
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -361,7 +543,6 @@
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="24dp"
                 android:background="@drawable/button_gradient"
-                app:backgroundTint="@null"
                 android:elevation="8dp"
                 android:fontFamily="@font/montserrat_bold"
                 android:letterSpacing="0.05"
@@ -369,8 +550,36 @@
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:textSize="18sp"
+                app:backgroundTint="@null"
                 app:cornerRadius="12dp"
                 app:icon="@drawable/ic_save"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="@color/white"
+                app:rippleColor="@color/purple_200"
+                app:strokeColor="@color/purple_700"
+                app:strokeWidth="2dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/agendaItemsButton"
+                style="@style/Widget.MaterialComponents.Button"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/button_gradient"
+                android:elevation="8dp"
+                android:fontFamily="@font/montserrat_bold"
+                android:letterSpacing="0.05"
+                android:text="Agenda Items"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                app:backgroundTint="@null"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_arrow_forward"
                 app:iconGravity="textStart"
                 app:iconPadding="12dp"
                 app:iconTint="@color/white"

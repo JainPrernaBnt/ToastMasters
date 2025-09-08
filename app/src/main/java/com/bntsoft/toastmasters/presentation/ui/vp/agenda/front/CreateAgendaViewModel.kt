@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.ui.vp.agenda
+package com.bntsoft.toastmasters.presentation.ui.vp.agenda.front
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,7 +38,9 @@ data class CreateAgendaUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
-    val isSaved: Boolean = false
+    val isSaved: Boolean = false,
+    val isClubInfoEditable: Boolean = false,
+    val isOfficersEditable: Boolean = false
 )
 
 @HiltViewModel
@@ -181,6 +183,47 @@ class CreateAgendaViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+    
+    fun toggleClubInfoEdit() {
+        _uiState.update { it.copy(isClubInfoEditable = !it.isClubInfoEditable) }
+    }
+    
+    fun toggleOfficersEdit() {
+        _uiState.update { it.copy(isOfficersEditable = !it.isOfficersEditable) }
+    }
+    
+    fun updateClubName(name: String) {
+        _uiState.update { state ->
+            state.copy(
+                agenda = state.agenda.copy(
+                    meeting = state.agenda.meeting.copy(
+                        location = name // Using location field to store club name for now
+                    )
+                ),
+                isSaved = false
+            )
+        }
+    }
+    
+    fun updateClubNumber(number: String) {
+        // Store club number in a custom field or extend the model as needed
+        _uiState.update { it.copy(isSaved = false) }
+    }
+    
+    fun updateArea(area: String) {
+        // Store area in a custom field or extend the model as needed
+        _uiState.update { it.copy(isSaved = false) }
+    }
+    
+    fun updateDistrict(district: String) {
+        // Store district in a custom field or extend the model as needed
+        _uiState.update { it.copy(isSaved = false) }
+    }
+    
+    fun updateClubMission(mission: String) {
+        // Store club mission in a custom field or extend the model as needed
+        _uiState.update { it.copy(isSaved = false) }
     }
 
 }

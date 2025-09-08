@@ -94,6 +94,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingTop="2dp">
@@ -114,7 +115,29 @@
                 android:maxLines="1"
                 android:textColor="@color/on_surface_medium"
                 tools:text="Hinjewadi Phase 1, Tech Park, Conference Room A" />
-        </LinearLayout>
 
+        </LinearLayout>
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="8dp"
+            android:background="@color/outline_variant" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCreateAgenda"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/create_agenda"
+            android:textAllCaps="false"
+            android:textColor="@color/primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/surface_container_highest"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_add"
+            app:iconGravity="start"
+            app:iconTint="@color/primary"
+            app:rippleColor="@color/purple_100" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

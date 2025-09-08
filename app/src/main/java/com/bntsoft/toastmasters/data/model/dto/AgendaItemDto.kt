@@ -1,9 +1,12 @@
 package com.bntsoft.toastmasters.data.model.dto
 
+import android.os.Parcelable
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class AgendaItemDto(
     @DocumentId
     val id: String = "",
@@ -20,4 +23,4 @@ data class AgendaItemDto(
     val createdAt: Timestamp? = null,
     @ServerTimestamp
     val updatedAt: Timestamp? = null
-)
+): Parcelable

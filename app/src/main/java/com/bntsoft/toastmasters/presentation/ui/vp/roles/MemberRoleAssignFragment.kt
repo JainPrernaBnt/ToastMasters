@@ -7,18 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentMemberRoleAssignBinding
-import com.bntsoft.toastmasters.domain.model.Meeting
-import com.bntsoft.toastmasters.presentation.ui.vp.agenda.CreateAgendaFragment
 import com.bntsoft.toastmasters.presentation.ui.vp.roles.adapter.MemberRoleAssignAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MemberRoleAssignFragment : Fragment() {
@@ -55,10 +47,8 @@ class MemberRoleAssignFragment : Fragment() {
         // Show loading indicator, hide members and button initially
         binding.progressBar.visibility = View.VISIBLE
         binding.rvMembers.visibility = View.GONE
-        binding.btnCreateAgenda.visibility = View.GONE
 
         setupRecyclerView()
-        setupClickListeners()
         observeViewModel()
         viewModel.loadRoleAssignments(currentMeetingId)
 
@@ -81,7 +71,10 @@ class MemberRoleAssignFragment : Fragment() {
                     handleRoleRemoved(userId, role)
                 },
                 onBackupMemberSelected = { userId, backupMemberId ->
-                    Log.d("MemberRoleAssignFrag", "Backup member selected - UserId: $userId, BackupId: $backupMemberId")
+                    Log.d(
+                        "MemberRoleAssignFrag",
+                        "Backup member selected - UserId: $userId, BackupId: $backupMemberId"
+                    )
                     viewModel.setBackupMember(userId, backupMemberId)
                 },
                 onSaveRoles = { userId, _ ->
@@ -89,7 +82,10 @@ class MemberRoleAssignFragment : Fragment() {
                     viewModel.saveRoleAssignments()
                 },
                 onToggleEditMode = { userId, isEditable ->
-                    Log.d("MemberRoleAssignFrag", "Toggling edit mode - UserId: $userId, isEditable: $isEditable")
+                    Log.d(
+                        "MemberRoleAssignFrag",
+                        "Toggling edit mode - UserId: $userId, isEditable: $isEditable"
+                    )
                     viewModel.toggleEditMode(userId, isEditable)
                 }
             )
@@ -102,22 +98,6 @@ class MemberRoleAssignFragment : Fragment() {
         binding.rvMembers.layoutManager = LinearLayoutManager(requireContext())
 
         Log.d("MemberRoleAssignFrag", "RecyclerView setup complete. Adapter: $adapter")
-    }
-
-    private fun setupClickListeners() {
-        binding.btnCreateAgenda.setOnClickListener {
-            navigateToCreateAgenda()
-        }
-    }
-
-    private fun navigateToCreateAgenda() {
-        // Get meeting ID from arguments
-        val meetingId = arguments?.getString("meeting_id") ?: return
-        
-        // Navigate to CreateAgendaFragment with just the meeting ID
-        val action = MemberRoleAssignFragmentDirections
-            .actionMemberRoleAssignFragmentToCreateAgendaFragment(meetingId)
-        findNavController().navigate(action)
     }
 
     private fun handleRoleSelected(userId: String, role: String) {
@@ -161,12 +141,15 @@ class MemberRoleAssignFragment : Fragment() {
             // Hide loading, show members and button when loaded
             binding.progressBar.visibility = View.GONE
             binding.rvMembers.visibility = View.VISIBLE
-            binding.btnCreateAgenda.visibility = View.VISIBLE
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             error?.let {
-                android.widget.Toast.makeText(requireContext(), it, android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(
+                    requireContext(),
+                    it,
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
             }
         }
     }

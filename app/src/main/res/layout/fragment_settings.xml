@@ -9,49 +9,374 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="88dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
 
-            <!-- Add your settings items here -->
+            <!-- Profile Header -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardElevation="4dp"
-                app:cardCornerRadius="8dp">
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/surface_container_highest"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="16dp">
+
+                    <TextView
+                        android:id="@+id/tvUserName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/montserrat_bold"
+                        android:text="John Doe"
+                        android:textColor="@color/on_surface"
+                        android:textSize="20sp"
+                        android:textStyle="normal" />
+
+                    <TextView
+                        android:id="@+id/tvUserEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fontFamily="@font/montserrat"
+                        android:text="john.doe@example.com"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="14sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEditProfile"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/edit_profile"
+                        android:textAllCaps="false"
+                        app:icon="@drawable/ic_edit"
+                        app:iconGravity="textStart"
+                        app:iconPadding="8dp"
+                        app:iconTint="@color/primary"
+                        app:strokeColor="@color/outline"
+                        app:strokeWidth="1dp"/>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- User Details -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/surface_container_high"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:paddingVertical="4dp">
+                    
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/account_details"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        android:textColor="@color/on_surface_variant" />
+
+                    <!-- Joined Date -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="4dp"
+                        android:background="@color/outline_variant"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:drawableStart="@drawable/ic_calendar"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:text="@string/joined_date"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface"
+                        app:helperText="January 1, 2023"
+                        app:helperTextTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        app:helperTextTextColor="@color/on_surface_variant" />
+
+                    <!-- Gender -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/outline_variant"
+                        android:layout_marginTop="4dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:drawableStart="@drawable/ic_gender"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:text="@string/gender"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface"
+                        app:helperText="Male"
+                        app:helperTextTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        app:helperTextTextColor="@color/on_surface_variant" />
+
+                    <!-- Phone Number -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/outline_variant"
+                        android:layout_marginTop="4dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:drawableStart="@drawable/ic_phone"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:text="@string/phone_number"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface"
+                        app:helperText="+1 (555) 123-4567"
+                        app:helperTextTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        app:helperTextTextColor="@color/on_surface_variant" />
+
+                    <!-- Toastmasters ID -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/outline_variant"
+                        android:layout_marginTop="4dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:drawableStart="@drawable/ic_toastmasters_id"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:text="@string/toastmasters_id"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface"
+                        app:helperText="12345678"
+                        app:helperTextTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        app:helperTextTextColor="@color/on_surface_variant" />
+
+                    <!-- Club ID -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/outline_variant"
+                        android:layout_marginTop="4dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:drawableStart="@drawable/ic_people"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:text="@string/club_id"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface"
+                        app:helperText="1234567"
+                        app:helperTextTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        app:helperTextTextColor="@color/on_surface_variant" />
+
+                    <!-- Address -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/outline_variant"
+                        android:layout_marginTop="4dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:drawableStart="@drawable/ic_location"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:text="@string/address"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface"
+                        app:helperText="123 Main St, City, Country"
+                        app:helperTextTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        app:helperTextTextColor="@color/on_surface_variant" />
+
+                    <!-- Level -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/outline_variant"
+                        android:layout_marginTop="4dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:drawableStart="@drawable/ic_assessment"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/primary"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:text="@string/level"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface"
+                        app:helperText="Pathways Level 3"
+                        app:helperTextTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        app:helperTextTextColor="@color/on_surface_variant" />
+
+                    <!-- Role -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:layout_marginStart="16dp"
+                        android:background="@color/outline_variant"
+                        android:layout_marginTop="4dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        style="@style/SettingItemStyle"
+                        android:layout_marginBottom="8dp"
+                        android:drawableStart="@drawable/ic_person"
+                        android:drawablePadding="16dp"
+                        android:drawableTint="@color/purple_500"
+                        android:text="Role"
+                        android:textAppearance="?attr/textAppearanceBody2"
+                        app:helperText="Vice President Education"
+                        app:helperTextTextColor="@color/purple_900" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- App Settings Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/surface_container_high"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/account_settings"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="16dp"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnLogout"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:paddingStart="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="8dp"
+                        android:text="@string/app_settings"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        android:textColor="@color/on_surface_variant" />
+                    <!-- Theme Toggle -->
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchTheme"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/logout"
-                        android:textColor="@color/red_500"
-                        app:strokeColor="@color/red_500"
-                        app:strokeWidth="1dp"
-                        android:layout_marginTop="8dp"/>
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:checked="false"
+                        android:text="@string/dark_theme"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        app:thumbTint="@color/surface"
+                        app:trackTint="@color/surface_variant"
+                        app:trackDecorationTint="@color/primary" />
 
+                    <!-- Notifications -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1px"
+                        android:background="@color/outline_variant"/>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchNotifications"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingVertical="12dp"
+                        android:checked="true"
+                        android:text="@string/notification"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        app:thumbTint="@color/surface"
+                        app:trackTint="@color/surface_variant"
+                        app:trackDecorationTint="@color/primary" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Logout Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogout"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="32dp"
+                android:backgroundTint="@android:color/transparent"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingVertical="16dp"
+                android:text="@string/logout"
+                android:textAllCaps="false"
+                android:textColor="@color/red_500"
+                android:textSize="16sp"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_logout"
+                app:iconGravity="textStart"
+                app:iconPadding="12dp"
+                app:iconTint="@color/red_500"
+                app:rippleColor="@color/red_100"
+                app:strokeColor="@color/red_500"
+                app:strokeWidth="1.5dp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

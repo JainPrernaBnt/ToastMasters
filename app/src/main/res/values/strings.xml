@@ -174,7 +174,7 @@
     <string name="address">Address</string>
     <string name="level">Level</string>
     <string name="gender">Gender</string>
-    <string name="joined_date">Joined: %s</string>
+    <string name="joined_date">Joined: </string>
     <string name="password">Password</string>
     <string name="toastmasters_id">Toastmasters Unique ID</string>
     <string name="club_id">Club Unique ID</string>
@@ -389,4 +389,10 @@
     <string name="speech_objectives">Speech Objective</string>
     <string name="notes">Note</string>
     <string name="toastmaster">Toastmaster</string>
+    <string name="dark_theme">Dark Theme</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="account_details">Account Details</string>
+    <string name="app_settings">App Settings</string>
+    <string name="please_fill_all_fields">Please fill all the fields</string>
+    <string name="add_agenda_item">Add agenda item</string>
 </resources>

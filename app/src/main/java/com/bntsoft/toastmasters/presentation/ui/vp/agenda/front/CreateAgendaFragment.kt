@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.ui.vp.agenda
+package com.bntsoft.toastmasters.presentation.ui.vp.agenda.front
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -67,6 +67,22 @@ class CreateAgendaFragment : Fragment() {
         binding.saveButton.setOnClickListener {
             showConfirmationDialog()
         }
+        
+        binding.agendaItemsButton.setOnClickListener {
+            findNavController().navigate(
+                CreateAgendaFragmentDirections.actionCreateAgendaFragmentToAgendaTableFragment(
+                    meetingId = meetingId
+                )
+            )
+        }
+        
+        binding.editClubInfoButton.setOnClickListener {
+            viewModel.toggleClubInfoEdit()
+        }
+        
+        binding.editOfficersButton.setOnClickListener {
+            viewModel.toggleOfficersEdit()
+        }
     }
 
     private fun showConfirmationDialog() {
@@ -94,6 +110,32 @@ class CreateAgendaFragment : Fragment() {
                         if (state.isSaving) getString(R.string.saving) else getString(
                             R.string.save
                         )
+                    
+                    // Update edit mode for Club Information section
+                    binding.clubNameInputLayout.isEnabled = state.isClubInfoEditable
+                    binding.clubNumberInputLayout.isEnabled = state.isClubInfoEditable
+                    binding.areaInputLayout.isEnabled = state.isClubInfoEditable
+                    binding.districtInputLayout.isEnabled = state.isClubInfoEditable
+                    binding.missionInputLayout.isEnabled = state.isClubInfoEditable
+                    
+                    // Update edit button text and icon for Club Information
+                    val clubInfoButtonText = if (state.isClubInfoEditable) 
+                        getString(R.string.cancel) else getString(R.string.edit)
+                    binding.editClubInfoButton.text = clubInfoButtonText
+                    
+                    // Update edit mode for Officers section
+                    binding.presidentInputLayout.isEnabled = state.isOfficersEditable
+                    binding.vpEducationInputLayout.isEnabled = state.isOfficersEditable
+                    binding.vpMembershipInputLayout.isEnabled = state.isOfficersEditable
+                    binding.secretaryInputLayout.isEnabled = state.isOfficersEditable
+                    binding.treasurerInputLayout.isEnabled = state.isOfficersEditable
+                    binding.saaInputLayout.isEnabled = state.isOfficersEditable
+                    binding.ippInputLayout.isEnabled = state.isOfficersEditable
+                    
+                    // Update edit button text and icon for Officers
+                    val officersButtonText = if (state.isOfficersEditable) 
+                        getString(R.string.cancel) else getString(R.string.edit)
+                    binding.editOfficersButton.text = officersButtonText
 
                     if (state.isSaved) {
                         showMessage(getString(R.string.agenda_saved))
@@ -153,6 +195,47 @@ class CreateAgendaFragment : Fragment() {
             isClickable = false
             background = null
         }
+        
+        // Set up Club Information fields
+        binding.clubNameEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                viewModel.updateClubName(s?.toString() ?: "")
+            }
+        })
+        
+        binding.clubNumberEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                viewModel.updateClubNumber(s?.toString() ?: "")
+            }
+        })
+        
+        binding.areaEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                viewModel.updateArea(s?.toString() ?: "")
+            }
+        })
+        
+        binding.districtEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                viewModel.updateDistrict(s?.toString() ?: "")
+            }
+        })
+        
+        binding.missionEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                viewModel.updateClubMission(s?.toString() ?: "")
+            }
+        })
     }
 
 
