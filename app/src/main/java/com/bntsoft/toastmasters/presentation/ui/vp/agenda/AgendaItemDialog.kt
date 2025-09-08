@@ -9,32 +9,52 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
+import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
 import com.bntsoft.toastmasters.databinding.DialogAddEditAgendaBinding
+import com.bntsoft.toastmasters.utils.Resource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AgendaItemDialog : DialogFragment() {
+    @Inject
+    lateinit var assignedRoleRepository: AssignedRoleRepository
+    
     private var _binding: DialogAddEditAgendaBinding? = null
     private val binding get() = _binding!!
     private var onSaveClickListener: ((AgendaItemDto) -> Unit)? = null
     private var agendaItem: AgendaItemDto? = null
+    private var meetingId: String = ""
+    private val roleOptions = mutableListOf<String>()
+    
+    private var greenTime: Int = 0
+    private var yellowTime: Int = 0
+    private var redTime: Int = 0
     private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
     private var selectedTime: Calendar = Calendar.getInstance()
 
     companion object {
         private const val ARG_AGENDA_ITEM = "agenda_item"
+        private const val ARG_MEETING_ID = "meeting_id"
 
         fun newInstance(
+            meetingId: String,
             agendaItem: AgendaItemDto? = null,
             onSave: (AgendaItemDto) -> Unit
         ): AgendaItemDialog {
             return AgendaItemDialog().apply {
                 arguments = Bundle().apply {
                     putParcelable(ARG_AGENDA_ITEM, agendaItem)
+                    putString(ARG_MEETING_ID, meetingId)
                 }
                 onSaveClickListener = onSave
             }
@@ -68,27 +88,15 @@ class AgendaItemDialog : DialogFragment() {
         setupTimePicker()
         setupPresenters()
 
-        arguments?.getParcelable<AgendaItemDto>(ARG_AGENDA_ITEM)?.let { item ->
-            agendaItem = item
-            binding.apply {
-                activityInput.setText(item.activity)
-                presenterInput.setText(item.presenterName)
-                greenCardInput.setText(if (item.greenTime > 0) item.greenTime.toString() else "")
-                yellowCardInput.setText(if (item.yellowTime > 0) item.yellowTime.toString() else "")
-                redCardInput.setText(if (item.redTime > 0) item.redTime.toString() else "")
-
-                // Set time if available
-                if (item.time.isNotBlank()) {
-                    val time = timeFormat.parse(item.time)
-                    time?.let {
-                        selectedTime.time = it
-                        timeInput.setText(timeFormat.format(it))
-                    }
-                }
-            }
+        meetingId = arguments?.getString(ARG_MEETING_ID) ?: ""
+        
+        arguments?.getParcelable<AgendaItemDto>(ARG_AGENDA_ITEM)?.let {
+            agendaItem = it
+            greenTime = it.greenTime
+            yellowTime = it.yellowTime
+            redTime = it.redTime
+            populateFields(it)
         }
-
-        // In AgendaItemDialog.kt
 
         binding.btnSave.setOnClickListener {
             if (!validateInputs()) {
@@ -132,18 +140,9 @@ class AgendaItemDialog : DialogFragment() {
     }
 
     private fun setupTimePicker() {
-        binding.timeInput.setOnClickListener {
-            TimePickerDialog(
-                requireContext(),
-                { _, hourOfDay, minute ->
-                    selectedTime.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                    selectedTime.set(Calendar.MINUTE, minute)
-                    binding.timeInput.setText(timeFormat.format(selectedTime.time))
-                },
-                selectedTime.get(Calendar.HOUR_OF_DAY),
-                selectedTime.get(Calendar.MINUTE),
-                false
-            ).show()
+        binding.timeInput.apply {
+            setOnClickListener { showTimePicker() }
+            setOnFocusChangeListener { _, hasFocus -> if (hasFocus) showTimePicker() }
         }
 
         // Set initial time if available
@@ -152,58 +151,122 @@ class AgendaItemDialog : DialogFragment() {
         }
     }
 
+    private fun showTimePicker() {
+        TimePickerDialog(
+            requireContext(),
+            { _, hourOfDay, minute ->
+                selectedTime.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                selectedTime.set(Calendar.MINUTE, minute)
+                binding.timeInput.setText(timeFormat.format(selectedTime.time))
+            },
+            selectedTime.get(Calendar.HOUR_OF_DAY),
+            selectedTime.get(Calendar.MINUTE),
+            false
+        ).show()
+    }
+
     private fun setupPresenters() {
-        val presenters = listOf("John Doe", "Jane Smith", "Mike Johnson")
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
-            presenters
+            roleOptions
         )
         binding.presenterInput.setAdapter(adapter)
+        binding.presenterInput.threshold = 1 // Start showing suggestions after 1 character
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            assignedRoleRepository.getAssignedRoles(meetingId).collectLatest { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        roleOptions.clear()
+                        result.data?.forEach { assignedRole ->
+                            assignedRole.roles.forEach { role ->
+                                roleOptions.add("${assignedRole.memberName} - $role")
+                            }
+                        }
+                        adapter.notifyDataSetChanged()
+                    }
+                    is Resource.Error -> {
+                        // Handle error (optional: show error message)
+                    }
+                    is Resource.Loading -> {
+                        // Show loading state if needed
+                    }
+                }
+            }
+        }
     }
 
     private fun validateInputs(): Boolean {
         return binding.run {
-            val timeValid = timeInput.text?.toString()
-                ?.matches(Regex("^(0?[1-9]|1[0-2]):[0-5][0-9] [APMapm]{2}$")) ?: false
-            val greenValid = greenCardInput.text?.toString()
-                ?.matches(Regex("^([0-9]|0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9])?$")) ?: false
-            val yellowValid = yellowCardInput.text?.toString()
-                ?.matches(Regex("^([0-9]|0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9])?$")) ?: false
-            val redValid = redCardInput.text?.toString()
-                ?.matches(Regex("^([0-9]|0[0-9]|1[0-9]|2[0-3])(:[0-5][0-9])?$")) ?: false
+            val timeValid = !timeInput.text.isNullOrBlank()
+            val greenValid = !greenCardInput.text.isNullOrBlank() && 
+                (greenCardInput.text.toString().toIntOrNull() ?: 0) > 0
+            val yellowValid = !yellowCardInput.text.isNullOrBlank() && 
+                (yellowCardInput.text.toString().toIntOrNull() ?: 0) > 0
+            val redValid = !redCardInput.text.isNullOrBlank() && 
+                (redCardInput.text.toString().toIntOrNull() ?: 0) > 0
 
             var allValid = true
 
             if (!timeValid) {
-                timeInput.error = "Invalid time format (HH:MM AM/PM)"
+                timeInput.error = "Please select a valid time"
                 allValid = false
             } else {
                 timeInput.error = null
             }
 
             if (!greenValid) {
-                greenCardInput.error = "Invalid format (e.g., 2 or 02:30)"
+                greenCardInput.error = "Please enter a valid number"
                 allValid = false
             } else {
                 greenCardInput.error = null
             }
 
             if (!yellowValid) {
-                yellowCardInput.error = "Invalid format (e.g., 2 or 02:30)"
+                yellowCardInput.error = "Please enter a valid number"
                 allValid = false
             } else {
                 yellowCardInput.error = null
             }
 
             if (!redValid) {
-                redCardInput.error = "Invalid format (e.g., 2 or 02:30)"
+                redCardInput.error = "Please enter a valid number"
                 allValid = false
             } else {
                 redCardInput.error = null
             }
 
             allValid && !activityInput.text.isNullOrBlank() && !presenterInput.text.isNullOrBlank()
+        }
+    }
+
+    private fun populateFields(agendaItem: AgendaItemDto) {
+        binding.apply {
+            activityInput.setText(agendaItem.activity)
+            presenterInput.setText(agendaItem.presenterName)
+            greenCardInput.setText(agendaItem.greenTime.toString())
+            yellowCardInput.setText(agendaItem.yellowTime.toString())
+            redCardInput.setText(agendaItem.redTime.toString())
+            
+            // Set time if available, otherwise use current time
+            if (agendaItem.time.isNotEmpty()) {
+                try {
+                    val time = SimpleDateFormat("HH:mm", Locale.getDefault()).parse(agendaItem.time)
+                    time?.let {
+                        val calendar = Calendar.getInstance()
+                        calendar.time = it
+                        selectedTime = calendar
+                        timeInput.setText(timeFormat.format(it))
+                    } ?: run {
+                        timeInput.setText(timeFormat.format(selectedTime.time))
+                    }
+                } catch (e: Exception) {
+                    timeInput.setText(timeFormat.format(selectedTime.time))
+                }
+            } else {
+                timeInput.setText(timeFormat.format(selectedTime.time))
+            }
         }
     }
 

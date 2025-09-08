@@ -328,16 +328,30 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         return try {
             val document = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
-                .collection(AGENDA_ITEMS_SUBCOLLECTION)
+                .collection("agenda")
+                .document(itemId)
+                .collection("agendaItems")
                 .document(itemId)
                 .get()
                 .await()
 
             if (document.exists()) {
-                val item = document.toObject<AgendaItem>()
-                    ?.copy(id = document.id)
-                    ?: return Error(Exception("Failed to parse agenda item"))
-
+                val data = document.data ?: return Error(Exception("No data found"))
+                val cardSequence = data["cardSequence"] as? Map<*, *> ?: emptyMap<String, Any>()
+                
+                val item = AgendaItem(
+                    id = document.id,
+                    meetingId = meetingId,
+                    activity = data["activity"] as? String ?: "",
+                    presenterName = data["presenter"] as? String ?: "",
+                    time = data["time"] as? String ?: "",
+                    orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
+                    greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
+                    yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
+                    redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
+                    updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp ?: com.google.firebase.Timestamp.now()
+                )
+                
                 Success(item)
             } else {
                 Error(Exception("Agenda item not found"))
@@ -347,12 +361,136 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAgendaItems(meetingId: String): List<AgendaItem> {
+        return try {
+            // First get the agenda document
+            val agendaDocs = firestore.collection(MEETINGS_COLLECTION)
+                .document(meetingId)
+                .collection("agenda")
+                .get()
+                .await()
+
+            if (agendaDocs.isEmpty) return emptyList()
+
+            // For each agenda, get its items
+            val allItems = mutableListOf<AgendaItem>()
+            
+            for (agendaDoc in agendaDocs) {
+                val itemsSnapshot = agendaDoc.reference
+                    .collection("agendaItems")
+                    .orderBy("order")
+                    .get()
+                    .await()
+
+                itemsSnapshot.documents.forEach { doc ->
+                    try {
+                        val data = doc.data ?: return@forEach
+                        val cardSequence = data["cardSequence"] as? Map<*, *> ?: emptyMap<String, Any>()
+                        
+                        val item = AgendaItem(
+                            id = doc.id,
+                            meetingId = meetingId,
+                            activity = data["activity"] as? String ?: "",
+                            presenterName = data["presenter"] as? String ?: "",
+                            time = data["time"] as? String ?: "",
+                            orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
+                            greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
+                            yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
+                            redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
+                            updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp 
+                                ?: com.google.firebase.Timestamp.now()
+                        )
+                        allItems.add(item)
+                    } catch (e: Exception) {
+                        // Skip items that can't be parsed
+                    }
+                }
+            }
+            
+            // Sort by order index as a fallback
+            allItems.sortedBy { it.orderIndex }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    override fun observeAgendaItems(meetingId: String): Flow<List<AgendaItem>> = callbackFlow {
+        val agendaRef = firestore.collection(MEETINGS_COLLECTION)
+            .document(meetingId)
+            .collection("agenda")
+
+        val listener = agendaRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                // Handle error
+                return@addSnapshotListener
+            }
+
+            if (snapshot == null || snapshot.isEmpty) {
+                trySend(emptyList())
+                return@addSnapshotListener
+            }
+
+            // For each agenda document, listen to its items
+            snapshot.documents.forEach { agendaDoc ->
+                agendaDoc.reference.collection("agendaItems")
+                    .orderBy("order")
+                    .addSnapshotListener { itemsSnapshot, itemsError ->
+                        if (itemsError != null || itemsSnapshot == null) {
+                            return@addSnapshotListener
+                        }
+
+                        val items = itemsSnapshot.documents.mapNotNull { doc ->
+                            try {
+                                val data = doc.data ?: return@mapNotNull null
+                                val cardSequence = data["cardSequence"] as? Map<*, *> ?: emptyMap<String, Any>()
+                                
+                                AgendaItem(
+                                    id = doc.id,
+                                    meetingId = meetingId,
+                                    activity = data["activity"] as? String ?: "",
+                                    presenterName = data["presenter"] as? String ?: "",
+                                    time = data["time"] as? String ?: "",
+                                    orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
+                                    greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
+                                    yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
+                                    redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
+                                    updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp 
+                                        ?: com.google.firebase.Timestamp.now()
+                                )
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+
+                        trySend(items.sortedBy { it.orderIndex })
+                    }
+            }
+        }
+
+        awaitClose { listener.remove() }
+    }
+
     override suspend fun saveAgendaItem(meetingId: String, item: AgendaItem): Result<String> {
         return try {
-            val itemData = item.copy(updatedAt = Timestamp.now())
+            // Create a map with the desired structure
+            val itemData = hashMapOf<String, Any>(
+                "time" to item.time,
+                "activity" to item.activity,
+                "presenter" to item.presenterName,
+                "order" to item.orderIndex,
+                "cardSequence" to mapOf(
+                    "green" to item.greenTime,
+                    "yellow" to item.yellowTime,
+                    "red" to item.redTime
+                ),
+                "updatedAt" to FieldValue.serverTimestamp()
+            )
+
             val itemRef = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
-                .collection(AGENDA_ITEMS_SUBCOLLECTION)
+                .collection("agenda")
+                .document(item.id)
+                .collection("agendaItems")
                 .document(item.id)
 
             itemRef.set(itemData).await()
@@ -362,6 +500,7 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                 .document(meetingId)
                 .update("updatedAt", FieldValue.serverTimestamp())
                 .await()
+            
             Success(itemRef.id)
         } catch (e: Exception) {
             Error(e)
@@ -370,11 +509,33 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
 
     override suspend fun deleteAgendaItem(meetingId: String, itemId: String): Result<Unit> {
         return try {
-            firestore.collection(MEETINGS_COLLECTION)
+            // First, find the agenda document that contains this item
+            val agendaDocs = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
-                .collection(AGENDA_ITEMS_SUBCOLLECTION)
+                .collection("agenda")
+                .whereEqualTo("__name__", itemId) // Look for agenda document with ID matching itemId
+                .get()
+                .await()
+
+            if (agendaDocs.isEmpty) {
+                return Error(Exception("Agenda item not found"))
+            }
+
+            // Delete the agenda item
+            val agendaDoc = agendaDocs.documents[0]
+            agendaDoc.reference
+                .collection("agendaItems")
                 .document(itemId)
                 .delete()
+                .await()
+
+            // Also delete the parent agenda document if needed
+            // agendaDoc.reference.delete().await()
+
+            // Update the parent meeting's updatedAt timestamp
+            firestore.collection(MEETINGS_COLLECTION)
+                .document(meetingId)
+                .update("updatedAt", FieldValue.serverTimestamp())
                 .await()
 
             Success(Unit)
@@ -390,17 +551,39 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         return try {
             val batch = firestore.batch()
             val now = Timestamp.now()
+            val agendaRef = firestore.collection(MEETINGS_COLLECTION)
+                .document(meetingId)
+                .collection("agenda")
 
-            items.forEachIndexed { index, item ->
-                val itemRef = firestore.collection(MEETINGS_COLLECTION)
-                    .document(meetingId)
-                    .collection(AGENDA_ITEMS_SUBCOLLECTION)
+            // First, get all agenda documents to find the ones we need to update
+            val agendaDocs = agendaRef.get().await()
+            
+            // Create a map of item ID to its new order
+            val orderMap = items.associate { it.id to it.orderIndex }
+            
+            // Find and update each item
+            for (item in items) {
+                // Find the agenda document for this item
+                val agendaDoc = agendaDocs.documents.find { it.id == item.id } ?: continue
+                
+                // Update the order in the agendaItems subcollection
+                val itemRef = agendaDoc.reference
+                    .collection("agendaItems")
                     .document(item.id)
-
-                batch.update(itemRef, "orderIndex", index, "updatedAt", now)
+                
+                // Update fields one by one to match the expected format
+                batch.update(itemRef, "order", item.orderIndex)
+                batch.update(itemRef, "updatedAt", now)
             }
 
             batch.commit().await()
+            
+            // Update the parent meeting's updatedAt timestamp
+            firestore.collection(MEETINGS_COLLECTION)
+                .document(meetingId)
+                .update("updatedAt", FieldValue.serverTimestamp())
+                .await()
+                
             Success(Unit)
         } catch (e: Exception) {
             Error(e)
@@ -413,17 +596,33 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     ): Result<Unit> {
         return try {
             val batch = firestore.batch()
-            val now = Timestamp.now()
+            val agendaRef = firestore.collection(MEETINGS_COLLECTION)
+                .document(meetingId)
+                .collection("agenda")
+                .document("default") // or use a specific agenda ID if needed
 
+            // First, clear existing items if needed
+            // Note: Be careful with this in production - you might want to merge instead
+            val existingItems = agendaRef.collection("agendaItems").get().await()
+            existingItems.forEach { batch.delete(it.reference) }
+
+            // Add all new items
             items.forEachIndexed { index, item ->
-                val itemData = item.copy(
-                    orderIndex = index,
-                    updatedAt = now
+                val itemData = hashMapOf<String, Any>(
+                    "time" to item.time,
+                    "activity" to item.activity,
+                    "presenter" to item.presenterName,
+                    "order" to index,
+                    "cardSequence" to mapOf(
+                        "green" to item.greenTime,
+                        "yellow" to item.yellowTime,
+                        "red" to item.redTime
+                    ),
+                    "updatedAt" to FieldValue.serverTimestamp()
                 )
 
-                val itemRef = firestore.collection(MEETINGS_COLLECTION)
-                    .document(meetingId)
-                    .collection(AGENDA_ITEMS_SUBCOLLECTION)
+                val itemRef = agendaRef
+                    .collection("agendaItems")
                     .document(item.id)
 
                 batch.set(itemRef, itemData)

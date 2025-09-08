@@ -19,3 +19,11 @@ sealed class Resource<T>(
 
 val Resource<*>.succeeded
     get() = this is Resource.Success && data != null
+
+fun <T, R> Resource<T>.map(transform: (T) -> R): Resource<R> {
+    return when (this) {
+        is Resource.Success -> Resource.Success(transform(data as T))
+        is Resource.Loading -> Resource.Loading((data as? T)?.let { transform(it) })
+        is Resource.Error -> Resource.Error(message ?: "", (data as? T)?.let { transform(it) })
+    }
+}

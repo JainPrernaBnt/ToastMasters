@@ -31,7 +31,10 @@ class AgendaRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun updateAgendaStatus(meetingId: String, status: AgendaStatus): Resource<Unit> {
+    override suspend fun updateAgendaStatus(
+        meetingId: String,
+        status: AgendaStatus
+    ): Resource<Unit> {
         return mapResult(
             result = agendaDataSource.updateAgendaStatus(meetingId, status),
             onError = { it.message ?: "Failed to update agenda status" }
@@ -43,6 +46,23 @@ class AgendaRepositoryImpl @Inject constructor(
             result = agendaDataSource.getAgendaItem(meetingId, itemId),
             onError = { it.message ?: "Failed to get agenda item" }
         )
+    }
+
+    override suspend fun getAgendaItems(meetingId: String): Flow<Resource<List<AgendaItem>>> {
+        return flow {
+            try {
+                // Get initial list
+                val result = agendaDataSource.getAgendaItems(meetingId)
+                emit(Resource.Success(result))
+
+                // Observe for changes
+                agendaDataSource.observeAgendaItems(meetingId).collect { items ->
+                    emit(Resource.Success(items))
+                }
+            } catch (e: Exception) {
+                emit(Resource.Error(e.message ?: "Failed to load agenda items"))
+            }
+        }
     }
 
     override suspend fun saveAgendaItem(item: AgendaItem): Resource<String> {
@@ -59,14 +79,20 @@ class AgendaRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun reorderAgendaItems(meetingId: String, items: List<AgendaItem>): Resource<Unit> {
+    override suspend fun reorderAgendaItems(
+        meetingId: String,
+        items: List<AgendaItem>
+    ): Resource<Unit> {
         return mapResult(
             result = agendaDataSource.reorderAgendaItems(meetingId, items),
             onError = { it.message ?: "Failed to reorder agenda items" }
         )
     }
 
-    override suspend fun saveAllAgendaItems(meetingId: String, items: List<AgendaItem>): Resource<Unit> {
+    override suspend fun saveAllAgendaItems(
+        meetingId: String,
+        items: List<AgendaItem>
+    ): Resource<Unit> {
         return mapResult(
             result = agendaDataSource.saveAllAgendaItems(meetingId, items),
             onError = { it.message ?: "Failed to save all agenda items" }

@@ -139,9 +139,9 @@ class UserRepositoryImpl @Inject constructor(
                     fcmToken = domainUser.fcmToken ?: "",
                     mentorNames = domainUser.mentorNames,
                     roles = listOf(domainUser.role),
-                    status = if (domainUser.isApproved) 
-                        com.bntsoft.toastmasters.data.model.User.Status.APPROVED 
-                        else com.bntsoft.toastmasters.data.model.User.Status.PENDING_APPROVAL,
+                    status = if (domainUser.isApproved)
+                        com.bntsoft.toastmasters.data.model.User.Status.APPROVED
+                    else com.bntsoft.toastmasters.data.model.User.Status.PENDING_APPROVAL,
                     lastLogin = null,
                     createdAt = domainUser.createdAt,
                     updatedAt = domainUser.updatedAt

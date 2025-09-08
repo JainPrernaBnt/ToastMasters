@@ -15,6 +15,7 @@ interface AgendaRepository {
     
     // Agenda Item operations
     suspend fun getAgendaItem(meetingId: String, itemId: String): Resource<AgendaItem>
+    suspend fun getAgendaItems(meetingId: String): Flow<Resource<List<AgendaItem>>>
     suspend fun saveAgendaItem(item: AgendaItem): Resource<String> // Returns item ID
     suspend fun deleteAgendaItem(meetingId: String, itemId: String): Resource<Unit>
     suspend fun reorderAgendaItems(meetingId: String, items: List<AgendaItem>): Resource<Unit>

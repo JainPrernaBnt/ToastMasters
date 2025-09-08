@@ -1,8 +1,8 @@
 package com.bntsoft.toastmasters.data.repository
 
-import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.data.model.MemberRole
+import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.data.remote.FirebaseMeetingDataSource
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
@@ -67,11 +67,13 @@ class MeetingRepositoryImpl @Inject constructor(
                     firebaseDataSource.sendMeetingNotification(newMeeting)
                     Resource.Success(newMeeting)
                 }
+
                 is Result.Error -> {
                     Resource.Error(
                         result.exception.message ?: "Failed to create meeting in Firebase"
                     )
                 }
+
                 Result.Loading -> {
                     Resource.Error("Unexpected loading state while creating meeting")
                 }
@@ -185,8 +187,11 @@ class MeetingRepositoryImpl @Inject constructor(
             emptyList()
         }
     }
-    
-    override suspend fun saveRoleAssignments(meetingId: String, assignments: List<RoleAssignmentItem>): Result<Unit> {
+
+    override suspend fun saveRoleAssignments(
+        meetingId: String,
+        assignments: List<RoleAssignmentItem>
+    ): Result<Unit> {
         return try {
             firebaseDataSource.saveRoleAssignments(meetingId, assignments)
             Result.Success(Unit)
@@ -204,7 +209,7 @@ class MeetingRepositoryImpl @Inject constructor(
             null
         }
     }
-    
+
     override suspend fun getAssignedRoles(meetingId: String, userId: String): List<String> {
         return try {
             firebaseDataSource.getAssignedRoles(meetingId, userId)
@@ -213,8 +218,12 @@ class MeetingRepositoryImpl @Inject constructor(
             emptyList()
         }
     }
-    
-    override suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit> {
+
+    override suspend fun saveSpeakerDetails(
+        meetingId: String,
+        userId: String,
+        speakerDetails: SpeakerDetails
+    ): Result<Unit> {
         return try {
             firebaseDataSource.saveSpeakerDetails(meetingId, userId, speakerDetails)
             Result.Success(Unit)
@@ -223,7 +232,7 @@ class MeetingRepositoryImpl @Inject constructor(
             Result.Error(e)
         }
     }
-    
+
     override suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails? {
         return try {
             firebaseDataSource.getSpeakerDetails(meetingId, userId)
@@ -232,7 +241,7 @@ class MeetingRepositoryImpl @Inject constructor(
             null
         }
     }
-    
+
     override fun getSpeakerDetailsForMeeting(meetingId: String): Flow<List<SpeakerDetails>> = flow {
         try {
             val details = firebaseDataSource.getSpeakerDetailsForMeeting(meetingId)
@@ -243,7 +252,11 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveGrammarianDetails(meetingId: String, userId: String, grammarianDetails: GrammarianDetails): Result<Unit> {
+    override suspend fun saveGrammarianDetails(
+        meetingId: String,
+        userId: String,
+        grammarianDetails: GrammarianDetails
+    ): Result<Unit> {
         return try {
             firebaseDataSource.saveGrammarianDetails(meetingId, userId, grammarianDetails)
             Result.Success(Unit)
@@ -253,7 +266,10 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getGrammarianDetails(meetingId: String, userId: String): GrammarianDetails? {
+    override suspend fun getGrammarianDetails(
+        meetingId: String,
+        userId: String
+    ): GrammarianDetails? {
         return try {
             firebaseDataSource.getGrammarianDetails(meetingId, userId)
         } catch (e: Exception) {
@@ -262,15 +278,16 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getGrammarianDetailsForMeeting(meetingId: String): Flow<List<GrammarianDetails>> = flow {
-        try {
-            val details = firebaseDataSource.getGrammarianDetailsForMeeting(meetingId)
-            emit(details)
-        } catch (e: Exception) {
-            Timber.e(e, "Error getting grammarian details for meeting $meetingId")
-            emit(emptyList())
+    override fun getGrammarianDetailsForMeeting(meetingId: String): Flow<List<GrammarianDetails>> =
+        flow {
+            try {
+                val details = firebaseDataSource.getGrammarianDetailsForMeeting(meetingId)
+                emit(details)
+            } catch (e: Exception) {
+                Timber.e(e, "Error getting grammarian details for meeting $meetingId")
+                emit(emptyList())
+            }
         }
-    }
 
     override suspend fun getMemberRolesForMeeting(meetingId: String): List<MemberRole> {
         return try {

@@ -5,9 +5,13 @@ import com.bntsoft.toastmasters.data.repository.MeetingRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MemberRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MemberResponseRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.NotificationRepositoryImpl
+import com.bntsoft.toastmasters.data.repository.AgendaRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MeetingAgendaRepositoryImpl
+import com.bntsoft.toastmasters.data.repository.AssignedRoleRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.UserRepositoryImpl
+import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
+import com.bntsoft.toastmasters.domain.repository.AgendaRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingAgendaRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
@@ -47,6 +51,12 @@ abstract class RepositoryModule {
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindAssignedRoleRepository(
+        assignedRoleRepositoryImpl: AssignedRoleRepositoryImpl
+    ): AssignedRoleRepository
 
     @Binds
     @Singleton
@@ -65,4 +75,10 @@ abstract class RepositoryModule {
     abstract fun bindMeetingAgendaRepository(
         meetingAgendaRepositoryImpl: MeetingAgendaRepositoryImpl
     ): MeetingAgendaRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAgendaRepository(
+        agendaRepositoryImpl: AgendaRepositoryImpl
+    ): AgendaRepository
 }

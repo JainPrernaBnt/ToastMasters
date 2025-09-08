@@ -16,6 +16,8 @@ interface FirebaseAgendaDataSource {
     
     // Agenda Item operations
     suspend fun getAgendaItem(meetingId: String, itemId: String): Result<AgendaItem>
+    suspend fun getAgendaItems(meetingId: String): List<AgendaItem>
+    fun observeAgendaItems(meetingId: String): Flow<List<AgendaItem>>
     suspend fun saveAgendaItem(meetingId: String, item: AgendaItem): Result<String>
     suspend fun deleteAgendaItem(meetingId: String, itemId: String): Result<Unit>
     suspend fun reorderAgendaItems(meetingId: String, items: List<AgendaItem>): Result<Unit>
