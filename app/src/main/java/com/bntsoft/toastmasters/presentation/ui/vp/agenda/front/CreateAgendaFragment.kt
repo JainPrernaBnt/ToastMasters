@@ -19,6 +19,7 @@ import com.bntsoft.toastmasters.databinding.FragmentCreateAgendaBinding
 import com.bntsoft.toastmasters.domain.model.MeetingAgenda
 import com.bntsoft.toastmasters.presentation.ui.vp.agenda.front.viewmodel.CreateAgendaViewModel
 import com.bntsoft.toastmasters.ui.adapter.AbbreviationAdapter
+import com.bntsoft.toastmasters.utils.Result
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
@@ -45,8 +46,40 @@ class CreateAgendaFragment : Fragment() {
     private lateinit var meetingId: String
     private var currentStep = 1
 
-    private val abbreviationAdapter = AbbreviationAdapter()
-    private var isAbbreviationEditing = false
+    private lateinit var abbreviationAdapter: AbbreviationAdapter
+
+    private fun setupAbbreviationAdapter() {
+        abbreviationAdapter = AbbreviationAdapter(
+            onItemRemoved = { position ->
+                val currentList = abbreviationAdapter.currentList.toMutableList()
+                if (position >= 0 && position < currentList.size) {
+                    val itemToRemove = currentList[position]
+                    currentList.removeAt(position)
+                    abbreviationAdapter.submitList(currentList)
+
+                    // If the item has an ID, delete it from Firebase
+                    if (itemToRemove.abbreviation.isNotBlank()) {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            viewModel.deleteAbbreviation(
+                                meetingId = meetingId,
+                                abbreviationKey = itemToRemove.abbreviation
+                            )
+                        }
+                    }
+
+                    // If no items left, add an empty one if in edit mode
+                    if (currentList.isEmpty() && isAbbreviationEditing) {
+                        addNewAbbreviationItem()
+                    }
+
+                    updateAbbreviationUI()
+                }
+            }
+        )
+    }
+
+    private
+    var isAbbreviationEditing = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -67,7 +100,6 @@ class CreateAgendaFragment : Fragment() {
         // Post the setup to ensure view hierarchy is ready
         view.post {
             updateStepView()
-            setupUI()
             setupAbbreviationsRecyclerView()
             setupClickListeners()
             setupMeetingDetails()
@@ -105,11 +137,19 @@ class CreateAgendaFragment : Fragment() {
         }
         binding.saveClubInfoButton.setOnClickListener {
             // Ensure all fields (even unedited/static) are captured before saving
-            viewModel.updateClubName(binding.clubNameEditText.text?.toString().orEmpty())
-            viewModel.updateClubNumber(binding.clubNumberEditText.text?.toString().orEmpty())
-            viewModel.updateDistrict(binding.districtEditText.text?.toString().orEmpty())
+            viewModel.updateClubName(
+                binding.clubNameEditText.text?.toString().orEmpty()
+            )
+            viewModel.updateClubNumber(
+                binding.clubNumberEditText.text?.toString().orEmpty()
+            )
+            viewModel.updateDistrict(
+                binding.districtEditText.text?.toString().orEmpty()
+            )
             viewModel.updateArea(binding.areaEditText.text?.toString().orEmpty())
-            viewModel.updateClubMission(binding.missionEditText.text?.toString().orEmpty())
+            viewModel.updateClubMission(
+                binding.missionEditText.text?.toString().orEmpty()
+            )
 
             viewModel.saveClubInfo()
         }
@@ -129,8 +169,14 @@ class CreateAgendaFragment : Fragment() {
                 "President",
                 binding.presidentEditText.text?.toString().orEmpty()
             )
-            viewModel.updateOfficer("VPE", binding.vpEducationEditText.text?.toString().orEmpty())
-            viewModel.updateOfficer("VPM", binding.vpMembershipEditText.text?.toString().orEmpty())
+            viewModel.updateOfficer(
+                "VPE",
+                binding.vpEducationEditText.text?.toString().orEmpty()
+            )
+            viewModel.updateOfficer(
+                "VPM",
+                binding.vpMembershipEditText.text?.toString().orEmpty()
+            )
             viewModel.updateOfficer(
                 "Secretary",
                 binding.secretaryEditText.text?.toString().orEmpty()
@@ -139,8 +185,14 @@ class CreateAgendaFragment : Fragment() {
                 "Treasurer",
                 binding.treasurerEditText.text?.toString().orEmpty()
             )
-            viewModel.updateOfficer("SAA", binding.saaEditText.text?.toString().orEmpty())
-            viewModel.updateOfficer("IPP", binding.ippEditText.text?.toString().orEmpty())
+            viewModel.updateOfficer(
+                "SAA",
+                binding.saaEditText.text?.toString().orEmpty()
+            )
+            viewModel.updateOfficer(
+                "IPP",
+                binding.ippEditText.text?.toString().orEmpty()
+            )
             viewModel.updateOfficer(
                 "VPPR",
                 binding.vpPublicRelationEditText.text?.toString().orEmpty()
@@ -163,11 +215,23 @@ class CreateAgendaFragment : Fragment() {
             // Reset to current values from ViewModel
             viewModel.uiState.value.grammarianDetails.let { details ->
                 binding.wordOfDayEditText.setText(details.wordOfTheDay)
-                binding.wordMeaningEditText.setText(details.wordMeaning.joinToString("\n"))
-                binding.wordExamplesEditText.setText(details.wordExamples.joinToString("\n"))
+                binding.wordMeaningEditText.setText(
+                    details.wordMeaning.joinToString(
+                        "\n"
+                    )
+                )
+                binding.wordExamplesEditText.setText(
+                    details.wordExamples.joinToString(
+                        "\n"
+                    )
+                )
                 binding.idiomEditText.setText(details.idiomOfTheDay)
                 binding.idiomMeaningEditText.setText(details.idiomMeaning)
-                binding.idiomExamplesEditText.setText(details.idiomExamples.joinToString("\n"))
+                binding.idiomExamplesEditText.setText(
+                    details.idiomExamples.joinToString(
+                        "\n"
+                    )
+                )
             }
         }
 
@@ -175,259 +239,132 @@ class CreateAgendaFragment : Fragment() {
             updateAndSaveGrammarianDetails()
         }
 
-        // Add Abbreviation button
+        // Abbreviation button click listeners are set up in setupAbbreviationsRecyclerView()
+    }
+
+    private fun setupAbbreviationsRecyclerView() {
+        setupAbbreviationAdapter()
+        binding.abbreviationsRecyclerView.adapter = abbreviationAdapter
+
+        // Set up click listeners
+        binding.abbreviationsSummaryText.setOnClickListener {
+            if (!isAbbreviationEditing) {
+                editAbbreviations()
+            }
+        }
+
         binding.addAbbreviationsButton.setOnClickListener {
             addNewAbbreviationItem()
         }
 
-        // Save Abbreviations button
         binding.saveAbbreviationsButton.setOnClickListener {
             saveAbbreviations()
         }
 
-        // Edit Abbreviations button (handled via text view click)
-        binding.abbreviationsSummaryText.setOnClickListener {
-            editAbbreviations()
-        }
-    }
-
-    private fun setupAbbreviationsRecyclerView() {
-        binding.abbreviationsRecyclerView.adapter = abbreviationAdapter
-        abbreviationAdapter.setOnItemRemovedListener { position ->
-            val currentList = abbreviationAdapter.currentList.toMutableList()
-            if (currentList.size > 1) {
-                currentList.removeAt(position)
-                abbreviationAdapter.submitList(currentList)
-                updateAbbreviationUI()
-            } else {
-                // If it's the last item, just clear the fields
-                currentList[0].abbreviation = ""
-                currentList[0].meaning = ""
-                abbreviationAdapter.notifyItemChanged(0)
+        // Collect StateFlow from ViewModel
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.abbreviations.collect { abbreviations: Map<String, String> ->
+                    if (abbreviations.isNotEmpty()) {
+                        val items = abbreviations.map { entry: Map.Entry<String, String> ->
+                            AbbreviationItem(
+                                id = entry.key, // Using abbreviation as ID for simplicity
+                                abbreviation = entry.key,
+                                meaning = entry.value,
+                                isEditable = isAbbreviationEditing
+                            )
+                        }
+                        abbreviationAdapter.submitList(items)
+                    } else if (!isAbbreviationEditing) {
+                        abbreviationAdapter.submitList(emptyList())
+                    }
+                    updateAbbreviationUI()
+                }
             }
         }
 
+        // Initial load
+        viewModel.loadAbbreviations(meetingId)
     }
 
     private fun addNewAbbreviationItem() {
         val currentList = abbreviationAdapter.currentList.toMutableList()
-        currentList.add(AbbreviationItem(id = UUID.randomUUID().toString()))
-        abbreviationAdapter.submitList(currentList)
+        currentList.add(
+            AbbreviationItem(
+                id = UUID.randomUUID().toString(),
+                abbreviation = "",
+                meaning = "",
+                isEditable = true
+            )
+        )
+        abbreviationAdapter.submitList(currentList) {
+            // Scroll to the bottom when adding a new item
+            binding.abbreviationsRecyclerView.smoothScrollToPosition(currentList.size - 1)
+        }
         updateAbbreviationUI()
     }
 
     private fun updateAbbreviationUI() {
-        val hasItems = abbreviationAdapter.itemCount > 0
-        val hasValidItems = abbreviationAdapter.currentList.any {
-            it.abbreviation.isNotBlank() && it.meaning.isNotBlank()
-        }
+        val hasItems = abbreviationAdapter.currentList.isNotEmpty()
 
         with(binding) {
-            // Show summary text only when not editing and there are no valid items
-            abbreviationsSummaryText.isVisible = !isAbbreviationEditing && !hasValidItems
+            // Always show the RecyclerView
+            abbreviationsRecyclerView.isVisible = true
+            abbreviationsSummaryText.isVisible = false
 
-            // Always show the RecyclerView when in edit mode or when there are items
-            abbreviationsRecyclerView.isVisible = isAbbreviationEditing || hasItems
+            // Show empty state message if no items and not in edit mode
+            if (!hasItems && !isAbbreviationEditing) {
+                abbreviationsSummaryText.text = "No abbreviations added. Tap to add."
+                abbreviationsSummaryText.isVisible = true
+                abbreviationsRecyclerView.isVisible = false
+            }
 
-            // Show save button only in edit mode and when there's at least one valid item
-            saveAbbreviationsButton.isVisible = isAbbreviationEditing && hasValidItems
-
-            // Show add button only in edit mode
+            // Show edit controls only in edit mode
+            saveAbbreviationsButton.isVisible = isAbbreviationEditing
             addAbbreviationsButton.isVisible = isAbbreviationEditing
-
-            // Update the summary text if not editing and there are valid items
-            if (!isAbbreviationEditing && hasValidItems) {
-                val abbreviationsText = abbreviationAdapter.currentList
-                    .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
-                    .joinToString(", ") { "${it.abbreviation} (${it.meaning})" }
-                abbreviationsSummaryText.text = abbreviationsText
-            } else if (!isAbbreviationEditing) {
-                abbreviationsSummaryText.text = getString(R.string.no_abbreviations_added)
-            }
-        }
-    }
-
-    private fun saveAbbreviations() {
-        // Filter out any empty or incomplete abbreviations
-        val validAbbreviations = abbreviationAdapter.currentList
-            .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
-            .associate { it.abbreviation to it.meaning }
-
-        if (validAbbreviations.isEmpty()) {
-            showMessage("Please add at least one valid abbreviation and meaning")
-            return
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                binding.abbreviationsProgressBar.isVisible = true
-                when (val result =
-                    viewModel.saveAbbreviations(meetingId, meetingId, validAbbreviations)) {
-                    is com.bntsoft.toastmasters.utils.Result.Error -> {
-                        showMessage("Failed to save abbreviations: ${result.exception}")
-                    }
-
-                    is com.bntsoft.toastmasters.utils.Result.Success -> {
-                        isAbbreviationEditing = false
-
-                        // Update the adapter with the saved abbreviations (non-editable)
-                        val savedItems = validAbbreviations.map { (abbr, meaning) ->
-                            AbbreviationItem(
-                                id = abbr,
-                                abbreviation = abbr,
-                                meaning = meaning,
-                                isEditable = false
-                            )
-                        }
-                        abbreviationAdapter.submitList(savedItems)
-
-                        // Show success message
-                        showMessage("Abbreviations saved successfully")
-
-                        // Update UI to show summary and hide edit controls
-                        binding.abbreviationsRecyclerView.isVisible = savedItems.isNotEmpty()
-                        binding.abbreviationsSummaryText.isVisible = savedItems.isNotEmpty()
-                        binding.saveAbbreviationsButton.isVisible = false
-                        binding.addAbbreviationsButton.isVisible = false
-
-                        // Update summary text
-                        if (savedItems.isNotEmpty()) {
-                            val abbreviationsText = savedItems.joinToString(", ") {
-                                "${it.abbreviation} (${it.meaning})"
-                            }
-                            binding.abbreviationsSummaryText.text = abbreviationsText
-                        } else {
-                            binding.abbreviationsSummaryText.text =
-                                getString(R.string.no_abbreviations_added)
-                        }
-                    }
-
-                    is com.bntsoft.toastmasters.utils.Result.Loading -> {
-                        // Loading state handled by progress bar
-                    }
-                }
-            } catch (e: Exception) {
-                showMessage("Failed to save abbreviations: ${e.message}")
-            } finally {
-                binding.abbreviationsProgressBar.isVisible = false
-            }
         }
     }
 
     private fun editAbbreviations() {
         isAbbreviationEditing = true
-
-        // Make sure the RecyclerView is visible and summary is hidden
-        binding.abbreviationsRecyclerView.isVisible = true
-        binding.abbreviationsSummaryText.isVisible = false
-
-        // Get current items or create a new list if empty
-        val currentItems = abbreviationAdapter.currentList.toMutableList()
-
-        if (currentItems.isEmpty()) {
-            // If no items exist, add a new empty one
+        val currentList = abbreviationAdapter.currentList.toMutableList()
+        
+        if (currentList.isEmpty()) {
+            // If no items, add an empty one
             addNewAbbreviationItem()
         } else {
-            // Make all existing items editable and update the list
-            val updatedList = currentItems.map { item ->
-                item.copy(isEditable = true)
-            }.toMutableList()
-
-            // If all items are valid (have both abbreviation and meaning), add a new empty one
-            if (updatedList.all { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }) {
-                updatedList.add(
-                    AbbreviationItem(
-                        id = UUID.randomUUID().toString(),
-                        isEditable = true
-                    )
-                )
-            }
-
+            // Make all items editable
+            val updatedList = currentList.map { it.copy(isEditable = true) }
             abbreviationAdapter.submitList(updatedList)
         }
-
-        // Show the save button and add button
-        binding.saveAbbreviationsButton.isVisible = true
-        binding.addAbbreviationsButton.isVisible = true
+        
+        updateAbbreviationUI()
     }
 
-    private fun setupUI() {
-        // Existing UI setup code
-        binding.themeEditText.apply {
-            isEnabled = false
-            isFocusable = false
-            isClickable = false
-            background = null
-        }
-
-        binding.dateEditText.apply {
-            isEnabled = false
-            isFocusable = false
-            isClickable = false
-            background = null
-        }
-
-        binding.startTimeEditText.apply {
-            isEnabled = false
-            isFocusable = false
-            isClickable = false
-            background = null
-        }
-
-        binding.endTimeEditText.apply {
-            isEnabled = false
-            isFocusable = false
-            isClickable = false
-            background = null
-        }
-
-        binding.venueEditText.apply {
-            isEnabled = false
-            isFocusable = false
-            isClickable = false
-            background = null
-        }
-
-        // Set up Club Information fields
-        binding.clubNameEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                viewModel.updateClubName(s?.toString() ?: "")
+    private fun saveAbbreviations() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val currentList = abbreviationAdapter.currentList
+                val abbreviations = currentList
+                    .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
+                    .associate { it.abbreviation to it.meaning }
+                
+                // Get the agenda ID from the ViewModel or use a default value
+                val agendaId = viewModel.uiState.value.agenda?.id ?: ""
+                viewModel.saveAbbreviations(meetingId, agendaId, abbreviations)
+                
+                isAbbreviationEditing = false
+                
+                // Update the list to mark items as non-editable
+                val updatedList = currentList.map { it.copy(isEditable = false) }
+                abbreviationAdapter.submitList(updatedList)
+                
+                updateAbbreviationUI()
+            } catch (e: Exception) {
+                // Handle any errors that might occur during save
+                showError("Failed to save abbreviations: ${e.message}")
             }
-        })
-
-        binding.clubNumberEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                viewModel.updateClubNumber(s?.toString() ?: "")
-            }
-        })
-
-        binding.areaEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                viewModel.updateArea(s?.toString() ?: "")
-            }
-        })
-
-        binding.districtEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                viewModel.updateDistrict(s?.toString() ?: "")
-            }
-        })
-
-        binding.missionEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                viewModel.updateClubMission(s?.toString() ?: "")
-            }
-        })
+        }
     }
 
     private fun observeViewModel() {
@@ -455,22 +392,30 @@ class CreateAgendaFragment : Fragment() {
                             }
 
                             // Update edit mode for Officers section
-                            binding.presidentInputLayout.isEnabled = state.isOfficersEditable
-                            binding.vpEducationInputLayout.isEnabled = state.isOfficersEditable
-                            binding.vpMembershipInputLayout.isEnabled = state.isOfficersEditable
-                            binding.secretaryInputLayout.isEnabled = state.isOfficersEditable
-                            binding.treasurerInputLayout.isEnabled = state.isOfficersEditable
-                            binding.saaInputLayout.isEnabled = state.isOfficersEditable
-                            binding.ippInputLayout.isEnabled = state.isOfficersEditable
+                            binding.presidentInputLayout.isEnabled =
+                                state.isOfficersEditable
+                            binding.vpEducationInputLayout.isEnabled =
+                                state.isOfficersEditable
+                            binding.vpMembershipInputLayout.isEnabled =
+                                state.isOfficersEditable
+                            binding.secretaryInputLayout.isEnabled =
+                                state.isOfficersEditable
+                            binding.treasurerInputLayout.isEnabled =
+                                state.isOfficersEditable
+                            binding.saaInputLayout.isEnabled =
+                                state.isOfficersEditable
+                            binding.ippInputLayout.isEnabled =
+                                state.isOfficersEditable
                             binding.vpPublicRelationInputLayout.isEnabled =
                                 state.isOfficersEditable
 
                             // Update edit button text for Officers
-                            binding.editOfficersButton.text = if (state.isOfficersEditable) {
-                                getString(R.string.cancel)
-                            } else {
-                                getString(R.string.edit)
-                            }
+                            binding.editOfficersButton.text =
+                                if (state.isOfficersEditable) {
+                                    getString(R.string.cancel)
+                                } else {
+                                    getString(R.string.edit)
+                                }
 
                             // Update grammarian details
                             state.grammarianDetails.let { details ->
@@ -516,7 +461,11 @@ class CreateAgendaFragment : Fragment() {
 
                             // Show success/error messages
                             state.error?.let { error ->
-                                if (error.contains("successfully", ignoreCase = true)) {
+                                if (error.contains(
+                                        "successfully",
+                                        ignoreCase = true
+                                    )
+                                ) {
                                     showMessage(error)
                                     toggleGrammarianEditMode(false)
                                 } else {
@@ -541,8 +490,10 @@ class CreateAgendaFragment : Fragment() {
 
                             // Update abbreviations UI based on edit mode
                             binding.abbreviationsRecyclerView.isVisible = true
-                            binding.saveAbbreviationsButton.isVisible = isAbbreviationEditing
-                            binding.addAbbreviationsButton.isVisible = isAbbreviationEditing
+                            binding.saveAbbreviationsButton.isVisible =
+                                isAbbreviationEditing
+                            binding.addAbbreviationsButton.isVisible =
+                                isAbbreviationEditing
 
                             if (state.isSaved) {
                                 showMessage(getString(R.string.agenda_saved))
@@ -602,7 +553,8 @@ class CreateAgendaFragment : Fragment() {
         }
 
         // Set up Club Information fields
-        binding.clubNameEditText.addTextChangedListener(object : android.text.TextWatcher {
+        binding.clubNameEditText.addTextChangedListener(object :
+            android.text.TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence?,
                 start: Int,
@@ -611,13 +563,21 @@ class CreateAgendaFragment : Fragment() {
             ) {
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int
+            ) {
+            }
+
             override fun afterTextChanged(s: android.text.Editable?) {
                 viewModel.updateClubName(s?.toString() ?: "")
             }
         })
 
-        binding.clubNumberEditText.addTextChangedListener(object : android.text.TextWatcher {
+        binding.clubNumberEditText.addTextChangedListener(object :
+            android.text.TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence?,
                 start: Int,
@@ -626,13 +586,21 @@ class CreateAgendaFragment : Fragment() {
             ) {
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int
+            ) {
+            }
+
             override fun afterTextChanged(s: android.text.Editable?) {
                 viewModel.updateClubNumber(s?.toString() ?: "")
             }
         })
 
-        binding.areaEditText.addTextChangedListener(object : android.text.TextWatcher {
+        binding.areaEditText.addTextChangedListener(object :
+            android.text.TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence?,
                 start: Int,
@@ -641,13 +609,21 @@ class CreateAgendaFragment : Fragment() {
             ) {
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int
+            ) {
+            }
+
             override fun afterTextChanged(s: android.text.Editable?) {
                 viewModel.updateArea(s?.toString() ?: "")
             }
         })
 
-        binding.districtEditText.addTextChangedListener(object : android.text.TextWatcher {
+        binding.districtEditText.addTextChangedListener(object :
+            android.text.TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence?,
                 start: Int,
@@ -656,13 +632,21 @@ class CreateAgendaFragment : Fragment() {
             ) {
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int
+            ) {
+            }
+
             override fun afterTextChanged(s: android.text.Editable?) {
                 viewModel.updateDistrict(s?.toString() ?: "")
             }
         })
 
-        binding.missionEditText.addTextChangedListener(object : android.text.TextWatcher {
+        binding.missionEditText.addTextChangedListener(object :
+            android.text.TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence?,
                 start: Int,
@@ -671,15 +655,25 @@ class CreateAgendaFragment : Fragment() {
             ) {
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int
+            ) {
+            }
+
             override fun afterTextChanged(s: android.text.Editable?) {
                 viewModel.updateClubMission(s?.toString() ?: "")
             }
         })
     }
 
-    private var isInitialLoad = true
-    private var currentOfficers: Map<String, String> = emptyMap()
+    private
+    var isInitialLoad = true
+
+    private
+    var currentOfficers: Map<String, String> = emptyMap()
 
     private fun updateUi(agenda: MeetingAgenda) {
         // Only update theme if it's changed
@@ -716,34 +710,40 @@ class CreateAgendaFragment : Fragment() {
 
         // Load and display abbreviations if they exist
         if (agenda.abbreviations.isNotEmpty()) {
-            val items = agenda.abbreviations.map { (abbr, meaning) ->
-                AbbreviationItem(
-                    id = abbr,
-                    abbreviation = abbr,
-                    meaning = meaning,
-                    isEditable = isAbbreviationEditing
-                )
-            }
+            val items =
+                agenda.abbreviations.map { (abbr, meaning) ->
+                    AbbreviationItem(
+                        id = abbr,
+                        abbreviation = abbr,
+                        meaning = meaning,
+                        isEditable = isAbbreviationEditing
+                    )
+                }
             abbreviationAdapter.submitList(items)
 
             // Update UI based on edit mode
             binding.abbreviationsRecyclerView.isVisible = true
-            binding.abbreviationsSummaryText.isVisible = !isAbbreviationEditing
-            binding.saveAbbreviationsButton.isVisible = isAbbreviationEditing
-            binding.addAbbreviationsButton.isVisible = isAbbreviationEditing
+            binding.abbreviationsSummaryText.isVisible =
+                !isAbbreviationEditing
+            binding.saveAbbreviationsButton.isVisible =
+                isAbbreviationEditing
+            binding.addAbbreviationsButton.isVisible =
+                isAbbreviationEditing
 
             if (!isAbbreviationEditing) {
                 val abbreviationsText = items
                     .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
                     .joinToString(", ") { "${it.abbreviation} (${it.meaning})" }
-                binding.abbreviationsSummaryText.text = abbreviationsText
+                binding.abbreviationsSummaryText.text =
+                    abbreviationsText
             }
         } else if (isAbbreviationEditing) {
             // If in edit mode but no abbreviations, add an empty item
             addNewAbbreviationItem()
         } else {
             // If not in edit mode and no abbreviations, show empty state
-            binding.abbreviationsSummaryText.text = getString(R.string.no_abbreviations_added)
+            binding.abbreviationsSummaryText.text =
+                getString(R.string.no_abbreviations_added)
             binding.abbreviationsSummaryText.isVisible = true
             binding.abbreviationsRecyclerView.isVisible = false
         }
@@ -761,27 +761,46 @@ class CreateAgendaFragment : Fragment() {
             binding.treasurerEditText.setupOfficerTextWatcher("Treasurer")
             binding.vpEducationEditText.setupOfficerTextWatcher("VPE")
             binding.vpMembershipEditText.setupOfficerTextWatcher("VPM")
-            binding.vpPublicRelationEditText.setupOfficerTextWatcher("VPPR")
+            binding.vpPublicRelationEditText.setupOfficerTextWatcher(
+                "VPPR"
+            )
         }
         // Only update text if it's different from current text
-        fun updateField(editText: TextInputEditText, value: String?) {
+        fun updateField(
+            editText: TextInputEditText,
+            value: String?
+        ) {
             if (editText.text?.toString() != value) {
                 editText.setText(value ?: "")
             }
         }
 
         // Update officer fields
-        updateField(binding.presidentEditText, officers["President"])
+        updateField(
+            binding.presidentEditText,
+            officers["President"]
+        )
         updateField(binding.vpEducationEditText, officers["VPE"])
         updateField(binding.vpMembershipEditText, officers["VPM"])
-        updateField(binding.secretaryEditText, officers["Secretary"])
-        updateField(binding.treasurerEditText, officers["Treasurer"])
+        updateField(
+            binding.secretaryEditText,
+            officers["Secretary"]
+        )
+        updateField(
+            binding.treasurerEditText,
+            officers["Treasurer"]
+        )
         updateField(binding.saaEditText, officers["SAA"])
         updateField(binding.ippEditText, officers["IPP"])
-        updateField(binding.vpPublicRelationEditText, officers["VPPR"])
+        updateField(
+            binding.vpPublicRelationEditText,
+            officers["VPPR"]
+        )
     }
 
-    private fun TextInputEditText.setupOfficerTextWatcher(role: String) {
+    private fun TextInputEditText.setupOfficerTextWatcher(
+        role: String
+    ) {
         // Clear existing text watchers
         this.tag?.let { oldWatcher ->
             if (oldWatcher is android.text.TextWatcher) {
@@ -811,21 +830,29 @@ class CreateAgendaFragment : Fragment() {
 
                 override fun afterTextChanged(s: android.text.Editable?) {
                     debounceJob?.cancel()
-                    debounceJob = viewLifecycleOwner.lifecycleScope.launch {
-                        delay(300) // 300ms debounce time
-                        if (isActive) {
-                            viewModel.updateOfficer(role, s?.toString() ?: "")
+                    debounceJob =
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            delay(300) // 300ms debounce time
+                            if (isActive) {
+                                viewModel.updateOfficer(
+                                    role,
+                                    s?.toString() ?: ""
+                                )
+                            }
                         }
-                    }
                 }
             }
 
-            this@setupOfficerTextWatcher.addTextChangedListener(textWatcher)
+            this@setupOfficerTextWatcher.addTextChangedListener(
+                textWatcher
+            )
             this@setupOfficerTextWatcher.tag = textWatcher
 
             // Clean up when the view is destroyed
             awaitCancellation()
-            this@setupOfficerTextWatcher.removeTextChangedListener(textWatcher)
+            this@setupOfficerTextWatcher.removeTextChangedListener(
+                textWatcher
+            )
         }
 
         // Store the job to cancel it if needed
@@ -853,14 +880,23 @@ class CreateAgendaFragment : Fragment() {
             ) {
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            override fun onTextChanged(
+                s: CharSequence?,
+                start: Int,
+                before: Int,
+                count: Int
+            ) {
                 debounceJob?.cancel()
-                debounceJob = viewLifecycleOwner.lifecycleScope.launch {
-                    delay(500) // 500ms debounce
-                    if (isAttachedToWindow && isLaidOut) {
-                        viewModel.updateOfficer(role, s?.toString() ?: "")
+                debounceJob =
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        delay(500) // 500ms debounce
+                        if (isAttachedToWindow && isLaidOut) {
+                            viewModel.updateOfficer(
+                                role,
+                                s?.toString() ?: ""
+                            )
+                        }
                     }
-                }
             }
 
             override fun afterTextChanged(s: android.text.Editable?) {}
@@ -873,23 +909,29 @@ class CreateAgendaFragment : Fragment() {
 
     private fun showMessage(message: String) {
         view?.let { view ->
-            Snackbar.make(view, message, Snackbar.LENGTH_SHORT).show()
+            Snackbar.make(view, message, Snackbar.LENGTH_SHORT)
+                .show()
         }
     }
 
     private fun toggleGrammarianEditMode(enable: Boolean) {
-        val isSaving = viewModel.uiState.value.isGrammarianDetailsSaving
+        val isSaving =
+            viewModel.uiState.value.isGrammarianDetailsSaving
 
         binding.wordOfDayEditText.isEnabled = enable && !isSaving
         binding.wordMeaningEditText.isEnabled = enable && !isSaving
         binding.wordExamplesEditText.isEnabled = enable && !isSaving
         binding.idiomEditText.isEnabled = enable && !isSaving
         binding.idiomMeaningEditText.isEnabled = enable && !isSaving
-        binding.idiomExamplesEditText.isEnabled = enable && !isSaving
+        binding.idiomExamplesEditText.isEnabled =
+            enable && !isSaving
 
-        binding.editGrammarianButton.visibility = if (enable) View.GONE else View.VISIBLE
-        binding.saveGrammarianButton.visibility = if (enable) View.VISIBLE else View.GONE
-        binding.cancelGrammarianButton.visibility = if (enable) View.VISIBLE else View.GONE
+        binding.editGrammarianButton.visibility =
+            if (enable) View.GONE else View.VISIBLE
+        binding.saveGrammarianButton.visibility =
+            if (enable) View.VISIBLE else View.GONE
+        binding.cancelGrammarianButton.visibility =
+            if (enable) View.VISIBLE else View.GONE
 
         // Update button states
         binding.saveGrammarianButton.isEnabled = !isSaving
@@ -902,17 +944,24 @@ class CreateAgendaFragment : Fragment() {
             // Show keyboard
             val imm =
                 requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(binding.wordOfDayEditText, InputMethodManager.SHOW_IMPLICIT)
+            imm.showSoftInput(
+                binding.wordOfDayEditText,
+                InputMethodManager.SHOW_IMPLICIT
+            )
         }
     }
 
     private fun updateAndSaveGrammarianDetails() {
         val wordOfTheDay = binding.wordOfDayEditText.text.toString()
-        val wordMeaning = binding.wordMeaningEditText.text.toString()
-        val wordExamples = binding.wordExamplesEditText.text.toString()
+        val wordMeaning =
+            binding.wordMeaningEditText.text.toString()
+        val wordExamples =
+            binding.wordExamplesEditText.text.toString()
         val idiomOfTheDay = binding.idiomEditText.text.toString()
-        val idiomMeaning = binding.idiomMeaningEditText.text.toString()
-        val idiomExamples = binding.idiomExamplesEditText.text.toString()
+        val idiomMeaning =
+            binding.idiomMeaningEditText.text.toString()
+        val idiomExamples =
+            binding.idiomExamplesEditText.text.toString()
 
         // Basic validation
         if (wordOfTheDay.isBlank() || idiomOfTheDay.isBlank()) {
@@ -953,18 +1002,23 @@ class CreateAgendaFragment : Fragment() {
             if (currentStep == 1) View.VISIBLE else View.GONE
         binding.ClubInformationCard.visibility =
             if (currentStep == 2) View.VISIBLE else View.GONE
-        binding.officersCard.visibility = if (currentStep == 3) View.VISIBLE else View.GONE
-        binding.grammarianCard.visibility = if (currentStep == 4) View.VISIBLE else View.GONE
+        binding.officersCard.visibility =
+            if (currentStep == 3) View.VISIBLE else View.GONE
+        binding.grammarianCard.visibility =
+            if (currentStep == 4) View.VISIBLE else View.GONE
         if (currentStep == 4) {
             // Load grammarian details when the grammarian step is active
             viewModel.loadGrammarianDetails(meetingId)
         }
-        binding.abbreviationsCard.visibility = if (currentStep == 5) View.VISIBLE else View.GONE
+        binding.abbreviationsCard.visibility =
+            if (currentStep == 5) View.VISIBLE else View.GONE
 
         binding.previousButton.visibility =
             if (currentStep > 1) View.VISIBLE else View.INVISIBLE
-        binding.nextButton.visibility = if (currentStep < 5) View.VISIBLE else View.GONE
-        binding.agendaItemsButton.visibility = if (currentStep == 5) View.VISIBLE else View.GONE
+        binding.nextButton.visibility =
+            if (currentStep < 5) View.VISIBLE else View.GONE
+        binding.agendaItemsButton.visibility =
+            if (currentStep == 5) View.VISIBLE else View.GONE
 
         // Update step indicators
         val indicators = listOf(

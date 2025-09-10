@@ -760,20 +760,21 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     override suspend fun getGrammarianDetailsForMeeting(meetingId: String): List<GrammarianDetails> {
         Log.d("FirebaseAgendaDS", "Fetching all grammarian details for meeting: $meetingId")
         return try {
-            val result = firestore.collection(MEETINGS_COLLECTION)
+            val snapshot = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection(GRAMMARIAN_DETAILS_SUBCOLLECTION)
                 .get()
                 .await()
-                .mapNotNull {
-                    it.toObject(GrammarianDetails::class.java)?.also { details ->
-                        Log.d("FirebaseAgendaDS", "Found grammarian details: $details")
-                    }
+
+            snapshot.documents.mapNotNull { doc ->
+                try {
+                    doc.toObject(GrammarianDetails::class.java)
+                } catch (e: Exception) {
+                    null
                 }
-            Log.d("FirebaseAgendaDS", "Total grammarian details found: ${result.size}")
-            result
+            }
         } catch (e: Exception) {
-            Log.e("FirebaseAgendaDS", "Error fetching grammarian details for meeting", e)
+            Log.e("FirebaseAgendaDS", "Error getting grammarian details for meeting", e)
             emptyList()
         }
     }

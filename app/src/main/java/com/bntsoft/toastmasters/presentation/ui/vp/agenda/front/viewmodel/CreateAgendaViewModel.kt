@@ -85,16 +85,20 @@ class CreateAgendaViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val abbreviations = abbreviationRepository.getAbbreviations(meetingId, meetingId) // Using meetingId as agendaId
+                val abbreviations = withContext(Dispatchers.IO) {
+                    abbreviationRepository.getAbbreviations(meetingId, meetingId)
+                }
                 _abbreviations.value = abbreviations
                 
                 // Update the agenda with the loaded abbreviations
                 _uiState.update { state ->
-                    val updatedAgenda = state.agenda?.copy(abbreviations = abbreviations) ?: state.agenda
+                    val updatedAgenda = state.agenda.copy(abbreviations = abbreviations)
                     state.copy(agenda = updatedAgenda)
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
+                // Even if loading fails, ensure we have an empty map
+                _abbreviations.value = emptyMap()
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -138,12 +142,66 @@ class CreateAgendaViewModel @Inject constructor(
     }
 
     suspend fun saveAbbreviations(meetingId: String, agendaId: String, abbreviations: Map<String, String>): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
+        return try {
+            _uiState.update { it.copy(isSaving = true) }
+            val result = withContext(Dispatchers.IO) {
                 abbreviationRepository.saveAbbreviations(meetingId, agendaId, abbreviations)
-            } catch (e: Exception) {
-                Result.Error(e)
             }
+            if (result is Result.Success) {
+                _abbreviations.value = abbreviations
+                _uiState.update { it.copy(isSaving = false, isSaved = true) }
+            } else {
+                val errorMessage = (result as? Result.Error)?.exception?.message ?: "Failed to save abbreviations"
+                _uiState.update { it.copy(isSaving = false, error = errorMessage) }
+            }
+            result
+        } catch (e: Exception) {
+            val errorMessage = e.message ?: "Unknown error occurred"
+            _uiState.update { it.copy(isSaving = false, error = errorMessage) }
+            Result.Error(Exception(errorMessage))
+        }
+    }
+    
+    suspend fun deleteAbbreviation(meetingId: String, abbreviationKey: String): Result<Unit> {
+        return try {
+            _uiState.update { it.copy(isSaving = true) }
+            val result = withContext(Dispatchers.IO) {
+                abbreviationRepository.deleteAbbreviation(meetingId, meetingId, abbreviationKey)
+            }
+            
+            if (result is Result.Success) {
+                // Update local state
+                val updatedAbbreviations = _abbreviations.value.toMutableMap()
+                updatedAbbreviations.remove(abbreviationKey)
+                _abbreviations.value = updatedAbbreviations
+                
+                // Update the agenda in the UI state
+                _uiState.update { state ->
+                    val updatedAgenda = state.agenda.copy(
+                        abbreviations = updatedAbbreviations
+                    )
+                    state.copy(
+                        agenda = updatedAgenda,
+                        isSaving = false,
+                        isSaved = true
+                    )
+                }
+            } else {
+                val errorMessage = (result as? Result.Error)?.exception?.message 
+                    ?: "Failed to delete abbreviation"
+                _uiState.update { it.copy(
+                    isSaving = false, 
+                    error = errorMessage
+                )}
+            }
+            result
+        } catch (e: Exception) {
+            val errorMessage = e.message ?: "Failed to delete abbreviation"
+            _uiState.update { it.copy(
+                isSaving = false, 
+                error = errorMessage
+            )}
+            Result.Error(Exception(errorMessage))
         }
     }
 
@@ -398,7 +456,6 @@ class CreateAgendaViewModel @Inject constructor(
             }
         }
     }
-
 
     fun saveOfficers() {
         viewModelScope.launch(Dispatchers.IO) {

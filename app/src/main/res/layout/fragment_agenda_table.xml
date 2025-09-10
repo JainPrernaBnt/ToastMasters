@@ -7,18 +7,21 @@
     android:background="@color/white"
     tools:context=".presentation.ui.vp.agenda.AgendaTableFragment">
 
-    <LinearLayout
+    <!-- Main ScrollView that contains the entire table -->
+    <HorizontalScrollView
+        android:id="@+id/mainScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:fillViewport="true">
 
-        <!-- Horizontal Scrollable Header Row -->
-        <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fadeScrollbars="false"
-            android:scrollbars="none">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
+            <!-- Header Row -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -87,53 +90,65 @@
                     android:text="PRESENTER"
                     android:textStyle="bold" />
             </LinearLayout>
-        </HorizontalScrollView>
 
+            <!-- RecyclerView for agenda items -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/agendaRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:scrollbars="vertical"
+                android:clipToPadding="false"
+                android:paddingBottom="88dp"
+                android:overScrollMode="never" />
+        </LinearLayout>
+    </HorizontalScrollView>
 
-        <!-- RecyclerView below header -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/agendaRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:orientation="vertical"
-            android:paddingBottom="88dp"
-            tools:itemCount="10"
-            tools:listitem="@layout/item_agenda" />
+    <!-- Bottom bar with export button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@android:color/white"
+        android:elevation="8dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/saveButton"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_margin="16dp"
-            android:text="@string/btn_export_pdf"
+            android:drawableStart="@drawable/ic_pdf"
+            android:drawablePadding="8dp"
+            android:text="Export as PDF"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textStyle="bold"
-            app:backgroundTint="@color/purple_500"
+            app:backgroundTint="@color/red_500"
             app:cornerRadius="8dp"
             app:iconGravity="textStart"
-            app:iconPadding="12dp"
-            app:iconTint="@color/white"
-            app:rippleColor="@color/purple_200"
-            app:strokeColor="@color/purple_700"
-            app:strokeWidth="2dp" />
-
-        <!-- Floating Action Button (fixed bottom-end) -->
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabAddItem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="80dp"
-            android:contentDescription="Add Item"
-            android:src="@drawable/ic_add"
-            app:backgroundTint="@color/purple_500"
-            app:rippleColor="@color/purple_200"
-            app:tint="@color/white" />
+            app:rippleColor="@color/red_200"
+            app:strokeColor="@color/red_700"
+            app:strokeWidth="1dp" />
     </LinearLayout>
+
+    <!-- FAB positioned above the export button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddItem"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="100dp"
+        android:contentDescription="Add item"
+        android:scaleType="center"
+        android:src="@drawable/ic_add"
+        app:backgroundTint="@color/purple_500"
+        app:elevation="6dp"
+        app:maxImageSize="24dp"
+        app:rippleColor="@color/purple_200"
+        app:showMotionSpec="@animator/fab_show_motion_spec"
+        app:hideMotionSpec="@animator/fab_hide_motion_spec"
+        app:useCompatPadding="true" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

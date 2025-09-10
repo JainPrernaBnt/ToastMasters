@@ -8,12 +8,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.data.model.AbbreviationItem
 import com.bntsoft.toastmasters.databinding.ItemAbbreviationBinding
 
-class AbbreviationAdapter : ListAdapter<AbbreviationItem, AbbreviationAdapter.AbbreviationViewHolder>(AbbreviationDiffCallback()) {
+class AbbreviationAdapter(
+    private val onItemRemoved: ((Int) -> Unit)? = null
+) : ListAdapter<AbbreviationItem, AbbreviationAdapter.AbbreviationViewHolder>(AbbreviationDiffCallback()) {
 
-    private var onItemRemoved: ((Int) -> Unit)? = null
-
-    fun setOnItemRemovedListener(listener: (Int) -> Unit) {
-        onItemRemoved = listener
+    init {
+        // Submit an empty list to avoid NPE in DiffUtil
+        submitList(emptyList())
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbbreviationViewHolder {
@@ -31,13 +32,24 @@ class AbbreviationAdapter : ListAdapter<AbbreviationItem, AbbreviationAdapter.Ab
 
     fun setEditable(isEditable: Boolean) {
         val updatedList = currentList.map { it.copy(isEditable = isEditable) }
-        submitList(updatedList)
+        submitList(updatedList) {
+            // Scroll to the bottom when adding a new item in edit mode
+            if (isEditable && updatedList.isNotEmpty()) {
+                notifyItemInserted(updatedList.size - 1)
+            }
+        }
     }
 
     fun getAbbreviationsMap(): Map<String, String> {
         return currentList
             .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
             .associate { it.abbreviation to it.meaning }
+    }
+    
+    fun addNewItem() {
+        val newList = currentList.toMutableList()
+        newList.add(AbbreviationItem(id = System.currentTimeMillis().toString()))
+        submitList(newList)
     }
 
     inner class AbbreviationViewHolder(
@@ -64,7 +76,10 @@ class AbbreviationAdapter : ListAdapter<AbbreviationItem, AbbreviationAdapter.Ab
                 }
 
                 removeButton.setOnClickListener {
-                    onItemRemoved?.invoke(adapterPosition)
+                    val position = bindingAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        onItemRemoved?.invoke(position)
+                    }
                 }
             }
         }

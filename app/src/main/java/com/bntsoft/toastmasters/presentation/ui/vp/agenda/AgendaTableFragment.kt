@@ -20,6 +20,7 @@ import com.bntsoft.toastmasters.data.mapper.AgendaItemMapper
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
 import com.bntsoft.toastmasters.databinding.FragmentAgendaTableBinding
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
+import com.bntsoft.toastmasters.utils.AgendaTimeCalculator
 import com.bntsoft.toastmasters.utils.Resource
 import com.bntsoft.toastmasters.utils.TimeUtils
 import com.google.android.material.snackbar.Snackbar
@@ -44,7 +45,6 @@ class AgendaTableFragment : Fragment() {
     lateinit var meetingId: String
     private lateinit var adapter: AgendaAdapter
     private lateinit var itemTouchHelper: ItemTouchHelper
-    private val items = mutableListOf<AgendaItemDto>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -87,17 +87,20 @@ class AgendaTableFragment : Fragment() {
                 viewModel.agendaItems.collect { result ->
                     when (result) {
                         is Resource.Success -> {
-                            val items = result.data ?: emptyList()
-                            Log.d("AgendaTableFragment", "Agenda items loaded: ${items.size}")
-                            adapter.submitList(ArrayList(items)) // Force fresh copy
-                            this@AgendaTableFragment.items.clear()
-                            this@AgendaTableFragment.items.addAll(items)
+                            val loadedItems = result.data ?: emptyList()
+                            Log.d("AgendaTableFragment", "Agenda items loaded: ${loadedItems.size}")
+                            loadedItems.forEachIndexed { index, item ->
+                                Log.d("AgendaTableFragment", "Item $index: ${item.activity} (order: ${item.orderIndex})")
+                            }
+                            // Submit the loaded items to the adapter
+                            val sortedItems = loadedItems.sortedBy { it.orderIndex }
+                            Log.d("AgendaTableFragment", "Submitting ${sortedItems.size} items to adapter")
+                            adapter.submitList(sortedItems)
+                            Log.d("AgendaTableFragment", "Adapter item count after submit: ${adapter.itemCount}")
                         }
-
                         is Resource.Error -> {
-                            showError(result.message ?: "Failed to load agenda items")
+                            showError(result.message ?: "An error occurred")
                         }
-
                         is Resource.Loading -> {
                             // Show loading state if needed
                         }
@@ -162,14 +165,21 @@ class AgendaTableFragment : Fragment() {
             onStartDrag = { viewHolder ->
                 // Start drag
                 itemTouchHelper.startDrag(viewHolder)
+            },
+            onItemsUpdated = { updatedItems ->
+                // Update items in Firebase when order or times change
+                viewModel.reorderItems(meetingId, updatedItems)
             }
         )
-
+        
         // Initialize with empty list to avoid NPE
         adapter.submitList(emptyList())
 
         binding.agendaRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            // Use a LinearLayoutManager with vertical orientation
+            layoutManager = LinearLayoutManager(requireContext()).apply {
+                orientation = LinearLayoutManager.VERTICAL
+            }
             this.adapter = this@AgendaTableFragment.adapter
             itemAnimator = DefaultItemAnimator()
             addItemDecoration(
@@ -179,17 +189,25 @@ class AgendaTableFragment : Fragment() {
                 )
             )
             setHasFixedSize(true)
+            // Disable nested scrolling since we're handling it with the parent HorizontalScrollView
+            isNestedScrollingEnabled = false
         }
+        
+        // Log RecyclerView configuration
+        Log.d("AgendaTableFragment", "RecyclerView setup complete. LayoutManager: ${binding.agendaRecyclerView.layoutManager}")
+        Log.d("AgendaTableFragment", "RecyclerView adapter: ${binding.agendaRecyclerView.adapter}")
+        Log.d("AgendaTableFragment", "RecyclerView item count: ${binding.agendaRecyclerView.adapter?.itemCount}")
 
         // Set up item touch helper for drag and drop
         val callback = object : ItemTouchHelper.Callback() {
+            private var isDragging = false
             override fun getMovementFlags(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
+                // Only allow vertical drag and drop, disable swipe to dismiss
                 val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
-                val swipeFlags = ItemTouchHelper.START or ItemTouchHelper.END
-                return makeMovementFlags(dragFlags, swipeFlags)
+                return makeMovementFlags(dragFlags, 0) // Set swipe flags to 0 to disable swipe
             }
 
             override fun onMove(
@@ -206,39 +224,40 @@ class AgendaTableFragment : Fragment() {
                     return false
                 }
 
+                // Get current items from adapter
+                val currentItems = adapter.currentList.toMutableList()
+                
                 // Move the item in the list
-                val moved = items.removeAt(fromPosition)
-                items.add(toPosition, moved)
+                val moved = currentItems.removeAt(fromPosition)
+                currentItems.add(toPosition, moved)
 
                 // Recompute orderIndex based on new positions
-                for (i in items.indices) {
-                    val it = items[i]
-                    items[i] = it.copy(orderIndex = i)
+                for (i in currentItems.indices) {
+                    val it = currentItems[i]
+                    currentItems[i] = it.copy(orderIndex = i)
                 }
 
-                // Refresh adapter with new order
-                adapter.submitList(ArrayList(items))
+                // Recalculate times starting from the minimum of fromPosition and toPosition
+                val startPosition = minOf(fromPosition, toPosition)
+                val updatedItems = AgendaTimeCalculator.recalculateTimesFromPosition(currentItems, startPosition)
+                
+                // Update the adapter with new order and times
+                adapter.submitList(ArrayList(updatedItems))
 
                 return true
             }
 
+            // Disable swipe to delete to prevent accidental deletions
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                if (position != RecyclerView.NO_POSITION && position < items.size) {
-                    val item = items[position]
-                    // Remove the item from the list and update the adapter
-                    items.removeAt(position)
-                    adapter.submitList(ArrayList(items))
-                    // Notify the view model to delete the item
-                    viewModel.deleteAgendaItem(meetingId, item.id)
-                }
+                // No-op since we're not using swipe to delete
+                // Items can only be deleted using the delete button
+                adapter.notifyItemChanged(viewHolder.adapterPosition)
             }
 
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
                 super.onSelectedChanged(viewHolder, actionState)
-                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
-                    viewHolder?.itemView?.alpha = 0.7f
-                }
+                isDragging = actionState == ItemTouchHelper.ACTION_STATE_DRAG
+                viewHolder?.itemView?.alpha = if (isDragging) 0.7f else 1.0f
             }
 
             override fun clearView(
@@ -247,19 +266,14 @@ class AgendaTableFragment : Fragment() {
             ) {
                 super.clearView(recyclerView, viewHolder)
                 viewHolder.itemView.alpha = 1.0f
-
-                // Update the order indices based on current positions
-                val updatedItems = items.mapIndexed { index, item ->
-                    item.copy(orderIndex = index, updatedAt = com.google.firebase.Timestamp.now())
-                }
-
-                // Update the local list
-                items.clear()
-                items.addAll(updatedItems)
-
+                isDragging = false
+                
+                // Get the current items from the adapter
+                val currentItems = adapter.currentList.toMutableList()
+                
                 // Only save if there are items to save
-                if (updatedItems.isNotEmpty()) {
-                    viewModel.reorderItems(meetingId, updatedItems)
+                if (currentItems.isNotEmpty()) {
+                    viewModel.reorderItems(meetingId, currentItems)
                 }
             }
 
@@ -268,7 +282,7 @@ class AgendaTableFragment : Fragment() {
             }
 
             override fun isItemViewSwipeEnabled(): Boolean {
-                return true
+                return false // Disable swipe to prevent accidental deletions
             }
         }
 
@@ -306,8 +320,9 @@ class AgendaTableFragment : Fragment() {
         binding.fabAddItem.setOnClickListener {
             Log.d("AgendaTableFragment", "Add button clicked, meetingId: $meetingId")
 
-            val isFirstItem = items.isEmpty()
-            val lastItem = items.maxByOrNull { it.orderIndex }
+            val currentItems = adapter.currentList
+            val isFirstItem = currentItems.isEmpty()
+            val lastItem = currentItems.maxByOrNull { it.orderIndex }
 
             viewLifecycleOwner.lifecycleScope.launch {
                 // Get meeting start time for first item
@@ -335,15 +350,15 @@ class AgendaTableFragment : Fragment() {
                 } else {
                     // For non-first items, calculate next time based on previous item
                     val lastTime = lastItem?.time ?: "09:00 AM"
-                    val redDuration = lastItem?.redTime ?: 5
+                    // Default to 0 minutes if no red time is set
+                    val redDuration = lastItem?.redTime?.let { it / 60 } ?: 0
                     TimeUtils.calculateNextTime(
                         lastTime,
-                        redDuration / 60
-                    ) // Convert seconds to minutes
+                        redDuration
+                    )
                 }
-
-                // Default to 0 seconds if no items exist, otherwise use last item's red time
-                val defaultRedTime = lastItem?.redTime ?: 0
+                // Default to 0 seconds for new items
+                val defaultRedTime = 0
 
                 // Show dialog on UI thread
                 activity?.runOnUiThread {

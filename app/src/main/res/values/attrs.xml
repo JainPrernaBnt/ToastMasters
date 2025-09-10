@@ -40,4 +40,16 @@
     
     <!-- Common Attributes -->
     <attr name="drawablePadding" format="dimension" />
+    
+    <!-- Step Indicator View -->
+    <declare-styleable name="StepIndicatorView">
+        <attr name="stepState" format="enum">
+            <enum name="active" value="0" />
+            <enum name="inactive" value="1" />
+            <enum name="completed" value="2" />
+        </attr>
+        <attr name="activeColor" format="color" />
+        <attr name="inactiveColor" format="color" />
+        <attr name="completedColor" format="color" />
+    </declare-styleable>
 </resources>

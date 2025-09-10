@@ -368,6 +368,9 @@
     <string name="notification">notification</string>
     <string name="mentors">Mentors</string>
     
+    <!-- Agenda Table -->
+    <string name="add_item">Add Item</string>
+
     <!-- Grammarian Details -->
     <string name="grammarian_details">Grammarian Details</string>
     <string name="word_of_the_day">Word of the Day</string>

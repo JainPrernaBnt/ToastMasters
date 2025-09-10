@@ -153,6 +153,8 @@ class AgendaItemDialog : DialogFragment() {
         binding.timeInput.apply {
             setOnClickListener { showTimePicker() }
             setOnFocusChangeListener { _, hasFocus -> if (hasFocus) showTimePicker() }
+            isFocusable = false  // Prevent keyboard from showing
+            isFocusableInTouchMode = false
         }
 
         // Set initial time if available
@@ -248,63 +250,50 @@ class AgendaItemDialog : DialogFragment() {
     }
 
     private fun validateInputs(): Boolean {
-        return binding.run {
-            val timeValid = !timeInput.text.isNullOrBlank()
-            val redValid = !redCardInput.text.isNullOrBlank() &&
-                    parseTimeToSecondsOrMinutes(redCardInput.text.toString()) > 0
+        val isValid = binding.activityInput.text?.isNotBlank() == true
 
-            var allValid = true
-
-            // Time validation
-            if (!timeValid) {
-                timeInput.error = "Please select a valid time"
-                allValid = false
-            } else {
-                timeInput.error = null
+        // Update redTime from input
+        binding.redCardInput.text?.toString()?.let {
+            if (it.isNotBlank()) {
+                redTime = parseTimeToSecondsOrMinutes(it)
             }
-
-            // Red card validation (required)
-            if (!redValid) {
-                redCardInput.error = "Please enter a valid number"
-                allValid = false
-            } else {
-                redCardInput.error = null
-            }
-
-            // Green and Yellow are optional → clear any error
-            greenCardInput.error = null
-            yellowCardInput.error = null
-
-            allValid && !activityInput.text.isNullOrBlank() && !presenterInput.text.isNullOrBlank()
         }
+
+        // Ensure red time is at least 1 minute
+        if (redTime <= 0) {
+            redTime = 60 // Default to 1 minute if not set
+        }
+
+        return isValid
     }
 
-    private fun populateFields(agendaItem: AgendaItemDto) {
+    private fun populateFields(item: AgendaItemDto) {
         binding.apply {
-            activityInput.setText(agendaItem.activity)
-            presenterInput.setText(agendaItem.presenterName)
-            // Convert seconds to minutes for display
-            greenCardInput.setText((agendaItem.greenTime / 60).toString())
-            yellowCardInput.setText((agendaItem.yellowTime / 60).toString())
-            redCardInput.setText((agendaItem.redTime / 60).toString())
+            activityInput.setText(item.activity)
+            presenterInput.setText(item.presenterName)
+            timeInput.setText(item.time ?: timeFormat.format(selectedTime.time))
 
-            // Set time if available, otherwise use current time
-            if (agendaItem.time.isNotEmpty()) {
+            // Set card times if they exist
+            if (item.greenTime > 0) {
+                greenCardInput.setText(formatSecondsToTime(item.greenTime))
+            }
+            if (item.yellowTime > 0) {
+                yellowCardInput.setText(formatSecondsToTime(item.yellowTime))
+            }
+            // Set red time from item, or empty if not set
+            redTime = if (item.redTime > 0) item.redTime else 0
+            redCardInput.setText(if (item.redTime > 0) formatSecondsToTime(redTime) else "")
+
+            // Parse the time if it exists
+            item.time?.let { timeString ->
                 try {
-                    val time = SimpleDateFormat("HH:mm", Locale.getDefault()).parse(agendaItem.time)
+                    val time = timeFormat.parse(timeString)
                     time?.let {
-                        val calendar = Calendar.getInstance()
-                        calendar.time = it
-                        selectedTime = calendar
-                        timeInput.setText(timeFormat.format(it))
-                    } ?: run {
-                        timeInput.setText(timeFormat.format(selectedTime.time))
+                        selectedTime.time = it
                     }
                 } catch (e: Exception) {
-                    timeInput.setText(timeFormat.format(selectedTime.time))
+                    Log.e("AgendaItemDialog", "Error parsing time: ${e.message}")
                 }
-            } else {
-                timeInput.setText(timeFormat.format(selectedTime.time))
             }
         }
     }
@@ -331,18 +320,35 @@ class AgendaItemDialog : DialogFragment() {
     }
 
     private fun parseTimeToSecondsOrMinutes(timeString: String): Int {
-        val trimmed = timeString.trim()
-        if (trimmed.isEmpty()) return 0
+        if (timeString.isBlank()) return 0
 
-        return if (trimmed.contains(":")) {
-            val parts = trimmed.split(":")
-            val minutes = parts[0].toIntOrNull() ?: 0
-            val seconds = parts.getOrNull(1)?.toIntOrNull() ?: 0
-            (minutes * 60) + seconds
+        return if (timeString.contains(':')) {
+            try {
+                val parts = timeString.split(":")
+                if (parts.size == 2) {
+                    val minutes = parts[0].trim().toIntOrNull() ?: 0
+                    val seconds = parts[1].trim().toIntOrNull() ?: 0
+                    (minutes * 60) + seconds
+                } else {
+                    0
+                }
+            } catch (e: Exception) {
+                Log.e("AgendaItemDialog", "Error parsing time: $timeString", e)
+                0
+            }
         } else {
-            // Just a number (assume minutes)
-            trimmed.toIntOrNull()?.times(60) ?: 0
+            // Assume it's just minutes
+            (timeString.trim().toIntOrNull() ?: 0) * 60
         }
     }
 
+    private fun formatSecondsToTime(seconds: Int): String {
+        val minutes = seconds / 60
+        val remainingSeconds = seconds % 60
+        return if (remainingSeconds > 0) {
+            "$minutes:$remainingSeconds"
+        } else {
+            "$minutes"
+        }
+    }
 }
