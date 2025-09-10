@@ -24,6 +24,8 @@ import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import android.widget.ArrayAdapter
+import androidx.fragment.app.activityViewModels
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -43,8 +45,10 @@ class EditMeetingFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: EditMeetingViewModel by viewModels()
+    private val meetingsViewModel: MeetingsViewModel by activityViewModels()
     private var meetingId: String = 0.toString()
     private var meeting: Meeting? = null
+    private var currentOfficers = mutableMapOf<String, String>()
 
     // No separate list; we'll render chips directly and compute counts on save
 
@@ -270,6 +274,15 @@ class EditMeetingFragment : Fragment() {
             meeting.roleCounts.forEach { (role, count) ->
                 addRoleChips(role, count)
             }
+            
+            // Update current officers
+            currentOfficers.clear()
+            currentOfficers.putAll(meeting.officers)
+            
+            // Update the latest officers in the ViewModel
+            if (meeting.officers.isNotEmpty()) {
+                meetingsViewModel.updateLatestOfficers(meeting.officers)
+            }
         }
     }
 
@@ -368,6 +381,7 @@ class EditMeetingFragment : Fragment() {
                 location = venue,
                 theme = theme,
                 roleCounts = roleCounts,
+                officers = currentOfficers,
                 isRecurring = current.isRecurring,
                 createdBy = current.createdBy,
                 createdAt = current.createdAt,

@@ -148,7 +148,6 @@ class AgendaAdapter(
     ) : RecyclerView.ViewHolder(binding.root), View.OnTouchListener {
 
         private var currentItem: AgendaItemDto? = null
-        private val dragHandle: View = binding.dragHandle
 
         init {
             binding.root.setOnClickListener {
@@ -165,7 +164,6 @@ class AgendaAdapter(
                 }
             }
 
-            dragHandle.setOnTouchListener(this)
         }
 
         fun bind(item: AgendaItemDto) {
@@ -178,21 +176,39 @@ class AgendaAdapter(
                 tvActivity.text = item.activity ?: ""
 
                 // Set presenter name, default to empty string if null
-                tvPresenter.text = item.presenterName ?: ""
+                etPresenter.setText(item.presenterName ?: "")
 
-                // Set card times if available, otherwise hide them
-                item.greenTime?.let {
-                    tvGreenTime.text = it.toString()
+                // Format and set card times if available, otherwise hide them
+                item.greenTime?.let { seconds ->
+                    val minutes = seconds / 60
+                    val remainingSeconds = seconds % 60
+                    tvGreenTime.text = if (remainingSeconds > 0) {
+                        String.format("%d:%02d", minutes, remainingSeconds)
+                    } else {
+                        "$minutes min"
+                    }
                     tvGreenTime.visibility = View.VISIBLE
                 } ?: run { tvGreenTime.visibility = View.GONE }
 
-                item.yellowTime?.let {
-                    tvYellowTime.text = it.toString()
+                item.yellowTime?.let { seconds ->
+                    val minutes = seconds / 60
+                    val remainingSeconds = seconds % 60
+                    tvYellowTime.text = if (remainingSeconds > 0) {
+                        String.format("%d:%02d", minutes, remainingSeconds)
+                    } else {
+                        "$minutes min"
+                    }
                     tvYellowTime.visibility = View.VISIBLE
                 } ?: run { tvYellowTime.visibility = View.GONE }
 
-                item.redTime?.let {
-                    tvRedTime.text = it.toString()
+                item.redTime?.let { seconds ->
+                    val minutes = seconds / 60
+                    val remainingSeconds = seconds % 60
+                    tvRedTime.text = if (remainingSeconds > 0) {
+                        String.format("%d:%02d", minutes, remainingSeconds)
+                    } else {
+                        "$minutes min"
+                    }
                     tvRedTime.visibility = View.VISIBLE
                 } ?: run { tvRedTime.visibility = View.GONE }
 

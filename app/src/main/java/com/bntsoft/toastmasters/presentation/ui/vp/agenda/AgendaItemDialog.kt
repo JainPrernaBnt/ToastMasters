@@ -3,6 +3,9 @@ package com.bntsoft.toastmasters.presentation.ui.vp.agenda
 import android.app.Dialog
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,14 +31,14 @@ import javax.inject.Inject
 class AgendaItemDialog : DialogFragment() {
     @Inject
     lateinit var assignedRoleRepository: AssignedRoleRepository
-    
+
     private var _binding: DialogAddEditAgendaBinding? = null
     private val binding get() = _binding!!
     private var onSaveClickListener: ((AgendaItemDto) -> Unit)? = null
     private var agendaItem: AgendaItemDto? = null
     private var meetingId: String = ""
     private val roleOptions = mutableListOf<String>()
-    
+
     private var greenTime: Int = 0
     private var yellowTime: Int = 0
     private var redTime: Int = 0
@@ -85,11 +88,18 @@ class AgendaItemDialog : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Get meetingId from arguments
+        meetingId = arguments?.getString(ARG_MEETING_ID) ?: run {
+            Log.e("AgendaItemDialog", "No meetingId provided")
+            dismiss()
+            return
+        }
+
+        Log.d("AgendaItemDialog", "Meeting ID: $meetingId")
+
         setupTimePicker()
         setupPresenters()
 
-        meetingId = arguments?.getString(ARG_MEETING_ID) ?: ""
-        
         arguments?.getParcelable<AgendaItemDto>(ARG_AGENDA_ITEM)?.let {
             agendaItem = it
             greenTime = it.greenTime
@@ -109,24 +119,24 @@ class AgendaItemDialog : DialogFragment() {
             val updatedItem = agendaItem?.copy(
                 activity = binding.activityInput.text.toString(),
                 presenterName = binding.presenterInput.text.toString(),
-                greenTime = binding.greenCardInput.text.toString().toIntOrNull() ?: 0,
-                yellowTime = binding.yellowCardInput.text.toString().toIntOrNull() ?: 0,
-                redTime = binding.redCardInput.text.toString().toIntOrNull() ?: 0,
+                greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
+                yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
+                redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
                 time = timeString
             ) ?: AgendaItemDto(
-                id = "", // Will be set by the parent fragment
+                id = "",
                 meetingId = (parentFragment as? AgendaTableFragment)?.meetingId ?: "",
                 activity = binding.activityInput.text.toString(),
                 presenterName = binding.presenterInput.text.toString(),
-                greenTime = binding.greenCardInput.text.toString().toIntOrNull() ?: 0,
-                yellowTime = binding.yellowCardInput.text.toString().toIntOrNull() ?: 0,
-                redTime = binding.redCardInput.text.toString().toIntOrNull() ?: 0,
+                greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
+                yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
+                redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
                 time = timeString
             )
 
             val finalItem = updatedItem.copy(
-                meetingId = updatedItem.meetingId.ifEmpty { 
-                    (parentFragment as? AgendaTableFragment)?.meetingId ?: "" 
+                meetingId = updatedItem.meetingId.ifEmpty {
+                    (parentFragment as? AgendaTableFragment)?.meetingId ?: ""
                 }
             )
 
@@ -166,33 +176,73 @@ class AgendaItemDialog : DialogFragment() {
     }
 
     private fun setupPresenters() {
-        val adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            roleOptions
-        )
-        binding.presenterInput.setAdapter(adapter)
-        binding.presenterInput.threshold = 1 // Start showing suggestions after 1 character
-        
+        Log.d("AgendaItemDialog", "Setting up presenters...")
+
+        // Validate meetingId before making the request
+        if (meetingId.isBlank()) {
+            Log.e("AgendaItemDialog", "Error: meetingId is empty")
+            return
+        }
+
+        Log.d("AgendaItemDialog", "Loading presenters for meeting: $meetingId")
+
+        // Load presenters from repository
         viewLifecycleOwner.lifecycleScope.launch {
-            assignedRoleRepository.getAssignedRoles(meetingId).collectLatest { result ->
-                when (result) {
-                    is Resource.Success -> {
-                        roleOptions.clear()
-                        result.data?.forEach { assignedRole ->
-                            assignedRole.roles.forEach { role ->
-                                roleOptions.add("${assignedRole.memberName} - $role")
+            try {
+                assignedRoleRepository.getAssignedRoles(meetingId).collect { result ->
+                    when (result) {
+                        is Resource.Success -> {
+                            val presenters = mutableListOf<String>()
+                            result.data?.forEach { assignedRole ->
+                                assignedRole.roles.forEach { role ->
+                                    val displayText = "${assignedRole.memberName} - $role"
+                                    if (!presenters.contains(displayText)) {
+                                        presenters.add(displayText)
+                                    }
+                                }
+                            }
+
+                            presenters.sort()
+                            Log.d("AgendaItemDialog", "Loaded ${presenters.size} presenters")
+
+                            activity?.runOnUiThread {
+                                try {
+                                    // Use MaterialAutoCompleteTextView helper to set items
+                                    binding.presenterInput.setSimpleItems(presenters.toTypedArray())
+
+                                    // Show dropdown on focus or click
+                                    binding.presenterInput.setOnFocusChangeListener { _, hasFocus ->
+                                        if (hasFocus && presenters.isNotEmpty()) {
+                                            binding.presenterInput.showDropDown()
+                                        }
+                                    }
+                                    binding.presenterInput.setOnClickListener {
+                                        if (presenters.isNotEmpty()) {
+                                            binding.presenterInput.showDropDown()
+                                        }
+                                    }
+
+                                    // If already focused, ensure dropdown shows
+                                    if (binding.presenterInput.hasFocus() && presenters.isNotEmpty()) {
+                                        binding.presenterInput.post { binding.presenterInput.showDropDown() }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("AgendaItemDialog", "Error updating presenter dropdown", e)
+                                }
                             }
                         }
-                        adapter.notifyDataSetChanged()
-                    }
-                    is Resource.Error -> {
-                        // Handle error (optional: show error message)
-                    }
-                    is Resource.Loading -> {
-                        // Show loading state if needed
+
+                        is Resource.Error -> {
+                            Log.e("AgendaItemDialog", "Error loading presenters: ${result.message}")
+                        }
+
+                        is Resource.Loading -> {
+                            // optional loading state
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e("AgendaItemDialog", "Exception while loading presenters", e)
             }
         }
     }
@@ -200,15 +250,12 @@ class AgendaItemDialog : DialogFragment() {
     private fun validateInputs(): Boolean {
         return binding.run {
             val timeValid = !timeInput.text.isNullOrBlank()
-            val greenValid = !greenCardInput.text.isNullOrBlank() && 
-                (greenCardInput.text.toString().toIntOrNull() ?: 0) > 0
-            val yellowValid = !yellowCardInput.text.isNullOrBlank() && 
-                (yellowCardInput.text.toString().toIntOrNull() ?: 0) > 0
-            val redValid = !redCardInput.text.isNullOrBlank() && 
-                (redCardInput.text.toString().toIntOrNull() ?: 0) > 0
+            val redValid = !redCardInput.text.isNullOrBlank() &&
+                    parseTimeToSecondsOrMinutes(redCardInput.text.toString()) > 0
 
             var allValid = true
 
+            // Time validation
             if (!timeValid) {
                 timeInput.error = "Please select a valid time"
                 allValid = false
@@ -216,26 +263,17 @@ class AgendaItemDialog : DialogFragment() {
                 timeInput.error = null
             }
 
-            if (!greenValid) {
-                greenCardInput.error = "Please enter a valid number"
-                allValid = false
-            } else {
-                greenCardInput.error = null
-            }
-
-            if (!yellowValid) {
-                yellowCardInput.error = "Please enter a valid number"
-                allValid = false
-            } else {
-                yellowCardInput.error = null
-            }
-
+            // Red card validation (required)
             if (!redValid) {
                 redCardInput.error = "Please enter a valid number"
                 allValid = false
             } else {
                 redCardInput.error = null
             }
+
+            // Green and Yellow are optional → clear any error
+            greenCardInput.error = null
+            yellowCardInput.error = null
 
             allValid && !activityInput.text.isNullOrBlank() && !presenterInput.text.isNullOrBlank()
         }
@@ -245,10 +283,11 @@ class AgendaItemDialog : DialogFragment() {
         binding.apply {
             activityInput.setText(agendaItem.activity)
             presenterInput.setText(agendaItem.presenterName)
-            greenCardInput.setText(agendaItem.greenTime.toString())
-            yellowCardInput.setText(agendaItem.yellowTime.toString())
-            redCardInput.setText(agendaItem.redTime.toString())
-            
+            // Convert seconds to minutes for display
+            greenCardInput.setText((agendaItem.greenTime / 60).toString())
+            yellowCardInput.setText((agendaItem.yellowTime / 60).toString())
+            redCardInput.setText((agendaItem.redTime / 60).toString())
+
             // Set time if available, otherwise use current time
             if (agendaItem.time.isNotEmpty()) {
                 try {
@@ -290,4 +329,20 @@ class AgendaItemDialog : DialogFragment() {
         super.onDestroyView()
         _binding = null
     }
+
+    private fun parseTimeToSecondsOrMinutes(timeString: String): Int {
+        val trimmed = timeString.trim()
+        if (trimmed.isEmpty()) return 0
+
+        return if (trimmed.contains(":")) {
+            val parts = trimmed.split(":")
+            val minutes = parts[0].toIntOrNull() ?: 0
+            val seconds = parts.getOrNull(1)?.toIntOrNull() ?: 0
+            (minutes * 60) + seconds
+        } else {
+            // Just a number (assume minutes)
+            trimmed.toIntOrNull()?.times(60) ?: 0
+        }
+    }
+
 }

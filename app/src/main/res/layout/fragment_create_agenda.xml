@@ -3,9 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/background">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
@@ -20,6 +22,127 @@
             android:paddingTop="16dp"
             android:paddingBottom="88dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/stepIndicatorLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                        android:id="@+id/step1Indicator"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="1"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        app:stepState="active" />
+
+                    <View
+                        android:layout_width="24dp"
+                        android:layout_height="1dp"
+                        android:background="@color/purple_200" />
+
+                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                        android:id="@+id/step2Indicator"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="2"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        app:stepState="inactive" />
+
+                    <View
+                        android:layout_width="24dp"
+                        android:layout_height="1dp"
+                        android:background="@color/purple_200" />
+
+                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                        android:id="@+id/step3Indicator"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="3"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        app:stepState="inactive" />
+
+                    <View
+                        android:layout_width="24dp"
+                        android:layout_height="1dp"
+                        android:background="@color/purple_200" />
+
+                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                        android:id="@+id/step4Indicator"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="4"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        app:stepState="inactive" />
+
+                    <View
+                        android:layout_width="24dp"
+                        android:layout_height="1dp"
+                        android:background="@color/purple_200" />
+
+                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                        android:id="@+id/step5Indicator"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="5"
+                        android:textColor="@android:color/white"
+                        android:textStyle="bold"
+                        app:stepState="inactive" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/previousButton"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/previous"
+                        android:textColor="@color/purple_500"
+                        android:visibility="invisible"
+                        app:strokeColor="@color/purple_500"
+                        app:strokeWidth="1dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/nextButton"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:backgroundTint="@color/purple_500"
+                        android:text="@string/next"
+                        android:textColor="@color/white"
+                        app:cornerRadius="8dp"
+                        app:rippleColor="@color/purple_200"
+                        app:strokeColor="@color/purple_700"
+                        app:strokeWidth="2dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Meeting Details Card -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/meetingDetailsCard"
                 style="@style/Widget.MaterialComponents.CardView"
@@ -167,17 +290,30 @@
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="16dp"
-                        android:background="@color/purple_200" />
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/ClubInformationCard"
+                style="@style/Widget.MaterialComponents.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#1F000000"
+                app:strokeWidth="0.5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
+                        android:layout_marginBottom="16dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -197,9 +333,34 @@
                             android:layout_height="wrap_content"
                             android:text="@string/edit"
                             android:textColor="@color/purple_500"
+                            android:visibility="visible"
                             app:icon="@drawable/ic_edit"
                             app:iconGravity="textEnd"
                             app:iconTint="@color/purple_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/saveClubInfoButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/save"
+                            android:textColor="@color/green_500"
+                            android:visibility="gone"
+                            app:icon="@drawable/ic_save"
+                            app:iconGravity="textEnd"
+                            app:iconTint="@color/green_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cancelClubInfoButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cancel"
+                            android:textColor="@color/red_500"
+                            android:visibility="gone"
+                            app:icon="@drawable/ic_cancel"
+                            app:iconGravity="textEnd"
+                            app:iconTint="@color/red_500" />
                     </LinearLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -324,6 +485,7 @@
                 style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="2dp"
                 app:strokeColor="#1F000000"
@@ -358,9 +520,34 @@
                             android:layout_height="wrap_content"
                             android:text="@string/edit"
                             android:textColor="@color/purple_500"
+                            android:visibility="visible"
                             app:icon="@drawable/ic_edit"
                             app:iconGravity="textEnd"
                             app:iconTint="@color/purple_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/saveOfficersButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/save"
+                            android:textColor="@color/green_500"
+                            android:visibility="gone"
+                            app:icon="@drawable/ic_save"
+                            app:iconGravity="textEnd"
+                            app:iconTint="@color/green_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cancelOfficersButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cancel"
+                            android:textColor="@color/red_500"
+                            android:visibility="gone"
+                            app:icon="@drawable/ic_cancel"
+                            app:iconGravity="textEnd"
+                            app:iconTint="@color/red_500" />
                     </LinearLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -431,6 +618,30 @@
                             android:inputType="textPersonName"
                             android:maxLines="1"
                             android:text="TM Harshada Pandure"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/vpPublicRelationInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"
+                        android:hint="VP Public Relation"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:endIconTint="@color/purple_500"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/vpPublicRelationEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:imeOptions="actionNext"
+                            android:inputType="textPersonName"
+                            android:maxLines="1"
+                            android:text="TM Suraj Krishnamoorthy"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -533,59 +744,324 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/saveButton"
-                style="@style/Widget.MaterialComponents.Button"
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/grammarianCard"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="24dp"
-                android:layout_marginEnd="16dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:background="@drawable/button_gradient"
-                android:elevation="8dp"
-                android:fontFamily="@font/montserrat_bold"
-                android:letterSpacing="0.05"
-                android:text="@string/save"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                app:backgroundTint="@null"
-                app:cornerRadius="12dp"
-                app:icon="@drawable/ic_save"
-                app:iconGravity="textStart"
-                app:iconPadding="12dp"
-                app:iconTint="@color/white"
-                app:rippleColor="@color/purple_200"
-                app:strokeColor="@color/purple_700"
-                app:strokeWidth="2dp" />
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#1F000000"
+                app:strokeWidth="0.5dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/agendaItemsButton"
-                style="@style/Widget.MaterialComponents.Button"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/grammarian_details"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                            android:textColor="@color/purple_700"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/editGrammarianButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/edit"
+                            android:textColor="@color/purple_500"
+                            app:icon="@drawable/ic_edit"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/purple_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/saveGrammarianButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/save"
+                            android:textColor="@color/purple_500"
+                            android:visibility="gone"
+                            app:icon="@drawable/ic_save"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/purple_500" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/cancelGrammarianButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/cancel"
+                            android:textColor="@color/purple_500"
+                            android:visibility="gone"
+                            app:icon="@drawable/ic_close"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/purple_500" />
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/wordOfDayInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:hint="@string/word_of_the_day"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:endIconTint="@color/purple_500"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/wordOfDayEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/wordMeaningInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/word_meaning"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:endIconTint="@color/purple_500"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/wordMeaningEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:inputType="textMultiLine"
+                            android:minLines="2"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/wordExamplesInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/word_examples"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:endIconTint="@color/purple_500"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/wordExamplesEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:inputType="textMultiLine"
+                            android:minLines="3"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="16dp"
+                        android:background="@color/purple_200" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/idiomInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/idiom_phrase_of_the_day"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:endIconTint="@color/purple_500"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/idiomEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/idiomMeaningInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/idiom_meaning"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:endIconTint="@color/purple_500"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/idiomMeaningEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:inputType="textMultiLine"
+                            android:minLines="2"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/idiomExamplesInputLayout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/idiom_examples"
+                        app:boxStrokeColor="@color/purple_200"
+                        app:endIconTint="@color/purple_500"
+                        app:hintTextColor="@color/purple_500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/idiomExamplesEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:inputType="textMultiLine"
+                            android:minLines="3"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Abbreviations Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/abbreviationsCard"
+                style="@style/Widget.MaterialComponents.CardView"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginEnd="16dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:background="@drawable/button_gradient"
-                android:elevation="8dp"
-                android:fontFamily="@font/montserrat_bold"
-                android:letterSpacing="0.05"
-                android:text="Agenda Items"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                app:backgroundTint="@null"
-                app:cornerRadius="12dp"
-                app:icon="@drawable/ic_arrow_forward"
-                app:iconGravity="textStart"
-                app:iconPadding="12dp"
-                app:iconTint="@color/white"
-                app:rippleColor="@color/purple_200"
-                app:strokeColor="@color/purple_700"
-                app:strokeWidth="2dp" />
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#1F000000"
+                app:strokeWidth="0.5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/abbreviation"
+                            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                            android:textColor="@color/purple_700"
+                            android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/addAbbreviationsButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/add"
+                            app:icon="@drawable/ic_add"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/purple_700" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/saveAbbreviationsButton"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/save"
+                            android:visibility="gone"
+                            app:icon="@drawable/ic_save"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/purple_700" />
+                    </LinearLayout>
+
+                    <androidx.core.widget.ContentLoadingProgressBar
+                        android:id="@+id/abbreviationsProgressBar"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/abbreviationsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:padding="4dp"
+                        android:visibility="gone"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        tools:listitem="@layout/item_abbreviation" />
+
+                    <TextView
+                        android:id="@+id/abbreviationsSummaryText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="16dp"
+                        android:text="@string/no_abbreviations_added"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                        android:gravity="center"
+                        android:visibility="visible" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/agendaItemsButton"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/button_gradient"
+                        android:elevation="4dp"
+                        android:fontFamily="@font/montserrat_bold"
+                        android:letterSpacing="0.05"
+                        android:text="Agenda Items"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        app:backgroundTint="@null"
+                        app:cornerRadius="12dp"
+                        app:icon="@drawable/ic_arrow_forward"
+                        app:iconGravity="textStart"
+                        app:iconPadding="12dp"
+                        app:iconTint="@color/white"
+                        app:rippleColor="@color/purple_200"
+                        app:strokeColor="@color/purple_700"
+                        app:strokeWidth="2dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
@@ -600,3 +1076,4 @@
         app:trackThickness="4dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+

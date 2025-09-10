@@ -6,8 +6,8 @@
 
     <string-array name="Preferred_roles">
         <item>+ Add new role</item>
-        <item>Sergeant-at-Arms (SAA)</item>
-        <item>Toastmaster of the Day (TMOD)</item>
+        <item>Sergeant-at-Arms</item>
+        <item>Toastmaster of the Day</item>
         <item>Speaker</item>
         <item>Speech Evaluator</item>
         <item>General Evaluator</item>
@@ -367,6 +367,15 @@
     <string name="logout">Logout</string>
     <string name="notification">notification</string>
     <string name="mentors">Mentors</string>
+    
+    <!-- Grammarian Details -->
+    <string name="grammarian_details">Grammarian Details</string>
+    <string name="word_of_the_day">Word of the Day</string>
+    <string name="word_meaning">Word Meaning</string>
+    <string name="word_examples">Word Examples</string>
+    <string name="idiom_phrase_of_the_day">Idiom/Phrase of the Day</string>
+    <string name="idiom_meaning">Idiom Meaning</string>
+    <string name="idiom_examples">Idiom Examples</string>
     <string name="assign">Assign\n</string>
     <string name="venue_not_specified">Venue not specified</string>
     <string name="error_saving_availability">Error saving availabiility</string>
@@ -390,9 +399,30 @@
     <string name="notes">Note</string>
     <string name="toastmaster">Toastmaster</string>
     <string name="dark_theme">Dark Theme</string>
+    
+    <!-- Abbreviations -->
+    <string name="abbreviations">Abbreviations</string>
+    <string name="error_loading_abbreviations">Failed to load abbreviations</string>
+    <string name="error_saving_abbreviation">Failed to save abbreviation</string>
+    <string name="error_deleting_abbreviation">Failed to delete abbreviation</string>
+    <string name="abbreviation_added">Abbreviation added</string>
+    <string name="abbreviation_updated">Abbreviation updated</string>
+    <string name="abbreviation_deleted">Abbreviation deleted</string>
+    <string name="confirm_delete_abbreviation">Delete this abbreviation?</string>
     <string name="edit_profile">Edit Profile</string>
     <string name="account_details">Account Details</string>
     <string name="app_settings">App Settings</string>
     <string name="please_fill_all_fields">Please fill all the fields</string>
     <string name="add_agenda_item">Add agenda item</string>
+    <string name="abbreviation">Abbrevation</string>
+    <string name="meaning">Meaning</string>
+    <string name="add">Add</string>
+    <string name="manage">Manage</string>
+    <string name="no_abbreviations_added">No Abbreviation Added. Tap to add Abbreviation</string>
+    <string name="btn_export_pdf">Export PDF</string>
+
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="finish">Finish</string>
 </resources>
+

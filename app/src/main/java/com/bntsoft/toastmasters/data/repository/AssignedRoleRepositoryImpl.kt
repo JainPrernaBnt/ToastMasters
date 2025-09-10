@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.data.repository
 
+import android.util.Log
 import com.bntsoft.toastmasters.data.model.MemberRole
 import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
 import com.bntsoft.toastmasters.utils.Resource
@@ -20,6 +21,11 @@ class AssignedRoleRepositoryImpl @Inject constructor(
         flow {
             emit(Resource.Loading())
             try {
+                if (meetingId.isBlank()) {
+                    throw IllegalArgumentException("Meeting ID cannot be empty")
+                }
+                
+                Log.d("AssignedRoleRepository", "Fetching roles for meeting: $meetingId")
                 val snapshot = firestore.collection("meetings")
                     .document(meetingId)
                     .collection("assignedRole")

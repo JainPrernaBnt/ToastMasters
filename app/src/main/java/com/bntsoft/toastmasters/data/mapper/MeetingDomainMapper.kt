@@ -48,9 +48,14 @@ class MeetingDomainMapper @Inject constructor() {
             location = entity.venue,
             roleCounts = entity.roleCounts ?: emptyMap(),
             assignedCounts = entity.assignedCounts ?: emptyMap(),
+            assignedRoles = entity.assignedRoles ?: emptyMap(),
+            officers = entity.officers ?: emptyMap(),
             createdAt = entity.createdAt,
-            updatedAt = entity.createdAt,
-            status = entity.status
+            updatedAt = entity.updatedAt ?: entity.createdAt,
+            status = entity.status,
+            agendaId = entity.agendaId ?: "",
+            isRecurring = entity.isRecurring ?: false,
+            createdBy = entity.createdBy ?: ""
         )
     }
 
@@ -91,9 +96,13 @@ class MeetingDomainMapper @Inject constructor() {
             roleCounts = dto.roleCounts ?: emptyMap(),
             assignedRoles = dto.assignedRoles ?: emptyMap(),
             assignedCounts = finalAssignedCounts,
+            officers = dto.officers ?: emptyMap(),
             createdAt = dto.createdAt,
             updatedAt = dto.updatedAt,
-            status = dto.status
+            status = dto.status,
+            agendaId = dto.agendaId ?: "",
+            isRecurring = dto.isRecurring ?: false,
+            createdBy = dto.createdBy ?: ""
         )
     }
 
@@ -112,9 +121,15 @@ class MeetingDomainMapper @Inject constructor() {
             venue = meeting.location,
             theme = meeting.theme,
             roleCounts = meeting.roleCounts,
+            assignedCounts = finalCounts,
+            assignedRoles = meeting.assignedRoles,
+            officers = meeting.officers,
             createdAt = meeting.createdAt,
+            updatedAt = meeting.updatedAt,
             status = meeting.status,
-            assignedCounts = finalCounts
+            agendaId = meeting.agendaId.ifEmpty { null },
+            isRecurring = meeting.isRecurring,
+            createdBy = meeting.createdBy.ifEmpty { null }
         )
     }
 
@@ -136,7 +151,12 @@ class MeetingDomainMapper @Inject constructor() {
             createdAt = meeting.createdAt,
             status = meeting.status,
             assignedRoles = meeting.assignedRoles,
-            assignedCounts = finalCounts
+            assignedCounts = finalCounts,
+            updatedAt = meeting.updatedAt,
+            agendaId = meeting.agendaId,
+            isRecurring = meeting.isRecurring,
+            createdBy = meeting.createdBy,
+            officers = meeting.officers
         )
     }
 

@@ -19,8 +19,10 @@ import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentCreateMeetingBinding
 import com.bntsoft.toastmasters.databinding.ItemMeetingFormBinding
-import com.bntsoft.toastmasters.domain.model.Meeting
+import com.bntsoft.toastmasters.data.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingFormData
+import java.util.Date
+import java.time.Instant
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
 import com.google.android.material.chip.Chip
@@ -129,13 +131,10 @@ class CreateMeetingFragment : Fragment() {
         // Calculate the base date (next Saturday after last meeting or today)
         viewLifecycleOwner.lifecycleScope.launch {
             val lastMeetingDate = viewModel.getLastMeetingDate()
-            val baseCalendar = if (lastMeetingDate != null) {
+            val baseCalendar = lastMeetingDate?.let { date ->
                 // Start from the last meeting date
-                Calendar.getInstance().apply { time = lastMeetingDate }
-            } else {
-                // No meetings exist, start from today
-                Calendar.getInstance()
-            }
+                Calendar.getInstance().apply { time = date }
+            } ?: Calendar.getInstance() // No meetings exist, start from today
             
             // Move to the next Saturday from the base date
             val dayOfWeek = baseCalendar.get(Calendar.DAY_OF_WEEK)
@@ -458,18 +457,24 @@ class CreateMeetingFragment : Fragment() {
                 roleCounts[role] = roleCounts.getOrDefault(role, 0) + 1
             }
             
+            // Convert LocalDateTime to Date for the data model
+            val startDate = Date.from(startLocalDateTime.atZone(ZoneId.systemDefault()).toInstant())
+            val endDate = Date.from(endLocalDateTime.atZone(ZoneId.systemDefault()).toInstant())
+            
+            // Create meeting using data model
             val meeting = Meeting(
                 theme = theme,
-                dateTime = startLocalDateTime,
-                endDateTime = endLocalDateTime,
-                location = venue,
-                roleCounts = roleCounts
+                date = startDate,
+                startTime = startLocalDateTime.toLocalTime().toString(),
+                endTime = endLocalDateTime.toLocalTime().toString(),
+                venue = venue,
+                officers = emptyMap() // Empty officers as they will be set by the ViewModel
             )
             viewModel.createMeeting(meeting, forceCreate)
         }
     }
 
-    private fun showDuplicateMeetingDialog(meeting: Meeting) {
+    private fun showDuplicateMeetingDialog(meeting: com.bntsoft.toastmasters.domain.model.Meeting) {
         android.app.AlertDialog.Builder(requireContext())
             .setTitle("Meeting already exists")
             .setMessage("A meeting is already scheduled on this date and time. Do you want to create it again?")

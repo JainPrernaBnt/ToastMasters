@@ -1,5 +1,8 @@
 package com.bntsoft.toastmasters.data.remote
 
+import com.bntsoft.toastmasters.data.model.Abbreviations
+import com.bntsoft.toastmasters.data.model.ClubInfo
+import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.domain.model.AgendaItem
 import com.bntsoft.toastmasters.domain.model.AgendaStatus
 import com.bntsoft.toastmasters.domain.model.MeetingAgenda
@@ -27,5 +30,22 @@ interface FirebaseAgendaDataSource {
     
     // Status updates
     fun observeAgendaStatus(meetingId: String): Flow<AgendaStatus>
+    
+    // Grammarian Details
+    suspend fun getGrammarianDetails(meetingId: String, userId: String): GrammarianDetails?
+    suspend fun saveGrammarianDetails(meetingId: String, userId: String, details: GrammarianDetails): Result<Unit>
+    suspend fun getGrammarianDetailsForMeeting(meetingId: String): List<GrammarianDetails>
+    
+    // Abbreviation operations
+    suspend fun getAbbreviations(meetingId: String, agendaId: String): Abbreviations
+    suspend fun saveAbbreviations(meetingId: String, agendaId: String, abbreviations: Abbreviations): Result<Unit>
+    suspend fun deleteAbbreviation(meetingId: String, agendaId: String, abbreviationKey: String): Result<Unit>
 
+//    Officers Information
+    suspend fun updateOfficers(meetingId: String, officers: Map<String, String>): Result<Unit>
+    suspend fun getOfficers(meetingId: String, agendaId: String): Result<Map<String, String>>
+
+    // Club Information
+    suspend fun updateClubInfo(meetingId: String, clubName: String, clubNumber: String, district: String, area: String, mission: String): Result<Unit>
+    suspend fun getClubInfo(meetingId: String, agendaId: String): Result<ClubInfo>
 }

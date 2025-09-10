@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:fillViewport="true"
     android:background="@drawable/dialog_background"
+    android:fillViewport="true"
     android:padding="16dp">
 
     <LinearLayout
@@ -150,23 +150,30 @@
         <!-- Presenter Input -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/presenterLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:hint="Presenter"
-            app:boxStrokeColor="@color/blue_500"
-            app:endIconDrawable="@drawable/ic_person"
-            app:endIconTint="@color/blue_500">
+            app:boxStrokeColor="@color/blue_500">
 
-            <AutoCompleteTextView
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/presenterInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
+                android:completionThreshold="1"
+                android:dropDownWidth="match_parent"
+                android:dropDownHeight="wrap_content"
+                android:dropDownVerticalOffset="8dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:imeOptions="actionDone"
                 android:inputType="text"
                 android:maxLines="1"
                 android:minHeight="48dp"
+                android:paddingStart="10dp"
                 android:textSize="14sp" />
+
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Buttons -->

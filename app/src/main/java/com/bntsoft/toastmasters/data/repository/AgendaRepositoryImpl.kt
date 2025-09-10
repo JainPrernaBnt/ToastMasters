@@ -52,11 +52,19 @@ class AgendaRepositoryImpl @Inject constructor(
         return flow {
             try {
                 // Get initial list
-                val result = agendaDataSource.getAgendaItems(meetingId)
-                emit(Resource.Success(result))
+                val initial = agendaDataSource.getAgendaItems(meetingId)
+                emit(Resource.Success(initial))
 
                 // Observe for changes
+                var firstEmission = true
                 agendaDataSource.observeAgendaItems(meetingId).collect { items ->
+                    if (firstEmission) {
+                        firstEmission = false
+                        // Ignore first empty emission if we already have items
+                        if (initial.isNotEmpty() && items.isEmpty()) {
+                            return@collect
+                        }
+                    }
                     emit(Resource.Success(items))
                 }
             } catch (e: Exception) {

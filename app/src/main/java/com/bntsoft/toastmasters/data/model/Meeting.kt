@@ -1,6 +1,5 @@
 package com.bntsoft.toastmasters.data.model
 
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import java.util.*
 

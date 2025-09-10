@@ -18,6 +18,7 @@ data class MeetingAgenda(
     val startTime: String = "",
     val endTime: String = "",
     val officers: Map<String, String> = emptyMap(),
+    val abbreviations: Map<String, String> = emptyMap(),
     val agendaStatus: AgendaStatus = AgendaStatus.DRAFT,
     @ServerTimestamp
     val createdAt: Timestamp? = null,

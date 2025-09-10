@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.di
 
+import com.bntsoft.toastmasters.data.repository.AbbreviationRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.AuthRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MeetingRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MemberRepositoryImpl
@@ -9,6 +10,7 @@ import com.bntsoft.toastmasters.data.repository.AgendaRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MeetingAgendaRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.AssignedRoleRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.UserRepositoryImpl
+import com.bntsoft.toastmasters.domain.repository.AbbreviationRepository
 import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.AgendaRepository
@@ -81,4 +83,10 @@ abstract class RepositoryModule {
     abstract fun bindAgendaRepository(
         agendaRepositoryImpl: AgendaRepositoryImpl
     ): AgendaRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAbbreviationRepository(
+        impl: AbbreviationRepositoryImpl
+    ): AbbreviationRepository
 }

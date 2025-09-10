@@ -173,8 +173,12 @@ class MainActivity : BaseActivity() {
                 supportActionBar?.show()
                 window.decorView.systemUiVisibility = 0
                 // Show bottom nav for all non-auth destinations except when in CreateAgendaFragment
-                bottomNav.visibility =
-                    if (destination.id == R.id.createAgendaFragment) View.GONE else View.VISIBLE
+                bottomNav.visibility = when (destination.id) {
+                    R.id.createAgendaFragment -> View.GONE
+                    R.id.agendaTableFragment -> View.GONE
+                    else -> View.VISIBLE
+                }
+
             }
 
             // Handle back button visibility - show back button for all non-top-level destinations

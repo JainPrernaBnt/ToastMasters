@@ -17,7 +17,7 @@ import javax.inject.Inject
 class EditMeetingViewModel @Inject constructor(
     private val meetingRepository: MeetingRepository
 ) : ViewModel() {
-
+    
     private val _uiState = MutableStateFlow<EditMeetingState>(EditMeetingState.Loading)
     val uiState: StateFlow<EditMeetingState> = _uiState.asStateFlow()
 
@@ -46,20 +46,13 @@ class EditMeetingViewModel @Inject constructor(
             _uiState.value = EditMeetingState.Loading
 
             try {
-                when (val result = meetingRepository.updateMeeting(meeting)) {
-                    is Resource.Success -> {
-                        _uiState.value = EditMeetingState.Updated(meeting)
-                    }
-
-                    is Resource.Error -> {
-                        _uiState.value = EditMeetingState.Error(
-                            result.message ?: "Failed to update meeting"
-                        )
-                    }
-
-                    is Resource.Loading -> {
-                        _uiState.value = EditMeetingState.Loading
-                    }
+                val result = meetingRepository.updateMeeting(meeting)
+                if (result is Resource.Success) {
+                    _uiState.value = EditMeetingState.Updated(meeting)
+                } else if (result is Resource.Error) {
+                    _uiState.value = EditMeetingState.Error(
+                        result.message ?: "An unknown error occurred"
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = EditMeetingState.Error(
@@ -74,20 +67,13 @@ class EditMeetingViewModel @Inject constructor(
             _uiState.value = EditMeetingState.Loading
 
             try {
-                when (val result = meetingRepository.deleteMeeting(meetingId)) {
-                    is Resource.Success -> {
-                        _uiState.value = EditMeetingState.Deleted
-                    }
-
-                    is Resource.Error -> {
-                        _uiState.value = EditMeetingState.Error(
-                            result.message ?: "Failed to delete meeting"
-                        )
-                    }
-
-                    is Resource.Loading -> {
-                        _uiState.value = EditMeetingState.Loading
-                    }
+                val result = meetingRepository.deleteMeeting(meetingId)
+                if (result is Resource.Success) {
+                    _uiState.value = EditMeetingState.Deleted
+                } else if (result is Resource.Error) {
+                    _uiState.value = EditMeetingState.Error(
+                        result.message ?: "An unknown error occurred"
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = EditMeetingState.Error(

@@ -1,157 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="18dp">
+    android:scrollbars="none">
 
-    <!-- Drag handle -->
-    <ImageView
-        android:id="@+id/dragHandle"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@drawable/ic_drag_handle"
-        app:layout_constraintBottom_toBottomOf="@id/agendaCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/agendaCard"
-        app:tint="@color/purple_500" />
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/agendaCard"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        app:cardBackgroundColor="@color/white"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="1dp"
-        app:contentPadding="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/dragHandle"
-        app:layout_constraintTop_toTopOf="parent"
-        app:strokeColor="@color/purple_500"
-        app:strokeWidth="0.5dp">
+        android:orientation="horizontal">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <!-- TIME -->
+        <TextView
+            android:id="@+id/tvTime"
+            style="@style/Cell.Time"
+            android:text="10:00 AM"/>
 
-            <!-- Time -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Time: 10:00 AM"
-                android:textColor="@color/purple_700"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <!-- Card Sequence -->
+        <LinearLayout
+            style="@style/Cell.CardSequence"
+            android:padding="1dp"
+            android:orientation="horizontal"
+            android:weightSum="3">
 
-            <!-- Edit Button -->
-            <ImageButton
-                android:id="@+id/EditButton"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Edit item"
-                android:src="@drawable/ic_edit"
-                app:layout_constraintEnd_toStartOf="@id/deleteButton"
-                app:layout_constraintTop_toTopOf="@id/tvTime"
-                app:tint="@color/blue_500" />
-
-            <!-- Delete Button -->
-            <ImageButton
-                android:id="@+id/deleteButton"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Delete item"
-                android:src="@drawable/ic_delete"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tvTime"
-                app:tint="@color/red_500" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/cardSequenceLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Card Sequence"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="@id/tvTime"
-                app:layout_constraintTop_toBottomOf="@id/tvTime" />
-            <!-- Card Time Details -->
-            <LinearLayout
-                android:id="@+id/cardTimesRow"
+            <TextView
+                android:id="@+id/tvGreenTime"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:weightSum="3"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cardSequenceLabel">
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#8BC34A"
+                android:gravity="center"
+                android:text="2"/>
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvGreenTime"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Green: 2"
-                    android:textColor="@color/green_500"
-                    android:textSize="16sp" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvYellowTime"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Yellow: 2"
-                    android:textColor="@color/yellow_700"
-                    android:textSize="16sp" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvRedTime"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Red: 3"
-                    android:textColor="@color/red_500"
-                    android:textSize="16sp" />
-            </LinearLayout>
-
-            <!-- Activity -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvActivity"
+            <TextView
+                android:id="@+id/tvYellowTime"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Activity Name: "
-                android:textColor="@color/blue_500"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cardTimesRow" />
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#FFEB3B"
+                android:gravity="center"
+                android:text="2"/>
 
-            <!-- Presenter -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvPresenter"
+            <TextView
+                android:id="@+id/tvRedTime"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Presenter Name: "
-                android:textColor="@color/gray_800"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvActivity" />
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#F44336"
+                android:gravity="center"
+                android:text="3"
+                android:textColor="@android:color/white"/>
+        </LinearLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
+        <!-- ACTIVITY -->
+        <TextView
+            android:id="@+id/tvActivity"
+            style="@style/Cell.Activity"
+            android:text="Activity Name"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- PRESENTER -->
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/etPresenter"
+            style="@style/Cell.Presenter"
+            android:hint="Select Presenter"
+            android:inputType="none"/>
+
+        <!-- DELETE -->
+        <ImageButton
+            android:id="@+id/deleteButton"
+            style="@style/Cell.Delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_delete"
+            android:contentDescription="Delete"
+            android:tint="@color/red_500"/>
+    </LinearLayout>
+</HorizontalScrollView>

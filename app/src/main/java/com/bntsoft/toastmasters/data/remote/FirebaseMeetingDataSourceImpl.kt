@@ -336,7 +336,13 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     dto.roleCounts.mapValues { 0 }
                 },
                 "createdAt" to dto.createdAt,
-                "status" to dto.status.name
+                "status" to dto.status.name,
+                // Add officers data
+                "officers" to (dto.officers?.toMap() ?: emptyMap<String, String>()),
+                // Add agenda ID if exists
+                "agendaId" to (dto.agendaId ?: ""),
+                // Add timestamps
+                "updatedAt" to FieldValue.serverTimestamp()
             )
             document.set(meetingMap).await()
             val newMeeting = meetingMapper.mapToDomain(dto)
@@ -366,10 +372,18 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     "endTime" to dto.endTime,
                     "venue" to dto.venue,
                     "theme" to dto.theme,
-                    "roleCounts" to dto.roleCounts
+                    "updatedAt" to FieldValue.serverTimestamp(),
+                    "status" to dto.status.name,
+                    "officers" to (dto.officers ?: emptyMap()),
+                    "agendaId" to dto.agendaId
                 )
 
-                // Only update assignedCounts if it doesn't exist yet
+                // Only update roleCounts if they're not empty
+                if (dto.roleCounts.isNotEmpty()) {
+                    updateMap["roleCounts"] = dto.roleCounts
+                }
+
+                // Initialize assignedCounts if it doesn't exist
                 val currentData = document.data ?: emptyMap()
                 if (!currentData.containsKey("assignedCounts")) {
                     // Initialize assignedCounts with all roles set to 0

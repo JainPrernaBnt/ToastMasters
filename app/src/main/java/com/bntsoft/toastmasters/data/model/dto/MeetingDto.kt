@@ -1,7 +1,6 @@
 package com.bntsoft.toastmasters.data.model.dto
 
 import com.bntsoft.toastmasters.domain.models.MeetingStatus
-
 import java.time.LocalDateTime
 
 data class MeetingDto(
@@ -18,7 +17,11 @@ data class MeetingDto(
     val createdAt: Long = 0,
     val assignedRoles: Map<String, String> = emptyMap(),
     val status: MeetingStatus = MeetingStatus.NOT_COMPLETED,
-    val updatedAt: Long = 0
+    val updatedAt: Long = 0,
+    val agendaId: String = "",
+    val isRecurring: Boolean = false,
+    val createdBy: String = "",
+    val officers: Map<String, String> = emptyMap()
 ) {
     constructor(
         meetingID: String,
@@ -28,11 +31,15 @@ data class MeetingDto(
         venue: String = "",
         theme: String = "No Theme",
         roleCounts: Map<String, Int> = emptyMap(),
-        assignedCounts: Map<String, Int>,
+        assignedCounts: Map<String, Int> = emptyMap(),
         createdAt: Long = 0,
         status: MeetingStatus = MeetingStatus.NOT_COMPLETED,
         assignedRoles: Map<String, String> = emptyMap(),
-        updatedAt: Long = 0
+        updatedAt: Long = 0,
+        agendaId: String = "",
+        isRecurring: Boolean = false,
+        createdBy: String = "",
+        officers: Map<String, String> = emptyMap()
     ) : this(
         meetingID = meetingID,
         date = date,
@@ -47,6 +54,10 @@ data class MeetingDto(
         createdAt = createdAt,
         status = status,
         assignedRoles = assignedRoles,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        agendaId = agendaId,
+        isRecurring = isRecurring,
+        createdBy = createdBy,
+        officers = officers
     )
 }
