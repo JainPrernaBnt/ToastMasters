@@ -4,10 +4,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
+import com.bntsoft.toastmasters.databinding.ItemAddAgendaButtonBinding
 import com.bntsoft.toastmasters.databinding.ItemAgendaBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -15,6 +15,9 @@ import java.util.Locale
 
 const val VIEW_TYPE_ITEM = 0
 const val VIEW_TYPE_ADD_BUTTON = 1
+const val VIEW_TYPE_TIME_BREAK = 2
+const val VIEW_TYPE_SESSION = 3
+const val PAYLOAD_ITEM_CHANGED = "item_changed"
 
 class AgendaAdapter(
     private val onItemClick: (AgendaItemDto) -> Unit,
@@ -40,11 +43,51 @@ class AgendaAdapter(
 
     fun submitList(newItems: List<AgendaItemDto>) {
         Log.d("AgendaAdapter", "submitList called with ${newItems.size} items")
-        _items.clear()
-        _items.addAll(newItems.sortedBy { it.orderIndex })
-        Log.d("AgendaAdapter", "Items after update: ${_items.size}")
-        notifyDataSetChanged()
-        Log.d("AgendaAdapter", "notifyDataSetChanged called")
+
+        // Calculate the differences between old and new lists
+        val oldItems = _items.toList()
+        val sortedNewItems = newItems.sortedBy { it.orderIndex }
+
+        if (oldItems.isEmpty()) {
+            // If the list is empty, just add all new items
+            _items.addAll(sortedNewItems)
+            notifyItemRangeInserted(0, sortedNewItems.size)
+        } else {
+            // Use DiffUtil to calculate the differences
+            val diffCallback = object : DiffUtil.Callback() {
+                override fun getOldListSize(): Int = oldItems.size
+                override fun getNewListSize(): Int = sortedNewItems.size
+
+                override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                    return oldItems[oldItemPosition].id == sortedNewItems[newItemPosition].id
+                }
+
+                override fun areContentsTheSame(
+                    oldItemPosition: Int,
+                    newItemPosition: Int
+                ): Boolean {
+                    return oldItems[oldItemPosition] == sortedNewItems[newItemPosition]
+                }
+
+                override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
+                    return if (oldItems[oldItemPosition] != sortedNewItems[newItemPosition]) {
+                        PAYLOAD_ITEM_CHANGED
+                    } else {
+                        null
+                    }
+                }
+            }
+
+            val diffResult = DiffUtil.calculateDiff(diffCallback)
+            _items.clear()
+            _items.addAll(sortedNewItems)
+            diffResult.dispatchUpdatesTo(this)
+        }
+
+        // Always notify the add button
+        notifyItemChanged(_items.size)
+
+        Log.d("AgendaAdapter", "List updated. Total items: ${_items.size}")
     }
 
     fun getItems(): List<AgendaItemDto> = _items.toList()
@@ -89,12 +132,11 @@ class AgendaAdapter(
             // Last position is always the add button
             VIEW_TYPE_ADD_BUTTON
         } else {
-            // Check if this is a session header
             val item = _items[position]
-            if (item.isSessionHeader) {
-                VIEW_TYPE_ITEM // We'll handle the header in the ViewHolder
-            } else {
-                VIEW_TYPE_ITEM
+            when {
+                item.isSessionHeader -> VIEW_TYPE_SESSION
+                item.activity?.contains("BREAK", ignoreCase = true) == true -> VIEW_TYPE_TIME_BREAK
+                else -> VIEW_TYPE_ITEM
             }
         }
     }
@@ -102,51 +144,61 @@ class AgendaAdapter(
     override fun getItemCount(): Int = _items.size + 1 // +1 for the add button
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val binding = ItemAgendaBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+
         return when (viewType) {
-            VIEW_TYPE_ITEM -> {
-                val binding = ItemAgendaBinding.inflate(
+            VIEW_TYPE_ADD_BUTTON -> {
+                val binding = ItemAddAgendaButtonBinding.inflate(
                     LayoutInflater.from(parent.context),
                     parent,
                     false
                 )
-                AgendaItemViewHolder(binding)
+                AddButtonViewHolder(binding)
             }
 
-            VIEW_TYPE_ADD_BUTTON -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_add_agenda_button, parent, false)
-                AddButtonViewHolder(view)
-            }
-
-            else -> throw IllegalArgumentException("Invalid view type")
+            else -> ViewHolder(binding)
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
-            is AgendaItemViewHolder -> {
+            is ViewHolder -> {
                 if (position < _items.size) {
                     val item = _items[position]
-                    Log.d(
-                        "AgendaAdapter",
-                        "Binding item at $position: ${item.activity} (order: ${item.orderIndex})"
-                    )
-                    holder.bind(item)
+                    val viewType = getItemViewType(position)
+                    holder.bind(item, viewType)
 
-                    // Set click listener only for non-header items
-                    if (!item.isSessionHeader) {
+                    // Only set click listeners for normal items
+                    if (viewType == VIEW_TYPE_ITEM) {
+                        // Set click listener for the item
                         holder.itemView.setOnClickListener {
                             onItemClick(item)
                         }
-                        holder.itemView.isClickable = true
+
+                        // Set long click listener for drag
+                        holder.itemView.setOnLongClickListener {
+                            if (canDrag(position)) {
+                                onStartDrag(holder)
+                            }
+                            true
+                        }
                     } else {
-                        holder.itemView.isClickable = false
+                        // Clear click listeners for non-normal items
+                        holder.itemView.setOnClickListener(null)
+                        holder.itemView.setOnLongClickListener(null)
                     }
                 }
             }
 
             is AddButtonViewHolder -> {
-                // Click handling is now in the ViewHolder's init block
+                // Handle add button click
+                holder.binding.btnAddItem.setOnClickListener {
+                    onAddItemClick()
+                }
             }
         }
     }
@@ -163,7 +215,22 @@ class AgendaAdapter(
                 "AgendaAdapter",
                 "onBindViewHolder with payloads: $payloads for position $position"
             )
-            onBindViewHolder(holder, position)
+
+            when (holder) {
+                is ViewHolder -> {
+                    if (position < _items.size) {
+                        val item = _items[position]
+                        val viewType = getItemViewType(position)
+
+                        // Only rebind if there's a payload indicating content change
+                        if (payloads.any { it == PAYLOAD_ITEM_CHANGED }) {
+                            holder.bind(item, viewType)
+                        }
+                    }
+                }
+                // No special handling needed for AddButtonViewHolder with payloads
+                else -> onBindViewHolder(holder, position)
+            }
         }
     }
 
@@ -204,85 +271,78 @@ class AgendaAdapter(
         notifyDataSetChanged()
     }
 
-    inner class AddButtonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val addButton: Button = view.findViewById(R.id.addItemButton)
-        
+    inner class AddButtonViewHolder(
+        val binding: ItemAddAgendaButtonBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
         init {
-            addButton.setOnClickListener { onAddItemClick() }
-            addButton.setOnLongClickListener { false }
+            binding.btnAddItem.setOnClickListener { onAddItemClick() }
+            binding.btnAddItem.setOnLongClickListener { false }
         }
     }
 
-    inner class AgendaItemViewHolder(
-        private val binding: ItemAgendaBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
-
-        fun bind(item: AgendaItemDto) {
+    inner class ViewHolder(private val binding: ItemAgendaBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: AgendaItemDto, viewType: Int) {
             binding.apply {
-                if (item.isSessionHeader) {
-                    // Show session header layout and hide normal item layout
-                    normalItemLayout.visibility = View.GONE
-                    sessionHeaderLayout.visibility = View.VISIBLE
-                    tvSessionTitle.text = item.activity ?: ""
+                // Hide all views first
+                normalItemLayout.visibility = View.GONE
+                sessionHeaderLayout.visibility = View.GONE
+                timeBreakLayout.visibility = View.GONE
 
-                    // Make the entire item not clickable for session headers
+                when (viewType) {
+                    VIEW_TYPE_ITEM -> {
+                        // Show normal item layout
+                        normalItemLayout.visibility = View.VISIBLE
+
+                        // Set time if available
+                        tvTime.text = item.time ?: ""
+
+                        // Set activity name
+                        tvActivity.text = item.activity ?: ""
+
+                        // Set presenter name if available
+                        tvPresenter.setText(item.presenterName ?: "")
+
+                        // Set time indicators if available
+                        item.greenTime?.let {
+                            tvGreenTime.text = (it / 60).toString()
+                            tvGreenTime.visibility = View.VISIBLE
+                        } ?: run { tvGreenTime.visibility = View.GONE }
+
+                        item.yellowTime?.let {
+                            tvYellowTime.text = (it / 60).toString()
+                            tvYellowTime.visibility = View.VISIBLE
+                        } ?: run { tvYellowTime.visibility = View.GONE }
+
+                        item.redTime?.let {
+                            tvRedTime.text = (it / 60).toString()
+                            tvRedTime.visibility = View.VISIBLE
+                        } ?: run { tvRedTime.visibility = View.GONE }
+                    }
+
+                    VIEW_TYPE_SESSION -> {
+                        // Show session header layout
+                        sessionHeaderLayout.visibility = View.VISIBLE
+                        tvSessionTitle.text = item.activity ?: ""
+                    }
+
+                    VIEW_TYPE_TIME_BREAK -> {
+                        // Show time break layout
+                        timeBreakLayout.visibility = View.VISIBLE
+                        tvTimeBreakText.text = item.activity ?: ""
+                    }
+                }
+
+                // Set position tag for drag and drop
+                itemView.tag = item.orderIndex
+
+                // Disable click for non-normal items to prevent selection
+                if (viewType != VIEW_TYPE_ITEM) {
                     itemView.isClickable = false
                     itemView.isFocusable = false
-                    itemView.isLongClickable = false
-                    itemView.background = null
                 } else {
-                    // Show normal item layout and hide session header
-                    normalItemLayout.visibility = View.VISIBLE
-                    sessionHeaderLayout.visibility = View.GONE
-
-                    // Set time, default to empty string if null
-                    tvTime.text = item.time ?: ""
-
-                    // Make time text bold for better visibility
-                    tvTime.setTypeface(tvTime.typeface, android.graphics.Typeface.BOLD)
-
-                    // Set activity, default to empty string if null
-                    tvActivity.text = item.activity ?: ""
-
-                    // Set presenter name, default to empty string if null
-                    etPresenter.setText(item.presenterName ?: "")
-
-                    // Format and set card times if available, otherwise hide them
-                    item.greenTime?.let { seconds ->
-                        val minutes = seconds / 60
-                        val remainingSeconds = seconds % 60
-                        tvGreenTime.text = if (remainingSeconds > 0) {
-                            String.format("%d:%02d", minutes, remainingSeconds)
-                        } else {
-                            "$minutes min"
-                        }
-                        tvGreenTime.visibility = View.VISIBLE
-                    }
-
-                    item.yellowTime?.let { seconds ->
-                        val minutes = seconds / 60
-                        val remainingSeconds = seconds % 60
-                        tvYellowTime.text = if (remainingSeconds > 0) {
-                            String.format("%d:%02d", minutes, remainingSeconds)
-                        } else {
-                            "$minutes min"
-                        }
-                        tvYellowTime.visibility = View.VISIBLE
-                    }
-
-                    item.redTime?.let { seconds ->
-                        val minutes = seconds / 60
-                        val remainingSeconds = seconds % 60
-                        tvRedTime.text = if (remainingSeconds > 0) {
-                            String.format("%d:%02d", minutes, remainingSeconds)
-                        } else {
-                            "$minutes min"
-                        }
-                        tvRedTime.visibility = View.VISIBLE
-                    } ?: run { tvRedTime.visibility = View.GONE }
-
-                    // Set position tag for drag and drop
-                    itemView.tag = item.orderIndex
+                    itemView.isClickable = true
+                    itemView.isFocusable = true
                 }
             }
         }
@@ -319,15 +379,17 @@ class AgendaAdapter(
     }
 
     override fun canDrag(position: Int): Boolean {
-        // Don't allow dragging the add button or session headers
-        return position < _items.size && !_items[position].isSessionHeader
+        // Only allow dragging normal items (not time breaks, sessions, or the add button)
+        return position < _items.size &&
+                getItemViewType(position) == VIEW_TYPE_ITEM
     }
 
     override fun canSwipe(position: Int): Boolean {
-        // Don't allow swiping the add button or session headers
-        return position < _items.size && !_items[position].isSessionHeader
+        // Don't allow swiping any items (including time breaks and sessions)
+        return false
     }
 }
+
 interface ItemTouchHelperAdapter {
     fun onItemMove(fromPosition: Int, toPosition: Int): Boolean
     fun onItemDismiss(position: Int): Boolean

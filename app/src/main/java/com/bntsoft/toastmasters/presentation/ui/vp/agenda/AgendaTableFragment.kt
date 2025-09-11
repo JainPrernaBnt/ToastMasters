@@ -211,7 +211,7 @@ class AgendaTableFragment : Fragment() {
                     val sessionItem = AgendaItemDto(
                         id = "session_${System.currentTimeMillis()}",
                         meetingId = meetingId,
-                        activity = sessionName,
+                        activity = sessionName.uppercase(),
                         time = "", // Will be calculated
                         orderIndex = agendaAdapter.itemCount - 1, // Add before the add button
                         greenTime = 0,
@@ -257,11 +257,18 @@ class AgendaTableFragment : Fragment() {
             .setCancelable(true)
             .create()
             
+        dialog.show()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.window?.setLayout(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+        dialog.window?.let { w ->
+            val lp = w.attributes
+            lp.dimAmount = 0f
+            w.attributes = lp
+            w.clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        }
 
         binding.btnTimeBreak.setOnClickListener {
             dialog.dismiss()
@@ -277,7 +284,7 @@ class AgendaTableFragment : Fragment() {
             dialog.dismiss()
         }
 
-        dialog.show()
+        
     }
 
     private fun showTimeBreakDialog() {
@@ -294,7 +301,7 @@ class AgendaTableFragment : Fragment() {
 
                     // Create a new time break item
                     val newItem = AgendaItemDto(
-                        id = System.currentTimeMillis().toString(),
+                        id = "break_${System.currentTimeMillis()}",
                         meetingId = meetingId,
                         orderIndex = agendaAdapter.itemCount - 1,
                         activity = timeBreakText,
@@ -456,11 +463,10 @@ class AgendaTableFragment : Fragment() {
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
-                // Only allow drag for non-add button items
-                val dragFlags = if (viewHolder.itemViewType == VIEW_TYPE_ITEM) {
-                    ItemTouchHelper.UP or ItemTouchHelper.DOWN
-                } else {
-                    0
+                // Only allow drag for normal items (not time breaks, sessions, or add button)
+                val dragFlags = when (viewHolder.itemViewType) {
+                    VIEW_TYPE_ITEM -> ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                    else -> 0
                 }
                 return makeMovementFlags(dragFlags, 0)
             }
@@ -470,8 +476,8 @@ class AgendaTableFragment : Fragment() {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                // Don't move items if target is the add button
-                if (target.itemViewType == VIEW_TYPE_ADD_BUTTON) {
+                // Don't move items if target is not a normal item or if source is not a normal item
+                if (target.itemViewType != VIEW_TYPE_ITEM || viewHolder.itemViewType != VIEW_TYPE_ITEM) {
                     return false
                 }
 
@@ -496,6 +502,17 @@ class AgendaTableFragment : Fragment() {
                     return false
                 }
 
+                // Don't allow moving time breaks or session headers
+                val fromItem = items[fromPosition]
+                val toItem = items[toPosition]
+                
+                if (fromItem.activity.contains("BREAK", ignoreCase = true) || 
+                    fromItem.isSessionHeader ||
+                    toItem.activity.contains("BREAK", ignoreCase = true) || 
+                    toItem.isSessionHeader) {
+                    return false
+                }
+
                 // Swap the items
                 Collections.swap(items, fromPosition, toPosition)
 
@@ -517,8 +534,8 @@ class AgendaTableFragment : Fragment() {
             }
 
             override fun isLongPressDragEnabled(): Boolean {
-                // Disable long press to drag, we'll handle it manually
-                return false
+                // Enable long press drag
+                return true
             }
 
             override fun isItemViewSwipeEnabled(): Boolean {
@@ -538,15 +555,21 @@ class AgendaTableFragment : Fragment() {
                     }
 
                     ItemTouchHelper.ACTION_STATE_IDLE -> {
-                        if (isDragging) {
-                            viewHolder?.itemView?.alpha = 1.0f
-                            isDragging = false
-                            Log.d("AgendaTableFragment", "Drag ended")
-                            // Save the new order when drag ends
-                            viewModel.saveAllAgendaItems(
-                                meetingId,
-                                agendaAdapter.getItems()
+                        viewHolder?.itemView?.alpha = 1.0f
+                        Log.d("AgendaTableFragment", "Drag ended")
+                        // Recalculate times including breaks from the top and persist in one batch
+                        val reordered = agendaAdapter.getItems().toMutableList()
+                        if (reordered.isNotEmpty()) {
+                            reordered.forEachIndexed { index, item -> item.orderIndex = index }
+                            val recalculated = AgendaTimeCalculator.recalculateTimesFromPosition(
+                                reordered,
+                                0,
+                                meetingStartTime
                             )
+                            binding.agendaRecyclerView.post {
+                                agendaAdapter.submitList(recalculated)
+                                viewModel.reorderItems(meetingId, recalculated)
+                            }
                         }
                     }
                 }

@@ -15,45 +15,39 @@ object AgendaTimeCalculator {
      */
     fun calculateAgendaTimes(items: List<AgendaItemDto>, meetingStartTime: String): List<AgendaItemDto> {
         if (items.isEmpty()) return items
-        
+
         val result = mutableListOf<AgendaItemDto>()
         val calendar = Calendar.getInstance()
-        
-        try {
-            // Parse the meeting start time
-            calendar.time = timeFormat.parse(meetingStartTime) ?: return items
-        } catch (e: Exception) {
-            return items
-        }
-        
-        var lastValidTime = calendar.time
-        
-        for (index in items.indices) {
-            val item = items[index]
-            
-            if (item.isSessionHeader) {
-                // For session headers, use the last valid time
-                result.add(item.copy(time = timeFormat.format(lastValidTime)))
-                continue
-            }
-            
-            if (index == 0) {
-                // First non-header item uses the meeting start time
-                result.add(item.copy(time = meetingStartTime))
-                lastValidTime = timeFormat.parse(meetingStartTime) ?: continue
+
+        val start = try { timeFormat.parse(meetingStartTime) } catch (_: Exception) { null } ?: return items
+        var currentTime = start
+
+        items.forEach { item ->
+            // Set current item's displayed time
+            val timeString = timeFormat.format(currentTime)
+
+            // Determine if this row is a break-style header: either flagged or text contains BREAK
+            val isBreakHeader = item.isSessionHeader || (item.activity.contains("BREAK", ignoreCase = true))
+
+            if (isBreakHeader) {
+                result.add(item.copy(time = timeString))
+                val breakMinutes = (item.redTime / 60).coerceAtLeast(0)
+                if (breakMinutes > 0) {
+                    calendar.time = currentTime
+                    calendar.add(Calendar.MINUTE, breakMinutes)
+                    currentTime = calendar.time
+                }
             } else {
-                // Calculate time based on the last valid item's time and red card
-                val prevItem = result[index - 1] // Use the recalculated item from result
-                calendar.time = lastValidTime
-                // Convert red time from seconds to minutes
-                calendar.add(Calendar.MINUTE, prevItem.redTime / 60)
-                
-                val newTime = calendar.time
-                result.add(item.copy(time = timeFormat.format(newTime)))
-                lastValidTime = newTime
+                result.add(item.copy(time = timeString))
+                val redMinutes = (item.redTime / 60).coerceAtLeast(0)
+                if (redMinutes > 0) {
+                    calendar.time = currentTime
+                    calendar.add(Calendar.MINUTE, redMinutes)
+                    currentTime = calendar.time
+                }
             }
         }
-        
+
         return result
     }
     

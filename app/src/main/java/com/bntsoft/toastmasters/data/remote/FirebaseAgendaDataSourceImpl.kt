@@ -414,6 +414,7 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                         greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
                         yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
                         redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
+                        isSessionHeader = (data["isSessionHeader"] as? Boolean) ?: false,
                         updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
                             ?: com.google.firebase.Timestamp.now()
                     )
@@ -449,6 +450,8 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                                 presenterName = data["presenter"] as? String ?: "",
                                 time = data["time"] as? String ?: "",
                                 orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
+                                isSessionHeader = data["isSessionHeader"] as? Boolean ?: false,
+                                duration = (data["duration"] as? Number)?.toInt() ?: 0,
                                 greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
                                 yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
                                 redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
@@ -503,6 +506,8 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                                 presenterName = data["presenter"] as? String ?: "",
                                 time = data["time"] as? String ?: "",
                                 orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
+                                isSessionHeader = data["isSessionHeader"] as? Boolean ?: false,
+                                duration = (data["duration"] as? Number)?.toInt() ?: 0,
                                 greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
                                 yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
                                 redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
@@ -532,15 +537,17 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         return try {
             val agendaId = resolveAgendaId(meetingId)
             val itemData = hashMapOf(
-                "time" to item.time,
-                "activity" to item.activity,
-                "presenter" to item.presenterName,
+                "time" to (item.time ?: ""),
+                "activity" to (item.activity ?: ""),
+                "presenter" to (item.presenterName ?: ""),
                 "order" to item.orderIndex,
                 "meetingId" to meetingId,
+                "isSessionHeader" to (item.isSessionHeader ?: false),
+                "duration" to (item.duration ?: 0),
                 "cardSequence" to mapOf(
-                    "green" to item.greenTime,
-                    "yellow" to item.yellowTime,
-                    "red" to item.redTime
+                    "green" to (item.greenTime ?: 0),
+                    "yellow" to (item.yellowTime ?: 0),
+                    "red" to (item.redTime ?: 0)
                 ),
                 "updatedAt" to FieldValue.serverTimestamp()
             )
@@ -605,7 +612,9 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             for (item in items) {
                 val itemRef = itemsRef.document(item.id)
                 batch.update(itemRef, "order", item.orderIndex)
-                batch.update(itemRef, "time", item.time) // Update the time as well
+                batch.update(itemRef, "time", item.time ?: "") // Update the time as well
+                batch.update(itemRef, "isSessionHeader", item.isSessionHeader ?: false)
+                batch.update(itemRef, "duration", item.duration ?: 0)
                 batch.update(itemRef, "updatedAt", now)
             }
 
@@ -643,14 +652,16 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             // Add all new items
             items.forEachIndexed { index, item ->
                 val itemData = hashMapOf<String, Any>(
-                    "time" to item.time,
-                    "activity" to item.activity,
-                    "presenter" to item.presenterName,
+                    "time" to (item.time ?: ""),
+                    "activity" to (item.activity ?: ""),
+                    "presenter" to (item.presenterName ?: ""),
                     "order" to index,
+                    "isSessionHeader" to (item.isSessionHeader ?: false),
+                    "duration" to (item.duration ?: 0),
                     "cardSequence" to mapOf(
-                        "green" to item.greenTime,
-                        "yellow" to item.yellowTime,
-                        "red" to item.redTime
+                        "green" to (item.greenTime ?: 0),
+                        "yellow" to (item.yellowTime ?: 0),
+                        "red" to (item.redTime ?: 0)
                     ),
                     "updatedAt" to FieldValue.serverTimestamp()
                 )

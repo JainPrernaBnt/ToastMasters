@@ -52,6 +52,14 @@ object AgendaDialogs {
         }
 
         dialog.show()
+        dialog.window?.apply {
+            setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            setBackgroundDrawableResource(android.R.color.transparent)
+            val lp = attributes
+            lp.dimAmount = 0f
+            attributes = lp
+            clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        }
     }
 
     private fun showCustomSessionDialog(context: Context, listener: OnSessionSelectedListener) {
@@ -76,6 +84,14 @@ object AgendaDialogs {
         }
 
         dialog.show()
+        dialog.window?.apply {
+            setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            setBackgroundDrawableResource(android.R.color.transparent)
+            val lp = attributes
+            lp.dimAmount = 0f
+            attributes = lp
+            clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        }
     }
 
     fun showTimeBreakDialog(context: Context, listener: OnTimeBreakSetListener) {
@@ -85,33 +101,21 @@ object AgendaDialogs {
         dialog.setContentView(binding.root)
         dialog.setCancelable(true)
 
-        // Set time picker to only show minutes and seconds
-        binding.timePicker.setIs24HourView(true)
-        // Set up time picker to only show minutes and seconds
-        binding.timePicker.hour = 0
-        binding.timePicker.minute = 5
-        binding.timePicker.setIs24HourView(true)  // Use 24-hour format for consistency
-        binding.timePicker.visibility = View.VISIBLE
-        
-        // Since TimePicker doesn't directly support seconds, we'll use a workaround
-        // by treating the minute picker as seconds when needed
-        var isSelectingSeconds = false
-        var selectedMinutes = 0
-        
-        binding.timePicker.setOnTimeChangedListener { _, hour, minute ->
-            if (hour > 0) {
-                binding.timePicker.hour = 0
-            }
-            if (!isSelectingSeconds) {
-                selectedMinutes = minute
-                binding.timePicker.minute = 0  // Reset to 0 for seconds selection
-                isSelectingSeconds = true
-            }
-        }
+        // Use explicit minutes/seconds NumberPickers from the layout
+        val npMinutes = binding.root.findViewById<android.widget.NumberPicker>(R.id.npMinutes)
+        val npSeconds = binding.root.findViewById<android.widget.NumberPicker>(R.id.npSeconds)
+        npMinutes.minValue = 0
+        npMinutes.maxValue = 59
+        npMinutes.value = 5
+        npMinutes.wrapSelectorWheel = true
+        npSeconds.minValue = 0
+        npSeconds.maxValue = 59
+        npSeconds.value = 0
+        npSeconds.wrapSelectorWheel = true
 
         binding.btnSet.setOnClickListener {
-            val minutes = if (isSelectingSeconds) selectedMinutes else binding.timePicker.minute
-            val seconds = if (isSelectingSeconds) binding.timePicker.minute else 0
+            val minutes = npMinutes.value
+            val seconds = npSeconds.value
             listener.onTimeBreakSet(minutes, seconds)
             dialog.dismiss()
         }
@@ -121,5 +125,13 @@ object AgendaDialogs {
         }
 
         dialog.show()
+        dialog.window?.apply {
+            setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            setBackgroundDrawableResource(android.R.color.transparent)
+            val lp = attributes
+            lp.dimAmount = 0f
+            attributes = lp
+            clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        }
     }
 }

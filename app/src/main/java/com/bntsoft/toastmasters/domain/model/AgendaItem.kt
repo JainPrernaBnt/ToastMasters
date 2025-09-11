@@ -21,6 +21,7 @@ data class AgendaItem(
     val presenterId: String = "",
     val presenterName: String = "",
     val isSessionHeader: Boolean = false,
+    val duration: Int = 0,
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp
