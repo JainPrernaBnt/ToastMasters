@@ -34,7 +34,7 @@
                     android:gravity="center"
                     android:orientation="horizontal">
 
-                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                    <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step1Indicator"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
@@ -49,7 +49,7 @@
                         android:layout_height="1dp"
                         android:background="@color/purple_200" />
 
-                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                    <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step2Indicator"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
@@ -64,7 +64,7 @@
                         android:layout_height="1dp"
                         android:background="@color/purple_200" />
 
-                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                    <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step3Indicator"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
@@ -79,7 +79,7 @@
                         android:layout_height="1dp"
                         android:background="@color/purple_200" />
 
-                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                    <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step4Indicator"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
@@ -94,7 +94,7 @@
                         android:layout_height="1dp"
                         android:background="@color/purple_200" />
 
-                    <com.bntsoft.toastmasters.custom.StepIndicatorView
+                    <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step5Indicator"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
