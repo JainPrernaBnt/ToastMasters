@@ -18,8 +18,6 @@ import com.bntsoft.toastmasters.data.model.AbbreviationItem
 import com.bntsoft.toastmasters.databinding.FragmentCreateAgendaBinding
 import com.bntsoft.toastmasters.domain.model.MeetingAgenda
 import com.bntsoft.toastmasters.presentation.ui.vp.agenda.front.viewmodel.CreateAgendaViewModel
-import com.bntsoft.toastmasters.ui.adapter.AbbreviationAdapter
-import com.bntsoft.toastmasters.utils.Result
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText

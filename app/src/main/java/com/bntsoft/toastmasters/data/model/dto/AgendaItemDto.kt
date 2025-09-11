@@ -11,7 +11,7 @@ data class AgendaItemDto(
     @DocumentId
     val id: String = "",
     val meetingId: String = "",
-    val orderIndex: Int = 0,
+    var orderIndex: Int = 0,
     val time: String = "",
     val greenTime: Int = 0,
     val yellowTime: Int = 0,
@@ -19,6 +19,7 @@ data class AgendaItemDto(
     val activity: String = "",
     val presenterId: String = "",
     val presenterName: String = "",
+    val isSessionHeader: Boolean = false,
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp

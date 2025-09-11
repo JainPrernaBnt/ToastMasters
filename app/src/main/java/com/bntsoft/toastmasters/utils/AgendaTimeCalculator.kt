@@ -26,21 +26,31 @@ object AgendaTimeCalculator {
             return items
         }
         
+        var lastValidTime = calendar.time
+        
         for (index in items.indices) {
             val item = items[index]
+            
+            if (item.isSessionHeader) {
+                // For session headers, use the last valid time
+                result.add(item.copy(time = timeFormat.format(lastValidTime)))
+                continue
+            }
+            
             if (index == 0) {
-                // First item uses the meeting start time
+                // First non-header item uses the meeting start time
                 result.add(item.copy(time = meetingStartTime))
+                lastValidTime = timeFormat.parse(meetingStartTime) ?: continue
             } else {
-                // Calculate time based on the PREVIOUS RECALCULATED item's time and red card
+                // Calculate time based on the last valid item's time and red card
                 val prevItem = result[index - 1] // Use the recalculated item from result
-                val prevTime = timeFormat.parse(prevItem.time) ?: continue
-                
-                calendar.time = prevTime
+                calendar.time = lastValidTime
                 // Convert red time from seconds to minutes
                 calendar.add(Calendar.MINUTE, prevItem.redTime / 60)
                 
-                result.add(item.copy(time = timeFormat.format(calendar.time)))
+                val newTime = calendar.time
+                result.add(item.copy(time = timeFormat.format(newTime)))
+                lastValidTime = newTime
             }
         }
         
@@ -57,15 +67,7 @@ object AgendaTimeCalculator {
     fun recalculateTimesFromPosition(items: List<AgendaItemDto>, startPosition: Int = 0, meetingStartTime: String? = null): List<AgendaItemDto> {
         if (items.isEmpty() || startPosition < 0 || startPosition >= items.size) return items
         
-        // If starting from position 0, perform a FULL recalculation from meeting start time
-        if (startPosition == 0) {
-            // Use the provided meeting start time, or fall back to the existing time of the first item
-            val startTime = meetingStartTime ?: items.firstOrNull()?.time ?: return items
-            return calculateAgendaTimes(items, startTime)
-        }
-        
-        // For other positions, we still need to ensure we're using recalculated times
-        // So we'll perform a full recalculation from position 0 to ensure consistency
+        // Always perform a full recalculation to ensure consistency with session headers
         val startTime = meetingStartTime ?: items.firstOrNull()?.time ?: return items
         return calculateAgendaTimes(items, startTime)
     }

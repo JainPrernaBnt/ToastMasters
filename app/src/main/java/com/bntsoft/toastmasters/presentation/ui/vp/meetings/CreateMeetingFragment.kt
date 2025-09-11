@@ -2,27 +2,23 @@ package com.bntsoft.toastmasters.presentation.ui.vp.meetings
 
 import android.os.Bundle
 import android.text.InputFilter
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ArrayAdapter
-import android.widget.EditText
-import androidx.appcompat.app.AlertDialog
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
+import com.bntsoft.toastmasters.data.model.Meeting
 import com.bntsoft.toastmasters.databinding.FragmentCreateMeetingBinding
 import com.bntsoft.toastmasters.databinding.ItemMeetingFormBinding
-import com.bntsoft.toastmasters.data.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingFormData
-import java.util.Date
-import java.time.Instant
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
 import com.google.android.material.chip.Chip
@@ -35,6 +31,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @AndroidEntryPoint
@@ -67,7 +64,29 @@ class CreateMeetingFragment : Fragment() {
 
         // Set click listener for "Add Another Meeting" button
         binding.addAnotherMeetingButton.setOnClickListener {
-            addNewMeetingForm()
+            if (meetingForms.isNotEmpty()) {
+                // Get the last form's roles
+                val lastForm = meetingForms.last()
+                val roles = getRolesFromForm(lastForm.binding)
+                
+                if (roles.isNotEmpty()) {
+                    // Show confirmation dialog
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Copy Preferred Roles?")
+                        .setMessage("Do you want to use the same preferred roles as the above meeting?")
+                        .setPositiveButton("Yes") { _, _ ->
+                            addNewMeetingForm(roles)
+                        }
+                        .setNegativeButton("No") { _, _ ->
+                            addNewMeetingForm()
+                        }
+                        .show()
+                } else {
+                    addNewMeetingForm()
+                }
+            } else {
+                addNewMeetingForm()
+            }
         }
 
         // Set click listener for "Create Meeting(s)" button
@@ -88,13 +107,11 @@ class CreateMeetingFragment : Fragment() {
                             "Meeting '${state.meeting.theme}' created successfully",
                             Toast.LENGTH_SHORT
                         ).show()
+                        // Clear the form for new entry
                         binding.meetingFormsContainer.removeAllViews()
                         meetingForms.clear()
                         addNewMeetingForm()
                         viewModel.resetCreateMeetingState()
-                        findNavController().navigate(
-                            R.id.action_createMeetingFragment_to_dashboardFragment
-                        )
                     }
 
                     is CreateMeetingState.Duplicate -> {
@@ -119,7 +136,29 @@ class CreateMeetingFragment : Fragment() {
         }
     }
 
-    private fun addNewMeetingForm() {
+    private fun getRolesFromForm(formBinding: ItemMeetingFormBinding): List<Pair<String, Int>> {
+        val roles = mutableListOf<Pair<String, Int>>()
+        val roleCount = mutableMapOf<String, Int>()
+        
+        // Count occurrences of each role
+        for (i in 0 until formBinding.roleChipGroup.childCount) {
+            val chip = formBinding.roleChipGroup.getChildAt(i) as? Chip
+            chip?.let {
+                val roleText = it.text.toString()
+                val roleName = roleText.substringBeforeLast(' ').trim()
+                roleCount[roleName] = (roleCount[roleName] ?: 0) + 1
+            }
+        }
+        
+        // Convert to list of pairs
+        roleCount.forEach { (role, count) ->
+            roles.add(Pair(role, count))
+        }
+        
+        return roles
+    }
+    
+    private fun addNewMeetingForm(rolesToCopy: List<Pair<String, Int>> = emptyList()) {
         val formBinding =
             ItemMeetingFormBinding.inflate(layoutInflater, binding.meetingFormsContainer, false)
 
@@ -222,6 +261,25 @@ class CreateMeetingFragment : Fragment() {
                 }
             }
 
+            // Add roles if copying from previous form
+            if (rolesToCopy.isNotEmpty()) {
+                rolesToCopy.forEach { (role, count) ->
+                    for (i in 1..count) {
+                        val chip = Chip(context).apply {
+                            text = "$role $i"
+                            isCloseIconVisible = true
+                            setOnCloseIconClickListener {
+                                formBinding.roleChipGroup.removeView(this) 
+                            }
+                            tag = role
+                            setChipBackgroundColorResource(R.color.chip_background)
+                            setTextAppearance(R.style.ChipTextAppearance)
+                        }
+                        formBinding.roleChipGroup.addView(chip)
+                    }
+                }
+            }
+            
             setupRoleManagement(formBinding)
         }
 
@@ -461,14 +519,16 @@ class CreateMeetingFragment : Fragment() {
             val startDate = Date.from(startLocalDateTime.atZone(ZoneId.systemDefault()).toInstant())
             val endDate = Date.from(endLocalDateTime.atZone(ZoneId.systemDefault()).toInstant())
             
-            // Create meeting using data model
+            // Create meeting using data model with role information
             val meeting = Meeting(
                 theme = theme,
                 date = startDate,
                 startTime = startLocalDateTime.toLocalTime().toString(),
                 endTime = endLocalDateTime.toLocalTime().toString(),
                 venue = venue,
-                officers = emptyMap() // Empty officers as they will be set by the ViewModel
+                officers = emptyMap(), // Empty officers as they will be set by the ViewModel
+                roleCounts = roleCounts, // Add role counts
+                assignedCounts = roleCounts.mapValues { 0 } // Initialize assigned counts to 0
             )
             viewModel.createMeeting(meeting, forceCreate)
         }

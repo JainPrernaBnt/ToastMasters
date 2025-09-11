@@ -196,6 +196,29 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Toastmasters ID -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/levelInputLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space_medium"
+                android:hint="@string/hint_level"
+                app:startIconDrawable="@drawable/ic_level"
+                app:boxStrokeColor="?attr/colorOnSurface"
+                app:hintTextColor="?attr/colorOnSurface"
+                app:startIconTint="?attr/colorOnSurface">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/levelEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLines="1"
+                    android:textColor="?attr/colorOnSurface" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
             <!-- Role Selection -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

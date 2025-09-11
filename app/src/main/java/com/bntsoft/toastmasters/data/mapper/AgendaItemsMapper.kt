@@ -20,7 +20,8 @@ class AgendaItemsMapper @Inject constructor() : Mapper<AgendaItemsDto, AgendaIte
             greenTimeMin = entity.greenTimeMin,
             yellowTimeMin = entity.yellowTimeMin,
             redTimeMin = entity.redTimeMin,
-            order = entity.order
+            order = entity.order,
+            isSessionHeader = entity.isSessionHeader
         )
     }
 
@@ -38,7 +39,8 @@ class AgendaItemsMapper @Inject constructor() : Mapper<AgendaItemsDto, AgendaIte
             greenTimeMin = dto.greenTimeMin,
             yellowTimeMin = dto.yellowTimeMin,
             redTimeMin = dto.redTimeMin,
-            order = dto.order
+            order = dto.order,
+            isSessionHeader = dto.isSessionHeader
         )
     }
 

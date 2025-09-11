@@ -13,5 +13,6 @@ data class AgendaItemsDto(
     val greenTimeMin: Int?,
     val yellowTimeMin: Int?,
     val redTimeMin: Int?,
-    val order: Int? = null
+    val order: Int? = null,
+    val isSessionHeader: Boolean = false  // Indicates if this is a session header
 )

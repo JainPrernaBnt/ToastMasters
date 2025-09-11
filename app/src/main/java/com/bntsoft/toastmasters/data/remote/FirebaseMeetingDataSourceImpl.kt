@@ -323,6 +323,15 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             val document = meetingsCollection.document()
             val dto = meetingMapper.mapToDto(meeting).copy(meetingID = document.id)
             // Convert the MeetingDto to a map and set it in Firestore
+            // Ensure roleCounts and assignedCounts are not null and properly initialized
+            val safeRoleCounts = dto.roleCounts.ifEmpty { emptyMap() }
+            val safeAssignedCounts = if (dto.assignedCounts.isEmpty()) {
+                // If no assigned counts, initialize with all roles set to 0
+                safeRoleCounts.mapValues { 0 }
+            } else {
+                dto.assignedCounts
+            }
+
             val meetingMap = hashMapOf(
                 "meetingID" to dto.meetingID,
                 "date" to dto.date,
@@ -330,18 +339,15 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 "endTime" to dto.endTime,
                 "venue" to dto.venue,
                 "theme" to dto.theme,
-                "roleCounts" to dto.roleCounts,
-                "assignedCounts" to dto.assignedCounts.ifEmpty {
-                    // Initialize with all roles set to 0
-                    dto.roleCounts.mapValues { 0 }
-                },
+                "roleCounts" to safeRoleCounts,
+                "assignedCounts" to safeAssignedCounts,
                 "createdAt" to dto.createdAt,
                 "status" to dto.status.name,
-                // Add officers data
-                "officers" to (dto.officers?.toMap() ?: emptyMap<String, String>()),
-                // Add agenda ID if exists
+                "officers" to (dto.officers ?: emptyMap()),
+                "assignedRoles" to (dto.assignedRoles ?: emptyMap()),
                 "agendaId" to (dto.agendaId ?: ""),
-                // Add timestamps
+                "isRecurring" to (dto.isRecurring ?: false),
+                "createdBy" to (dto.createdBy ?: ""),
                 "updatedAt" to FieldValue.serverTimestamp()
             )
             document.set(meetingMap).await()
@@ -378,17 +384,34 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     "agendaId" to dto.agendaId
                 )
 
-                // Only update roleCounts if they're not empty
-                if (dto.roleCounts.isNotEmpty()) {
-                    updateMap["roleCounts"] = dto.roleCounts
-                }
+                // Update roleCounts if they're provided
+                updateMap["roleCounts"] = dto.roleCounts.ifEmpty { emptyMap() }
 
-                // Initialize assignedCounts if it doesn't exist
+                // Handle assignedCounts - merge with existing or initialize with zeros
                 val currentData = document.data ?: emptyMap()
-                if (!currentData.containsKey("assignedCounts")) {
-                    // Initialize assignedCounts with all roles set to 0
-                    updateMap["assignedCounts"] = dto.roleCounts.mapValues { 0 }
+                val currentAssignedCounts = currentData["assignedCounts"] as? Map<*, *> ?: emptyMap<String, Int>()
+                
+                // If we have new role counts, ensure all roles have assigned counts
+                val updatedAssignedCounts = if (dto.roleCounts.isNotEmpty()) {
+                    val mergedCounts = currentAssignedCounts.toMutableMap()
+                    // Add any new roles with 0 assigned count
+                    dto.roleCounts.keys.forEach { role ->
+                        if (!mergedCounts.containsKey(role)) {
+                            mergedCounts[role] = 0
+                        }
+                    }
+                    // Remove any roles that no longer exist in roleCounts
+                    mergedCounts.keys.toList().forEach { role ->
+                        if (!dto.roleCounts.containsKey(role)) {
+                            mergedCounts.remove(role)
+                        }
+                    }
+                    mergedCounts
+                } else {
+                    currentAssignedCounts as Map<String, Int>
                 }
+                
+                updateMap["assignedCounts"] = updatedAssignedCounts
 
                 document.reference.update(updateMap).await()
                 Result.Success(Unit)

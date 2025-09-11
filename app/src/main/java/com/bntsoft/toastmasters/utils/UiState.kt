@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.util
+package com.bntsoft.toastmasters.utils
 
 sealed class UiState<out T> {
     object Loading : UiState<Nothing>()

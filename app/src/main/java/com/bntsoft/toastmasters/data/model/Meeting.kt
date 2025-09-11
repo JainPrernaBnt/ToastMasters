@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.data.model
 
+import com.bntsoft.toastmasters.data.local.entity.MeetingRoles
 import com.google.firebase.firestore.Exclude
 import java.util.*
 
@@ -10,6 +11,9 @@ data class Meeting(
     val startTime: String = "",
     val endTime: String = "",
     val venue: String = "",
+    val roleCounts: Map<String, Int> = emptyMap(),
+    val assignedRoles: Map<String, String> = emptyMap(),
+    val assignedCounts: Map<String, Int> = emptyMap(),
     val officers: Map<String, String> = emptyMap(),
     @get:Exclude
     val isLoading: Boolean = false,

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.google.gms.services)
     id("kotlin-parcelize")
     id("androidx.navigation.safeargs.kotlin")
+    id("kotlin-kapt")
 }
 
 android {
@@ -41,6 +42,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        dataBinding = true
     }
     
     // Room schema location

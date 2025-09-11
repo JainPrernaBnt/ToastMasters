@@ -34,6 +34,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import javax.inject.Inject
 import com.bntsoft.toastmasters.data.model.Meeting as DataMeeting
 import com.bntsoft.toastmasters.domain.model.Meeting as DomainMeeting
@@ -265,7 +267,17 @@ class MeetingsViewModel @Inject constructor(
             id = this.id,
             theme = this.theme,
             dateTime = dateTime,
+            endDateTime = this.endTime.let { 
+                if (it.isNotEmpty()) {
+                    LocalDateTime.of(
+                        dateTime.toLocalDate(),
+                        LocalTime.parse(it)
+                    )
+                } else null 
+            },
             location = this.venue,
+            roleCounts = this.roleCounts,
+            assignedCounts = this.assignedCounts,
             officers = this.officers,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()

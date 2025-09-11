@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.data.model.MemberRole
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
-import com.bntsoft.toastmasters.util.UiState
+import com.bntsoft.toastmasters.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

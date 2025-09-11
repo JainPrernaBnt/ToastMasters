@@ -8,8 +8,14 @@
     android:background="?android:attr/selectableItemBackground"
     android:clickable="false"
     android:focusable="false"
-    android:minHeight="48dp"
     android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/normalItemLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:orientation="horizontal">
 
         <!-- TIME -->
         <TextView
@@ -69,6 +75,26 @@
             android:focusable="false"
             android:clickable="false"
             android:focusableInTouchMode="false" />
+    </LinearLayout>
 
+    <!-- Session Header Layout -->
+    <LinearLayout
+        android:id="@+id/sessionHeaderLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:visibility="gone">
 
+        <TextView
+            android:id="@+id/tvSessionTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="SESSION TITLE" />
+    </LinearLayout>
 </LinearLayout>

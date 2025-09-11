@@ -91,7 +91,8 @@ class SignUpFragment : Fragment() {
             binding.toastmastersIdEditText,
             binding.clubIdEditText,
             binding.passwordEditText,
-            binding.confirmPasswordEditText
+            binding.confirmPasswordEditText,
+            binding.levelEditText
         ).forEach { editText ->
             editText.addTextChangedListener(textWatcher)
         }
@@ -195,6 +196,7 @@ class SignUpFragment : Fragment() {
         } else {
             ""
         }
+        val level = binding.levelEditText.text.toString().trim()
 
         // Get selected role
         val role = if (binding.roleVpEducation.isChecked) {
@@ -213,6 +215,7 @@ class SignUpFragment : Fragment() {
             toastmastersId = toastmastersId,
             clubId = clubId,
             password = password,
+            level = level,
             role = role, // Use selected role
             isApproved = role == UserRole.VP_EDUCATION, // Auto-approve VP Education
             mentorNames = if (mentorName.isNotBlank()) listOf(mentorName) else emptyList()

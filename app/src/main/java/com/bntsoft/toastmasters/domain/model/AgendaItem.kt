@@ -20,6 +20,7 @@ data class AgendaItem(
     val activity: String = "",
     val presenterId: String = "",
     val presenterName: String = "",
+    val isSessionHeader: Boolean = false,
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp
@@ -38,7 +39,8 @@ data class AgendaItem(
             redTime = 0,
             activity = "",
             presenterId = "",
-            presenterName = ""
+            presenterName = "",
+            isSessionHeader = false
         )
     }
 }

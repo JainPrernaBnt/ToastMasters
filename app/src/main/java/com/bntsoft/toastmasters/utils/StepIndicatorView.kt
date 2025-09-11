@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.custom
+package com.bntsoft.toastmasters.utils
 
 import android.content.Context
 import android.util.AttributeSet

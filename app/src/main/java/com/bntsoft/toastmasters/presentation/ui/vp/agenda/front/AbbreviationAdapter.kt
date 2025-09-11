@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.ui.adapter
+package com.bntsoft.toastmasters.presentation.ui.vp.agenda.front
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,7 +10,9 @@ import com.bntsoft.toastmasters.databinding.ItemAbbreviationBinding
 
 class AbbreviationAdapter(
     private val onItemRemoved: ((Int) -> Unit)? = null
-) : ListAdapter<AbbreviationItem, AbbreviationAdapter.AbbreviationViewHolder>(AbbreviationDiffCallback()) {
+) : ListAdapter<AbbreviationItem, AbbreviationAdapter.AbbreviationViewHolder>(
+    AbbreviationDiffCallback()
+) {
 
     init {
         // Submit an empty list to avoid NPE in DiffUtil

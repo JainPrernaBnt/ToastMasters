@@ -43,5 +43,6 @@ data class AgendaItems(
     val greenTimeMin: Int?,
     val yellowTimeMin: Int?,
     val redTimeMin: Int?,
-    val order: Int? = null          // To sort items if needed
+    val order: Int? = null,         // To sort items if needed
+    val isSessionHeader: Boolean = false  // Indicates if this is a session header
 )
