@@ -16,7 +16,9 @@ object AgendaTimeCalculator {
     fun calculateAgendaTimes(items: List<AgendaItemDto>, meetingStartTime: String): List<AgendaItemDto> {
         if (items.isEmpty()) return items
         
+        val result = mutableListOf<AgendaItemDto>()
         val calendar = Calendar.getInstance()
+        
         try {
             // Parse the meeting start time
             calendar.time = timeFormat.parse(meetingStartTime) ?: return items
@@ -24,53 +26,47 @@ object AgendaTimeCalculator {
             return items
         }
         
-        return items.mapIndexed { index, item ->
+        for (index in items.indices) {
+            val item = items[index]
             if (index == 0) {
                 // First item uses the meeting start time
-                item.copy(time = meetingStartTime)
+                result.add(item.copy(time = meetingStartTime))
             } else {
-                // Calculate time based on previous item's time and red card
-                val prevItem = items[index - 1]
-                val prevTime = timeFormat.parse(prevItem.time) ?: return@mapIndexed item
+                // Calculate time based on the PREVIOUS RECALCULATED item's time and red card
+                val prevItem = result[index - 1] // Use the recalculated item from result
+                val prevTime = timeFormat.parse(prevItem.time) ?: continue
                 
                 calendar.time = prevTime
-                calendar.add(Calendar.MINUTE, prevItem.redTime)
+                // Convert red time from seconds to minutes
+                calendar.add(Calendar.MINUTE, prevItem.redTime / 60)
                 
-                item.copy(time = timeFormat.format(calendar.time))
+                result.add(item.copy(time = timeFormat.format(calendar.time)))
             }
         }
+        
+        return result
     }
     
     /**
      * Recalculate times for all items starting from the given position
      * @param items List of agenda items
      * @param startPosition Position to start recalculating from (0 to recalculate all)
+     * @param meetingStartTime The meeting start time to use for the first item (optional)
      * @return List of agenda items with recalculated times
      */
-    fun recalculateTimesFromPosition(items: List<AgendaItemDto>, startPosition: Int = 0): List<AgendaItemDto> {
+    fun recalculateTimesFromPosition(items: List<AgendaItemDto>, startPosition: Int = 0, meetingStartTime: String? = null): List<AgendaItemDto> {
         if (items.isEmpty() || startPosition < 0 || startPosition >= items.size) return items
         
-        val result = items.toMutableList()
-        
-        // If starting from position 0, we need the meeting start time
+        // If starting from position 0, perform a FULL recalculation from meeting start time
         if (startPosition == 0) {
-            // Use the existing time of the first item as the meeting start time
-            val meetingStartTime = items.firstOrNull()?.time ?: return items
-            return calculateAgendaTimes(items, meetingStartTime)
+            // Use the provided meeting start time, or fall back to the existing time of the first item
+            val startTime = meetingStartTime ?: items.firstOrNull()?.time ?: return items
+            return calculateAgendaTimes(items, startTime)
         }
         
-        // For other positions, calculate based on the previous item
-        for (i in startPosition until items.size) {
-            val prevItem = result[i - 1]
-            val prevTime = timeFormat.parse(prevItem.time) ?: continue
-            
-            val calendar = Calendar.getInstance()
-            calendar.time = prevTime
-            calendar.add(Calendar.MINUTE, prevItem.redTime)
-            
-            result[i] = result[i].copy(time = timeFormat.format(calendar.time))
-        }
-        
-        return result
+        // For other positions, we still need to ensure we're using recalculated times
+        // So we'll perform a full recalculation from position 0 to ensure consistency
+        val startTime = meetingStartTime ?: items.firstOrNull()?.time ?: return items
+        return calculateAgendaTimes(items, startTime)
     }
 }

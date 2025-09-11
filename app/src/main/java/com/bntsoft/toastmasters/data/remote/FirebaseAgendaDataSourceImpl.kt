@@ -605,6 +605,7 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             for (item in items) {
                 val itemRef = itemsRef.document(item.id)
                 batch.update(itemRef, "order", item.orderIndex)
+                batch.update(itemRef, "time", item.time) // Update the time as well
                 batch.update(itemRef, "updatedAt", now)
             }
 

@@ -3,8 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="false"
+    android:focusable="false"
+    android:minHeight="48dp"
     android:orientation="horizontal">
 
         <!-- TIME -->
@@ -61,7 +65,10 @@
             android:id="@+id/etPresenter"
             style="@style/Cell.Presenter"
             android:hint="Select Presenter"
-            android:inputType="none" />
+            android:inputType="none"
+            android:focusable="false"
+            android:clickable="false"
+            android:focusableInTouchMode="false" />
 
 
 </LinearLayout>
