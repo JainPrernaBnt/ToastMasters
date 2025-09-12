@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,10 +30,11 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val preferenceManager: PreferenceManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<SettingsUiState>(SettingsUiState.Loading)
+    private val _uiState = MutableStateFlow(SettingsUiState.Loading)
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
@@ -59,7 +61,17 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
+                // Sign out from Firebase
                 firebaseAuth.signOut()
+
+                preferenceManager.clearUserData()
+                preferenceManager.isLoggedIn = false
+                preferenceManager.userId = null
+                preferenceManager.userEmail = null
+                preferenceManager.userName = null
+                preferenceManager.authToken = null
+                preferenceManager.fcmToken = null
+
                 _uiState.update { it.copy(navigateToLogin = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message ?: "Logout failed") }

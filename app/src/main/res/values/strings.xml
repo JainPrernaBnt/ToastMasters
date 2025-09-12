@@ -358,7 +358,7 @@
     <string name="notification_channel_important_description">Important notifications that require your attention</string>
     <string name="notification">notification</string>
     <string name="mentors">Mentors</string>
-    
+
     <!-- Settings -->
 
     <string name="joined_date">Member Since</string>
@@ -371,7 +371,7 @@
     <string name="yes">Yes</string>
     <string name="guest_user">Guest User</string>
     <string name="not_provided">Not provided</string>
-    
+
     <!-- Agenda Table -->
     <string name="add_item">Add Item</string>
 
@@ -406,7 +406,7 @@
     <string name="notes">Note</string>
     <string name="toastmaster">Toastmaster</string>
     <string name="dark_theme">Dark Theme</string>
-    
+
     <!-- Abbreviations -->
     <string name="abbreviations">Abbreviations</string>
     <string name="error_loading_abbreviations">Failed to load abbreviations</string>

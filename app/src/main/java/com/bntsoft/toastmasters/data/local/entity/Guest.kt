@@ -26,6 +26,5 @@ data class Guest(
     val email: String,
     val playedRole: Boolean = false,
     val rolePlayed: String?,
-    val gender: String
 )
 

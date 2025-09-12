@@ -164,8 +164,9 @@ class AgendaTableFragment : Fragment() {
                 viewModel.saveStatus.collect { status ->
                     when (status) {
                         is Resource.Success -> {
-                            // Refresh the list after successful save
-                            viewModel.loadAgendaItems(meetingId)
+                            // Don't automatically refresh - let the adapter handle updates
+                            // Only show success message if needed
+                            Log.d("AgendaTableFragment", "Agenda items saved successfully")
                         }
 
                         is Resource.Error -> {
@@ -186,19 +187,45 @@ class AgendaTableFragment : Fragment() {
             object : AgendaDialogs.OnTimeBreakSetListener {
                 override fun onTimeBreakSet(minutes: Int, seconds: Int) {
                     val totalSeconds = (minutes * 60) + seconds
+                    val timeBreakText = if (minutes > 0) {
+                        "$minutes MINUTE${if (minutes > 1) "S" else ""} BREAK"
+                    } else {
+                        "$seconds SECOND${if (seconds > 1) "S" else ""} BREAK"
+                    }
+
+                    // Create a new time break item
                     val breakItem = AgendaItemDto(
                         id = "break_${System.currentTimeMillis()}",
                         meetingId = meetingId,
-                        activity = if (minutes > 0) "$minutes MINUTE${if (minutes > 1) "S" else ""} BREAK"
-                        else "$seconds SECOND${if (seconds > 1) "S" else ""} BREAK",
+                        activity = timeBreakText,
                         time = "", // Will be calculated
-                        orderIndex = agendaAdapter.itemCount - 1, // Add before the add button
+                        orderIndex = agendaAdapter.getItems().size, // Add at the end
                         greenTime = 0,
                         yellowTime = 0,
                         redTime = totalSeconds,
-                        presenterName = ""
+                        presenterName = "",
+                        isSessionHeader = false
                     )
-                    viewModel.saveAgendaItem(breakItem)
+
+                    // Add the break item to the list
+                    val currentItems = agendaAdapter.getItems().toMutableList()
+                    currentItems.add(breakItem)
+
+                    // Recalculate times for all items
+                    val updatedItems = AgendaTimeCalculator.recalculateTimesFromPosition(
+                        currentItems,
+                        0,
+                        meetingStartTime
+                    )
+
+                    // Update order indices to be sequential
+                    updatedItems.forEachIndexed { index, item ->
+                        item.orderIndex = index
+                    }
+
+                    // Update the adapter and save to Firebase
+                    agendaAdapter.submitList(updatedItems)
+                    viewModel.saveAllAgendaItems(meetingId, updatedItems)
                 }
             })
     }
@@ -213,7 +240,7 @@ class AgendaTableFragment : Fragment() {
                         meetingId = meetingId,
                         activity = sessionName.uppercase(),
                         time = "", // Will be calculated
-                        orderIndex = agendaAdapter.itemCount - 1, // Add before the add button
+                        orderIndex = agendaAdapter.getItems().size, // Add at the end
                         greenTime = 0,
                         yellowTime = 0,
                         redTime = 0,
@@ -231,6 +258,11 @@ class AgendaTableFragment : Fragment() {
                         0,
                         meetingStartTime
                     )
+
+                    // Update order indices to be sequential
+                    updatedItems.forEachIndexed { index, item ->
+                        item.orderIndex = index
+                    }
 
                     // Update the adapter and save to Firebase
                     agendaAdapter.submitList(updatedItems)
@@ -272,7 +304,7 @@ class AgendaTableFragment : Fragment() {
 
         binding.btnTimeBreak.setOnClickListener {
             dialog.dismiss()
-            showTimeBreakDialog()
+            showBreakTimeDialog()
         }
 
         binding.btnSession.setOnClickListener {
@@ -285,50 +317,6 @@ class AgendaTableFragment : Fragment() {
         }
 
         
-    }
-
-    private fun showTimeBreakDialog() {
-        AgendaDialogs.showTimeBreakDialog(
-            requireContext(),
-            object : AgendaDialogs.OnTimeBreakSetListener {
-                override fun onTimeBreakSet(minutes: Int, seconds: Int) {
-                    val totalSeconds = (minutes * 60) + seconds
-                    val timeBreakText = if (minutes > 0) {
-                        "$minutes MINUTE${if (minutes > 1) "S" else ""} BREAK"
-                    } else {
-                        "$seconds SECOND${if (seconds > 1) "S" else ""} BREAK"
-                    }
-
-                    // Create a new time break item
-                    val newItem = AgendaItemDto(
-                        id = "break_${System.currentTimeMillis()}",
-                        meetingId = meetingId,
-                        orderIndex = agendaAdapter.itemCount - 1,
-                        activity = timeBreakText,
-                        presenterName = "",
-                        time = "",
-                        greenTime = 0,
-                        yellowTime = 0,
-                        redTime = totalSeconds,
-                        isSessionHeader = false
-                    )
-
-                    // Add the new item and update the list
-                    val currentItems = agendaAdapter.getItems().toMutableList()
-                    currentItems.add(newItem)
-
-                    // Recalculate times for all items
-                    val updatedItems = AgendaTimeCalculator.recalculateTimesFromPosition(
-                        currentItems,
-                        0,
-                        meetingStartTime
-                    )
-
-                    // Update the adapter and save to Firebase
-                    agendaAdapter.submitList(updatedItems)
-                    viewModel.saveAllAgendaItems(meetingId, updatedItems)
-                }
-            })
     }
 
     private fun setupRecyclerView() {

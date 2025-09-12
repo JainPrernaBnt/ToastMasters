@@ -179,7 +179,6 @@ class MemberDashboardAdapter(
 
                 // Safely parse values
                 val level = dialogBinding.etLevel.text.toString().toIntOrNull() ?: 1
-                val projectNumber = dialogBinding.etProjectNumber.text.toString().toIntOrNull() ?: 1
                 val speechTime = dialogBinding.etSpeechTime.text.toString().ifEmpty { "5" }
 
                 // Prepare SpeakerDetails object
@@ -189,7 +188,7 @@ class MemberDashboardAdapter(
                     name = dialogBinding.etName.text.toString().trim(),
                     pathwaysTrack = dialogBinding.etPathwaysTrack.text.toString().trim(),
                     level = level,
-                    projectNumber = projectNumber,
+                    projectNumber = dialogBinding.etProjectNumber.text.toString().trim(),
                     projectTitle = dialogBinding.etProjectTitle.text.toString().trim(),
                     speechTime = speechTime,
                     speechTitle = dialogBinding.etSpeechTitle.text.toString().trim(),

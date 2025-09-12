@@ -13,8 +13,7 @@ class GuestMapper @Inject constructor() : Mapper<GuestDto, Guest> {
             phone = entity.phone,
             email = entity.email,
             playedRole = entity.playedRole,
-            rolePlayed = entity.rolePlayed,
-            gender = entity.gender
+            rolePlayed = entity.rolePlayed
         )
     }
 
@@ -26,8 +25,7 @@ class GuestMapper @Inject constructor() : Mapper<GuestDto, Guest> {
             phone = dto.phone,
             email = dto.email,
             playedRole = dto.playedRole,
-            rolePlayed = dto.rolePlayed,
-            gender = dto.gender
+            rolePlayed = dto.rolePlayed
         )
     }
 

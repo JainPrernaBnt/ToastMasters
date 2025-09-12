@@ -149,10 +149,9 @@ class SettingsFragment : Fragment() {
             .findNavController(R.id.nav_host_fragment)
 
         navController.navigate(R.id.action_global_auth_nav_graph) {
-            popUpTo(R.id.vp_nav_graph) { inclusive = true }
+            popUpTo(navController.graph.startDestinationId) { inclusive = true }
         }
 
-        requireActivity().finish()
     }
 
 

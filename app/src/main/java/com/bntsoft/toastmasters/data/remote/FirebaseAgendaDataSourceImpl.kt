@@ -201,7 +201,6 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         }
     }
 
-
     override suspend fun updateAgendaStatus(meetingId: String, status: AgendaStatus): Result<Unit> {
         return try {
             firestore.collection(MEETINGS_COLLECTION)
@@ -640,7 +639,7 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             val agendaRef = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document("default") // or use a specific agenda ID if needed
+                .document(resolveAgendaId(meetingId))
 
             // First, clear existing items if needed
             // Note: Be careful with this in production - you might want to merge instead

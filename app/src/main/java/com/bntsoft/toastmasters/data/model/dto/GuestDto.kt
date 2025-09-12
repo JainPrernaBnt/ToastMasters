@@ -8,5 +8,4 @@ data class GuestDto(
     val email: String,
     val playedRole: Boolean = false,
     val rolePlayed: String? = null,
-    val gender: String
 )

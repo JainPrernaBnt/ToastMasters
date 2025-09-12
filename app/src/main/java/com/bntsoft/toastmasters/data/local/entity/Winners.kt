@@ -29,10 +29,11 @@ import androidx.room.PrimaryKey
 data class Winners(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val meetingId: Int,
-    val category: String, // e.g., "Best Speaker", "Best Evaluator"
-    val winnerUserId: Int?, // nullable if guest winner
-    val isGuest: Boolean, // true if guest won
-    val guestName: String?, // filled if guest winner
+    val meetingId: String,
+    val category: String,
+    val isMember: Boolean = true,            // True if winner is a member, false if guest
+    val winnerUserId: Int? = null,           // Member ID (nullable for guest)
+    val memberName: String? = null,          // Member name
+    val guestName: String? = null            // Guest name (filled if isMember = false)
 )
 

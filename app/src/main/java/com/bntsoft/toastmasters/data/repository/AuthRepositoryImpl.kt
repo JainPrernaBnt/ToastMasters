@@ -11,6 +11,7 @@ import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
 import com.bntsoft.toastmasters.utils.NotificationHelper
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -28,6 +29,7 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestoreService: FirestoreService,
+    private val preferenceManager: PreferenceManager,
     private val notificationRepository: NotificationRepository
 ) : AuthRepository {
 
@@ -174,7 +176,18 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
-        firebaseAuth.signOut()
+        try {
+            firebaseAuth.signOut()
+            preferenceManager.clearUserData()
+            preferenceManager.isLoggedIn = false
+            preferenceManager.userId = null
+            preferenceManager.userEmail = null
+            preferenceManager.userName = null
+            preferenceManager.authToken = null
+        } catch (e: Exception) {
+            Timber.e(e, "Error during logout")
+            throw e
+        }
     }
 
     override suspend fun userExists(email: String, phone: String): Boolean {

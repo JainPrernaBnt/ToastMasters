@@ -7,7 +7,7 @@ data class SpeakerDetails(
     val name: String = "",
     val pathwaysTrack: String = "",
     val level: Int = 0,
-    val projectNumber: Int = 0,
+    val projectNumber: String = "",
     val projectTitle: String = "",
     val speechTime: String = "",
     val speechTitle: String = "",

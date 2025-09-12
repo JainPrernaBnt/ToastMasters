@@ -85,10 +85,7 @@ class PreferenceManager @Inject constructor(
     }
 
     fun clearUserData() {
-        prefs.edit {
-            remove(KEY_USER_ROLE)
-            remove(KEY_IS_LOGGED_IN)
-        }
+       clearAll()
     }
 
     fun clearAll() {

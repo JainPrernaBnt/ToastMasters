@@ -91,7 +91,15 @@
         android:id="@+id/reportsFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.reports.ReportsFragment"
         android:label="Reports"
-        tools:layout="@layout/fragment_reports" />
+        tools:layout="@layout/fragment_reports" >
+        <action
+            android:id="@+id/action_reportsFragment_to_reportsDataFragment"
+            app:destination="@id/reportsDataFragment" >
+            <argument
+                android:name="report_id"
+                app:argType="string" />
+        </action>
+    </fragment>
 
     <fragment
         android:id="@+id/settingsFragment"
@@ -176,6 +184,12 @@
             app:argType="string" />
         <action
             android:id="@+id/action_agendaTableFragment_to_createAgendaFragment"
-            app:destination="@id/createAgendaFragment" />
+            app:destination="@id/createAgendaFragment" >
+
+        </action>
     </fragment>
+    <fragment
+        android:id="@+id/reportsDataFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.reports.ReportsDataFragment"
+        android:label="ReportsDataFragment" />
 </navigation>
