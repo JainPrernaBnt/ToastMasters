@@ -61,9 +61,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // Sign out from Firebase
-                firebaseAuth.signOut()
-
+                // Clear all user data first
                 preferenceManager.clearUserData()
                 preferenceManager.isLoggedIn = false
                 preferenceManager.userId = null
@@ -71,10 +69,17 @@ class SettingsViewModel @Inject constructor(
                 preferenceManager.userName = null
                 preferenceManager.authToken = null
                 preferenceManager.fcmToken = null
-
+                
+                // Sign out from Firebase
+                firebaseAuth.signOut()
+                
+                // Update UI state to trigger navigation
                 _uiState.update { it.copy(navigateToLogin = true) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message ?: "Logout failed") }
+                _uiState.update { it.copy(
+                    error = e.message ?: "Logout failed",
+                    navigateToLogin = true // Still try to navigate to login even if there's an error
+                )}
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }

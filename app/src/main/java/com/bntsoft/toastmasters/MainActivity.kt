@@ -114,7 +114,7 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun setupAuthNavigation() {
+    fun setupAuthNavigation() {
         bottomNav.visibility = View.GONE
         val navGraph = navController.navInflater.inflate(R.navigation.auth_nav_graph)
         navGraph.setStartDestination(R.id.loginFragment)

@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.presentation.ui.common.settings
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,7 +8,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
+import com.bntsoft.toastmasters.MainActivity
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentSettingsBinding
 import com.bntsoft.toastmasters.utils.PreferenceManager
@@ -145,13 +148,34 @@ class SettingsFragment : Fragment() {
     }
 
     private fun navigateToLogin() {
-        val navController = requireActivity()
-            .findNavController(R.id.nav_host_fragment)
-
-        navController.navigate(R.id.action_global_auth_nav_graph) {
-            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+        try {
+            // Get the activity's nav controller
+            val navController = requireActivity().findNavController(R.id.nav_host_fragment)
+            
+            // Create a new NavOptions to clear the back stack
+            val navOptions = NavOptions.Builder()
+                .setPopUpTo(navController.graph.startDestinationId, true)
+                .build()
+                
+            // Navigate to login fragment with cleared back stack
+            navController.navigate(
+                R.id.loginFragment,
+                null,
+                navOptions
+            )
+            
+            // Reset the navigation graph to auth flow
+            (requireActivity() as? MainActivity)?.setupAuthNavigation()
+            
+        } catch (e: Exception) {
+            // If navigation fails, restart the app to the login screen
+            val intent = requireContext().packageManager.getLaunchIntentForPackage(requireContext().packageName)
+            intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            if (intent != null) {
+                startActivity(intent)
+            }
+            activity?.finish()
         }
-
     }
 
 
