@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
 import com.bntsoft.toastmasters.data.mapper.AgendaItemMapper
 import com.bntsoft.toastmasters.domain.model.AgendaItem
+import com.bntsoft.toastmasters.domain.model.AgendaStatus
 import com.bntsoft.toastmasters.domain.repository.AgendaRepository
 import com.bntsoft.toastmasters.utils.Resource
 import com.bntsoft.toastmasters.utils.Result
@@ -113,5 +114,18 @@ class AgendaTableViewModel @Inject constructor(
 
     fun clearStatus() {
         _saveStatus.value = null
+    }
+
+    suspend fun publishAgenda(meetingId: String): Resource<Unit> {
+        return try {
+            val result = agendaRepository.updateAgendaStatus(meetingId, AgendaStatus.FINALIZED)
+            when (result) {
+                is Resource.Success -> Resource.Success(Unit)
+                is Resource.Error -> Resource.Error(result.message ?: "Failed to publish agenda")
+                is Resource.Loading -> Resource.Loading()
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to publish agenda")
+        }
     }
 }

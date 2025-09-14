@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -172,12 +173,17 @@ class MainActivity : BaseActivity() {
             } else {
                 supportActionBar?.show()
                 window.decorView.systemUiVisibility = 0
-                // Show bottom nav for all non-auth destinations except when in CreateAgendaFragment
-                bottomNav.visibility = when (destination.id) {
-                    R.id.createAgendaFragment -> View.GONE
-                    R.id.agendaTableFragment -> View.GONE
-                    else -> View.VISIBLE
-                }
+                // Show bottom nav for all non-auth destinations except when in CreateAgendaFragment or AgendaTableFragment
+                val shouldHideBottomNav = when (destination.id) {
+                    R.id.createAgendaFragment -> true
+                    R.id.agendaTableFragment -> true
+                    else -> false
+                } || destination.label.toString().contains("Agenda", ignoreCase = true)
+                
+                // Debug logging
+                Log.d("MainActivity", "Destination ID: ${destination.id}, Label: ${destination.label}, Should hide bottom nav: $shouldHideBottomNav")
+                
+                bottomNav.visibility = if (shouldHideBottomNav) View.GONE else View.VISIBLE
 
             }
 

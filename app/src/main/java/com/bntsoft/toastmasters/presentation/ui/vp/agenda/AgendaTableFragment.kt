@@ -24,9 +24,11 @@ import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
 import com.bntsoft.toastmasters.databinding.DialogAddItemBinding
 import com.bntsoft.toastmasters.databinding.FragmentAgendaTableBinding
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
+import com.bntsoft.toastmasters.domain.model.AgendaStatus
 import com.bntsoft.toastmasters.utils.AgendaTimeCalculator
 import com.bntsoft.toastmasters.utils.Resource
 import com.bntsoft.toastmasters.utils.TimeUtils
+import com.bntsoft.toastmasters.utils.UserManager
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -44,6 +46,9 @@ class AgendaTableFragment : Fragment() {
     @Inject
     lateinit var meetingRepository: MeetingRepository
 
+    @Inject
+    lateinit var userManager: UserManager
+
     private var _binding: FragmentAgendaTableBinding? = null
     private val binding get() = _binding!!
     private val viewModel: AgendaTableViewModel by viewModels()
@@ -51,6 +56,8 @@ class AgendaTableFragment : Fragment() {
     private lateinit var agendaAdapter: AgendaAdapter
     private lateinit var itemTouchHelper: ItemTouchHelper
     private var meetingStartTime: String? = null
+    private var isVpEducation: Boolean = false
+    private var isAgendaPublished: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -79,6 +86,8 @@ class AgendaTableFragment : Fragment() {
 
         Log.d("AgendaTableFragment", "Initialized with meetingId: $meetingId")
 
+        // Check user role and agenda status
+        checkUserRoleAndAgendaStatus()
         setupRecyclerView()
         setupClickListeners()
         setupObservers()
@@ -86,6 +95,57 @@ class AgendaTableFragment : Fragment() {
         // Load meeting start time and existing agenda items
         loadMeetingStartTime()
         viewModel.loadAgendaItems(meetingId)
+    }
+
+    private fun checkUserRoleAndAgendaStatus() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // Check if user is VP Education
+                isVpEducation = userManager.isVpEducation()
+                Log.d("AgendaTableFragment", "User is VP Education: $isVpEducation")
+                
+                // Check agenda status
+                val meeting = meetingRepository.getMeetingById(meetingId)
+                // For now, we'll assume agenda is published if meeting exists
+                // In a real implementation, you'd check the agenda status from the database
+                isAgendaPublished = meeting != null
+                Log.d("AgendaTableFragment", "Agenda is published: $isAgendaPublished")
+                
+                // Apply role-based UI visibility
+                applyRoleBasedVisibility()
+                
+                // If user is Member and agenda is not published, show message and go back
+                if (!isVpEducation && !isAgendaPublished) {
+                    showMessage("Agenda is not yet published by VP Education")
+                    findNavController().navigateUp()
+                    return@launch
+                }
+                
+            } catch (e: Exception) {
+                Log.e("AgendaTableFragment", "Error checking user role and agenda status: ${e.message}")
+                // Default to Member view for safety
+                isVpEducation = false
+                isAgendaPublished = false
+                applyRoleBasedVisibility()
+            }
+        }
+    }
+
+    private fun applyRoleBasedVisibility() {
+        if (isVpEducation) {
+            // VP Education: Show all UI elements
+            binding.publishAgendaButton.visibility = View.VISIBLE
+            binding.exportButton.visibility = View.VISIBLE
+            binding.fabAddItem.visibility = View.VISIBLE
+        } else {
+            // Member: Hide editing UI elements
+            binding.publishAgendaButton.visibility = View.GONE
+            binding.exportButton.visibility = View.GONE
+            binding.fabAddItem.visibility = View.GONE
+        }
+        
+        // Update adapter with user role
+        agendaAdapter.updateUserRole(isVpEducation)
     }
 
     private fun loadMeetingStartTime() {
@@ -283,12 +343,12 @@ class AgendaTableFragment : Fragment() {
         Log.d("AgendaTableFragment", "showAddItemDialog called")
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_item, null)
         val binding = DialogAddItemBinding.bind(dialogView)
-        
+
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setView(dialogView)
             .setCancelable(true)
             .create()
-            
+
         dialog.show()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         dialog.window?.setLayout(
@@ -316,7 +376,7 @@ class AgendaTableFragment : Fragment() {
             dialog.dismiss()
         }
 
-        
+
     }
 
     private fun setupRecyclerView() {
@@ -360,7 +420,8 @@ class AgendaTableFragment : Fragment() {
                 agendaAdapter.submitList(items)
                 viewModel.saveAllAgendaItems(meetingId, items)
                 true
-            }
+            },
+            isVpEducation = isVpEducation
         )
 
         // Initialize with empty list to avoid NPE
@@ -386,59 +447,61 @@ class AgendaTableFragment : Fragment() {
             setHasFixedSize(false)
             isNestedScrollingEnabled = false
 
-            // Add long press listener for delete
-            addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
-                private var longPressStartTime: Long = 0
-                private val longPressDuration = 1000L // 1 second for long press
-                private var longPressRunnable: Runnable? = null
-                private var currentChild: View? = null
+            // Add long press listener for delete (only for VP Education)
+            if (isVpEducation) {
+                addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
+                    private var longPressStartTime: Long = 0
+                    private val longPressDuration = 1000L // 1 second for long press
+                    private var longPressRunnable: Runnable? = null
+                    private var currentChild: View? = null
 
-                override fun onInterceptTouchEvent(
-                    rv: RecyclerView,
-                    e: android.view.MotionEvent
-                ): Boolean {
-                    when (e.action) {
-                        android.view.MotionEvent.ACTION_DOWN -> {
-                            longPressStartTime = System.currentTimeMillis()
-                            currentChild = rv.findChildViewUnder(e.x, e.y)
+                    override fun onInterceptTouchEvent(
+                        rv: RecyclerView,
+                        e: android.view.MotionEvent
+                    ): Boolean {
+                        when (e.action) {
+                            android.view.MotionEvent.ACTION_DOWN -> {
+                                longPressStartTime = System.currentTimeMillis()
+                                currentChild = rv.findChildViewUnder(e.x, e.y)
 
-                            // Start long press detection
-                            longPressRunnable = Runnable {
-                                Log.d("AgendaTableFragment", "Long press detected!")
-                                val position = rv.getChildAdapterPosition(
-                                    currentChild ?: return@Runnable
-                                )
-                                Log.d(
-                                    "AgendaTableFragment",
-                                    "Long press position: $position"
-                                )
-                                if (position != RecyclerView.NO_POSITION) {
-                                    val itemToDelete = agendaAdapter.getItemAt(position)
+                                // Start long press detection
+                                longPressRunnable = Runnable {
+                                    Log.d("AgendaTableFragment", "Long press detected!")
+                                    val position = rv.getChildAdapterPosition(
+                                        currentChild ?: return@Runnable
+                                    )
                                     Log.d(
                                         "AgendaTableFragment",
-                                        "Item to delete: ${itemToDelete?.activity}"
+                                        "Long press position: $position"
                                     )
-                                    if (itemToDelete != null) {
-                                        showDeleteConfirmationDialog(
-                                            position,
-                                            itemToDelete
+                                    if (position != RecyclerView.NO_POSITION) {
+                                        val itemToDelete = agendaAdapter.getItemAt(position)
+                                        Log.d(
+                                            "AgendaTableFragment",
+                                            "Item to delete: ${itemToDelete?.activity}"
                                         )
+                                        if (itemToDelete != null) {
+                                            showDeleteConfirmationDialog(
+                                                position,
+                                                itemToDelete
+                                            )
+                                        }
                                     }
                                 }
+                                rv.postDelayed(longPressRunnable!!, longPressDuration)
                             }
-                            rv.postDelayed(longPressRunnable!!, longPressDuration)
-                        }
 
-                        android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
-                            // Cancel long press if finger is lifted
-                            longPressRunnable?.let { rv.removeCallbacks(it) }
-                            longPressRunnable = null
-                            currentChild = null
+                            android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                                // Cancel long press if finger is lifted
+                                longPressRunnable?.let { rv.removeCallbacks(it) }
+                                longPressRunnable = null
+                                currentChild = null
+                            }
                         }
+                        return false
                     }
-                    return false
-                }
-            })
+                })
+            }
         }
 
         // Set up item touch helper for drag and drop
@@ -451,10 +514,14 @@ class AgendaTableFragment : Fragment() {
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
-                // Only allow drag for normal items (not time breaks, sessions, or add button)
-                val dragFlags = when (viewHolder.itemViewType) {
-                    VIEW_TYPE_ITEM -> ItemTouchHelper.UP or ItemTouchHelper.DOWN
-                    else -> 0
+                // Only allow drag for VP Education users and normal items (not time breaks, sessions, or add button)
+                val dragFlags = if (isVpEducation) {
+                    when (viewHolder.itemViewType) {
+                        VIEW_TYPE_ITEM -> ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                        else -> 0
+                    }
+                } else {
+                    0 // Disable drag for Members
                 }
                 return makeMovementFlags(dragFlags, 0)
             }
@@ -493,11 +560,12 @@ class AgendaTableFragment : Fragment() {
                 // Don't allow moving time breaks or session headers
                 val fromItem = items[fromPosition]
                 val toItem = items[toPosition]
-                
-                if (fromItem.activity.contains("BREAK", ignoreCase = true) || 
+
+                if (fromItem.activity.contains("BREAK", ignoreCase = true) ||
                     fromItem.isSessionHeader ||
-                    toItem.activity.contains("BREAK", ignoreCase = true) || 
-                    toItem.isSessionHeader) {
+                    toItem.activity.contains("BREAK", ignoreCase = true) ||
+                    toItem.isSessionHeader
+                ) {
                     return false
                 }
 
@@ -633,6 +701,38 @@ class AgendaTableFragment : Fragment() {
         }
     }
 
+    private fun publishAgenda() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                showMessage("Publishing agenda...")
+                // Update agenda status to FINALIZED (published)
+                val result = viewModel.publishAgenda(meetingId)
+                when (result) {
+                    is Resource.Success -> {
+                        isAgendaPublished = true
+                        showMessage("Agenda published successfully! Members can now view it.")
+                        // Update UI to reflect published state
+                        binding.publishAgendaButton.text = "Agenda Published"
+                        binding.publishAgendaButton.isEnabled = false
+                    }
+                    is Resource.Error -> {
+                        showMessage("Failed to publish agenda: ${result.message}")
+                    }
+                    is Resource.Loading -> {
+                        showMessage("Publishing agenda...")
+                    }
+                }
+            } catch (e: Exception) {
+                showMessage("Error publishing agenda: ${e.message}")
+            }
+        }
+    }
+
+    private fun exportAgendaToPdf() {
+        // TODO: Implement PDF export functionality
+        showMessage("PDF export functionality will be implemented")
+    }
+
     private fun showEditDialog(item: AgendaItemDto) {
         val dialog = AgendaItemDialog.newInstance(
             meetingId = meetingId,
@@ -662,16 +762,17 @@ class AgendaTableFragment : Fragment() {
 // Removed onStartDrag as it's now handled by the adapter
 
     private fun setupClickListeners() {
-        binding.saveButton.setOnClickListener {
-            val agendaItems = agendaAdapter.getItems()
-            if (agendaItems.isNotEmpty()) {
-                // Update order indices based on current position
-                val updatedItems = agendaItems.mapIndexed { index, item ->
-                    item.copy(orderIndex = index)
-                }
-                viewModel.saveAllAgendaItems(meetingId, updatedItems)
-            } else {
-                showMessage("No agenda items to save")
+        // Publish button click listener (only for VP Education)
+        binding.publishAgendaButton.setOnClickListener {
+            if (isVpEducation) {
+                publishAgenda()
+            }
+        }
+
+        // Export button click listener (only for VP Education)
+        binding.exportButton.setOnClickListener {
+            if (isVpEducation) {
+                exportAgendaToPdf()
             }
         }
 

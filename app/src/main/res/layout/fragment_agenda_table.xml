@@ -115,11 +115,26 @@
         android:elevation="8dp">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/saveButton"
+            android:id="@+id/publishAgendaButton"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_pdf"
+            android:drawablePadding="8dp"
+            android:text="Publish Agenda to Members"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:backgroundTint="@color/green_500"
+            app:cornerRadius="8dp"
+            app:iconGravity="textStart"
+            app:rippleColor="@color/green_500"
+            app:strokeColor="@color/green_700"
+            app:strokeWidth="1dp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/exportButton"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:drawablePadding="8dp"
             android:text="Export as PDF"
             android:textAllCaps="false"
@@ -140,7 +155,7 @@
         android:layout_height="56dp"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="100dp"
+        android:layout_marginBottom="140dp"
         android:contentDescription="Add item"
         android:scaleType="center"
         android:src="@drawable/ic_add"

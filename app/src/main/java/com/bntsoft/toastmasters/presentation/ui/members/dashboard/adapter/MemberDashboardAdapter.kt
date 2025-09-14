@@ -124,8 +124,10 @@ class MemberDashboardAdapter(
                     btnFillDetails.visibility = View.GONE
                 }
 
-                // Hide the assign role button as it's not needed in the dashboard
-                btnAssignRole.visibility = View.GONE
+                btnAgenda.visibility = View.VISIBLE
+                btnAgenda.setOnClickListener {
+                    onMeetingClick(item.meeting.id)
+                }
 
                 root.setOnClickListener {
                     onMeetingClick(item.meeting.id)

@@ -26,7 +26,8 @@ class AgendaAdapter(
     private val onItemsUpdated: (List<AgendaItemDto>) -> Unit = {},
     private var meetingStartTime: String? = null,
     private val onItemMove: (Int, Int) -> Boolean = { _, _ -> false },
-    private val onAddItemClick: () -> Unit = {}
+    private val onAddItemClick: () -> Unit = {},
+    private var isVpEducation: Boolean = true
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), ItemTouchHelperAdapter {
 
     private val _items = mutableListOf<AgendaItemDto>()
@@ -39,6 +40,11 @@ class AgendaAdapter(
 
     fun updateMeetingStartTime(startTime: String?) {
         this.meetingStartTime = startTime
+    }
+
+    fun updateUserRole(isVpEducation: Boolean) {
+        this.isVpEducation = isVpEducation
+        notifyDataSetChanged() // Refresh to show/hide add button
     }
 
     fun submitList(newItems: List<AgendaItemDto>) {
@@ -128,8 +134,8 @@ class AgendaAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == _items.size) {
-            // Last position is always the add button
+        return if (position == _items.size && isVpEducation) {
+            // Last position is the add button only for VP Education
             VIEW_TYPE_ADD_BUTTON
         } else {
             val item = _items[position]
@@ -141,7 +147,7 @@ class AgendaAdapter(
         }
     }
 
-    override fun getItemCount(): Int = _items.size + 1 // +1 for the add button
+    override fun getItemCount(): Int = _items.size + if (isVpEducation) 1 else 0 // +1 for the add button only for VP Education
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val binding = ItemAgendaBinding.inflate(
@@ -179,9 +185,9 @@ class AgendaAdapter(
                             onItemClick(item)
                         }
 
-                        // Set long click listener for drag
+                        // Set long click listener for drag (only for VP Education)
                         holder.itemView.setOnLongClickListener {
-                            if (canDrag(position)) {
+                            if (isVpEducation && canDrag(position)) {
                                 onStartDrag(holder)
                             }
                             true
@@ -195,9 +201,13 @@ class AgendaAdapter(
             }
 
             is AddButtonViewHolder -> {
-                // Handle add button click
-                holder.binding.btnAddItem.setOnClickListener {
-                    onAddItemClick()
+                // Handle add button click (only for VP Education)
+                if (isVpEducation) {
+                    holder.binding.btnAddItem.setOnClickListener {
+                        onAddItemClick()
+                    }
+                } else {
+                    holder.binding.btnAddItem.setOnClickListener(null)
                 }
             }
         }

@@ -125,12 +125,12 @@
                 app:layout_constraintTop_toBottomOf="@id/tvMeetingRole" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAssignRole"
+                android:id="@+id/btnAgenda"
                 style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="@string/backout"
+                android:text="@string/agenda"
                 android:textAllCaps="false"
                 android:visibility="gone"
                 app:cornerRadius="12dp"

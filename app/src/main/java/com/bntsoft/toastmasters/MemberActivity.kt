@@ -1,6 +1,8 @@
 package com.bntsoft.toastmasters
 
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -40,10 +42,20 @@ class MemberActivity : BaseActivity() {
                     R.id.navigation_meetings -> getString(R.string.title_upcoming_meetings)
                     R.id.navigation_leaderboard -> getString(R.string.title_leaderboard)
                     R.id.navigation_settings -> getString(R.string.title_settings)
+                    R.id.agendaTableFragment -> getString(R.string.agenda)
                     else -> getString(R.string.app_name)
-
                 }
 
+                // Hide bottom navigation for specific fragments
+                val shouldHideBottomNav = when (destination.id) {
+                    R.id.agendaTableFragment -> true
+                    else -> false
+                } || destination.label.toString().contains("Agenda", ignoreCase = true)
+
+                // Debug logging
+                Log.d("MemberActivity", "Destination ID: ${destination.id}, Label: ${destination.label}, Should hide bottom nav: $shouldHideBottomNav")
+
+                binding.bottomNavView.visibility = if (shouldHideBottomNav) View.GONE else View.VISIBLE
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Navigation error: ${e.message}", Toast.LENGTH_LONG).show()

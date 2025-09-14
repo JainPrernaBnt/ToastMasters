@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -56,8 +57,21 @@ class VpMainActivity : BaseActivity() {
                     R.id.leaderboardFragment -> getString(R.string.title_leaderboard)
                     R.id.reportsFragment -> getString(R.string.title_reports)
                     R.id.settingsFragment -> getString(R.string.title_settings)
+                    R.id.agendaTableFragment -> getString(R.string.agenda)
                     else -> getString(R.string.app_name)
                 }
+
+                // Hide bottom navigation for specific fragments
+                val shouldHideBottomNav = when (destination.id) {
+                    R.id.createAgendaFragment -> true
+                    R.id.agendaTableFragment -> true
+                    else -> false
+                } || destination.label.toString().contains("Agenda", ignoreCase = true)
+
+                // Debug logging
+                Log.d("VpMainActivity", "Destination ID: ${destination.id}, Label: ${destination.label}, Should hide bottom nav: $shouldHideBottomNav")
+
+                binding.bottomNavView.visibility = if (shouldHideBottomNav) View.GONE else View.VISIBLE
             }
 
         } catch (e: Exception) {

@@ -27,10 +27,10 @@ class MemberDashboardFragment : Fragment() {
     private val viewModel: MemberDashboardViewModel by viewModels()
     private val adapter by lazy {
         MemberDashboardAdapter(viewModel, viewModel.currentUserId ?: ""){ meetingId ->
-            // Navigate with meetingId
+            // Navigate to agenda with meetingId
             val bundle = Bundle().apply { putString("meetingId", meetingId) }
             findNavController().navigate(
-                R.id.meetings_role,
+                R.id.action_memberDashboardFragment_to_agendaTableFragment,
                 bundle
             )
         }
