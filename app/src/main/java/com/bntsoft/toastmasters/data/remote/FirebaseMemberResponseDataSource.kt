@@ -20,4 +20,6 @@ interface FirebaseMemberResponseDataSource {
     ): kotlinx.coroutines.flow.Flow<MemberResponseDto?>
 
     fun observeResponsesForMeeting(meetingId: String): kotlinx.coroutines.flow.Flow<List<MemberResponseDto>>
+
+    suspend fun getBackoutMembers(meetingId: String): List<Pair<String, Long>>
 }

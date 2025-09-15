@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.databinding.ItemAvailableMemberBinding
+import com.bntsoft.toastmasters.databinding.ItemBackoutBinding
 import com.bntsoft.toastmasters.databinding.ItemNotAvailableMemberBinding
 import com.bntsoft.toastmasters.databinding.ItemNotConfirmedMemberBinding
 import com.bntsoft.toastmasters.databinding.ItemNotRespondedMemberBinding
@@ -101,6 +102,13 @@ abstract class BaseMemberResponseAdapter<T : RecyclerView.ViewHolder> :
 
     protected fun bindCommonViews(
         binding: ItemNotRespondedMemberBinding,
+        item: MemberResponseUiModel
+    ) {
+        binding.tvMemberName.text = item.user.name
+    }
+
+    protected fun bindCommonViews(
+        binding: ItemBackoutBinding,
         item: MemberResponseUiModel
     ) {
         binding.tvMemberName.text = item.user.name

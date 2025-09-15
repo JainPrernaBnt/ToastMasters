@@ -4,6 +4,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import android.util.Log
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,8 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "FirestoreService"
+
 @Singleton
 class FirestoreService @Inject constructor(
     private val firestore: FirebaseFirestore
@@ -21,6 +24,7 @@ class FirestoreService @Inject constructor(
     companion object {
         private const val USERS_COLLECTION = "users"
         private const val MEETINGS_COLLECTION = "meetings"
+        private const val BACKOUTS_COLLECTION = "backoutMembers"
     }
 
     // User operations
@@ -51,12 +55,7 @@ class FirestoreService @Inject constructor(
             .get()
             .await()
     }
-    
-    /**
-     * Get a reference to a Firestore collection
-     * @param collectionPath The path to the collection (e.g., "meetings", "users")
-     * @return CollectionReference for the specified path
-     */
+
     fun getCollection(collectionPath: String) = firestore.collection(collectionPath)
 
     fun getAllUsers(): Flow<List<DocumentSnapshot>> = callbackFlow {
@@ -86,6 +85,47 @@ class FirestoreService @Inject constructor(
             }
 
         awaitClose { listenerRegistration.remove() }
+    }
+    
+    fun getBackoutMessages(meetingId: String? = null): Flow<List<DocumentSnapshot>> = callbackFlow {
+        val collectionRef = if (!meetingId.isNullOrEmpty()) {
+            Log.d(TAG, "Fetching backout messages from collection: meetings/$meetingId/backoutMembers")
+            firestore.collection("meetings")
+                .document(meetingId)
+                .collection("backoutMembers")
+        } else {
+            Log.d(TAG, "Cannot fetch all backout messages without meetingId")
+            // Return empty flow if no meetingId is provided
+            trySend(emptyList())
+            awaitClose {}
+            return@callbackFlow
+        }
+        
+        val subscription = collectionRef
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e(TAG, "Error getting backout messages", error)
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    Log.d(TAG, "Received ${snapshot.size()} backout messages")
+                    if (!snapshot.isEmpty) {
+                        snapshot.documents.forEach { doc ->
+                            Log.d(TAG, "Backout message: ${doc.id} - ${doc.data}")
+                        }
+                        trySend(snapshot.documents).isSuccess
+                    } else {
+                        Log.d(TAG, "No backout messages found in the collection")
+                        trySend(emptyList()).isSuccess
+                    }
+                } else {
+                    Log.d(TAG, "Snapshot is null for backout messages")
+                    trySend(emptyList()).isSuccess
+                }
+            }
+        awaitClose { subscription.remove() }
     }
 
     // Pending approvals

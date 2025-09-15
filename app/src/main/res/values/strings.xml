@@ -214,6 +214,7 @@
     <string name="not_available_members_count">%d</string>
     <string name="not_confirmed_members_count">%d</string>
     <string name="not_responded_members_count">%d</string>
+    <string name="backout_members_count">%d</string>
     <string name="edit">Edit</string>
     <string name="done">Done</string>
 
@@ -370,6 +371,7 @@
     <string name="yes">Yes</string>
     <string name="guest_user">Guest User</string>
     <string name="not_provided">Not provided</string>
+    <string name="backout_message_format">%1$s has backed out from the meeting - %2$s</string>
 
     <!-- Agenda Table -->
     <string name="add_item">Add Item</string>

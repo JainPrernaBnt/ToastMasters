@@ -58,4 +58,8 @@ class MemberResponseRepositoryImpl @Inject constructor(
         // No local cache to sync, so this does nothing.
         return Result.Success(Unit)
     }
+
+    override suspend fun getBackoutMembers(meetingId: String): List<Pair<String, Long>> {
+        return remoteDataSource.getBackoutMembers(meetingId)
+    }
 }

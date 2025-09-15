@@ -13,6 +13,7 @@ import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentMemberResponseBinding
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter.AvailableMemberAdapter
+import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter.BackoutMemberAdapter
 import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter.NotAvailableMemberAdapter
 import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter.NotConfirmedMemberAdapter
 import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter.NotRespondedMemberAdapter
@@ -33,6 +34,7 @@ class MemberResponseFragment : Fragment() {
     private lateinit var notAvailableMemberAdapter: NotAvailableMemberAdapter
     private lateinit var notConfirmedMemberAdapter: NotConfirmedMemberAdapter
     private lateinit var notRespondedMemberAdapter: NotRespondedMemberAdapter
+    private lateinit var backoutMemberAdapter: BackoutMemberAdapter
 
     private var meetingId: String = ""
 
@@ -65,6 +67,7 @@ class MemberResponseFragment : Fragment() {
         notAvailableMemberAdapter = NotAvailableMemberAdapter()
         notConfirmedMemberAdapter = NotConfirmedMemberAdapter()
         notRespondedMemberAdapter = NotRespondedMemberAdapter()
+        backoutMemberAdapter = BackoutMemberAdapter()
 
         val memberClickListener: (User) -> Unit = { user ->
             UiUtils.showSnackbar(requireView(), "${user.name} clicked")
@@ -74,6 +77,7 @@ class MemberResponseFragment : Fragment() {
         notAvailableMemberAdapter.setOnMemberClickListener(memberClickListener)
         notConfirmedMemberAdapter.setOnMemberClickListener(memberClickListener)
         notRespondedMemberAdapter.setOnMemberClickListener(memberClickListener)
+        backoutMemberAdapter.setOnMemberClickListener(memberClickListener)
     }
 
     private fun setupRecyclerViews() {
@@ -93,6 +97,10 @@ class MemberResponseFragment : Fragment() {
             // Not Responded Members
             rvNotRespondedMembers.layoutManager = LinearLayoutManager(requireContext())
             rvNotRespondedMembers.adapter = notRespondedMemberAdapter
+
+            // Backout Members
+            backoutMembers.layoutManager = LinearLayoutManager(requireContext())
+            backoutMembers.adapter = backoutMemberAdapter
         }
     }
 
@@ -122,6 +130,7 @@ class MemberResponseFragment : Fragment() {
                         Log.e("MemberResponseFrag", "Error: ${state.message}")
                         UiUtils.showSnackbar(requireView(), state.message)
                     }
+
                 }
             }
         }
@@ -158,12 +167,16 @@ class MemberResponseFragment : Fragment() {
                 "Not Responded[$index]: ${item.user.name} (${item.user.id})"
             )
         }
+        state.backoutMembers.take(3).forEachIndexed { index, item ->
+            Log.d("MemberResponseFrag", "Backout[$index]: ${item.user.name} (${item.user.id})")
+        }
 
         // Update all member lists
         availableMemberAdapter.submitList(state.availableMembers)
         notAvailableMemberAdapter.submitList(state.notAvailableMembers)
         notConfirmedMemberAdapter.submitList(state.notConfirmedMembers)
         notRespondedMemberAdapter.submitList(state.notRespondedMembers)
+        backoutMemberAdapter.submitList(state.backoutMembers)
 
         Log.d("MemberResponseFrag", "Adapters updated with new lists")
 
@@ -177,6 +190,8 @@ class MemberResponseFragment : Fragment() {
                 getString(R.string.not_confirmed_members_count, state.notConfirmedMembers.size)
             tvNotRespondedCount.text =
                 getString(R.string.not_responded_members_count, state.notRespondedMembers.size)
+            backoutCount.text =
+                getString(R.string.backout_members_count, state.backoutMembers.size)
 
             Log.d(
                 "MemberResponseFrag", "Counts updated - " +
@@ -197,12 +212,15 @@ class MemberResponseFragment : Fragment() {
                 if (state.notConfirmedMembers.isEmpty()) View.GONE else View.VISIBLE
             cvNotRespondedMembers.visibility =
                 if (state.notRespondedMembers.isEmpty()) View.GONE else View.VISIBLE
+            backoutMembersCard.visibility =
+                if (state.backoutMembers.isEmpty()) View.GONE else View.VISIBLE
 
             // Show empty state if no data
             val hasData = state.availableMembers.isNotEmpty() ||
                     state.notAvailableMembers.isNotEmpty() ||
                     state.notConfirmedMembers.isNotEmpty() ||
-                    state.notRespondedMembers.isNotEmpty()
+                    state.notRespondedMembers.isNotEmpty() ||
+                    state.backoutMembers.isNotEmpty()
 
             groupEmpty.visibility = if (hasData) View.GONE else View.VISIBLE
             scrollView.visibility = if (hasData) View.VISIBLE else View.GONE

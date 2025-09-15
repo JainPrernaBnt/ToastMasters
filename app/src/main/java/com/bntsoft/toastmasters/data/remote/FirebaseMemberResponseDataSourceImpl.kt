@@ -96,6 +96,29 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
         }
     }
 
+    override suspend fun getBackoutMembers(meetingId: String): List<Pair<String, Long>> {
+        return try {
+            val backoutMembers = db.collection("meetings")
+                .document(meetingId)
+                .collection("backoutMembers")
+                .get()
+                .await()
+
+            backoutMembers.documents.mapNotNull { doc ->
+                val userId = doc.id
+                val timestamp = doc.getLong("timestamp") ?: 0L
+                if (userId.isNotBlank() && timestamp > 0) {
+                    userId to timestamp
+                } else {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting backout members for meeting $meetingId")
+            emptyList()
+        }
+    }
+
     override suspend fun saveResponse(response: MemberResponseDto) {
         try {
             val data = hashMapOf(

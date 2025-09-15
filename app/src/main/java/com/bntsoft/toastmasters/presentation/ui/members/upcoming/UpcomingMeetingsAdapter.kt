@@ -12,6 +12,7 @@ import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingAvailability
 import com.bntsoft.toastmasters.domain.models.AvailabilityStatus
 import com.google.android.material.chip.Chip
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -28,7 +29,7 @@ private class MeetingDiffCallback : DiffUtil.ItemCallback<Meeting>() {
 class UpcomingMeetingsAdapter :
     ListAdapter<Meeting, UpcomingMeetingsAdapter.MeetingViewHolder>(MeetingDiffCallback()) {
 
-    var onAvailabilitySubmitted: ((String, AvailabilityStatus, List<String>) -> Unit)? = null
+    var onAvailabilitySubmitted: ((meetingId: String, status: AvailabilityStatus, preferredRoles: List<String>, isBackout: Boolean) -> Unit)? = null
     var onEditClicked: ((Meeting) -> Unit)? = null
 
     // Add current user ID property
@@ -37,10 +38,24 @@ class UpcomingMeetingsAdapter :
     private val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)
     private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
 
+    private fun getPreviousMonday(meetingTime: java.time.LocalDateTime): java.time.LocalDateTime {
+        var date = meetingTime.toLocalDate()
+        while (date.dayOfWeek != java.time.DayOfWeek.MONDAY) {
+            date = date.minusDays(1)
+        }
+        return date.atTime(meetingTime.toLocalTime())
+    }
+    
     private fun canEditAvailability(meetingTime: java.time.LocalDateTime): Boolean {
         val currentTime = java.time.LocalDateTime.now()
-        val deadline = meetingTime.minusMinutes(30)
-        return currentTime.isBefore(deadline)
+        val mondayBeforeMeeting = getPreviousMonday(meetingTime)
+        return currentTime.isBefore(mondayBeforeMeeting)
+    }
+    
+    private fun isAfterCutoff(meetingTime: java.time.LocalDateTime): Boolean {
+        val currentTime = java.time.LocalDateTime.now()
+        val mondayBeforeMeeting = getPreviousMonday(meetingTime)
+        return currentTime.isAfter(mondayBeforeMeeting) && currentTime.isBefore(meetingTime)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MeetingViewHolder {
@@ -59,6 +74,8 @@ class UpcomingMeetingsAdapter :
     inner class MeetingViewHolder(
         private val binding: ItemUpcomingMeetingBinding
     ) : RecyclerView.ViewHolder(binding.root) {
+        
+        private val btnBackout = binding.root.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnBackout)
 
         private var isAvailable = false
         private val selectedRoles = linkedMapOf<String, Int>() // Role to priority map
@@ -148,13 +165,37 @@ class UpcomingMeetingsAdapter :
                     tvRoleInstructions.visibility = View.GONE
                     tvYourAvailability.visibility = View.GONE
                     tvPreferredRoles.visibility = View.GONE
-                    // Show edit button only if editing is allowed
-                    btnEdit.visibility = if (canEdit) View.VISIBLE else View.GONE
+                    // Show edit button or backout button based on timing
+                    if (isAfterCutoff(meeting.dateTime)) {
+                        // Show backout button if after cutoff but before meeting
+                        btnEdit.visibility = View.GONE
+                        btnBackout.visibility = View.VISIBLE
+                        btnBackout.setOnClickListener {
+                            MaterialAlertDialogBuilder(itemView.context)
+                                .setTitle("Backout from Meeting")
+                                .setMessage("Are you sure you want to backout from this meeting? This will remove you from any assigned roles.")
+                                .setPositiveButton("Yes, Backout") { _, _ ->
+                                    onAvailabilitySubmitted?.invoke(
+                                        meeting.id,
+                                        AvailabilityStatus.NOT_AVAILABLE,
+                                        emptyList(),
+                                        true
+                                    )
 
-                    // Show message about editing deadline if applicable
-                    if (!canEdit) {
-                        tvAvailabilityStatus.text =
-                            "You can no longer change your availability.\nUpdates are only allowed up to 30 minutes before the meeting."
+                                }
+                                .setNegativeButton("Cancel", null)
+                                .show()
+                        }
+                    } else {
+                        // Show edit button if before cutoff
+                        btnEdit.visibility = if (canEdit) View.VISIBLE else View.GONE
+                        btnBackout.visibility = View.GONE
+                        
+                        // Show message about editing deadline if applicable
+                        if (!canEdit) {
+                            tvAvailabilityStatus.text =
+                                "You can no longer change your availability.\nUpdates are only allowed up to 5 days before the meeting."
+                        }
                     }
 
                     // Show current status
@@ -179,19 +220,26 @@ class UpcomingMeetingsAdapter :
                     // Setup edit button and deadline message
                     if (canEdit) {
                         btnEdit.visibility = View.VISIBLE
+                        btnBackout.visibility = View.GONE
                         btnEdit.setOnClickListener {
                             onEditClicked?.invoke(meeting)
                         }
 
-                        val deadlineTime = meeting.dateTime.minusMinutes(30)
+                        val mondayBeforeMeeting = getPreviousMonday(meeting.dateTime)
                         tvDeadline.text =
                             "You can update your availability for this meeting until ${
-                                deadlineTime.format(timeFormatter)
-                            }."
+                                mondayBeforeMeeting.format(dateFormatter)
+                            } at 11:59 PM.\nAfter this, you can only backout from the meeting."
+                        tvDeadline.visibility = View.VISIBLE
+                    } else if (isAfterCutoff(meeting.dateTime)) {
+                        btnEdit.visibility = View.GONE
+                        btnBackout.visibility = View.VISIBLE
+                        tvDeadline.text = "The regular edit period has ended. You can still backout from this meeting if needed."
                         tvDeadline.visibility = View.VISIBLE
                     } else {
                         btnEdit.visibility = View.GONE
-                        tvDeadline.text = "You can no longer change your availability."
+                        btnBackout.visibility = View.GONE
+                        tvDeadline.text = "The meeting has already started or ended."
                         tvDeadline.visibility = View.VISIBLE
                     }
 
@@ -257,14 +305,11 @@ class UpcomingMeetingsAdapter :
                         R.id.rbNotConfirmed -> AvailabilityStatus.NOT_CONFIRMED
                         else -> AvailabilityStatus.NOT_AVAILABLE
                     }
-
                     onAvailabilitySubmitted?.invoke(
                         meeting.id,
-                        status,
-                        if (status == AvailabilityStatus.AVAILABLE) selectedRoles.entries
-                            .sortedBy { it.value }
-                            .map { it.key }
-                            .toList() else emptyList()
+                        AvailabilityStatus.NOT_AVAILABLE,
+                        emptyList(),
+                        true
                     )
                 }
             }

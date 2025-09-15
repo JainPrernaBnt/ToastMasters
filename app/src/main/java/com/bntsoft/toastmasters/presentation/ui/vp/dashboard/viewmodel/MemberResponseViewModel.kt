@@ -36,7 +36,7 @@ class MemberResponseViewModel @Inject constructor(
             try {
                 _uiState.value = MemberResponseUiState.Loading
 
-                // Get all members (excluding VP Education) and responses in parallel
+                // Get all members (excluding VP Education), responses, and backout members in parallel
                 val membersDeferred = async {
                     memberRepository.getAllMembers(includePending = false)
                         .first()
@@ -50,17 +50,26 @@ class MemberResponseViewModel @Inject constructor(
                         emptyList()
                     }
                 }
+                val backoutMembersDeferred = async {
+                    try {
+                        memberResponseRepository.getBackoutMembers(meetingId)
+                    } catch (e: Exception) {
+                        Log.e("MemberResponseVM", "Error getting backout members: ${e.message}", e)
+                        emptyList()
+                    }
+                }
 
                 val members = membersDeferred.await()
                 val responses = responsesDeferred.await()
+                val backoutMembers = backoutMembersDeferred.await()
 
                 Log.d(
                     "MemberResponseVM",
-                    "Fetched ${members.size} members and ${responses.size} responses for meeting $meetingId"
+                    "Fetched ${members.size} members, ${responses.size} responses, and ${backoutMembers.size} backout members for meeting $meetingId"
                 )
 
                 // Process the data
-                val uiState = processMemberResponses(members, responses)
+                val uiState = processMemberResponses(members, responses, backoutMembers)
                 _uiState.value = uiState
 
                 // Log the UI state
@@ -70,7 +79,8 @@ class MemberResponseViewModel @Inject constructor(
                         "UI State - Available: ${uiState.availableMembers.size}, " +
                                 "Not Available: ${uiState.notAvailableMembers.size}, " +
                                 "Not Confirmed: ${uiState.notConfirmedMembers.size}, " +
-                                "Not Responded: ${uiState.notRespondedMembers.size}"
+                                "Not Responded: ${uiState.notRespondedMembers.size}, " +
+                                "Backout: ${uiState.backoutMembers.size}"
                     )
                 }
             } catch (e: Exception) {
@@ -82,41 +92,57 @@ class MemberResponseViewModel @Inject constructor(
 
     private fun processMemberResponses(
         members: List<User>,
-        responses: List<MemberResponse>
+        responses: List<MemberResponse>,
+        backoutMembers: List<Pair<String, Long>>
     ): MemberResponseUiState {
         Log.d(
             "MemberResponseVM",
-            "Processing ${members.size} members and ${responses.size} responses"
+            "Processing ${members.size} members, ${responses.size} responses, and ${backoutMembers.size} backout members"
         )
         return try {
             // Create a map of memberId to response for quick lookup
             val responseMap = responses.associateBy { it.memberId }
+            val backoutMemberMap = backoutMembers.associate { it.first to it.second }
 
             // Create UI models for each member
             val memberResponses = members.map { member ->
                 val response = responseMap[member.id]
-                MemberResponseUiModel.fromUserAndResponse(member, response)
+                val backoutTimestamp = backoutMemberMap[member.id]
+                val responseWithBackout = if (backoutTimestamp != null && response != null) {
+                    response.copy(backoutTimestamp = backoutTimestamp)
+                } else {
+                    response
+                }
+                MemberResponseUiModel.fromUserAndResponse(member, responseWithBackout)
             }
 
             // Group by availability status
             val availableMembers = memberResponses.filter {
-                it.availability == MemberResponse.AvailabilityStatus.AVAILABLE
+                it.availability == MemberResponse.AvailabilityStatus.AVAILABLE && 
+                it.response?.backoutTimestamp == null
             }
             val notAvailableMembers = memberResponses.filter {
-                it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE
+                it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE && 
+                it.response?.backoutTimestamp == null
             }
             val notConfirmedMembers = memberResponses.filter {
-                it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED
+                it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED && 
+                it.response?.backoutTimestamp == null
             }
             val notRespondedMembers = memberResponses.filter {
-                it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED
+                it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED && 
+                it.response?.backoutTimestamp == null
             }
+            val backoutMemberResponses = memberResponses.filter {
+                it.response?.backoutTimestamp != null
+            }.sortedByDescending { it.response?.backoutTimestamp }
 
             MemberResponseUiState.Success(
                 availableMembers = availableMembers,
                 notAvailableMembers = notAvailableMembers,
                 notConfirmedMembers = notConfirmedMembers,
-                notRespondedMembers = notRespondedMembers
+                notRespondedMembers = notRespondedMembers,
+                backoutMembers = backoutMemberResponses
             )
         } catch (e: Exception) {
             MemberResponseUiState.Error("Error processing member responses: ${e.message}")
@@ -129,7 +155,8 @@ class MemberResponseViewModel @Inject constructor(
             val availableMembers: List<MemberResponseUiModel>,
             val notAvailableMembers: List<MemberResponseUiModel>,
             val notConfirmedMembers: List<MemberResponseUiModel>,
-            val notRespondedMembers: List<MemberResponseUiModel>
+            val notRespondedMembers: List<MemberResponseUiModel>,
+            val backoutMembers: List<MemberResponseUiModel> = emptyList()
         ) : MemberResponseUiState()
 
         data class Error(val message: String) : MemberResponseUiState()

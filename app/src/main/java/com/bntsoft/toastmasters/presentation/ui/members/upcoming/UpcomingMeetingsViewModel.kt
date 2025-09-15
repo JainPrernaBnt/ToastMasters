@@ -65,7 +65,8 @@ class UpcomingMeetingsListViewModel @Inject constructor(
     fun saveMeetingAvailability(
         meetingId: String,
         status: AvailabilityStatus,
-        preferredRoles: List<String>
+        preferredRoles: List<String>,
+        isBackout: Boolean = false
     ) {
         viewModelScope.launch {
             try {
@@ -78,17 +79,47 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                 val meetingAvailability = MeetingAvailability(
                     userId = currentUserId,
                     meetingId = meetingId,
-                    status = status,
+                    status = if (isBackout) AvailabilityStatus.NOT_AVAILABLE else status,
                     preferredRoles = finalPreferredRoles,
-                    timestamp = System.currentTimeMillis()
+                    timestamp = System.currentTimeMillis(),
+                    isBackout = isBackout
                 )
 
-                db.collection("meetings")
+                val batch = db.batch()
+                
+                // Update availability
+                val availabilityRef = db.collection("meetings")
                     .document(meetingId)
                     .collection("availability")
                     .document(currentUserId)
-                    .set(meetingAvailability)
-                    .await()
+                
+                batch.set(availabilityRef, meetingAvailability)
+                
+                // If this is a backout, clear any assigned roles
+                if (isBackout) {
+                    val roleRef = db.collection("meetings")
+                        .document(meetingId)
+                        .collection("assignedRole")
+                        .document(currentUserId)
+                    
+                    batch.delete(roleRef)
+                    
+                    // Add to backout members collection
+                    val backoutRef = db.collection("meetings")
+                        .document(meetingId)
+                        .collection("backoutMembers")
+                        .document(currentUserId)
+                    
+                    val backoutData = hashMapOf(
+                        "userId" to currentUserId,
+                        "timestamp" to System.currentTimeMillis(),
+                        "meetingId" to meetingId
+                    )
+                    
+                    batch.set(backoutRef, backoutData)
+                }
+                
+                batch.commit().await()
 
                 // Update the meetings list directly to avoid a full refresh
                 _meetings.value = _meetings.value?.map { meeting ->

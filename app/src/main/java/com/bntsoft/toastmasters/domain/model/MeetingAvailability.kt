@@ -10,7 +10,8 @@ data class MeetingAvailability(
     val meetingId: String = "",
     val status: AvailabilityStatus = AvailabilityStatus.NOT_AVAILABLE,
     val preferredRoles: List<String> = emptyList(),
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val isBackout: Boolean = false
 ): Parcelable {
     // Helper property for backward compatibility
     val isAvailable: Boolean

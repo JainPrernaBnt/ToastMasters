@@ -17,4 +17,6 @@ interface MemberResponseRepository {
     suspend fun deleteResponse(meetingId: String, memberId: String): Result<Unit>
 
     suspend fun syncResponses(memberId: String): Result<Unit>
+    
+    suspend fun getBackoutMembers(meetingId: String): List<Pair<String, Long>>
 }

@@ -7,7 +7,8 @@ data class MemberResponse(
     val availability: AvailabilityStatus,
     val preferredRoles: List<String>,
     val notes: String = "",
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
+    val backoutTimestamp: Long? = null
 ) {
 
     enum class AvailabilityStatus {

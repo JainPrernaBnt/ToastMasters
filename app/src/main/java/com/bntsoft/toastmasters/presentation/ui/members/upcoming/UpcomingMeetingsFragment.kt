@@ -25,8 +25,8 @@ class UpcomingMeetingsFragment : Fragment() {
 
     private fun setupAdapter() {
         adapter = UpcomingMeetingsAdapter().apply {
-            onAvailabilitySubmitted = { meetingId, status, preferredRoles ->
-                viewModel.saveMeetingAvailability(meetingId, status, preferredRoles)
+            onAvailabilitySubmitted = { meetingId, status, preferredRoles, isBackout ->
+                viewModel.saveMeetingAvailability(meetingId, status, preferredRoles, isBackout)
             }
             onEditClicked = { meeting ->
                 viewModel.toggleEditMode(meeting)
