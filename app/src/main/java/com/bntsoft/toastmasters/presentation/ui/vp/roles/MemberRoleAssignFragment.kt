@@ -87,6 +87,13 @@ class MemberRoleAssignFragment : Fragment() {
                         "Toggling edit mode - UserId: $userId, isEditable: $isEditable"
                     )
                     viewModel.toggleEditMode(userId, isEditable)
+                },
+                onEvaluatorSelected = { speakerId, evaluatorId ->
+                    Log.d(
+                        "MemberRoleAssignFrag",
+                        "Evaluator selected - SpeakerId: $speakerId, EvaluatorId: $evaluatorId"
+                    )
+                    viewModel.assignEvaluator(speakerId, evaluatorId)
                 }
             )
             // Initial setup with empty lists, will be updated in observeViewModel
@@ -150,6 +157,14 @@ class MemberRoleAssignFragment : Fragment() {
                     it,
                     android.widget.Toast.LENGTH_LONG
                 ).show()
+            }
+        }
+
+        viewModel.evaluatorAssigned.observe(viewLifecycleOwner) { (speakerId, evaluatorId) ->
+            if (speakerId.isNotBlank()) {
+                // Update the UI to show the selected evaluator
+                // The actual assignment is already handled in the adapter
+                // No need to show the prompt here as the evaluator is already selected
             }
         }
     }

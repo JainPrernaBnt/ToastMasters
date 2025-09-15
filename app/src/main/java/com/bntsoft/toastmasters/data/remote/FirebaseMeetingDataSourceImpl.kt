@@ -11,6 +11,7 @@ import com.bntsoft.toastmasters.utils.Result
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
@@ -208,7 +209,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                             endDateTime = endDateTime,
                             venue = document.getString("location") ?: "",
                             // Try to get theme from meetingData first, then from root document
-                            theme = (meetingData["theme"] as? String) 
+                            theme = (meetingData["theme"] as? String)
                                 ?: (document.getString("theme") ?: "No Theme"),
                             roleCounts = (meetingData["roleCounts"] as? Map<String, *>)?.mapValues { (_, value) ->
                                 when (value) {
@@ -390,7 +391,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 // Handle assignedCounts - merge with existing or initialize with zeros
                 val currentData = document.data ?: emptyMap()
                 val currentAssignedCounts = currentData["assignedCounts"] as? Map<*, *> ?: emptyMap<String, Int>()
-                
+
                 // If we have new role counts, ensure all roles have assigned counts
                 val updatedAssignedCounts = if (dto.roleCounts.isNotEmpty()) {
                     val mergedCounts = currentAssignedCounts.toMutableMap()
@@ -410,7 +411,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 } else {
                     currentAssignedCounts as Map<String, Int>
                 }
-                
+
                 updateMap["assignedCounts"] = updatedAssignedCounts
 
                 document.reference.update(updateMap).await()
@@ -473,11 +474,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             // Collect all userIds we are updating
             val userIds = assignments.map { it.userId }.distinct()
 
-            // Fetch existing docs for those users (to delete/reset before saving new)
-            val existingDocs = if (userIds.isNotEmpty()) {
-                assignedRolesRef.whereIn("userId", userIds).get().await()
-            } else null
-
             firestore.runTransaction { transaction ->
                 // Get current meeting data
                 val meetingDoc = transaction.get(meetingRef)
@@ -485,11 +481,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     (meetingDoc.get("assignedCounts") as? Map<*, *> ?: emptyMap<String, Int>())
                         .mapValues { (_, value) -> (value as? Number)?.toInt() ?: 0 }
                         .toMutableMap()
-
-                // Delete old user assignment docs
-                existingDocs?.documents?.forEach { doc ->
-                    transaction.delete(doc.reference)
-                }
 
                 // Save new user assignment docs
                 assignments.forEach { assignment ->
@@ -503,7 +494,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         "updatedAt" to FieldValue.serverTimestamp()
                     )
 
-                    transaction.set(userDocRef, roleData)
+                    // Merge to preserve additional fields like evaluator/evaluatorId/evaluatorRole
+                    transaction.set(userDocRef, roleData, SetOptions.merge())
                 }
 
                 // Recalculate assignedCounts
@@ -781,6 +773,131 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Error getting member roles for meeting $meetingId")
             emptyList()
+        }
+    }
+    override suspend fun updateSpeakerEvaluator(
+        meetingId: String,
+        speakerId: String,
+        evaluatorName: String,
+        evaluatorId: String
+    ): Result<Unit> {
+        return try {
+            // Step 1: Get the next evaluator number BEFORE transaction
+            val nextEvaluatorNumber = getNextEvaluatorNumber(meetingId)
+            val evaluatorRole = "Evaluator $nextEvaluatorNumber"
+
+            val speakerRef = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .document(speakerId)
+
+            val meetingRef = firestore.collection("meetings").document(meetingId)
+            val evaluatorRef = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .document(evaluatorId)
+
+            firestore.runTransaction { transaction ->
+                val speakerDoc = transaction.get(speakerRef)
+                val meetingDoc = transaction.get(meetingRef)
+                val evaluatorDoc = transaction.get(evaluatorRef)
+
+                // Check if evaluator already has a role
+                val existingEvaluatorRoles = (evaluatorDoc.get("roles") as? List<*>)
+                    ?.filterIsInstance<String>()
+                    ?.filter { it.startsWith("Evaluator") }
+                    ?: emptyList()
+
+                // Only assign the evaluatorRole if evaluator has no existing one
+                val roleToAssign = if (existingEvaluatorRoles.isNotEmpty()) {
+                    existingEvaluatorRoles.first()
+                } else {
+                    evaluatorRole
+                }
+
+                // Update speaker's roles
+                val currentRoles = (speakerDoc.get("roles") as? List<*>)?.filterIsInstance<String>()?.toMutableList()
+                    ?: mutableListOf()
+                currentRoles.removeIf { it.startsWith("Evaluator") }
+                currentRoles.add(roleToAssign)
+
+                // Prepare speaker data
+                val speakerData = speakerDoc.data?.toMutableMap() ?: mutableMapOf()
+                speakerData["userId"] = speakerDoc.getString("userId") ?: speakerId
+                speakerData["memberName"] = speakerDoc.getString("memberName") ?: ""
+                speakerData["assignedAt"] = speakerDoc.getTimestamp("assignedAt") ?: FieldValue.serverTimestamp()
+                speakerData["evaluator"] = evaluatorName
+                speakerData["evaluatorRole"] = roleToAssign
+                speakerData["evaluatorId"] = evaluatorId
+                speakerData["roles"] = currentRoles
+                speakerData["updatedAt"] = FieldValue.serverTimestamp()
+
+                transaction.set(speakerRef, speakerData, SetOptions.merge())
+                Log.d("FirebaseTransaction", "Updated speaker $speakerId with evaluator $evaluatorName ($roleToAssign)")
+
+                // Update meeting assignedCounts only if evaluator didn't have a role
+                val currentCounts = (meetingDoc.get("assignedCounts") as? Map<*, *>
+                    ?: emptyMap<String, Int>())
+                    .mapValues { (_, v) -> (v as? Number)?.toInt() ?: 0 }
+                    .toMutableMap()
+
+                if (existingEvaluatorRoles.isEmpty()) {
+                    currentCounts[roleToAssign] = (currentCounts[roleToAssign] ?: 0) + 1
+                    transaction.update(meetingRef, "assignedCounts", currentCounts)
+                    Log.d("FirebaseTransaction", "Updated assignedCounts for $roleToAssign: ${currentCounts[roleToAssign]}")
+                }
+
+                null
+            }.await()
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseTransaction", "Error in updateSpeakerEvaluator", e)
+            Result.Error(e)
+        }
+    }
+
+
+    private suspend fun getNextEvaluatorNumber(meetingId: String): Int {
+        return try {
+            val snapshot = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .get()
+                .await()
+
+            var maxNumber = 0
+            val evaluatorPattern = Regex("^Evaluator\\s+(\\d+)$")
+
+            for (doc in snapshot.documents) {
+                val roles = (doc["roles"] as? List<*>)?.filterIsInstance<String>() ?: continue
+
+                for (role in roles) {
+                    val match = evaluatorPattern.find(role)
+                    match?.groupValues?.get(1)?.toIntOrNull()?.let { number ->
+                        if (number > maxNumber) {
+                            maxNumber = number
+                        }
+                    }
+                }
+            }
+
+            maxNumber + 1 // Return the next available number
+        } catch (e: Exception) {
+            Timber.e(e, "Error finding next evaluator number for meeting $meetingId")
+            1 // Default to 1 if there's an error
+        }
+    }
+
+    override suspend fun updateMeetingRoleCounts(meetingId: String, roleCounts: Map<String, Int>) {
+        try {
+            firestore.collection("meetings")
+                .document(meetingId)
+                .update("roleCounts", roleCounts)
+                .await()
+        } catch (e: Exception) {
+            Timber.e(e, "Error updating role counts for meeting $meetingId")
+            throw e
         }
     }
 

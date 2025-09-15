@@ -10,6 +10,7 @@ data class RoleAssignmentItem(
     val assignedRole: String = "",
     val backupMemberId: String = "",
     val backupMemberName: String = "",
+    val evaluatorId: String = "",
     val isEditable: Boolean = false,
     val roleCounts: Map<String, Int> = emptyMap(),
     val assignedRoleCounts: Map<String, Int> = emptyMap(),

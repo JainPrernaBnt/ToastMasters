@@ -43,6 +43,35 @@
     <color name="yellow_500">#FFEB3B</color>
     <color name="yellow_700">#FBC02D</color>
 
+    <!-- ===== Role Colors ===== -->
+    <!-- Toastmaster -->
+    <color name="toastmaster_bg">#E8EAF6</color>
+    <color name="toastmaster_text">#1A237E</color>
+    
+    <!-- Speaker -->
+    <color name="speaker_bg">#E8F5E9</color>
+    <color name="speaker_text">#1B5E20</color>
+    
+    <!-- Evaluator -->
+    <color name="evaluator_bg">#E1F5FE</color>
+    <color name="evaluator_text">#01579B</color>
+    
+    <!-- Timer -->
+    <color name="timer_bg">#FFF8E1</color>
+    <color name="timer_text">#E65100</color>
+    
+    <!-- Ah-Counter -->
+    <color name="ah_counter_bg">#FCE4EC</color>
+    <color name="ah_counter_text">#880E4F</color>
+    
+    <!-- Grammarian -->
+    <color name="grammarian_bg">#F3E5F5</color>
+    <color name="grammarian_text">#4A148C</color>
+    
+    <!-- Default Role -->
+    <color name="default_role_bg">#F5F5F5</color>
+    <color name="default_role_text">#212121</color>
+
     <!-- ===== Material 3 Tokens ===== -->
     <color name="surface_container_highest">#E6E6E6</color>
     <color name="surface_container_high">#EBE6ED</color>

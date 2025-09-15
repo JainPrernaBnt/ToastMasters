@@ -15,6 +15,14 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class VpMainActivity : BaseActivity() {
     private lateinit var binding: ActivityVpMainBinding
+    
+    fun hideBottomNavigation() {
+        binding.bottomNavView.visibility = View.GONE
+    }
+    
+    fun showBottomNavigation() {
+        binding.bottomNavView.visibility = View.VISIBLE
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +66,7 @@ class VpMainActivity : BaseActivity() {
                     R.id.reportsFragment -> getString(R.string.title_reports)
                     R.id.settingsFragment -> getString(R.string.title_settings)
                     R.id.agendaTableFragment -> getString(R.string.agenda)
+                    R.id.editMeetingFragment -> getString(R.string.title_edit_meeting)
                     else -> getString(R.string.app_name)
                 }
 
@@ -65,13 +74,19 @@ class VpMainActivity : BaseActivity() {
                 val shouldHideBottomNav = when (destination.id) {
                     R.id.createAgendaFragment -> true
                     R.id.agendaTableFragment -> true
+                    R.id.editMeetingFragment -> true
+                    R.id.memberRoleAssignFragment -> true
                     else -> false
                 } || destination.label.toString().contains("Agenda", ignoreCase = true)
 
                 // Debug logging
                 Log.d("VpMainActivity", "Destination ID: ${destination.id}, Label: ${destination.label}, Should hide bottom nav: $shouldHideBottomNav")
 
-                binding.bottomNavView.visibility = if (shouldHideBottomNav) View.GONE else View.VISIBLE
+                if (shouldHideBottomNav) {
+                    hideBottomNavigation()
+                } else {
+                    showBottomNavigation()
+                }
             }
 
         } catch (e: Exception) {

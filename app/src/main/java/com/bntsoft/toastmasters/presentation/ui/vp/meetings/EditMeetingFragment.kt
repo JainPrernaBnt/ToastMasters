@@ -18,6 +18,7 @@ import com.bntsoft.toastmasters.databinding.FragmentEditMeetingBinding
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.EditMeetingViewModel
 import com.bntsoft.toastmasters.utils.UiUtils
+import com.bntsoft.toastmasters.VpMainActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -66,8 +67,16 @@ class EditMeetingFragment : Fragment() {
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Ensure bottom navigation is hidden when fragment is visible
+        (activity as? VpMainActivity)?.hideBottomNavigation()
+    }
+    
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Hide bottom navigation when this fragment is visible
+        (activity as? VpMainActivity)?.hideBottomNavigation()
 
         // Get meeting ID from nav arguments (string id from Firestore)
         meetingId = arguments?.getString("meeting_id") ?: (arguments?.getInt(ARG_MEETING_ID)
@@ -477,7 +486,15 @@ class EditMeetingFragment : Fragment() {
         )
     }
 
+    override fun onPause() {
+        super.onPause()
+        // Show bottom navigation when leaving this fragment
+        (activity as? VpMainActivity)?.showBottomNavigation()
+    }
+    
     override fun onDestroyView() {
+        // Show bottom navigation when view is destroyed
+        (activity as? VpMainActivity)?.showBottomNavigation()
         super.onDestroyView()
         _binding = null
     }

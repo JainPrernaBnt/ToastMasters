@@ -13,12 +13,16 @@ import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.utils.Resource
 import com.bntsoft.toastmasters.utils.Result
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -304,6 +308,33 @@ class MeetingRepositoryImpl @Inject constructor(
             emptyList()
         }
     }
+
+    override suspend fun updateSpeakerEvaluator(
+        meetingId: String,
+        speakerId: String,
+        evaluatorName: String,
+        evaluatorId: String
+    ): Result<Unit> {
+        return firebaseDataSource.updateSpeakerEvaluator(
+            meetingId,
+            speakerId,
+            evaluatorName,
+            evaluatorId
+        )
+    }
+
+    override suspend fun updateMeetingRoleCounts(
+        meetingId: String,
+        roleCounts: Map<String, Int>
+    ): Result<Unit> {
+        return try {
+            firebaseDataSource.updateMeetingRoleCounts(meetingId, roleCounts)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Error(e)
+        }
+    }
+
 
     override suspend fun getAllAssignedRoles(meetingId: String): Map<String, String> {
         return try {

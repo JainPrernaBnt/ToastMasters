@@ -228,7 +228,7 @@ class DashboardFragment : Fragment() {
             val name = dialogView.etSpeakerName.text.toString().trim()
             val topic = dialogView.etTopic.text.toString().trim()
 
-            if (name.isBlank() || topic.isBlank()) {
+            if (name.isBlank()) {
                 // Show error
                 return@setOnClickListener
             }
@@ -236,7 +236,7 @@ class DashboardFragment : Fragment() {
             val speaker = TableTopicSpeaker(
                 meetingId = meetingId,
                 speakerName = name,
-                topic = topic
+                topic = topic.ifBlank { "" }
             )
             speakersAdapter.addSpeaker(speaker)
 

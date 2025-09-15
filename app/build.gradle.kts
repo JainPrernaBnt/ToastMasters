@@ -96,6 +96,9 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
     
+    // Timber for logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
+    
     // Hilt Navigation (if using Compose)
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 

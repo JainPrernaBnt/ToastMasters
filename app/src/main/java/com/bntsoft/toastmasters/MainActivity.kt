@@ -229,8 +229,10 @@ class MainActivity : BaseActivity() {
         val currentDestination = navController.currentDestination?.id ?: return
         val isAuthScreen = currentDestination == R.id.loginFragment ||
                 currentDestination == R.id.signUpFragment
+
+        val bottomNavHide = currentDestination == R.id.editMeetingFragment
         // Hide bottom nav for auth screens
-        bottomNav.visibility = if (isAuthScreen) View.GONE else View.VISIBLE
+        bottomNav.visibility = if (isAuthScreen && bottomNavHide) View.GONE else View.VISIBLE
 
         // Update system UI flags
         if (isAuthScreen) {

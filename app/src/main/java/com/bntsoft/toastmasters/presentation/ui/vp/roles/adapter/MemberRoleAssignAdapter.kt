@@ -22,6 +22,7 @@ class MemberRoleAssignAdapter :
     private var onBackupMemberSelected: ((String, String) -> Unit)? = null
     private var onSaveRoles: ((String, List<String>) -> Unit)? = null
     private var onToggleEditMode: ((String, Boolean) -> Unit)? = null
+    private var onEvaluatorSelected: ((String, String) -> Unit) = { _, _ -> }
     private var currentUserId: String = ""
 
     fun setCallbacks(
@@ -29,13 +30,15 @@ class MemberRoleAssignAdapter :
         onRoleRemoved: (String, String) -> Unit = { _, _ -> },
         onBackupMemberSelected: (String, String) -> Unit = { _, _ -> },
         onSaveRoles: (String, List<String>) -> Unit = { _, _ -> },
-        onToggleEditMode: (String, Boolean) -> Unit = { _, _ -> }
+        onToggleEditMode: (String, Boolean) -> Unit = { _, _ -> },
+        onEvaluatorSelected: (String, String) -> Unit = { _, _ -> }
     ) {
         this.onRoleSelected = onRoleSelected
         this.onRoleRemoved = onRoleRemoved
         this.onBackupMemberSelected = onBackupMemberSelected
         this.onSaveRoles = onSaveRoles
         this.onToggleEditMode = onToggleEditMode
+        this.onEvaluatorSelected = onEvaluatorSelected
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -63,7 +66,8 @@ class MemberRoleAssignAdapter :
             onBackupMemberSelected,
             availableMembers,
             onSaveRoles,
-            onToggleEditMode
+            onToggleEditMode,
+            onEvaluatorSelected
         )
     }
 
@@ -80,21 +84,110 @@ class MemberRoleAssignAdapter :
     inner class ViewHolder(
         private val binding: ItemMemberRoleAssignmentBinding
     ) : RecyclerView.ViewHolder(binding.root) {
+
+        private val evaluatorBinding = binding.evaluatorPrompt
+
+        fun showEvaluatorPrompt() {
+            binding.evaluatorPrompt.root.visibility = View.VISIBLE
+        }
+
+        private fun setupEvaluatorSelection(
+            item: RoleAssignmentItem,
+            onEvaluatorSelected: ((String, String) -> Unit)?
+        ) {
+            evaluatorBinding.apply {
+                // Get the current list of members with their roles
+                val currentMembers = this@MemberRoleAssignAdapter.currentList
+                val allMembers = this@MemberRoleAssignAdapter.availableMembers
+
+                // Get all members who are already evaluators
+                val evaluators = currentMembers
+                    .filter { assignment ->
+                        assignment.selectedRoles.any { it.startsWith("Evaluator") } &&
+                                assignment.userId != item.userId // Exclude current speaker
+                    }
+                    .mapNotNull { assignment ->
+                        allMembers.find { it.first == assignment.userId }
+                    }
+
+                // If no evaluators found, use all available members (except current speaker)
+                val members = if (evaluators.isNotEmpty()) {
+                    evaluators
+                } else {
+                    allMembers.filter { member ->
+                        member.first != item.userId // Don't allow self-evaluation
+                    }
+                }.toMutableList()
+
+                // Get current evaluator name if exists
+                val currentEvaluator = item.evaluatorId?.let { evaluatorId ->
+                    allMembers.find { it.first == evaluatorId }?.let { evaluator ->
+                        // Ensure current evaluator is in the list even if not in available members
+                        if (!members.any { it.first == evaluatorId }) {
+                            members.add(evaluator)
+                        }
+                        evaluator.second to evaluators.any { it.first == evaluatorId }
+                    }
+                }
+
+                // Create a list of member names with evaluator status
+                val memberNames = members.map { member ->
+                    val isEvaluator = evaluators.any { it.first == member.first }
+                    if (isEvaluator) "${member.second} (Evaluator)" else member.second
+                }
+
+                val memberAdapter = ArrayAdapter(
+                    root.context,
+                    android.R.layout.simple_dropdown_item_1line,
+                    memberNames
+                )
+
+                actvEvaluator.setAdapter(memberAdapter)
+
+                // Set current evaluator if exists
+                currentEvaluator?.let { (evaluatorName, isEvaluator) ->
+                    val displayName =
+                        if (isEvaluator) "$evaluatorName (Evaluator)" else evaluatorName
+                    if (actvEvaluator.text.toString() != displayName) {
+                        actvEvaluator.setText(displayName, false)
+                    }
+                }
+
+                // Clear any existing click listeners to prevent duplicates
+                actvEvaluator.onItemClickListener = null
+
+                actvEvaluator.setOnItemClickListener { _, _, position, _ ->
+                    val selectedMember = members[position]
+                    val selectedMemberId = selectedMember.first
+
+                    // Only trigger evaluator assignment if it's a different evaluator
+                    if (selectedMemberId != item.evaluatorId) {
+                        // Check if the selected member is already an evaluator
+                        val isAlreadyEvaluator = evaluators.any { it.first == selectedMemberId }
+
+                        // If not an evaluator, we need to assign them the evaluator role first
+                        if (!isAlreadyEvaluator) {
+                            // We'll just assign them as evaluator for this speaker
+                            // The role assignment will be handled when the evaluator is assigned
+                        }
+
+                        // Assign them as the evaluator for this speaker
+                        onEvaluatorSelected?.invoke(item.userId, selectedMemberId)
+
+                        // Update the displayed text with evaluator status
+                        val isEvaluator = evaluators.any { it.first == selectedMemberId }
+                        val displayName =
+                            if (isEvaluator) "${selectedMember.second} (Evaluator)" else selectedMember.second
+                        actvEvaluator.setText(displayName, false)
+                    }
+                }
+            }
+        }
+
         private var currentItem: RoleAssignmentItem? = null
         private var currentRoles: List<MemberRoleAssignViewModel.RoleDisplayItem> = emptyList()
         private var availableMembers: List<Pair<String, String>> = emptyList()
         private var isSettingChecked = false
-
-        private fun addRoleFromInput(
-            binding: ItemMemberRoleAssignmentBinding,
-            item: RoleAssignmentItem
-        ) {
-            val role = binding.actvRole.text.toString().trim()
-            if (role.isNotEmpty()) {
-                addRoleToChipGroup(binding, role, item)
-                binding.actvRole.text.clear()
-            }
-        }
 
         private fun addRoleToChipGroup(
             binding: ItemMemberRoleAssignmentBinding,
@@ -164,8 +257,10 @@ class MemberRoleAssignAdapter :
             onBackupMemberSelected: ((String, String) -> Unit)?,
             availableMembers: List<Pair<String, String>>,
             onSaveRoles: ((String, List<String>) -> Unit)?,
-            onToggleEditMode: ((String, Boolean) -> Unit)?
+            onToggleEditMode: ((String, Boolean) -> Unit)?,
+            onEvaluatorSelected: ((String, String) -> Unit)?
         ) {
+
             this.currentItem = item
             this.currentRoles = roles
             this.availableMembers = availableMembers
@@ -187,6 +282,23 @@ class MemberRoleAssignAdapter :
             binding.apply {
                 tvMemberName.text = item.memberName
 
+                // Handle evaluator selection UI
+                val isSpeaker = item.selectedRoles.any { it.startsWith("Speaker") }
+                if (isSpeaker) {
+                    evaluatorPrompt.root.visibility = View.VISIBLE
+                    // Only setup evaluator selection if not already set up
+                    if (evaluatorPrompt.actvEvaluator.adapter == null) {
+                        setupEvaluatorSelection(item, onEvaluatorSelected)
+                    }
+                    // Always update the evaluator text if we have an evaluator ID
+                    item.evaluatorId?.let { evaluatorId ->
+                        availableMembers.find { it.first == evaluatorId }?.let { evaluator ->
+                            evaluatorPrompt.actvEvaluator.setText(evaluator.second, false)
+                        }
+                    }
+                } else {
+                    evaluatorPrompt.root.visibility = View.GONE
+                }
                 // Set up preferred roles chips
                 chipGroupPreferredRoles.removeAllViews()
                 android.util.Log.d(
@@ -253,6 +365,8 @@ class MemberRoleAssignAdapter :
 
                     chipGroupSelectedRoles.addView(chip)
                 }
+
+                // Evaluator UI visibility is already handled above
 
                 // Set up recent roles
                 if (item.recentRoles.isNotEmpty()) {
@@ -329,6 +443,7 @@ class MemberRoleAssignAdapter :
                     actvBackupMember.setOnItemClickListener { _, _, position, _ ->
                         val selectedMember = otherMembers[position]
                         onBackupMemberSelected?.invoke(item.userId, selectedMember.first)
+                        onEvaluatorSelected?.invoke(item.userId, selectedMember.first)
                     }
                 } else {
                     actvBackupMember.setOnItemClickListener(null)
@@ -422,6 +537,7 @@ class MemberRoleAssignAdapter :
             }
         }
     }
+
 
     class DiffCallback : DiffUtil.ItemCallback<RoleAssignmentItem>() {
         override fun areItemsTheSame(
