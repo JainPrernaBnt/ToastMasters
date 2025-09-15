@@ -14,7 +14,7 @@ data class RoleAssignmentItem(
     val isEditable: Boolean = false,
     val roleCounts: Map<String, Int> = emptyMap(),
     val assignedRoleCounts: Map<String, Int> = emptyMap(),
-    val allAssignedRoles: Map<String, String> = emptyMap()
+    val allAssignedRoles: Map<String, List<String>> = emptyMap()
 ) {
     fun copyWithEditMode(editable: Boolean): RoleAssignmentItem {
         val newSelectedRoles = if (editable && selectedRoles.isEmpty() && assignedRole.isNotBlank()) {

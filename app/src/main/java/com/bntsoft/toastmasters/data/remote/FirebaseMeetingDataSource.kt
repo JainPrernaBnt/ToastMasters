@@ -36,7 +36,7 @@ interface FirebaseMeetingDataSource {
     
     suspend fun getAssignedRoles(meetingId: String, userId: String): List<String>
 
-    suspend fun getAllAssignedRoles(meetingId: String): Map<String, String>
+    suspend fun getAllAssignedRoles(meetingId: String): Map<String, List<String>>
     
     // Speaker details methods
     suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit>

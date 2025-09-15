@@ -607,7 +607,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAllAssignedRoles(meetingId: String): Map<String, String> {
+    override suspend fun getAllAssignedRoles(meetingId: String): Map<String, List<String>> {
         return try {
             val assignedRolesRef = firestore.collection("meetings")
                 .document(meetingId)
@@ -615,16 +615,17 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
             val querySnapshot = assignedRolesRef.get().await()
 
-            querySnapshot.documents.flatMap { doc ->
+            querySnapshot.documents.associate { doc ->
                 val userId = doc.id
-                val roles = doc.get("roles") as? List<*> ?: emptyList<Any>()
-                roles.filterIsInstance<String>().map { role -> role to userId }
-            }.toMap()
+                val roles = (doc.get("roles") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                userId to roles
+            }
         } catch (e: Exception) {
             Timber.e(e, "Error getting all assigned roles for meeting $meetingId")
             emptyMap()
         }
     }
+
 
     override suspend fun saveSpeakerDetails(
         meetingId: String,

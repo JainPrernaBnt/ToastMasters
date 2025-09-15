@@ -335,8 +335,74 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getRecentCompletedMeetings(limit: Int): List<Meeting> {
+        return try {
+            val now = LocalDateTime.now()
+            val meetings = firebaseDataSource.getAllMeetings().first()
 
-    override suspend fun getAllAssignedRoles(meetingId: String): Map<String, String> {
+            Timber.d("Total meetings found: ${meetings.size}")
+            meetings.forEach { meeting ->
+                Timber.d("Meeting: ${meeting.id} - Status: ${meeting.status} - Date: ${meeting.dateTime}")
+            }
+
+            val completedMeetings = meetings.filter { meeting ->
+                val isCompleted = meeting.status == MeetingStatus.COMPLETED
+                val isBeforeNow = meeting.dateTime?.let { !it.isAfter(now) } ?: true
+
+                // If meeting is completed, we don't care if it's in the future
+                val includeMeeting = isCompleted || isBeforeNow
+
+                Timber.d(
+                    "Checking meeting ${meeting.id}: " +
+                            "status=${meeting.status}, " +
+                            "dateTime=${meeting.dateTime}, " +
+                            "isCompleted=$isCompleted, " +
+                            "isBeforeNow=$isBeforeNow, " +
+                            "include=$includeMeeting"
+                )
+
+                isCompleted // only completed meetings are included
+            }
+
+            Timber.d("Found ${completedMeetings.size} completed meetings out of ${meetings.size} total")
+
+            completedMeetings
+                .sortedByDescending { it.dateTime } // sort by most recent date
+                .take(limit)
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting recent completed meetings")
+            emptyList()
+        }
+    }
+
+    override suspend fun getRoleAssignmentsForMeetings(
+        meetingIds: List<String>
+    ): Map<String, Map<String, List<String>>> {
+        if (meetingIds.isEmpty()) return emptyMap()
+
+        return try {
+            coroutineScope {
+                meetingIds.map { meetingId ->
+                    async {
+                        try {
+                            val assignments = firebaseDataSource.getAllAssignedRoles(meetingId) // Map<userId, List<role>>
+                            if (assignments.isNotEmpty()) meetingId to assignments else null
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error getting assignments for meeting $meetingId")
+                            null
+                        }
+                    }
+                }.awaitAll()
+                    .filterNotNull()
+                    .toMap()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error getting role assignments for meetings")
+            emptyMap()
+        }
+    }
+
+    override suspend fun getAllAssignedRoles(meetingId: String): Map<String, List<String>> {
         return try {
             firebaseDataSource.getAllAssignedRoles(meetingId)
         } catch (e: Exception) {

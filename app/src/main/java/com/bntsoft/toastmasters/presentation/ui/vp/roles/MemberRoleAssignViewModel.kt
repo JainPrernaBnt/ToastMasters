@@ -9,11 +9,10 @@ import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import com.bntsoft.toastmasters.utils.Result
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,6 +41,10 @@ class MemberRoleAssignViewModel @Inject constructor(
         MutableLiveData<Pair<String, String>>() // speakerId to evaluatorId
     val evaluatorAssigned: LiveData<Pair<String, String>> = _evaluatorAssigned
 
+    // Recent roles
+    private val _recentRoles = MutableLiveData<Map<String, List<String>>>()
+    val recentRoles: LiveData<Map<String, List<String>>> = _recentRoles
+
     private val meetingId: String = savedStateHandle["meeting_id"] ?: ""
 
     init {
@@ -49,10 +52,12 @@ class MemberRoleAssignViewModel @Inject constructor(
         if (meetingId.isNotEmpty()) {
             Log.d("MemberRoleAssignVM", "Loading role assignments for meeting: $meetingId")
             loadRoleAssignments(meetingId)
+            loadRecentRoles()
         } else {
             Log.e("MemberRoleAssignVM", "No meetingId provided in savedStateHandle")
             _roleAssignments.value = emptyList()
             _assignableRoles.value = emptyMap()
+            _recentRoles.value = emptyMap()
         }
     }
 
@@ -454,7 +459,7 @@ class MemberRoleAssignViewModel @Inject constructor(
                 // Check if the evaluator already has an evaluator role
                 val evaluatorAssignment = currentAssignments.find { it.userId == evaluatorId }
                 val evaluatorName = availableMembers.value?.find { it.first == evaluatorId }?.second
-                
+
                 if (evaluatorName == null) {
                     val error = "Evaluator not found in available members. ID: $evaluatorId"
                     Log.e("MemberRoleAssignVM", error)
@@ -468,16 +473,76 @@ class MemberRoleAssignViewModel @Inject constructor(
                 )
 
                 // If evaluator doesn't have an evaluator role, assign one
-                val evaluatorRole = if (evaluatorAssignment?.selectedRoles?.any { it.startsWith("Evaluator") } != true) {
-                    // Get the next available evaluator number
-                    val nextNumber = (evaluatorAssignment?.selectedRoles
-                        ?.mapNotNull { role ->
-                            """Evaluator (\d+)""".toRegex().find(role)?.groupValues?.get(1)?.toInt()
-                        }?.maxOrNull() ?: 0) + 1
-                    "Evaluator $nextNumber"
-                } else {
-                    // Use existing evaluator role
-                    evaluatorAssignment.selectedRoles.first { it.startsWith("Evaluator") }
+                val evaluatorRole =
+                    if (evaluatorAssignment?.selectedRoles?.any { it.startsWith("Evaluator") } != true) {
+                        // Get the next available evaluator number
+                        val nextNumber = (evaluatorAssignment?.selectedRoles
+                            ?.mapNotNull { role ->
+                                """Evaluator (\d+)""".toRegex().find(role)?.groupValues?.get(1)
+                                    ?.toInt()
+                            }?.maxOrNull() ?: 0) + 1
+                        "Evaluator $nextNumber"
+                    } else {
+                        // Use existing evaluator role
+                        evaluatorAssignment.selectedRoles.first { it.startsWith("Evaluator") }
+                    }
+
+                fun assignEvaluator(speakerId: String, evaluatorId: String) {
+                    viewModelScope.launch {
+                        try {
+                            val result = meetingRepository.updateSpeakerEvaluator(
+                                meetingId = meetingId,
+                                speakerId = speakerId,
+                                evaluatorName = "", // We'll update this after getting member name
+                                evaluatorId = evaluatorId
+                            )
+
+                            when (result) {
+                                is Result.Success -> {
+                                    // Update the UI by finding the speaker and evaluator in the current assignments
+                                    val currentAssignments = _roleAssignments.value ?: return@launch
+
+                                    val updatedAssignments = currentAssignments.map { assignment ->
+                                        when (assignment.userId) {
+                                            speakerId -> assignment.copy(evaluatorId = evaluatorId)
+                                            evaluatorId -> {
+                                                // Add evaluator role if not already present
+                                                if (!assignment.selectedRoles.any { it.startsWith("Evaluator") }) {
+                                                    assignment.copy(
+                                                        selectedRoles = (assignment.selectedRoles + "Evaluator").toMutableList(),
+                                                        assignedRole = "Evaluator".takeIf { assignment.assignedRole.isEmpty() }
+                                                            ?: assignment.assignedRole
+                                                    )
+                                                } else {
+                                                    assignment
+                                                }
+                                            }
+
+                                            else -> assignment
+                                        }
+                                    }
+
+                                    _roleAssignments.value = updatedAssignments
+                                    _evaluatorAssigned.value = speakerId to evaluatorId
+                                }
+
+                                is Result.Error -> {
+                                    val error =
+                                        "Failed to assign evaluator: ${result.exception?.message ?: "Unknown error"}"
+                                    Log.e("MemberRoleAssignVM", error, result.exception)
+                                    _errorMessage.value = error
+                                }
+
+                                is Result.Loading -> {
+                                    // Loading state handled by UI if needed
+                                }
+                            }
+                        } catch (e: Exception) {
+                            val error = "Error assigning evaluator: ${e.message}"
+                            Log.e("MemberRoleAssignVM", error, e)
+                            _errorMessage.value = error
+                        }
+                    }
                 }
 
                 // Update the speaker's document with evaluator info
@@ -488,8 +553,11 @@ class MemberRoleAssignViewModel @Inject constructor(
                     evaluatorId = evaluatorId
                 )) {
                     is Result.Success -> {
-                        Log.d("MemberRoleAssignVM", "Successfully updated speaker evaluator in Firestore")
-                        
+                        Log.d(
+                            "MemberRoleAssignVM",
+                            "Successfully updated speaker evaluator in Firestore"
+                        )
+
                         // Update the role assignments
                         val updatedAssignments = currentAssignments.map { assignment ->
                             when (assignment.userId) {
@@ -507,20 +575,22 @@ class MemberRoleAssignViewModel @Inject constructor(
                                     }
 
                                 }
+
                                 else -> assignment
                             }
                         }
-                        
+
                         _roleAssignments.value = updatedAssignments
                         _evaluatorAssigned.value = speakerId to evaluatorId
                     }
-                    
+
                     is Result.Error -> {
-                        val error = "Failed to assign evaluator: ${result.exception?.message ?: "Unknown error"}"
+                        val error =
+                            "Failed to assign evaluator: ${result.exception?.message ?: "Unknown error"}"
                         Log.e("MemberRoleAssignVM", error, result.exception)
                         _errorMessage.value = error
                     }
-                    
+
                     is Result.Loading -> {
                         // Loading state handled by UI if needed
                     }
@@ -531,6 +601,58 @@ class MemberRoleAssignViewModel @Inject constructor(
                 _errorMessage.value = error
             }
         }
+    }
+
+    private fun loadRecentRoles() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                Log.d("MemberRoleAssignVM", "Loading recent roles...")
+                val recentMeetings = meetingRepository.getRecentCompletedMeetings(3)
+                Log.d(
+                    "MemberRoleAssignVM",
+                    "Found ${recentMeetings.size} recent completed meetings"
+                )
+
+                if (recentMeetings.isNotEmpty()) {
+                    val meetingIds = recentMeetings.map { it.id }
+                    val rolesByMeeting = meetingRepository.getRoleAssignmentsForMeetings(meetingIds)
+                    // rolesByMeeting = Map<meetingId, Map<userId, List<role>>>
+
+                    val recentRolesByUser = mutableMapOf<String, MutableList<String>>()
+
+                    rolesByMeeting.forEach { (_, userRolesMap) ->
+                        userRolesMap.forEach { (userId, rolesList) ->
+                            rolesList.forEach { role ->
+                                val cleanedRole = role.substringBeforeLast(" ")
+                                recentRolesByUser.getOrPut(userId) { mutableListOf() }
+                                    .add(cleanedRole)
+                            }
+                        }
+                    }
+
+                    // Make roles unique for each user
+                    val distinctRolesByUser =
+                        recentRolesByUser.mapValues { (_, roles) -> roles.distinct() }
+
+                    _recentRoles.postValue(distinctRolesByUser)
+                    Log.d(
+                        "MemberRoleAssignVM",
+                        "Loaded recent roles for ${distinctRolesByUser.size} users"
+                    )
+                } else {
+                    _recentRoles.postValue(emptyMap())
+                    Log.d("MemberRoleAssignVM", "No recent completed meetings found")
+                }
+            } catch (e: Exception) {
+                Log.e("MemberRoleAssignVM", "Error loading recent roles: ${e.message}", e)
+                _recentRoles.postValue(emptyMap())
+            }
+        }
+    }
+
+
+    fun getRecentRolesForUser(userId: String): List<String> {
+        return _recentRoles.value?.get(userId) ?: emptyList()
     }
 
     data class RoleDisplayItem(

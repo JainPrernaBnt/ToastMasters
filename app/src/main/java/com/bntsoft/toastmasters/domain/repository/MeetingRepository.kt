@@ -29,7 +29,7 @@ interface MeetingRepository {
     
     suspend fun getAssignedRole(meetingId: String, userId: String): String?
     suspend fun getAssignedRoles(meetingId: String, userId: String): List<String>
-    suspend fun getAllAssignedRoles(meetingId: String): Map<String, String>
+    suspend fun getAllAssignedRoles(meetingId: String): Map<String, List<String>>
     
     // Speaker details
     suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit>
@@ -44,7 +44,11 @@ interface MeetingRepository {
     suspend fun getMemberRolesForMeeting(meetingId: String): List<MemberRole>
 
     suspend fun updateSpeakerEvaluator(meetingId: String, speakerId: String, evaluatorName: String, evaluatorId: String): Result<Unit>
-
     suspend fun updateMeetingRoleCounts(meetingId: String, roleCounts: Map<String, Int>): Result<Unit>
-
+    
+    // Recent roles functionality
+    suspend fun getRecentCompletedMeetings(limit: Int = 3): List<Meeting>
+    suspend fun getRoleAssignmentsForMeetings(
+        meetingIds: List<String>
+    ): Map<String, Map<String, List<String>>>
 }

@@ -145,6 +145,12 @@ class MemberRoleAssignFragment : Fragment() {
         viewModel.availableMembers.observe(viewLifecycleOwner) { members ->
             Log.d("MemberRoleAssignFrag", "Available members updated. Count: ${members.size}")
             adapter.updateAvailableMembers(members)
+        }
+
+        viewModel.recentRoles.observe(viewLifecycleOwner) { recentRoles ->
+            Log.d("MemberRoleAssignFrag", "Recent roles updated for ${recentRoles.size} users")
+            adapter.setRecentRoles(recentRoles)
+            
             // Hide loading, show members and button when loaded
             binding.progressBar.visibility = View.GONE
             binding.rvMembers.visibility = View.VISIBLE

@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.databinding.ItemMemberRoleAssignmentBinding
@@ -24,6 +25,7 @@ class MemberRoleAssignAdapter :
     private var onToggleEditMode: ((String, Boolean) -> Unit)? = null
     private var onEvaluatorSelected: ((String, String) -> Unit) = { _, _ -> }
     private var currentUserId: String = ""
+    private var recentRoles: Map<String, List<String>> = emptyMap()
 
     fun setCallbacks(
         onRoleSelected: (String, String) -> Unit = { _, _ -> },
@@ -80,12 +82,29 @@ class MemberRoleAssignAdapter :
         availableMembers = newMembers
         notifyDataSetChanged()
     }
+    
+    fun setRecentRoles(roles: Map<String, List<String>>) {
+        recentRoles = roles
+        notifyDataSetChanged()
+    }
 
     inner class ViewHolder(
         private val binding: ItemMemberRoleAssignmentBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val evaluatorBinding = binding.evaluatorPrompt
+        private val recentRolesAdapter = RecentRolesAdapter(emptyList())
+
+        init {
+            binding.rvRecentRoles.apply {
+                layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+                adapter = recentRolesAdapter
+            }
+            
+            // Initially hide recent roles section
+            binding.tvRecentRolesLabel.visibility = View.GONE
+            binding.rvRecentRoles.visibility = View.GONE
+        }
 
         fun showEvaluatorPrompt() {
             binding.evaluatorPrompt.root.visibility = View.VISIBLE
@@ -276,11 +295,31 @@ class MemberRoleAssignAdapter :
             )
             android.util.Log.d("MemberRoleAssignAdapter", "[bind] Available roles: $roles")
 
+            android.util.Log.d(
+                "MemberRoleAssignAdapter",
+                "Recent roles for ${item.userId}: ${recentRoles[item.userId]}"
+            )
+
             // Filter out current member from available members
             val otherMembers = availableMembers.filter { it.first != item.userId }
 
             binding.apply {
                 tvMemberName.text = item.memberName
+                
+                // Update recent roles
+                recentRoles[item.userId]?.let { roles ->
+                    if (roles.isNotEmpty()) {
+                        tvRecentRolesLabel.visibility = View.VISIBLE
+                        rvRecentRoles.visibility = View.VISIBLE
+                        recentRolesAdapter.updateRoles(roles)
+                    } else {
+                        tvRecentRolesLabel.visibility = View.GONE
+                        rvRecentRoles.visibility = View.GONE
+                    }
+                } ?: run {
+                    tvRecentRolesLabel.visibility = View.GONE
+                    rvRecentRoles.visibility = View.GONE
+                }
 
                 // Handle evaluator selection UI
                 val isSpeaker = item.selectedRoles.any { it.startsWith("Speaker") }
@@ -369,10 +408,13 @@ class MemberRoleAssignAdapter :
                 // Evaluator UI visibility is already handled above
 
                 // Set up recent roles
-                if (item.recentRoles.isNotEmpty()) {
+                // Use the roles from adapter's recentRoles map
+                val rolesToShow = recentRoles[item.userId] ?: emptyList()
+
+                if (rolesToShow.isNotEmpty()) {
                     rvRecentRoles.visibility = View.VISIBLE
                     tvNoRecentRoles.visibility = View.GONE
-                    rvRecentRoles.adapter = RecentRolesAdapter(item.recentRoles)
+                    recentRolesAdapter.updateRoles(rolesToShow)
                 } else {
                     rvRecentRoles.visibility = View.GONE
                     tvNoRecentRoles.visibility = View.VISIBLE
@@ -393,9 +435,9 @@ class MemberRoleAssignAdapter :
                     }
                 }
 
-                // Filter out roles that are already assigned to someone else
                 val unassignedRoles = allRoleSlots.filter { role ->
-                    !item.allAssignedRoles.containsKey(role) || item.allAssignedRoles[role] == item.userId
+                    val assignedUsers = item.allAssignedRoles[role] ?: emptyList()
+                    assignedUsers.isEmpty() || assignedUsers.contains(item.userId)
                 }
 
                 val roleAdapter = ArrayAdapter<String>(
