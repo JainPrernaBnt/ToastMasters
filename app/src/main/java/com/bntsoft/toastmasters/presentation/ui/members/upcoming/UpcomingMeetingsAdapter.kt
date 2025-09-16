@@ -83,122 +83,56 @@ class UpcomingMeetingsAdapter :
         private var nextPriority = 1
 
         fun bind(meeting: Meeting, availability: MeetingAvailability? = null) {
+            setupInitialState()
+            itemView.tag = meeting
+
             val canEdit = canEditAvailability(meeting.dateTime)
-            itemView.tag = meeting // Store meeting in the view's tag
+            val isCutoff = isAfterCutoff(meeting.dateTime)
+
+            // Use the availability passed as param (from ViewModel)
+            val userAvailability = availability ?: meeting.availability?.takeIf { it.userId == currentUserId }
+
             binding.apply {
-                // Reset views to default state
-                rgAvailability.visibility = View.GONE
-                btnSubmit.visibility = View.GONE
-                btnEdit.visibility = View.GONE
-                tvAvailabilityStatus.visibility = View.GONE
-                tvSelectedRoles.visibility = View.GONE
-                cgRoles.visibility = View.GONE
+                // --- Basic Info ---
+                tvMeetingTitle.text = meeting.theme.ifEmpty { itemView.context.getString(R.string.meeting_title) }
+                tvMeetingDate.text = meeting.dateTime.format(dateFormatter)
+                tvMeetingTime.text = "${meeting.dateTime.format(timeFormatter)} - ${meeting.endDateTime?.format(timeFormatter) ?: ""}"
+                tvMeetingLocation.text = meeting.location.ifEmpty { itemView.context.getString(R.string.venue_not_specified) }
 
-                // Set meeting details
-                tvMeetingTitle.text = meeting.theme.ifEmpty {
-                    itemView.context.getString(R.string.meeting_title)
-                }
-
-                val date = "${meeting.dateTime.format(dateFormatter)} "
-                tvMeetingDate.text = date
-
-                val time = "${meeting.dateTime.format(timeFormatter)} - ${
-                    meeting.endDateTime?.format(timeFormatter) ?: ""
-                }"
-                tvMeetingTime.text = time
-
-                // Set location
-                tvMeetingLocation.text = meeting.location.ifEmpty {
-                    itemView.context.getString(R.string.venue_not_specified)
-                }
-                // Check if user has already submitted availability for this meeting
-                val userAvailability = meeting.availability?.takeIf { it.userId == currentUserId }
-
-                // Show form if:
-                // 1. Editing is allowed AND
-                // 2. (No availability is set yet OR we're in edit mode)
+                // --- Decide Form vs Read-only ---
                 val showForm = canEdit && (userAvailability == null || meeting.isEditMode)
 
                 if (showForm) {
-                    // Edit mode - show form
+                    // Show form (radio buttons + submit)
                     rgAvailability.visibility = View.VISIBLE
                     btnSubmit.visibility = View.VISIBLE
-                    btnEdit.visibility = View.GONE
-                    tvAvailabilityStatus.visibility = View.GONE
-                    tvSelectedRoles.visibility = View.GONE
                     tvRoleInstructions.visibility = View.VISIBLE
                     tvRoleInstructions.text =
                         "Select your preferred roles in order of priority.\nThe first role you select will be your highest priority."
-                    tvYourAvailability.visibility = View.VISIBLE
-                    tvPreferredRoles.visibility = View.VISIBLE
-                    // Set initial selection based on current availability
+
                     rgAvailability.clearCheck()
                     when (userAvailability?.status) {
                         AvailabilityStatus.AVAILABLE -> rgAvailability.check(R.id.rbAvailable)
-                        AvailabilityStatus.NOT_AVAILABLE -> rgAvailability.check(R.id.rbNotAvailable)
                         AvailabilityStatus.NOT_CONFIRMED -> rgAvailability.check(R.id.rbNotConfirmed)
-                        else -> rgAvailability.check(R.id.rbNotAvailable) // Default to Not Available
+                        AvailabilityStatus.NOT_AVAILABLE, null -> rgAvailability.check(R.id.rbNotAvailable)
                     }
 
-                    // Setup preferred roles if available
                     if (meeting.preferredRoles.isNotEmpty()) {
                         setupPreferredRoles(meeting.preferredRoles)
-                        // Only add preferred roles if we have them from user's previous availability
                         userAvailability?.preferredRoles?.let { roles ->
                             selectedRoles.clear()
-                            roles.forEachIndexed { index, role ->
-                                selectedRoles[role] = index + 1
-                            }
+                            roles.forEachIndexed { index, role -> selectedRoles[role] = index + 1 }
                             nextPriority = selectedRoles.size + 1
-                            // Update chip selection
                             cgRoles.visibility = View.VISIBLE
                             updateRoleChips()
                             updateSelectedRolesText()
                         }
                     }
                 } else {
-                    // Read-only view - show current status and edit button if allowed
-                    displayRoleStatus(meeting) // Display role status chips
-                    rgAvailability.visibility = View.GONE
-                    btnSubmit.visibility = View.GONE
+                    // Read-only view
+                    displayRoleStatus(meeting)
                     tvAvailabilityStatus.visibility = View.VISIBLE
-                    tvRoleInstructions.visibility = View.GONE
-                    tvYourAvailability.visibility = View.GONE
-                    tvPreferredRoles.visibility = View.GONE
-                    // Show edit button or backout button based on timing
-                    if (isAfterCutoff(meeting.dateTime)) {
-                        // Show backout button if after cutoff but before meeting
-                        btnEdit.visibility = View.GONE
-                        btnBackout.visibility = View.VISIBLE
-                        btnBackout.setOnClickListener {
-                            MaterialAlertDialogBuilder(itemView.context)
-                                .setTitle("Backout from Meeting")
-                                .setMessage("Are you sure you want to backout from this meeting? This will remove you from any assigned roles.")
-                                .setPositiveButton("Yes, Backout") { _, _ ->
-                                    onAvailabilitySubmitted?.invoke(
-                                        meeting.id,
-                                        AvailabilityStatus.NOT_AVAILABLE,
-                                        emptyList(),
-                                        true
-                                    )
 
-                                }
-                                .setNegativeButton("Cancel", null)
-                                .show()
-                        }
-                    } else {
-                        // Show edit button if before cutoff
-                        btnEdit.visibility = if (canEdit) View.VISIBLE else View.GONE
-                        btnBackout.visibility = View.GONE
-                        
-                        // Show message about editing deadline if applicable
-                        if (!canEdit) {
-                            tvAvailabilityStatus.text =
-                                "You can no longer change your availability.\nUpdates are only allowed up to 5 days before the meeting."
-                        }
-                    }
-
-                    // Show current status
                     val statusText = when (userAvailability?.status) {
                         AvailabilityStatus.AVAILABLE -> "Available"
                         AvailabilityStatus.NOT_CONFIRMED -> "Not Confirmed"
@@ -206,98 +140,53 @@ class UpcomingMeetingsAdapter :
                     }
                     tvAvailabilityStatus.text = "Your Availability: $statusText"
 
-                    // Show preferred roles if available
-                    if (userAvailability != null) {
-                        if (userAvailability.status == AvailabilityStatus.AVAILABLE && userAvailability.preferredRoles.isNotEmpty()) {
-                            tvSelectedRoles.visibility = View.VISIBLE
-                            tvSelectedRoles.text =
-                                "Preferred Roles: ${userAvailability.preferredRoles.joinToString(", ")}"
-                        } else {
-                            tvSelectedRoles.visibility = View.GONE
-                        }
+                    // Preferred roles
+                    if (userAvailability?.status == AvailabilityStatus.AVAILABLE &&
+                        userAvailability.preferredRoles.isNotEmpty()
+                    ) {
+                        tvSelectedRoles.visibility = View.VISIBLE
+                        tvSelectedRoles.text = "Preferred Roles: ${userAvailability.preferredRoles.joinToString(", ")}"
                     }
 
-                    // Setup edit button and deadline message
-                    if (canEdit) {
-                        btnEdit.visibility = View.VISIBLE
-                        btnBackout.visibility = View.GONE
-                        btnEdit.setOnClickListener {
-                            onEditClicked?.invoke(meeting)
-                        }
-
-                        val mondayBeforeMeeting = getPreviousMonday(meeting.dateTime)
-                        tvDeadline.text =
-                            "You can update your availability for this meeting until ${
-                                mondayBeforeMeeting.format(dateFormatter)
-                            } at 11:59 PM.\nAfter this, you can only backout from the meeting."
-                        tvDeadline.visibility = View.VISIBLE
-                    } else if (isAfterCutoff(meeting.dateTime)) {
-                        btnEdit.visibility = View.GONE
+                    // Edit/backout buttons
+                    if (isCutoff) {
                         btnBackout.visibility = View.VISIBLE
-                        tvDeadline.text = "The regular edit period has ended. You can still backout from this meeting if needed."
-                        tvDeadline.visibility = View.VISIBLE
-                    } else {
-                        btnEdit.visibility = View.GONE
-                        btnBackout.visibility = View.GONE
-                        tvDeadline.text = "The meeting has already started or ended."
-                        tvDeadline.visibility = View.VISIBLE
-                    }
-
-                    // Reset current status if needed
-                    if (currentStatus == null) {
-                        if (userAvailability != null) {
-                            currentStatus =
-                                userAvailability.status ?: AvailabilityStatus.NOT_AVAILABLE
-                        }
-                    }
-
-                    // Clear any previous selections
-                    selectedRoles.clear()
-                    cgRoles.removeAllViews()
-
-                    // If availability exists, pre-select the radio button and preferred roles
-                    userAvailability.let { availability ->
-                        if (availability != null) {
-                            currentStatus = availability.status
-                        }
-                        // Pre-select the radio button based on current availability
-                        if (availability != null) {
-                            when (availability.status) {
-                                AvailabilityStatus.AVAILABLE -> {
-                                    rgAvailability.check(R.id.rbAvailable)
-                                    setupPreferredRoles(meeting.preferredRoles)
-                                    availability.preferredRoles.forEachIndexed { index, role ->
-                                        selectedRoles[role] = index + 1
-                                    }
-                                    nextPriority = selectedRoles.size + 1
+                        btnBackout.setOnClickListener {
+                            MaterialAlertDialogBuilder(itemView.context)
+                                .setTitle("Backout from Meeting")
+                                .setMessage("Are you sure you want to back out from this meeting? This will remove you from any assigned roles.")
+                                .setPositiveButton("Yes, Backout") { _, _ ->
+                                    onAvailabilitySubmitted?.invoke(
+                                        meeting.id,
+                                        AvailabilityStatus.NOT_AVAILABLE,
+                                        emptyList(),
+                                        true // backout mode
+                                    )
                                 }
-
-                                AvailabilityStatus.NOT_CONFIRMED -> rgAvailability.check(R.id.rbNotConfirmed)
-                                AvailabilityStatus.NOT_AVAILABLE -> rgAvailability.check(R.id.rbNotAvailable)
-                            }
+                                .setNegativeButton("Cancel", null)
+                                .show()
                         }
+                    } else {
+                        btnEdit.visibility = if (canEdit) View.VISIBLE else View.GONE
+                        btnEdit.setOnClickListener { onEditClicked?.invoke(meeting) }
                     }
                 }
 
-                // Setup radio group listener
+                // --- RadioGroup Listener ---
                 rgAvailability.setOnCheckedChangeListener { _, checkedId ->
                     currentStatus = when (checkedId) {
                         R.id.rbAvailable -> AvailabilityStatus.AVAILABLE
                         R.id.rbNotConfirmed -> AvailabilityStatus.NOT_CONFIRMED
                         else -> AvailabilityStatus.NOT_AVAILABLE
                     }
-
-                    // Clear selected roles if not Available
                     if (checkedId != R.id.rbAvailable) {
                         selectedRoles.clear()
                         cgRoles.clearCheck()
                     }
-
                     updatePreferredRolesVisibility()
                 }
 
-
-                // Setup submit button
+                // --- Submit Button ---
                 btnSubmit.setOnClickListener {
                     val status = when (rgAvailability.checkedRadioButtonId) {
                         R.id.rbAvailable -> AvailabilityStatus.AVAILABLE
@@ -305,12 +194,7 @@ class UpcomingMeetingsAdapter :
                         R.id.rbNotConfirmed -> AvailabilityStatus.NOT_CONFIRMED
                         else -> AvailabilityStatus.NOT_AVAILABLE
                     }
-                    onAvailabilitySubmitted?.invoke(
-                        meeting.id,
-                        AvailabilityStatus.NOT_AVAILABLE,
-                        emptyList(),
-                        true
-                    )
+                    onAvailabilitySubmitted?.invoke(meeting.id, status, selectedRoles.keys.toList(), false)
                 }
             }
         }
@@ -464,4 +348,3 @@ class UpcomingMeetingsAdapter :
 
     }
 }
-

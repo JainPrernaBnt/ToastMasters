@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "cd75a1b79b5b4950b16f6c979a59f95f",
+    "identityHash": "a856acd905ecde1b5a25df70f7ab0962",
     "entities": [
       {
         "tableName": "members",
@@ -118,7 +118,7 @@
       },
       {
         "tableName": "meetings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`meetingID` TEXT NOT NULL, `date` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `venue` TEXT NOT NULL, `theme` TEXT NOT NULL, `roleCounts` TEXT NOT NULL, `assignedCounts` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `status` TEXT NOT NULL, PRIMARY KEY(`meetingID`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`meetingID` TEXT NOT NULL, `date` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `venue` TEXT NOT NULL, `theme` TEXT NOT NULL, `roleCounts` TEXT NOT NULL, `assignedCounts` TEXT NOT NULL, `assignedRoles` TEXT NOT NULL, `officers` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER, `status` TEXT NOT NULL, `agendaId` TEXT, `isRecurring` INTEGER NOT NULL, `createdBy` TEXT, PRIMARY KEY(`meetingID`))",
         "fields": [
           {
             "fieldPath": "meetingID",
@@ -169,16 +169,49 @@
             "notNull": true
           },
           {
+            "fieldPath": "assignedRoles",
+            "columnName": "assignedRoles",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "officers",
+            "columnName": "officers",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "createdAt",
             "columnName": "createdAt",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER"
+          },
+          {
             "fieldPath": "status",
             "columnName": "status",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "agendaId",
+            "columnName": "agendaId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "isRecurring",
+            "columnName": "isRecurring",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdBy",
+            "columnName": "createdBy",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -606,7 +639,7 @@
       },
       {
         "tableName": "agenda_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemsId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `agendaId` INTEGER NOT NULL, `time` TEXT NOT NULL, `activity` TEXT NOT NULL, `presenterId` INTEGER, `level` TEXT, `project` TEXT, `speechTitle` TEXT, `pathName` TEXT, `greenTimeMin` INTEGER, `yellowTimeMin` INTEGER, `redTimeMin` INTEGER, `order` INTEGER, FOREIGN KEY(`agendaId`) REFERENCES `agenda_master`(`agendaId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`presenterId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemsId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `agendaId` INTEGER NOT NULL, `time` TEXT NOT NULL, `activity` TEXT NOT NULL, `presenterId` INTEGER, `level` TEXT, `project` TEXT, `speechTitle` TEXT, `pathName` TEXT, `greenTimeMin` INTEGER, `yellowTimeMin` INTEGER, `redTimeMin` INTEGER, `order` INTEGER, `isSessionHeader` INTEGER NOT NULL, FOREIGN KEY(`agendaId`) REFERENCES `agenda_master`(`agendaId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`presenterId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "itemsId",
@@ -676,6 +709,12 @@
             "fieldPath": "order",
             "columnName": "order",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isSessionHeader",
+            "columnName": "isSessionHeader",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -822,7 +861,7 @@
       },
       {
         "tableName": "guests",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`guestId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `name` TEXT NOT NULL, `phone` TEXT NOT NULL, `email` TEXT NOT NULL, `playedRole` INTEGER NOT NULL, `rolePlayed` TEXT, `gender` TEXT NOT NULL, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`guestId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `name` TEXT NOT NULL, `phone` TEXT NOT NULL, `email` TEXT NOT NULL, `playedRole` INTEGER NOT NULL, `rolePlayed` TEXT, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "guestId",
@@ -864,12 +903,6 @@
             "fieldPath": "rolePlayed",
             "columnName": "rolePlayed",
             "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "gender",
-            "columnName": "gender",
-            "affinity": "TEXT",
-            "notNull": true
           }
         ],
         "primaryKey": {
@@ -905,7 +938,7 @@
       },
       {
         "tableName": "winners",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` INTEGER NOT NULL, `category` TEXT NOT NULL, `winnerUserId` INTEGER, `isGuest` INTEGER NOT NULL, `guestName` TEXT, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`winnerUserId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `meetingId` TEXT NOT NULL, `category` TEXT NOT NULL, `isMember` INTEGER NOT NULL, `winnerUserId` INTEGER, `memberName` TEXT, `guestName` TEXT, FOREIGN KEY(`meetingId`) REFERENCES `meetings`(`meetingID`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`winnerUserId`) REFERENCES `members`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -916,7 +949,7 @@
           {
             "fieldPath": "meetingId",
             "columnName": "meetingId",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -926,15 +959,20 @@
             "notNull": true
           },
           {
+            "fieldPath": "isMember",
+            "columnName": "isMember",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
             "fieldPath": "winnerUserId",
             "columnName": "winnerUserId",
             "affinity": "INTEGER"
           },
           {
-            "fieldPath": "isGuest",
-            "columnName": "isGuest",
-            "affinity": "INTEGER",
-            "notNull": true
+            "fieldPath": "memberName",
+            "columnName": "memberName",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "guestName",
@@ -1141,7 +1179,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cd75a1b79b5b4950b16f6c979a59f95f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a856acd905ecde1b5a25df70f7ab0962')"
     ]
   }
 }

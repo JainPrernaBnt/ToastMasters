@@ -24,10 +24,12 @@ import java.util.Locale
 class MemberDashboardAdapter(
     private val viewModel: MemberDashboardViewModel,
     private val currentUserId: String,
+    private val onAgendaClick: (String) -> Unit,
     private val onMeetingClick: (String) -> Unit
 ) : ListAdapter<MeetingWithRole, MemberDashboardAdapter.MeetingWithRoleViewHolder>(
     MeetingWithRoleDiffCallback()
-) {
+)
+ {
     private val TAG = "MeetingRoleAdapter"
 
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
@@ -126,7 +128,7 @@ class MemberDashboardAdapter(
 
                 btnAgenda.visibility = View.VISIBLE
                 btnAgenda.setOnClickListener {
-                    onMeetingClick(item.meeting.id)
+                    onAgendaClick(item.meeting.id)
                 }
 
                 root.setOnClickListener {

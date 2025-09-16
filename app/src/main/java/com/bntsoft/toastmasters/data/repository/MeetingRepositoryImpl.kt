@@ -13,6 +13,7 @@ import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.utils.Resource
 import com.bntsoft.toastmasters.utils.Result
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -294,20 +296,18 @@ class MeetingRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getMemberRolesForMeeting(meetingId: String): List<MemberRole> {
-        return try {
-            val memberRoles = firebaseDataSource.getMemberRolesForMeeting(meetingId)
-            memberRoles.map { (memberName, roles) ->
-                MemberRole(
-                    id = "", // We'll set this to empty as it's not used in the UI
-                    memberName = memberName,
-                    roles = roles
-                )
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Error getting member roles for meeting $meetingId")
-            emptyList()
+        val snapshot = FirebaseFirestore.getInstance()
+            .collection("meetings")
+            .document(meetingId)
+            .collection("assignedRole")
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toObject(MemberRole::class.java)?.copy(id = doc.id)
         }
     }
+
 
     override suspend fun updateSpeakerEvaluator(
         meetingId: String,

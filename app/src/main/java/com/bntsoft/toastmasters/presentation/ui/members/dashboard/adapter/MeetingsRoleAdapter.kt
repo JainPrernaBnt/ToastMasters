@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.presentation.ui.members.dashboard.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -20,7 +21,10 @@ class MeetingsRoleAdapter : ListAdapter<MemberRole, MeetingsRoleAdapter.Meetings
         return MeetingsRoleViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: MeetingsRoleAdapter.MeetingsRoleViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: MeetingsRoleAdapter.MeetingsRoleViewHolder,
+        position: Int
+    ) {
         val item = getItem(position)
         holder.bind(item)
     }
@@ -31,12 +35,19 @@ class MeetingsRoleAdapter : ListAdapter<MemberRole, MeetingsRoleAdapter.Meetings
         fun bind(memberRole: MemberRole) {
             binding.apply {
                 tvMemberName.text = memberRole.memberName
-                val rolesText = if (memberRole.roles.isNotEmpty()) {
+                tvMeetingRole.text = if (memberRole.roles.isNotEmpty()) {
                     "Assigned Roles: ${memberRole.roles.joinToString(", ")}"
                 } else {
                     itemView.context.getString(R.string.error_loading_roles)
                 }
-                tvMeetingRole.text = rolesText
+
+                if (!memberRole.evaluator.isNullOrBlank()) {
+                    tvEvaluator.visibility = View.VISIBLE
+                    tvEvaluator.text =
+                        "Evaluator: ${memberRole.evaluator} (${memberRole.evaluatorRole ?: ""})"
+                } else {
+                    tvEvaluator.visibility = View.GONE
+                }
             }
         }
     }

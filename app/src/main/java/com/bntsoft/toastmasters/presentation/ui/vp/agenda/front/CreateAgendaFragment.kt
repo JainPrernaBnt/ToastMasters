@@ -46,6 +46,9 @@ class CreateAgendaFragment : Fragment() {
 
     private lateinit var abbreviationAdapter: AbbreviationAdapter
 
+    private var isAbbreviationEditing = false
+
+
     private fun setupAbbreviationAdapter() {
         abbreviationAdapter = AbbreviationAdapter(
             onItemRemoved = { position ->
@@ -75,9 +78,6 @@ class CreateAgendaFragment : Fragment() {
             }
         )
     }
-
-    private
-    var isAbbreviationEditing = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -244,7 +244,7 @@ class CreateAgendaFragment : Fragment() {
         setupAbbreviationAdapter()
         binding.abbreviationsRecyclerView.adapter = abbreviationAdapter
 
-        // Set up click listeners
+        // Switch to edit mode on tapping summary
         binding.abbreviationsSummaryText.setOnClickListener {
             if (!isAbbreviationEditing) {
                 editAbbreviations()
@@ -263,19 +263,16 @@ class CreateAgendaFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.abbreviations.collect { abbreviations: Map<String, String> ->
-                    if (abbreviations.isNotEmpty()) {
-                        val items = abbreviations.map { entry: Map.Entry<String, String> ->
-                            AbbreviationItem(
-                                id = entry.key, // Using abbreviation as ID for simplicity
-                                abbreviation = entry.key,
-                                meaning = entry.value,
-                                isEditable = isAbbreviationEditing
-                            )
-                        }
-                        abbreviationAdapter.submitList(items)
-                    } else if (!isAbbreviationEditing) {
-                        abbreviationAdapter.submitList(emptyList())
+                    val items = abbreviations.map { entry ->
+                        AbbreviationItem(
+                            id = entry.key,
+                            abbreviation = entry.key,
+                            meaning = entry.value,
+                            isEditable = isAbbreviationEditing
+                        )
                     }
+
+                    abbreviationAdapter.submitList(items)
                     updateAbbreviationUI()
                 }
             }
@@ -296,7 +293,6 @@ class CreateAgendaFragment : Fragment() {
             )
         )
         abbreviationAdapter.submitList(currentList) {
-            // Scroll to the bottom when adding a new item
             binding.abbreviationsRecyclerView.smoothScrollToPosition(currentList.size - 1)
         }
         updateAbbreviationUI()
@@ -306,18 +302,13 @@ class CreateAgendaFragment : Fragment() {
         val hasItems = abbreviationAdapter.currentList.isNotEmpty()
 
         with(binding) {
-            // Always show the RecyclerView
-            abbreviationsRecyclerView.isVisible = true
-            abbreviationsSummaryText.isVisible = false
+            abbreviationsRecyclerView.isVisible = hasItems || isAbbreviationEditing
+            abbreviationsSummaryText.isVisible = !hasItems && !isAbbreviationEditing
 
-            // Show empty state message if no items and not in edit mode
             if (!hasItems && !isAbbreviationEditing) {
                 abbreviationsSummaryText.text = "No abbreviations added. Tap to add."
-                abbreviationsSummaryText.isVisible = true
-                abbreviationsRecyclerView.isVisible = false
             }
 
-            // Show edit controls only in edit mode
             saveAbbreviationsButton.isVisible = isAbbreviationEditing
             addAbbreviationsButton.isVisible = isAbbreviationEditing
         }
@@ -326,16 +317,14 @@ class CreateAgendaFragment : Fragment() {
     private fun editAbbreviations() {
         isAbbreviationEditing = true
         val currentList = abbreviationAdapter.currentList.toMutableList()
-        
+
         if (currentList.isEmpty()) {
-            // If no items, add an empty one
             addNewAbbreviationItem()
         } else {
-            // Make all items editable
             val updatedList = currentList.map { it.copy(isEditable = true) }
             abbreviationAdapter.submitList(updatedList)
         }
-        
+
         updateAbbreviationUI()
     }
 
@@ -346,24 +335,25 @@ class CreateAgendaFragment : Fragment() {
                 val abbreviations = currentList
                     .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
                     .associate { it.abbreviation to it.meaning }
-                
-                // Get the agenda ID from the ViewModel or use a default value
+
                 val agendaId = viewModel.uiState.value.agenda?.id ?: ""
                 viewModel.saveAbbreviations(meetingId, agendaId, abbreviations)
-                
+
+                // Switch back to read mode
                 isAbbreviationEditing = false
-                
-                // Update the list to mark items as non-editable
+
+                // Mark all items as read-only
                 val updatedList = currentList.map { it.copy(isEditable = false) }
                 abbreviationAdapter.submitList(updatedList)
-                
+
                 updateAbbreviationUI()
+                showMessage("Abbreviations saved successfully")
             } catch (e: Exception) {
-                // Handle any errors that might occur during save
                 showError("Failed to save abbreviations: ${e.message}")
             }
         }
     }
+
 
     private fun observeViewModel() {
         // Observe UI state

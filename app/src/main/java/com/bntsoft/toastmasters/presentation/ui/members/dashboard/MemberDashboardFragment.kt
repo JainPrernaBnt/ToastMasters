@@ -26,16 +26,26 @@ class MemberDashboardFragment : Fragment() {
 
     private val viewModel: MemberDashboardViewModel by viewModels()
     private val adapter by lazy {
-        MemberDashboardAdapter(viewModel, viewModel.currentUserId ?: ""){ meetingId ->
-            // Navigate to agenda with meetingId
-            val bundle = Bundle().apply { putString("meetingId", meetingId) }
-            findNavController().navigate(
-                R.id.action_memberDashboardFragment_to_agendaTableFragment,
-                bundle
-            )
-        }
+        MemberDashboardAdapter(
+            viewModel,
+            viewModel.currentUserId ?: "",
+            onAgendaClick = { meetingId ->
+                val bundle = Bundle().apply { putString("meetingId", meetingId) }
+                findNavController().navigate(
+                    R.id.action_memberDashboardFragment_to_agendaTableFragment,
+                    bundle
+                )
+            },
+            onMeetingClick = { meetingId ->
+                val bundle = Bundle().apply { putString("meetingId", meetingId) }
+                findNavController().navigate(
+                    R.id.action_navigation_dashboard_to_meetings_role,
+                    bundle
+                )
+            }
+        )
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate")

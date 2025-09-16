@@ -183,20 +183,23 @@ class UpcomingMeetingsListViewModel @Inject constructor(
             _uiState.value = UpcomingMeetingsUiState.Loading
             try {
                 meetingRepository.getUpcomingMeetings(LocalDate.now()).collect { meetings ->
-                    // Initialize meetings with no availability and not in edit mode
-                    val meetingsWithDefaultState = meetings.map { meeting ->
-                        meeting.copy(
-                            availability = null,
-                            isEditMode = false
-                        )
-                    }
+                    _meetings.value = meetings.map { it.copy(isEditMode = false) }
+                    _uiState.value = UpcomingMeetingsUiState.Success(_meetings.value ?: emptyList())
 
-                    _meetings.value = meetingsWithDefaultState
-                    _uiState.value = UpcomingMeetingsUiState.Success(meetingsWithDefaultState)
-
-                    // Check availability for each meeting
-                    meetingsWithDefaultState.forEach { meeting ->
-                        checkMeetingAvailability(meeting.id)
+                    // Listen for availability updates in real-time
+                    meetings.forEach { meeting ->
+                        db.collection("meetings")
+                            .document(meeting.id)
+                            .collection("availability")
+                            .document(currentUserId)
+                            .addSnapshotListener { snapshot, error ->
+                                if (error != null) return@addSnapshotListener
+                                val availability = snapshot?.toObject(MeetingAvailability::class.java)
+                                _meetings.value = _meetings.value?.map {
+                                    if (it.id == meeting.id) it.copy(availability = availability)
+                                    else it
+                                }
+                            }
                     }
                 }
             } catch (e: Exception) {
@@ -206,6 +209,7 @@ class UpcomingMeetingsListViewModel @Inject constructor(
             }
         }
     }
+
 }
 
 sealed class UpcomingMeetingsUiState {
