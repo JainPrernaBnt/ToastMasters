@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.databinding.FragmentMeetingsRoleBinding
+import com.bntsoft.toastmasters.data.model.MeetingRoleItem
 import com.bntsoft.toastmasters.presentation.ui.members.dashboard.adapter.MeetingsRoleAdapter
 import com.bntsoft.toastmasters.utils.UiState
 import com.google.android.material.snackbar.Snackbar
@@ -53,6 +54,7 @@ class MeetingsRoleFragment : Fragment() {
         binding.rvMeetings.apply {
             layoutManager = LinearLayoutManager(requireContext())
             this.adapter = this@MeetingsRoleFragment.adapter
+            itemAnimator = null // Disable animations to prevent flickering when updating the list
         }
     }
 

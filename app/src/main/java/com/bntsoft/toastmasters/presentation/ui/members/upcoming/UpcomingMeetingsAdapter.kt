@@ -132,7 +132,10 @@ class UpcomingMeetingsAdapter :
                     // Read-only view
                     displayRoleStatus(meeting)
                     tvAvailabilityStatus.visibility = View.VISIBLE
-
+                    tvYourAvailability.visibility = View.GONE
+                    tvPreferredRoles.visibility = View.GONE
+                    rgAvailability.visibility = View.GONE
+                    btnSubmit.visibility = View.GONE
                     val statusText = when (userAvailability?.status) {
                         AvailabilityStatus.AVAILABLE -> "Available"
                         AvailabilityStatus.NOT_CONFIRMED -> "Not Confirmed"
