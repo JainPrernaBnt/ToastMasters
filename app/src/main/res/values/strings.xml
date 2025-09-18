@@ -199,7 +199,7 @@
     <string name="forgot_password_dialog_message">Enter your email to receive a password reset link</string>
     <string name="hint_email">Email</string>
     <string name="your_availability">Your Availability</string>
-    <string name="not_confirmed">Not \nConfirm</string>
+    <string name="not_confirmed">Tentative</string>
     <string name="no_roles_available">No roles available</string>
 
     <!-- Member Response Fragment -->
@@ -230,7 +230,7 @@
     <string name="click_to_view_member_details">Click to view member details</string>
     <string name="available_members_preferred_roles">Available Members (Preferred Roles)</string>
     <string name="members_not_responded">Members Not Responded</string>
-    <string name="not_responded">No \nAnswer</string>
+    <string name="not_responded">Response Pending</string>
 
     <string name="not_confirmed_members">Not Confirmed Members</string>
 

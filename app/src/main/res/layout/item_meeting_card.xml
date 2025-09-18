@@ -3,27 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="8dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    app:cardBackgroundColor="@color/white"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
-    app:strokeColor="@color/outline_variant"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="2dp"
+    app:cardPreventCornerOverlap="false"
+    app:strokeColor="@color/surface_variant"
     app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp"
+        android:paddingBottom="20dp">
 
         <!-- Meeting Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:clickable="false"
             android:focusable="false"
             android:gravity="center_vertical"
@@ -36,62 +39,88 @@
                 android:clickable="false"
                 android:focusable="false"
                 android:src="@drawable/ic_event"
-                app:tint="@color/purple_500" />
+                app:tint="@color/primary" />
 
             <TextView
                 android:id="@+id/tvMeetingTitle"
                 android:layout_width="0dp"
-
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:clickable="false"
                 android:focusable="false"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="2sp"
                 android:text="Weekly ToastMasters Meeting"
                 android:textColor="@color/on_surface"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvMeetingDate"
-                android:layout_width="wrap_content"
-
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_date_chip"
-                android:clickable="false"
-                android:focusable="false"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
-                android:text="Aug 15, 2024"
-                android:textColor="@color/on_surface_medium"
-                android:textSize="14sp" />
 
             <ImageButton
                 android:id="@+id/btnOverflow"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_marginStart="4dp"
-                android:background="@android:color/transparent"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:backgroundTint="@color/surface_container_highest"
                 android:clickable="true"
                 android:contentDescription="@string/more_options"
+                android:outlineAmbientShadowColor="@android:color/transparent"
+                android:outlineSpotShadowColor="@android:color/transparent"
+                android:padding="4dp"
                 android:src="@drawable/ic_more_vert"
-                app:tint="@color/on_surface_medium" />
+                android:stateListAnimator="@null"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent"
+                app:tint="@color/on_surface_variant" />
 
         </LinearLayout>
 
         <!-- Meeting Details -->
         <LinearLayout
+            android:id="@+id/meetingDetailsCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
-            android:layout_marginBottom="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_meeting_details"
             android:clickable="false"
             android:focusable="false"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumCorner">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_calendar"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:id="@+id/tvMeetingDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="sans-serif"
+                    android:letterSpacing="0.01"
+                    android:text="Aug 15, 2024"
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -100,16 +129,19 @@
                     android:layout_height="16dp"
                     android:layout_marginEnd="8dp"
                     android:src="@drawable/ic_time"
-                    app:tint="@color/on_surface_medium" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvMeetingTime"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:fontFamily="sans-serif"
+                    android:letterSpacing="0.01"
                     android:text="5:30 PM - 7:30 PM"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="14sp" />
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -124,16 +156,19 @@
                     android:layout_height="16dp"
                     android:layout_marginEnd="8dp"
                     android:src="@drawable/ic_location"
-                    app:tint="@color/on_surface_medium" />
+                    app:tint="@color/primary" />
 
                 <TextView
                     android:id="@+id/tvMeetingVenue"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:fontFamily="sans-serif"
+                    android:letterSpacing="0.01"
                     android:text="Community Center, Room 101"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="14sp" />
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -143,81 +178,102 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
             android:baselineAligned="false"
             android:clickable="false"
+            android:divider="@null"
             android:focusable="false"
-            android:orientation="horizontal">
+            android:minHeight="100dp"
+            android:orientation="horizontal"
+            android:showDividers="middle">
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_availability_card"
                 android:gravity="center"
+                android:minHeight="100dp"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="16dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent">
 
                 <TextView
                     android:id="@+id/tvAvailableCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="-0.01"
                     android:text="12"
                     android:textColor="@color/success"
-                    android:textSize="24sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
                     android:gravity="center_horizontal"
+                    android:letterSpacing="0.02"
                     android:minLines="2"
                     android:text="@string/available"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="12sp" />
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_availability_card"
                 android:gravity="center"
+                android:minHeight="100dp"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="16dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent">
 
                 <TextView
                     android:id="@+id/tvNotAvailableCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="-0.01"
                     android:text="3"
                     android:textColor="@color/error"
-                    android:textSize="24sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
                     android:gravity="center_horizontal"
+                    android:letterSpacing="0.02"
                     android:minLines="2"
                     android:text="@string/not_available"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="12sp" />
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_availability_card"
                 android:gravity="center"
+                android:minHeight="100dp"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="16dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent">
 
                 <TextView
                     android:id="@+id/tvNotConfirmedCount"
@@ -231,40 +287,50 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
                     android:gravity="center_horizontal"
+                    android:letterSpacing="0.02"
                     android:minLines="2"
                     android:text="@string/not_confirmed"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="12sp" />
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="6dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_availability_card"
                 android:gravity="center"
+                android:minHeight="100dp"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="16dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent">
 
                 <TextView
                     android:id="@+id/tvNotResponded"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="1"
-                    android:textColor="@color/role_toastmaster"
+                    android:textColor="@color/on_error_container"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
                     android:gravity="center_horizontal"
+                    android:letterSpacing="0.02"
                     android:minLines="2"
                     android:text="@string/not_responded"
-                    android:textColor="@color/on_surface_medium"
-                    android:textSize="12sp" />
+                    android:textColor="@color/on_surface_variant"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 

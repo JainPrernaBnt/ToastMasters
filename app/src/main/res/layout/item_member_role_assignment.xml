@@ -5,22 +5,27 @@
     android:id="@+id/cardMember"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
     android:layout_marginBottom="16dp"
-    app:cardCornerRadius="8dp"
+    android:backgroundTint="@color/surface_container"
+    app:cardBackgroundColor="@color/surface_container"
+    app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
-    app:strokeColor="@color/gray_300"
-    app:strokeWidth="1dp">
+    app:strokeColor="@color/outline_variant"
+    app:strokeWidth="1dp"
+    app:rippleColor="@color/primary_container">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/tvMemberName"
@@ -30,6 +35,8 @@
                 android:layout_gravity="center_vertical"
                 android:textColor="@color/on_surface"
                 android:textSize="18sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.01"
                 tools:text="John Doe" />
 
             <View
@@ -47,9 +54,17 @@
                 android:textAllCaps="false"
                 android:visibility="gone"
                 app:icon="@drawable/ic_edit"
+                app:strokeColor="@color/outline"
+                app:strokeWidth="1dp"
+                app:rippleColor="@color/primary"
+                app:iconTint="@color/primary"
                 app:iconGravity="textStart"
-                app:iconTint="@color/purple_500"
-                app:strokeColor="@color/purple_500" />
+                app:iconPadding="4dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="16dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
 
         </LinearLayout>
 
@@ -84,9 +99,21 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/toastmaster"
-                    app:chipMinHeight="24dp"
+                    app:chipMinHeight="28dp"
                     app:chipMinTouchTargetSize="0dp"
-                    app:chipStartPadding="8dp" />
+                    app:chipStartPadding="12dp"
+                    app:chipEndPadding="12dp"
+                    app:chipBackgroundColor="@color/surface_variant"
+                    app:chipStrokeColor="@color/outline"
+                    app:chipStrokeWidth="1dp"
+                    app:chipCornerRadius="8dp"
+                    app:rippleColor="@color/primary"
+                    android:textColor="@color/on_surface"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.01"
+                    app:checkedIconTint="@color/primary"
+                    app:checkedIcon="@drawable/ic_check"
+                    app:closeIconTint="@color/on_surface_variant" />
 
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
@@ -214,9 +241,9 @@
             android:layout_marginTop="12dp"
             android:contentDescription="@string/assign_backup"
             android:text="@string/assign_backup"
-            android:textColor="@color/purple_700"
+            android:textColor="@color/primary"
             android:textSize="15sp"
-            app:buttonTint="@color/purple_500" />
+            app:buttonTint="@color/primary" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilBackupMember"

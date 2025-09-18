@@ -46,6 +46,7 @@
                 style="@style/TextAppearance.MaterialComponents.Body2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textStyle="bold"
                 android:textColor="@color/on_surface_medium"
                 tools:text="Aug 28, 2023" />
 
@@ -67,6 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawablePadding="4dp"
+                android:textStyle="bold"
                 android:textColor="@color/on_surface_medium"
                 tools:text="6:30 - 8:30 PM" />
         </LinearLayout>
@@ -79,10 +81,11 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:lineSpacingExtra="4dp"
+            android:fontFamily="sans-serif-medium"
             android:maxLines="2"
             android:paddingTop="4dp"
             android:textColor="@color/on_surface"
-            tools:text="The Power of Effective Communication" />
+            tools:text="Keep Dreaming" />
         <!-- Divider -->
         <View
             android:layout_width="match_parent"
@@ -112,6 +115,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:ellipsize="end"
+                android:textStyle="bold"
                 android:maxLines="1"
                 android:textColor="@color/on_surface_medium"
                 tools:text="Hinjewadi Phase 1, Tech Park, Conference Room A" />
