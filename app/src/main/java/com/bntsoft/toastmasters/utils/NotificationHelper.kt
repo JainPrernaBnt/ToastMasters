@@ -19,7 +19,7 @@ import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import android.util.Log
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -344,9 +344,9 @@ class NotificationHelper @Inject constructor(
                 data = data
             )
 
-            Timber.d("Meeting notification shown: $title")
+            Log.d("NotificationHelper", "Meeting notification shown: $title")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to show meeting notification")
+            Log.e("NotificationHelper", "Failed to show meeting notification", e)
         }
     }
 

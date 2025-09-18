@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.pow
@@ -47,18 +47,18 @@ class FcmTokenManager @Inject constructor(
 
                 // Check if token is valid and different from the saved one
                 if (token.isNotBlank() && token != savedToken) {
-                    Timber.d("New FCM token generated")
+                    Log.d(TAG, "New FCM token generated")
                     updateToken(token)
                 } else if (savedToken.isNullOrBlank()) {
-                    Timber.d("No saved token found, updating with new token")
+                    Log.d(TAG, "No saved token found, updating with new token")
                     updateToken(token)
                 } else {
-                    Timber.d("Using existing valid FCM token")
+                    Log.d(TAG, "Using existing valid FCM token")
                     // Verify the token is still valid on the server
                     verifyTokenOnServer(savedToken)
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Failed to get FCM token")
+                Log.e(TAG, "Failed to get FCM token", e)
                 // Retry after a delay if token fetch fails
                 retryTokenFetch()
             }
@@ -78,9 +78,9 @@ class FcmTokenManager @Inject constructor(
                 updateFcmTokenOnServer(userId, token)
             }
 
-            Timber.d("FCM token updated successfully")
+            Log.d(TAG, "FCM token updated successfully")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to update FCM token")
+            Log.e(TAG, "Failed to update FCM token", e)
             throw e
         }
     }
@@ -88,9 +88,9 @@ class FcmTokenManager @Inject constructor(
     private suspend fun updateFcmTokenOnServer(userId: String, token: String) {
         try {
             userRepository.updateFcmToken(userId, token)
-            Timber.d("FCM token updated on server for user: $userId")
+            Log.d(TAG, "FCM token updated on server for user: $userId")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to update FCM token on server")
+            Log.e(TAG, "Failed to update FCM token on server", e)
             // Queue the token update for retry
             queueTokenForRetry(userId, token)
             throw e
@@ -108,7 +108,7 @@ class FcmTokenManager @Inject constructor(
                 updateFcmTokenOnServer(userId, token)
             }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to verify FCM token on server")
+            Log.e(TAG, "Failed to verify FCM token on server", e)
         }
     }
 
@@ -136,9 +136,9 @@ class FcmTokenManager @Inject constructor(
         try {
             userRepository.updateFcmToken(userId, token)
             prefsManager.pendingTokenUpdate = null
-            Timber.d("Successfully retried pending FCM token update")
+            Log.d(TAG, "Successfully retried pending FCM token update")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to retry pending FCM token update")
+            Log.e(TAG, "Failed to retry pending FCM token update", e)
             // Will retry on next app launch
         }
     }
@@ -148,7 +148,7 @@ class FcmTokenManager @Inject constructor(
      */
     private fun retryTokenFetch(attempt: Int = 1) {
         if (attempt > MAX_RETRY_ATTEMPTS) {
-            Timber.w("Max retry attempts reached for FCM token fetch")
+            Log.w(TAG, "Max retry attempts reached for FCM token fetch")
             return
         }
 
@@ -156,7 +156,7 @@ class FcmTokenManager @Inject constructor(
 
         ioScope.launch {
             kotlinx.coroutines.delay(delayMs)
-            Timber.d("Retrying FCM token fetch (attempt $attempt)")
+            Log.d(TAG, "Retrying FCM token fetch (attempt $attempt)")
             getFcmToken()
         }
     }
@@ -178,9 +178,9 @@ class FcmTokenManager @Inject constructor(
                     removeFcmTokenFromServer(user.uid)
                 }
 
-                Timber.d("FCM token deleted successfully")
+                Log.d(TAG, "FCM token deleted successfully")
             } catch (e: Exception) {
-                Timber.e(e, "Failed to delete FCM token")
+                Log.e(TAG, "Failed to delete FCM token", e)
             }
         }
     }
@@ -188,9 +188,9 @@ class FcmTokenManager @Inject constructor(
     private suspend fun removeFcmTokenFromServer(userId: String) {
         try {
             userRepository.removeFcmToken(userId)
-            Timber.d("FCM token removed from server for user: $userId")
+            Log.d(TAG, "FCM token removed from server for user: $userId")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to remove FCM token from server")
+            Log.e(TAG, "Failed to remove FCM token from server", e)
             throw e
         }
     }

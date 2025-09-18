@@ -12,7 +12,7 @@ import com.bntsoft.toastmasters.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
-import timber.log.Timber
+import android.util.Log
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -40,6 +40,8 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         remoteMessage.notification?.let { notification ->
             val meetingId = remoteMessage.data["meeting_id"]
 
+            Log.d("FirebaseMsgService", "Message data payload: ${remoteMessage.data}")
+
             sendNotification(
                 title = notification.title ?: getString(R.string.app_name),
                 message = notification.body ?: "",
@@ -52,7 +54,7 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         super.onNewToken(token)
         // Send the token to your server if needed
         // You can also subscribe to topics here if needed
-        Timber.d("Refreshed FCM token: $token")
+        Log.d("FirebaseMsgService", "New FCM token: $token")
     }
 
     private fun sendNotification(title: String, message: String, meetingId: String? = null) {

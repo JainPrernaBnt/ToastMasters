@@ -21,7 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import timber.log.Timber
+// Timber import removed, using Android Log instead
 import javax.inject.Inject
 
 
@@ -66,7 +66,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
 
     override fun onCreate() {
         super.onCreate()
-        Timber.d("ToastMastersMessagingService created")
+        Log.d("ToastMastersMsgSvc", "ToastMastersMessagingService created")
     }
 
     override fun onNewToken(token: String) {
@@ -83,19 +83,19 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
             try {
                 fcmTokenManager.updateToken(token)
             } catch (e: Exception) {
-                Timber.e(e, "Failed to update FCM token")
+                Log.e("ToastMastersMsgSvc", "Failed to update FCM token", e)
             }
         }
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Timber.d("Message received from: ${remoteMessage.from}")
+        Log.d("ToastMastersMsgSvc", "From: ${remoteMessage.from}")
 
         try {
             // Check if message contains a data payload
             if (remoteMessage.data.isNotEmpty()) {
-                Timber.d("Message data payload: ${remoteMessage.data}")
+                Log.d("ToastMastersMsgSvc", "Message data: ${remoteMessage.data}")
 
                 // Handle different types of notifications
                 when (remoteMessage.data["type"]) {
@@ -108,7 +108,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
 
             // Check if message contains a notification payload
             remoteMessage.notification?.let { notification ->
-                Timber.d("Message Notification: ${notification.title} - ${notification.body}")
+                Log.d("ToastMastersMsgSvc", "Message notification body: ${remoteMessage.notification?.body}")
 
                 // Show notification if app is in background or if it's a high priority message
                 if (!isAppInForeground() || remoteMessage.priority == RemoteMessage.PRIORITY_HIGH) {
@@ -116,7 +116,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error handling FCM message")
+            Log.e("ToastMastersMsgSvc", "Error handling message", e)
         }
     }
 
@@ -140,9 +140,9 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 data = data
             )
 
-            Timber.d("Meeting created notification shown for meeting: $meetingId")
+            Log.d("ToastMastersMsgSvc", "Meeting created notification shown for meeting: $meetingId")
         } catch (e: Exception) {
-            Timber.e(e, "Failed to handle meeting created notification")
+            Log.e("ToastMastersMsgSvc", "Failed to handle meeting created notification", e)
         }
     }
 
@@ -160,7 +160,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 notificationHelper.handleRemoteMessage(remoteMessage)
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error processing FCM message", e)
+                Log.e("ToastMastersMsgSvc", "Error processing FCM message", e)
             }
         }
     }
@@ -171,7 +171,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         val title = data["title"] ?: getString(R.string.app_name)
         val message = data["message"] ?: ""
 
-        Log.d(TAG, "Processing message - Type: $type, Title: $title, Message: $message")
+        Log.d("ToastMastersMsgSvc", "Processing message - Type: $type, Title: $title, Message: $message")
 
         // Handle different message types
         when (type) {
@@ -180,7 +180,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 val userId = data["user_id"]
                 userId?.let {
                     // Update the local database or refresh the UI
-                    Log.d(TAG, "Member approved: $userId")
+                    Log.d("ToastMastersMsgSvc", "Member approved: $userId")
                 }
             }
 
@@ -188,7 +188,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 // Handle mentor assignment notification
                 val userId = data["user_id"]
                 val mentorNames = data["mentor_names"]
-                Timber.d(TAG, "Mentor assigned - User: $userId, Mentor: $mentorNames")
+                Log.d("ToastMastersMsgSvc", "Mentor assigned - User: $userId, Mentor: $mentorNames")
             }
 
             NotificationHelper.TYPE_MEETING_CREATED -> {
@@ -196,14 +196,14 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 val meetingId = data["meeting_id"]
                 meetingId?.let {
                     // TODO: Refresh the meetings list
-                    Timber.d(TAG, "New meeting created: $meetingId")
+                    Log.d("ToastMastersMsgSvc", "New meeting created: $meetingId")
                     // No need to update token here as it's unrelated to meeting creation
                 }
             }
 
             else -> {
                 // Handle other notification types or unknown types
-                Timber.d(TAG, "Received unknown message type: $type")
+                Log.d("ToastMastersMsgSvc", "Received unknown message type: $type")
             }
         }
     }
@@ -261,7 +261,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 data = data
             )
         } catch (e: Exception) {
-            Timber.e(e, "Failed to show notification")
+            Log.e("ToastMastersMsgSvc", "Failed to show notification", e)
         }
     }
 
@@ -284,7 +284,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 data = data
             )
         } catch (e: Exception) {
-            Timber.e(e, "Failed to handle meeting updated notification")
+            Log.e("ToastMastersMsgSvc", "Failed to handle meeting updated notification", e)
         }
     }
 
@@ -306,7 +306,7 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 data = data
             )
         } catch (e: Exception) {
-            Timber.e(e, "Failed to handle meeting reminder notification")
+            Log.e("ToastMastersMsgSvc", "Failed to handle meeting reminder notification", e)
         }
     }
 }

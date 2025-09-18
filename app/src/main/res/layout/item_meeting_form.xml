@@ -1,206 +1,253 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingTop="16dp"
-    android:paddingBottom="16dp">
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="@color/surface_container"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="0dp"
+    app:rippleColor="@color/primary_container"
+    app:strokeColor="@color/outline"
+    app:strokeWidth="1dp"
+    app:cardForegroundColor="?attr/selectableItemBackground">
 
-    <!-- Form Header with Remove Button -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/formTitle"
-            style="@style/TextAppearance.MaterialComponents.Headline6"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/meeting_details"
-            android:textAppearance="?attr/textAppearanceHeadline6" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/removeMeetingButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/remove"
-            android:textColor="?attr/colorError"
-            app:icon="@drawable/ic_delete"
-            app:iconGravity="textStart"
-            app:iconTint="?attr/colorError" />
-    </LinearLayout>
-
-
-    <!-- Meeting Date -->
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="@string/meeting_date"
-        app:startIconDrawable="@drawable/ic_calendar">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/meetingDateInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:cursorVisible="false"
-            android:focusable="false"
-            android:inputType="none"
-            tools:text="Saturday, August 5, 2023" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Time Picker Row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal">
-
-        <!-- Start Time -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
-            android:hint="@string/start_time"
-            app:startIconDrawable="@drawable/ic_time">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/startTimeInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:cursorVisible="false"
-                android:focusable="false"
-                android:inputType="none"
-                tools:text="5:30 PM" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- End Time -->
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:hint="@string/end_time"
-            app:startIconDrawable="@drawable/ic_time">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/endTimeInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:cursorVisible="false"
-                android:focusable="false"
-                android:inputType="none"
-                tools:text="7:30 PM" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-    </LinearLayout>
-
-    <!-- Venue -->
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="@string/venue"
-        app:startIconDrawable="@drawable/ic_location">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/venueInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:maxLines="2"
-            tools:text="Toastmasters Meeting Room" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Theme -->
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:hint="@string/theme"
-        app:startIconDrawable="@drawable/ic_theme">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/themeInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:maxLines="2"
-            tools:text="Effective Communication" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <!-- Preferred Roles -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:orientation="vertical">
-
+        <!-- Form Header with Remove Button -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/formTitle"
+                style="@style/TextAppearance.Material3.HeadlineSmall"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/preferred_roles"
-                android:textAppearance="?attr/textAppearanceSubtitle1"
-                android:textStyle="bold" />
+                android:text="@string/meeting_details"
+                android:textColor="@color/on_surface"
+                android:textStyle="bold"
+                android:letterSpacing="0" />
 
-
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/removeMeetingButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/remove"
+                android:textColor="@color/error"
+                app:icon="@drawable/ic_delete"
+                app:iconGravity="textEnd"
+                app:iconTint="@color/error"
+                app:rippleColor="@color/error_container"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="4dp"
+                app:iconSize="18dp"
+                app:iconPadding="0dp" />
         </LinearLayout>
+
+        <!-- Meeting Date -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="@string/meeting_date"
+            app:startIconDrawable="@drawable/ic_calendar"
+            app:startIconTint="@color/primary"
+            app:boxStrokeColor="@color/outline"
+            app:boxStrokeWidth="1dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/meetingDateInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:inputType="none"
+                android:minHeight="56dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                tools:text="Saturday, August 5, 2023" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Time Picker Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
+
+            <!-- Start Time -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:hint="@string/start_time"
+                app:startIconDrawable="@drawable/ic_time"
+                app:startIconTint="@color/primary"
+                app:boxStrokeColor="@color/outline"
+                app:boxStrokeWidth="1dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/startTimeInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:cursorVisible="false"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:minHeight="56dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                    tools:text="5:30 PM" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- End Time -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:hint="@string/end_time"
+                app:startIconDrawable="@drawable/ic_time"
+                app:startIconTint="@color/primary"
+                app:boxStrokeColor="@color/outline"
+                app:boxStrokeWidth="1dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/endTimeInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:cursorVisible="false"
+                    android:focusable="false"
+                    android:inputType="none"
+                    android:minHeight="56dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                    tools:text="7:30 PM" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Venue -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/venue"
+            app:startIconDrawable="@drawable/ic_location"
+            app:startIconTint="@color/primary"
+            app:boxStrokeColor="@color/outline"
+            app:boxStrokeWidth="1dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/venueInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:minHeight="56dp"
+                android:maxLines="2"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                tools:text="Toastmasters Meeting Room" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Theme -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/theme"
+            app:startIconDrawable="@drawable/ic_theme"
+            app:startIconTint="@color/primary"
+            app:boxStrokeColor="@color/outline"
+            app:boxStrokeWidth="1dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/themeInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:minHeight="56dp"
+                android:maxLines="2"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                tools:text="Effective Communication" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Preferred Roles Section -->
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/TextAppearance.Material3.TitleMedium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/preferred_roles"
+            android:textColor="@color/on_surface"
+            android:textStyle="bold"
+            android:letterSpacing="0" />
 
         <!-- Role Dropdown -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/roleDropdownLayout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:hint="@string/select_role"
             app:startIconDrawable="@drawable/ic_work"
-            app:boxBackgroundMode="outline"
-            app:boxStrokeWidth="1dp"
-            app:boxStrokeColor="?attr/colorOnSurface">
+            app:startIconTint="@color/primary"
+            app:boxStrokeColor="@color/outline"
+            app:boxStrokeWidth="1dp">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/roleDropdown"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"
+                android:minHeight="56dp"
                 android:inputType="none"
                 android:completionThreshold="1"
-                android:dropDownWidth="match_parent"
-                android:dropDownVerticalOffset="4dp"
-                android:dropDownHorizontalOffset="0dp"
-                android:dropDownSelector="?attr/selectableItemBackground"
                 android:singleLine="true"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:focusable="false"
                 android:clickable="true"
-                android:background="@null"/>
+                android:ellipsize="end"
+                android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                android:background="@null"
+                android:dropDownSelector="?attr/selectableItemBackground"
+                android:dropDownWidth="match_parent"
+                android:dropDownVerticalOffset="8dp"
+                android:dropDownHorizontalOffset="0dp"
+                app:popupTheme="@style/ThemeOverlay.ToastMasters.Menu"
+                android:popupElevation="8dp"/>
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -241,14 +288,38 @@
 
         </LinearLayout>
 
+        <!-- Selected Roles Chips -->
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/roleChipGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:minHeight="48dp"
-            app:singleSelection="false" />
+            android:paddingVertical="4dp"
+            app:chipSpacingHorizontal="8dp"
+            app:chipSpacingVertical="8dp"
+            app:singleSelection="false">
+
+            <!-- Chips will be added programmatically -->
+            <com.google.android.material.chip.Chip
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Toastmaster"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                app:chipBackgroundColor="@color/primary_container"
+                app:chipStrokeWidth="0dp"
+                app:closeIcon="@drawable/ic_close"
+                app:closeIconSize="16dp"
+                app:closeIconTint="@color/on_primary_container"
+                app:rippleColor="@color/primary_container"
+                app:chipMinHeight="32dp"
+                app:chipMinTouchTargetSize="0dp"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+
+        </com.google.android.material.chip.ChipGroup>
 
     </LinearLayout>
 
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

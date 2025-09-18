@@ -10,7 +10,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -45,7 +45,7 @@ class FirestoreNotificationRepository @Inject constructor(
             notificationRef.set(notification.toMap()).await()
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error sending notification to user $userId")
+            Log.e("NotifRepo", "Error sending notification to user $userId", e)
             false
         }
     }
@@ -57,10 +57,10 @@ class FirestoreNotificationRepository @Inject constructor(
         return try {
             // In a real app, you would use Firebase Cloud Functions to send to topics
             // For now, we'll just log it
-            Timber.d("Sending notification to topic $topic: ${notification.title} - ${notification.message}")
+            Log.d("NotifRepo", "Sending notification to topic $topic: ${notification.title} - ${notification.message}")
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error sending notification to topic $topic")
+            Log.e("NotifRepo", "Error sending notification to topic $topic", e)
             false
         }
     }
@@ -72,10 +72,10 @@ class FirestoreNotificationRepository @Inject constructor(
         return try {
             // In a real app, you would query users with the given role and send to each
             // For now, we'll just log it
-            Timber.d("Sending notification to role $role: ${notification.title} - ${notification.message}")
+            Log.d("NotifRepo", "Sending notification to role $role: ${notification.title} - ${notification.message}")
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error sending notification to role $role")
+            Log.e("NotifRepo", "Error sending notification to role $role", e)
             false
         }
     }
@@ -95,7 +95,7 @@ class FirestoreNotificationRepository @Inject constructor(
             .limit(limit.toLong())
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Timber.e(error, "Error getting notifications")
+                    Log.e("NotifRepo", "Error getting notifications", error)
                     trySend(emptyList()) // safe send
                     return@addSnapshotListener
                 }
@@ -104,7 +104,7 @@ class FirestoreNotificationRepository @Inject constructor(
                     try {
                         NotificationData.fromMap(document.data ?: return@mapNotNull null)
                     } catch (e: Exception) {
-                        Timber.e(e, "Error parsing notification ${document.id}")
+                        Log.e("NotifRepo", "Error mapping notification document", e)
                         null
                     }
                 } ?: emptyList()
@@ -133,7 +133,7 @@ class FirestoreNotificationRepository @Inject constructor(
 
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error marking notification $notificationId as read")
+            Log.e("NotifRepo", "Error marking notification as read", e)
             false
         }
     }
@@ -168,7 +168,7 @@ class FirestoreNotificationRepository @Inject constructor(
             batch.commit().await()
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error marking all notifications as read")
+            Log.e("NotifRepo", "Error marking all notifications as read", e)
             false
         }
     }
@@ -186,7 +186,7 @@ class FirestoreNotificationRepository @Inject constructor(
 
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error deleting notification $notificationId")
+            Log.e("NotifRepo", "Error deleting notification $notificationId", e)
             false
         }
     }
@@ -216,7 +216,7 @@ class FirestoreNotificationRepository @Inject constructor(
             batch.commit().await()
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error deleting all notifications")
+            Log.e("NotifRepo", "Error deleting all notifications", e)
             false
         }
     }
@@ -226,7 +226,7 @@ class FirestoreNotificationRepository @Inject constructor(
             firebaseMessaging.subscribeToTopic(topic).await()
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error subscribing to topic $topic")
+            Log.e("NotifRepo", "Error subscribing to topic $topic", e)
             false
         }
     }
@@ -236,7 +236,7 @@ class FirestoreNotificationRepository @Inject constructor(
             firebaseMessaging.unsubscribeFromTopic(topic).await()
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error unsubscribing from topic $topic")
+            Log.e("NotifRepo", "Error unsubscribing from topic $topic", e)
             false
         }
     }
@@ -249,7 +249,7 @@ class FirestoreNotificationRepository @Inject constructor(
                 .await()
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error updating FCM token for user $userId")
+            Log.e("NotifRepo", "Error updating FCM token for user $userId", e)
             false
         }
     }
@@ -262,7 +262,7 @@ class FirestoreNotificationRepository @Inject constructor(
                 .await()
             true
         } catch (e: Exception) {
-            Timber.e(e, "Error removing FCM token for user $userId")
+            Log.e("NotifRepo", "Error removing FCM token for user $userId", e)
             false
         }
     }

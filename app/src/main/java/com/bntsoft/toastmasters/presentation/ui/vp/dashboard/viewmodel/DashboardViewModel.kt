@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import timber.log.Timber
+// Timber import removed, using Android Log instead
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -75,7 +75,7 @@ class DashboardViewModel @Inject constructor(
                     }
 
                     if (meetings.isEmpty()) {
-                        Timber.d("No upcoming meetings found")
+                        Log.d("DashboardViewModel", "No upcoming meetings found")
                         _upcomingMeetingsStateWithCounts.value =
                             UpcomingMeetingsStateWithCounts.Empty
                         return@collectLatest
@@ -94,6 +94,8 @@ class DashboardViewModel @Inject constructor(
                                 val notRespondedCount =
                                     (totalMembers - responses.size).coerceAtLeast(0)
 
+                                Log.d("DashboardViewModel", "Meeting ${meeting.id} - Available: $availableCount, Not Available: $notAvailableCount, Not Confirmed: $notConfirmedCount, Not Responded: $notRespondedCount (Total members: $totalMembers, Responses: ${responses.size})")
+
                                 MeetingWithCounts(
                                     meeting = meeting,
                                     availableCount = availableCount,
@@ -109,16 +111,16 @@ class DashboardViewModel @Inject constructor(
                         meetingCounts.toList()
                     }.collect { meetingsWithCounts ->
                         val sortedMeetings = meetingsWithCounts.sortedBy { it.meeting.dateTime }
-                        Timber.d("Sending ${sortedMeetings.size} meetings to UI")
+                        Log.d("DashboardViewModel", "Successfully loaded ${meetingsWithCounts.size} upcoming meetings")
                         sortedMeetings.forEach { 
-                            Timber.d("Sending to UI: ${it.meeting.theme} - ${it.meeting.dateTime} - Status: ${it.meeting.status}")
+                            Log.d("DashboardViewModel", "Sending to UI: ${it.meeting.theme} - ${it.meeting.dateTime} - Status: ${it.meeting.status}")
                         }
                         _upcomingMeetingsStateWithCounts.value =
                             UpcomingMeetingsStateWithCounts.Success(sortedMeetings)
                     }
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Error loading upcoming meetings")
+                Log.e("DashboardViewModel", "Error loading meetings", e)
                 _upcomingMeetingsStateWithCounts.value =
                     UpcomingMeetingsStateWithCounts.Error(e.message ?: "Failed to load meetings")
             }
@@ -131,7 +133,7 @@ class DashboardViewModel @Inject constructor(
             // Refresh the list after deletion
             loadUpcomingMeetings()
         } catch (e: Exception) {
-            Timber.e(e, "Error deleting meeting $meetingId")
+            Log.e("DashboardViewModel", "Error deleting meeting $meetingId", e)
         }
     }
 
@@ -142,10 +144,10 @@ class DashboardViewModel @Inject constructor(
                 // Refresh the list after completion
                 loadUpcomingMeetings()
             } else if (result is Resource.Error) {
-                Timber.e("Error completing meeting: ${result.message}")
+                Log.e("DashboardViewModel", "Error completing meeting: ${result.message}")
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error completing meeting $meetingId")
+            Log.e("DashboardViewModel", "Error completing meeting $meetingId", e)
         }
     }
 

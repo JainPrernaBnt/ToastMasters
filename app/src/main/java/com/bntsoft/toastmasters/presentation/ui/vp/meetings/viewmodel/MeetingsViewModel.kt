@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import timber.log.Timber
+// Timber import removed, using Android Log instead
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -103,7 +103,7 @@ class MeetingsViewModel @Inject constructor(
                 Gson().fromJson(json, type) ?: DEFAULT_OFFICERS
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error loading latest officers from SharedPreferences")
+            Log.e("MeetingsViewModel", "Error loading latest officers from SharedPreferences", e)
             DEFAULT_OFFICERS
         }
     }
@@ -134,36 +134,36 @@ class MeetingsViewModel @Inject constructor(
     fun loadUpcomingMeetings() {
         viewModelScope.launch {
             _upcomingMeetingsStateWithCounts.value = UpcomingMeetingsStateWithCounts.Loading
-            Timber.d("Loading upcoming meetings...")
+            Log.d("MeetingsViewModel", "Loading upcoming meetings...")
 
             // Get all club members once
             val allMembers = try {
                 val members = memberRepository.getAllMembers(includePending = false).first()
-                Timber.d("Fetched ${members.size} active members")
+                Log.d("MeetingsViewModel", "Fetched ${members.size} active members")
                 members
             } catch (e: Exception) {
-                Timber.e(e, "Error fetching club members")
+                Log.e("MeetingsViewModel", "Error fetching club members", e)
                 emptyList<User>()
             }
             val totalMembers = allMembers.size
-            Timber.d("Total active members: $totalMembers")
+            Log.d("MeetingsViewModel", "Total active members: $totalMembers")
 
             meetingRepository.getUpcomingMeetings(LocalDate.now()).collectLatest { meetings ->
                 if (meetings.isEmpty()) {
-                    Timber.d("No upcoming meetings found")
+                    Log.d("MeetingsViewModel", "No upcoming meetings found")
                     _upcomingMeetingsStateWithCounts.value = UpcomingMeetingsStateWithCounts.Empty
                     return@collectLatest
                 }
 
-                Timber.d("Found ${meetings.size} upcoming meetings")
+                Log.d("MeetingsViewModel", "Found ${meetings.size} upcoming meetings")
                 val flows = meetings.map { meeting ->
                     if (!meeting.id.isNullOrBlank()) {
                         val responseFlow =
                             memberResponseRepository.getResponsesForMeeting(meeting.id)
                         responseFlow.collect { responses ->
-                            Timber.d("Meeting ${meeting.id} has ${responses.size} responses")
+                            Log.d("MeetingsViewModel", "Meeting ${meeting.id} has ${responses.size} responses")
                             responses.take(3).forEach { response ->
-                                Timber.d("Response: member=${response.memberId}, status=${response.availability}")
+                                Log.d("MeetingsViewModel", "Response: member=${response.memberId}, status=${response.availability}")
                             }
                         }
                         responseFlow
@@ -187,7 +187,8 @@ class MeetingsViewModel @Inject constructor(
                         val notRespondedCount = (totalMembers - totalResponses).coerceAtLeast(0)
 
                         // Debug logging
-                        Timber.d(
+                        Log.d(
+                            "MeetingsViewModel",
                             "Meeting ${meeting.id} - Available: $availableCount, " +
                                     "Not Available: $notAvailableCount, " +
                                     "Not Confirmed: $notConfirmedCount, " +
@@ -196,7 +197,7 @@ class MeetingsViewModel @Inject constructor(
 
                         // Log the first few responses for debugging
                         responses.take(3).forEach { response ->
-                            Timber.d("Response - Member: ${response.memberId}, Status: ${response.availability}")
+                            Log.d("MeetingsViewModel", "Response - Member: ${response.memberId}, Status: ${response.availability}")
                         }
 
                         MeetingWithCounts(
@@ -227,10 +228,10 @@ class MeetingsViewModel @Inject constructor(
                     loadMeetings()
                     loadUpcomingMeetings()
                 } else if (result is Resource.Error) {
-                    Timber.e("Failed to delete meeting: ${result.message}")
+                    Log.e("MeetingsViewModel", "Failed to delete meeting: ${result.message}")
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Error deleting meeting")
+                Log.e("MeetingsViewModel", "Error deleting meeting", e)
             }
         }
     }
@@ -299,7 +300,7 @@ class MeetingsViewModel @Inject constructor(
                 .apply()
             _latestOfficers.value = officers
         } catch (e: Exception) {
-            Timber.e(e, "Error saving latest officers to SharedPreferences")
+            Log.e("MeetingsViewModel", "Error saving latest officers to SharedPreferences", e)
         }
     }
 
@@ -308,18 +309,18 @@ class MeetingsViewModel @Inject constructor(
         formData: CreateMeetingFragment.MeetingFormData,
         forceCreate: Boolean = false
     ) = viewModelScope.launch {
-        Log.d("CreateMeeting", "Starting createMeeting in ViewModel")
+        Log.d("MeetingsViewModel", "Starting createMeeting in ViewModel")
         _createMeetingState.emit(CreateMeetingState.Loading)
-        Log.d("CreateMeeting", "Set state to Loading")
+        Log.d("MeetingsViewModel", "Set state to Loading")
 
         try {
             // Convert to domain model for duplicate check
             val domainMeeting = meeting.toDomainModel()
-            Log.d("CreateMeeting", "Converted to domain model")
+            Log.d("MeetingsViewModel", "Converted to domain model")
 
             // Check for duplicate meetings if not forcing creation
             if (!forceCreate && isDuplicateMeeting(domainMeeting)) {
-                Log.d("CreateMeeting", "Duplicate meeting found")
+                Log.d("MeetingsViewModel", "Duplicate meeting found")
                 _createMeetingState.emit(CreateMeetingState.Duplicate(domainMeeting))
                 return@launch
             }
@@ -331,7 +332,7 @@ class MeetingsViewModel @Inject constructor(
             if (meetingResult is Resource.Success) {
                 val createdMeeting = meetingResult.data
                 if (createdMeeting != null) {
-                    Log.d("CreateMeeting", "Meeting creation successful: ${createdMeeting.id}")
+                    Log.d("MeetingsViewModel", "Meeting creation successful: ${createdMeeting.id}")
 
                     // Create a default agenda for the meeting
                     val defaultAgenda = MeetingAgenda(
@@ -349,7 +350,7 @@ class MeetingsViewModel @Inject constructor(
                         val agendaResult = meetingAgendaRepository.saveMeetingAgenda(defaultAgenda)
                         if (agendaResult is com.bntsoft.toastmasters.utils.Result.Success<*>) {
                             Log.d(
-                                "CreateMeeting",
+                                "MeetingsViewModel",
                                 "Default agenda created successfully for meeting ${createdMeeting.id}"
                             )
 
@@ -362,18 +363,18 @@ class MeetingsViewModel @Inject constructor(
                             )
                         } else if (agendaResult is com.bntsoft.toastmasters.utils.Result.Error) {
                             Log.e(
-                                "CreateMeeting",
+                                "MeetingsViewModel",
                                 "Failed to create default agenda: ${agendaResult.exception?.message}"
                             )
                             // Even if agenda creation fails, we still consider the meeting creation successful
                         }
                     } catch (e: Exception) {
-                        Log.e("CreateMeeting", "Error saving default agenda", e)
+                        Log.e("MeetingsViewModel", "Error saving default agenda", e)
                         // Even if agenda creation fails, we still consider the meeting creation successful
                     }
 
                     Log.d(
-                        "CreateMeeting",
+                        "MeetingsViewModel",
                         "Emitting Success state with meeting: ${createdMeeting.id}"
                     )
                     _createMeetingState.emit(CreateMeetingState.Success(createdMeeting, formData))
@@ -383,12 +384,12 @@ class MeetingsViewModel @Inject constructor(
                     loadUpcomingMeetings()
                 } else {
                     val errorMsg = "Meeting was created but returned null data"
-                    Log.e("CreateMeeting", errorMsg)
+                    Log.e("MeetingsViewModel", errorMsg)
                     _createMeetingState.emit(CreateMeetingState.Error(errorMsg))
                 }
             } else if (meetingResult is Resource.Error) {
                 val errorMsg = "Meeting creation failed: ${meetingResult.message}"
-                Log.e("CreateMeeting", errorMsg)
+                Log.e("MeetingsViewModel", errorMsg)
                 _createMeetingState.emit(
                     CreateMeetingState.Error(
                         meetingResult.message ?: "Failed to create meeting"
@@ -397,14 +398,14 @@ class MeetingsViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             val errorMsg = "Error in createMeeting: ${e.message}"
-            Log.e("CreateMeeting", errorMsg, e)
+            Log.e("MeetingsViewModel", errorMsg, e)
             _createMeetingState.emit(CreateMeetingState.Error(
                 e.message ?: "An unexpected error occurred"
             ))
         }
 
         // Log the final state
-        Log.d("CreateMeeting", "Final state after createMeeting: ${_createMeetingState.toString()}")
+        Log.d("MeetingsViewModel", "Final state after createMeeting: ${_createMeetingState.toString()}")
     }
 
     suspend fun getLastMeetingDate(): java.util.Date? {

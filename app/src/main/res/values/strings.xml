@@ -436,5 +436,7 @@
 
     <string name="tm_id_with_value">TM ID: %1$s</string>
     <string name="club_id_with_value">Club ID: %1$s</string>
+    <string name="schedule_new_meeting">Schedule New Meeting</string>
+    <string name="schedule_meeting_description">Create and schedule a new Toastmasters meeting with all the necessary details</string>
 </resources>
 

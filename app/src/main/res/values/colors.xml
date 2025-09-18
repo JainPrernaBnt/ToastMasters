@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <!-- ===== Basic Colors ===== -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
@@ -14,6 +13,7 @@
     <color name="gray_800">#424242</color>
     <color name="grey_300">@color/gray_300</color>
     <color name="grey_600">@color/gray_600</color>
+
 
     <!-- ===== Teal Colors ===== -->
     <color name="teal_100">#B2DFDB</color>
@@ -73,37 +73,49 @@
     <color name="default_role_text">#212121</color>
 
     <!-- ===== Material 3 Tokens ===== -->
-    <color name="surface_container_highest">#E6E6E6</color>
-    <color name="surface_container_high">#EBE6ED</color>
+    <!-- Surface Colors -->
+    <color name="surface">#FFFBFE</color>
+    <color name="on_surface">#1C1B1F</color>
+    <color name="surface_variant">#E7E0EC</color>
     <color name="on_surface_variant">#49454F</color>
-    <color name="primary_container">#EADDFF</color>
-    <color name="on_primary_container">#21005D</color>
+    <color name="surface_container_lowest">#FFFFFF</color>
+    <color name="surface_container_low">#F7F2FA</color>
+    <color name="surface_container">#F3EDF7</color>
+    <color name="surface_container_high">#EDE7F3</color>
+    <color name="surface_container_highest">#E7E0EC</color>
+    
+    <!-- Primary Colors (Teal) -->
+    <color name="primary">#00796B</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#B2DFDB</color>
+    <color name="on_primary_container">#00201C</color>
+    
+    <!-- Secondary Colors (Mint) -->
+    <color name="secondary">#4A6360</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#CCE8E4</color>
+    <color name="on_secondary_container">#05201C</color>
+    
+    <!-- Tertiary Colors (Peach) -->
+    <color name="tertiary">#9C4146</color>
+    <color name="on_tertiary">#FFFFFF</color>
+    <color name="tertiary_container">#FFDAD9</color>
+    <color name="on_tertiary_container">#410009</color>
+    
+    <!-- Error Colors -->
+    <color name="error">#BA1A1A</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#FFDAD6</color>
+    <color name="on_error_container">#410002</color>
 
     <!-- ===== Theme Colors ===== -->
-    <color name="primary">#6200EE</color>
-    <color name="primary_dark">#3700B3</color>
-    <color name="primary_light">#BB86FC</color>
-    <!-- Primary color opacity variants -->
-    <color name="primary_opacity_10">#1A6200EE</color>
-    <color name="primary_opacity_20">#336200EE</color>
-    <color name="secondary">#03DAC6</color>
-    <color name="secondary_dark">#018786</color>
-    <color name="background">#FFF5F5F5</color>
-    <color name="surface">#FFFFFFFF</color>
-    <color name="surface_variant">#FFE1E1E1</color>
-    <color name="status_bar_color">#BB86FC</color>
-
+    <color name="background">#FFFBFE</color>
+    <color name="status_bar_color">#004D40</color>
+    <color name="primary_light">#B2DFDB</color>
+    <color name="primary_opacity_10">#1A00796B</color>
+    <color name="primary_opacity_20">#3300796B</color>
     <!-- On-colors -->
-    <!-- Material 3 Error Colors -->
-
-    <color name="on_error">#FFFFFF</color>
-    <color name="on_error_container">#410002</color>
-    
-    <!-- On-colors -->
-    <color name="on_primary">@color/white</color>
-    <color name="on_secondary">@color/black</color>
-    <color name="on_background">#FF121212</color>
-    <color name="on_surface">#FF121212</color>
+    <color name="on_background">#1C1B1F</color>
     <color name="on_surface_medium">#99000000</color>
     <color name="on_surface_low">#61000000</color>
 
@@ -114,8 +126,6 @@
     <color name="selection">#1F000000</color>
 
     <!-- ===== Status Colors ===== -->
-    <color name="error">#FF0000</color>
-    <color name="error_container">#FFDAD6</color>
     <color name="success">#4CAF50</color>
     <color name="warning">#FFA000</color>
     <color name="info">#2196F3</color>
@@ -137,7 +147,7 @@
     <color name="chip_stroke_checked">#81C784</color>
     <color name="chip_stroke_unchecked">#E0E0E0</color>
 
-    <!-- ===== Role Colors ===== -->
+    <!-- ===== Role Colors (Alternative Naming) ===== -->
     <color name="role_toastmaster">#9C27B0</color>
     <color name="role_speaker">#2196F3</color>
     <color name="role_evaluator">#4CAF50</color>

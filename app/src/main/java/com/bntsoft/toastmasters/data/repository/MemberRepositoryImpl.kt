@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -80,14 +80,14 @@ class MemberRepositoryImpl @Inject constructor(
                         notificationRepository.sendNotificationToUser(userId, notification)
                     } catch (e: Exception) {
                         // Log error but don't fail the operation
-                        e.printStackTrace()
+                        Log.e("MemberRepository", "Error in getMemberById", e)
                     }
                 }
             }
 
             updateSuccess
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("MemberRepository", "Error in getMemberById", e)
             false
         }
     }
@@ -125,7 +125,7 @@ class MemberRepositoryImpl @Inject constructor(
             firestoreService.getUserDocument(user.id).update(updates).await()
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("MemberRepository", "Error in getMemberById", e)
             false
         }
     }
@@ -140,7 +140,7 @@ class MemberRepositoryImpl @Inject constructor(
                     }
                 }
                 .catch { e ->
-                    e.printStackTrace()
+                    Log.e("MemberRepository", "Error in getMemberById", e)
                     emit(emptyList())
                 }
 
@@ -151,7 +151,7 @@ class MemberRepositoryImpl @Inject constructor(
                     }
                 }
                 .catch { e ->
-                    e.printStackTrace()
+                    Log.e("MemberRepository", "Error in getMemberById", e)
                     emit(emptyList())
                 }
 
@@ -171,7 +171,7 @@ class MemberRepositoryImpl @Inject constructor(
                     }
                 }
                 .catch { e ->
-                    e.printStackTrace()
+                    Log.e("MemberRepository", "Error in getMemberById", e)
                     emit(emptyList())
                 }
                 .collect { users ->
@@ -206,7 +206,7 @@ class MemberRepositoryImpl @Inject constructor(
                 null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("MemberRepository", "Error in getMemberById", e)
             null
         }
     }
@@ -226,7 +226,7 @@ class MemberRepositoryImpl @Inject constructor(
                 user
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("MemberRepository", "Error in getMemberById", e)
             null
         }
     }
@@ -246,7 +246,7 @@ class MemberRepositoryImpl @Inject constructor(
                 user
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("MemberRepository", "Error in getMemberById", e)
             null
         }
     }
@@ -270,7 +270,7 @@ class MemberRepositoryImpl @Inject constructor(
                 }
             }
             .catch { e ->
-                Timber.e(e, "Error observing user: $userId")
+                Log.e("MemberRepository", "Error observing user: $userId", e)
                 emit(null)
             }
     }

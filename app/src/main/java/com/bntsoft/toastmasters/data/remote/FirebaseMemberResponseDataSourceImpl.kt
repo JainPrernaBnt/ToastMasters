@@ -9,7 +9,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,7 +50,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 null
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting response for meeting $meetingId and member $memberId")
+            Log.e("FirebaseRespDS", "Error getting response for meeting $meetingId and member $memberId", e)
             null
         }
     }
@@ -77,7 +77,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 )
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting responses for meeting $meetingId")
+            Log.e("FirebaseRespDS", "Error getting responses for meeting $meetingId", e)
             emptyList()
         }
     }
@@ -91,7 +91,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
 
             querySnapshot.documents.mapNotNull { it.toObject(MemberResponseDto::class.java) }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting responses for member $memberId")
+            Log.e("FirebaseRespDS", "Error getting responses for member $memberId", e)
             emptyList()
         }
     }
@@ -114,7 +114,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting backout members for meeting $meetingId")
+            Log.e("FirebaseRespDS", "Error getting backout members for meeting $meetingId", e)
             emptyList()
         }
     }
@@ -143,10 +143,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 .await()
 
         } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Error saving response for meeting ${response.meetingId} and member ${response.memberId}"
-            )
+            Log.e("FirebaseRespDS", "Error saving response for meeting ${response.meetingId} and member ${response.memberId}", e)
             throw e
         }
     }
@@ -160,7 +157,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 .delete()
                 .await()
         } catch (e: Exception) {
-            Timber.e(e, "Error deleting response for meeting $meetingId and member $memberId")
+            Log.e("FirebaseRespDS", "Error deleting response for meeting $meetingId and member $memberId", e)
             throw e
         }
     }
@@ -174,10 +171,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
 
             val listener = docRef.addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Timber.e(
-                        e,
-                        "Error observing response for meeting $meetingId and member $memberId"
-                    )
+                    Log.e("FirebaseRespDS", "Error observing response for meeting $meetingId and member $memberId", e)
                     return@addSnapshotListener
                 }
 
@@ -205,7 +199,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 try {
                     listener.remove()
                 } catch (e: Exception) {
-                    Timber.e(e, "Error removing listener")
+                    Log.e("FirebaseRespDS", "Error removing listener", e)
                 }
             }
         }
@@ -217,12 +211,12 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 .collection("availability")
                 .addSnapshotListener { snapshot, e ->
                     if (e != null) {
-                        Timber.e(e, "Error observing responses for meeting $meetingId")
+                        Log.e("FirebaseRespDS", "Error observing responses for meeting $meetingId", e)
                         try {
                             trySend(emptyList())
                         } catch (sendException: Exception) {
                             // Ignore send exception - channel might be closed
-                            Timber.d("Failed to send empty list: ${sendException.message}")
+                            Log.d("FirebaseRespDS", "Failed to send empty list: ${sendException.message}")
                         }
                         return@addSnapshotListener
                     }
@@ -247,7 +241,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                         trySend(responses).isSuccess
                     } catch (sendException: Exception) {
                         // Ignore send exception - channel might be closed
-                        Timber.d("Failed to send responses: ${sendException.message}")
+                        Log.d("FirebaseRespDS", "Failed to send responses: ${sendException.message}")
                     }
                 }
 
@@ -255,7 +249,7 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 try {
                     listener.remove()
                 } catch (e: Exception) {
-                    Timber.e(e, "Error removing listener")
+                    Log.e("FirebaseRespDS", "Error removing listener", e)
                 }
             }
         }

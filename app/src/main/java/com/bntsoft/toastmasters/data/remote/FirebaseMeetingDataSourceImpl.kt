@@ -1,6 +1,5 @@
 package com.bntsoft.toastmasters.data.remote
 
-import android.util.Log
 import com.bntsoft.toastmasters.data.mapper.MeetingDomainMapper
 import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
@@ -18,7 +17,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import android.util.Log
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -281,7 +280,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             (preferenceDoc.get("preferredRoles") as? List<*>)?.filterIsInstance<String>()
                 ?: emptyList()
         } catch (e: Exception) {
-            Timber.e(e, "Error fetching preferred roles for user $userId in meeting $meetingId")
+            Log.e("FirebaseDS", "Error fetching preferred roles for user $userId in meeting $meetingId", e)
             emptyList()
         }
     }
@@ -293,8 +292,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 document.get("roleCounts") as? Map<String, *> ?: emptyMap<String, Any>()
             roleCounts.keys.toList()
         } catch (e: Exception) {
-            Timber.e(e, "Error getting meeting preferred roles")
-            Timber.e(e, "Error fetching preferred roles for meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting meeting preferred roles", e)
+            Log.e("FirebaseDS", "Error fetching preferred roles for meeting $meetingId", e)
             emptyList()
         }
     }
@@ -314,7 +313,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             val dto = document?.toObject(MeetingDto::class.java)
             dto?.let { meetingMapper.mapToDomain(it) }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting meeting by id: $id")
+            Log.e("FirebaseDS", "Error getting meeting by id: $id", e)
             null
         }
     }
@@ -359,7 +358,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
             Result.Success(newMeeting)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to create meeting")
+            Log.e("FirebaseDS", "Failed to create meeting", e)
             Result.Error(e)
         }
     }
@@ -390,7 +389,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
                 // Handle assignedCounts - merge with existing or initialize with zeros
                 val currentData = document.data ?: emptyMap()
-                val currentAssignedCounts = currentData["assignedCounts"] as? Map<*, *> ?: emptyMap<String, Int>()
+                val currentAssignedCounts =
+                    currentData["assignedCounts"] as? Map<*, *> ?: emptyMap<String, Int>()
 
                 // If we have new role counts, ensure all roles have assigned counts
                 val updatedAssignedCounts = if (dto.roleCounts.isNotEmpty()) {
@@ -420,7 +420,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 Result.Error(NoSuchElementException("Meeting not found"))
             }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to update meeting")
+            Log.e("FirebaseDS", "Failed to update meeting", e)
             Result.Error(e)
         }
     }
@@ -437,7 +437,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 Result.Error(NoSuchElementException("Meeting not found"))
             }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to delete meeting")
+            Log.e("FirebaseDS", "Failed to delete meeting", e)
             Result.Error(e)
         }
     }
@@ -458,7 +458,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 Result.Error(NoSuchElementException("Meeting not found"))
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error completing meeting $meetingId")
+            Log.e("FirebaseDS", "Error completing meeting $meetingId", e)
             Result.Error(e)
         }
     }
@@ -522,7 +522,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
             Result.Success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Error saving role assignments for meeting: $meetingId")
+            Log.e("FirebaseDS", "Error saving role assignments for meeting: $meetingId", e)
             Result.Error(e)
         }
     }
@@ -562,33 +562,34 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     // First try to get roles as an array
                     val roles = doc.get("roles") as? List<*>
                     if (!roles.isNullOrEmpty()) {
-                        Timber.d("Found roles array in legacy location: $roles")
+                        Log.d("FirebaseDS", "Found roles array in legacy location: $roles")
                         return roles.firstOrNull()?.toString()
                     }
 
                     // Fall back to single role field if array not found
                     val role = doc.getString("role")
                     if (!role.isNullOrEmpty()) {
-                        Timber.d("Found single role in legacy location: $role")
+                        Log.d("FirebaseDS", "Found single role in legacy location: $role")
                         return role
                     }
 
-                    Timber.d("No role found in legacy location")
+                    Log.d("FirebaseDS", "No role found in legacy location")
                     null
                 } else {
-                    Timber.d("No role assignment found in any location")
+                    Log.d("FirebaseDS", "No role assignment found in any location")
                     null
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting assigned role for user $userId in meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting assigned role for user $userId in meeting $meetingId", e)
             null
         }
     }
 
     override suspend fun getAssignedRoles(meetingId: String, userId: String): List<String> {
         return try {
-            val assignedRolesRef = firestore.collection("meetings").document(meetingId)
+            val assignedRolesRef = firestore.collection("meetings")
+                .document(meetingId)
                 .collection("assignedRole")
                 .document(userId)
                 .get()
@@ -602,7 +603,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 emptyList()
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting assigned roles for user $userId in meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting assigned roles for user $userId in meeting $meetingId", e)
             emptyList()
         }
     }
@@ -621,7 +622,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 userId to roles
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting all assigned roles for meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting all assigned roles for meeting $meetingId", e)
             emptyMap()
         }
     }
@@ -641,7 +642,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             speakerRef.set(speakerDetails).await()
             Result.Success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Error saving speaker details for user $userId in meeting $meetingId")
+            Log.e("FirebaseDS", "Error saving speaker details for user $userId in meeting $meetingId", e)
             Result.Error(e)
         }
     }
@@ -661,7 +662,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 null
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting speaker details for user $userId in meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting speaker details for user $userId in meeting $meetingId", e)
             null
         }
     }
@@ -676,7 +677,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
             snapshot.documents.mapNotNull { it.toObject(SpeakerDetails::class.java) }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting speaker details for meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting speaker details for meeting $meetingId", e)
             emptyList()
         }
     }
@@ -695,7 +696,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             detailsRef.set(grammarianDetails).await()
             Result.Success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Error saving grammarian details for user $userId in meeting $meetingId")
+            Log.e("FirebaseDS", "Error saving grammarian details for user $userId in meeting $meetingId", e)
             Result.Error(e)
         }
     }
@@ -718,7 +719,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 null
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting grammarian details for user $userId in meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting grammarian details for user $userId in meeting $meetingId", e)
             null
         }
     }
@@ -737,12 +738,12 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         userId = document.id
                     )
                 } catch (e: Exception) {
-                    Timber.e(e, "Error parsing grammarian details for document ${document.id}")
+                    Log.e("FirebaseDS", "Error parsing grammarian details for document ${document.id}", e)
                     null
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting grammarian details for meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting grammarian details for meeting $meetingId", e)
             emptyList()
         }
     }
@@ -767,12 +768,12 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                         null
                     }
                 } catch (e: Exception) {
-                    Timber.e(e, "Error parsing member roles for document ${document.id}")
+                    Log.e("FirebaseDS", "Error parsing member roles for document ${document.id}", e)
                     null
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error getting member roles for meeting $meetingId")
+            Log.e("FirebaseDS", "Error getting member roles for meeting $meetingId", e)
             emptyList()
         }
     }
@@ -885,7 +886,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
             maxNumber + 1 // Return the next available number
         } catch (e: Exception) {
-            Timber.e(e, "Error finding next evaluator number for meeting $meetingId")
+            Log.e("FirebaseMeetingDataSource", "Error finding next evaluator number for meeting $meetingId", e)
             1 // Default to 1 if there's an error
         }
     }
@@ -897,7 +898,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 .update("roleCounts", roleCounts)
                 .await()
         } catch (e: Exception) {
-            Timber.e(e, "Error updating role counts for meeting $meetingId")
+            Log.e("FirebaseMeetingDataSource", "Error updating role counts for meeting $meetingId", e)
             throw e
         }
     }
@@ -917,21 +918,18 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
             // In a real implementation, we would send notifications to each member
             // For now, we'll just log the notification details
-            Timber.d("Sending notification for meeting ${meeting.id} to members: $memberIds")
+            Log.d("FirebaseMeetingDataSource", "Sending notification for meeting ${meeting.id} to members: $memberIds")
 
             // Simulate notification sending
             memberIds.forEach { memberId ->
                 // In a real app, this would use a notification service
                 // For example: notificationService.sendMeetingNotification(memberId, meeting)
-                Timber.d("Notification sent to member $memberId about meeting ${meeting.id}")
+                Log.d("FirebaseMeetingDataSource", "Notification sent to member $memberId about meeting ${meeting.id}")
             }
 
             Result.Success(Unit)
         } catch (e: Exception) {
-            Timber.e(
-                e, "Failed t" +
-                        "o send notifications for meeting: ${meeting.id}"
-            )
+            Log.e("FirebaseMeetingDataSource", "Failed to send notifications for meeting: ${meeting.id}", e)
             Result.Error(e)
         }
     }

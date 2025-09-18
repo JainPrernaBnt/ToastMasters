@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+// Timber import removed - using Android Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -55,29 +55,25 @@ class AuthRepositoryImpl @Inject constructor(
                     val user = UserDeserializer.fromDocument(userDoc)
                     if (user != null) {
                         // Log user details for debugging
-                        Timber.tag("AuthRepositoryImpl")
-                            .d("User role: ${user.role}, isApproved: ${user.isApproved}, isVpEducation: ${user.isVpEducation}")
+                        Log.d("AuthRepositoryImpl", "User role: ${user.role}, isApproved: ${user.isApproved}, isVpEducation: ${user.isVpEducation}")
 
                         // Check if user is VP Education (always allow login) or an approved member
                         if (user.isVpEducation) {
-                            Timber.tag("AuthRepositoryImpl")
-                                .d("VP Education user logged in successfully")
+                            Log.d("AuthRepositoryImpl", "VP Education user logged in successfully")
                             AuthResult.Success(user)
                         } else if (user.role == UserRole.MEMBER) {
                             if (user.isApproved) {
-                                Timber.tag("AuthRepositoryImpl")
-                                    .d("Approved member logged in successfully")
+                                Log.d("AuthRepositoryImpl", "Approved member logged in successfully")
                                 AuthResult.Success(user)
                             } else {
                                 // Regular member not approved yet
-                                Timber.tag("AuthRepositoryImpl")
-                                    .d("Member not approved, signing out")
+                                Log.d("AuthRepositoryImpl", "Member not approved, signing out")
                                 firebaseAuth.signOut()
                                 AuthResult.Error("Your account is pending approval")
                             }
                         } else {
                             // Unknown role
-                            Timber.tag("AuthRepositoryImpl").d("Unknown role, signing out")
+                            Log.d("AuthRepositoryImpl", "Unknown role, signing out")
                             firebaseAuth.signOut()
                             AuthResult.Error("Invalid user role")
                         }
@@ -154,7 +150,7 @@ class AuthRepositoryImpl @Inject constructor(
                 }
 
                 else -> {
-                    Timber.tag("AuthRepository").e(e, "Sign up error")
+                    Log.e("AuthRepository", "Sign up error", e)
                     AuthResult.Error(e.message ?: "Failed to create account")
                 }
             }
@@ -185,7 +181,7 @@ class AuthRepositoryImpl @Inject constructor(
             preferenceManager.userName = null
             preferenceManager.authToken = null
         } catch (e: Exception) {
-            Timber.e(e, "Error during logout")
+            Log.e("AuthRepository", "Error during logout", e)
             throw e
         }
     }

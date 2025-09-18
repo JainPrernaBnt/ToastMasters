@@ -95,10 +95,7 @@ dependencies {
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
-    
-    // Timber for logging
-    implementation("com.jakewharton.timber:timber:5.0.1")
-    
+
     // Hilt Navigation (if using Compose)
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
@@ -111,8 +108,6 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
-
-    implementation("com.jakewharton.timber:timber:5.0.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
 

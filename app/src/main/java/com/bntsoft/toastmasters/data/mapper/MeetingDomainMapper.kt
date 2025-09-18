@@ -3,7 +3,7 @@ package com.bntsoft.toastmasters.data.mapper
 import com.bntsoft.toastmasters.data.local.entity.MeetingEntity
 import com.bntsoft.toastmasters.data.model.dto.MeetingDto
 import com.bntsoft.toastmasters.domain.model.Meeting
-import timber.log.Timber
+import android.util.Log
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -22,10 +22,7 @@ class MeetingDomainMapper @Inject constructor() {
             val startTime = LocalTime.parse(entity.startTime, timeFormatter)
             LocalDateTime.of(date, startTime)
         } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Error parsing entity date/time: date=${entity.date}, time=${entity.startTime}"
-            )
+            Log.e("MeetingMapper", "Error parsing entity date/time: date=${entity.date}, time=${entity.startTime}", e)
             throw IllegalArgumentException("Invalid date/time format in database for meeting ${entity.meetingID}")
         }
 
@@ -35,7 +32,7 @@ class MeetingDomainMapper @Inject constructor() {
                 val endTime = LocalTime.parse(entity.endTime, timeFormatter)
                 LocalDateTime.of(date, endTime)
             } catch (e: Exception) {
-                Timber.e(e, "Error parsing entity end time: ${entity.endTime}")
+                Log.e("MeetingMapper", "Error parsing entity end time: ${entity.endTime}", e)
                 null
             }
         } else null
@@ -67,7 +64,7 @@ class MeetingDomainMapper @Inject constructor() {
             } else LocalTime.NOON
             LocalDateTime.of(datePart, timePart)
         } catch (e: Exception) {
-            Timber.e(e, "Error parsing date/time from dto: date=${dto.date}, time=${dto.startTime}")
+            Log.e("MeetingMapper", "Error parsing DTO date/time: date=${dto.date}, time=${dto.startTime}", e)
             LocalDateTime.now()
         }
 
@@ -78,7 +75,7 @@ class MeetingDomainMapper @Inject constructor() {
                 LocalDateTime.of(datePart, endTime)
             } else dateTime.plusHours(2)
         } catch (e: Exception) {
-            Timber.e(e, "Error parsing end time from dto: ${dto.endTime}")
+            Log.e("MeetingMapper", "Error parsing DTO end time: ${dto.endTime}", e)
             dateTime.plusHours(2)
         }
 

@@ -31,7 +31,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import timber.log.Timber
+
+// Timber import removed, using Android Log instead
 
 @AndroidEntryPoint
 class DashboardFragment : Fragment() {
@@ -168,15 +169,16 @@ class DashboardFragment : Fragment() {
                     }
                 }
 
-                // Also log to console for debugging
-                Timber.tag("DashboardDebug").d(message)
+                // Log to console for debugging
+                Log.d("DashboardDebug", message)
                 if (state is DashboardViewModel.UpcomingMeetingsStateWithCounts.Success) {
                     state.meetings.forEach { meeting ->
-                        Timber.tag("DashboardDebug").d(
-                            "%snull", "Meeting: ${meeting.meeting.theme}, " +
+                        Log.d(
+                            "DashboardDebug",
+                            "Meeting: ${meeting.meeting.theme}, " +
                                     "Available: ${meeting.availableCount}, " +
                                     "Not Available: ${meeting.notAvailableCount}, " +
-                                    "Not Confirmed: ${meeting.notConfirmedCount}, "
+                                    "Not Confirmed: ${meeting.notConfirmedCount}"
                         )
                     }
                 }

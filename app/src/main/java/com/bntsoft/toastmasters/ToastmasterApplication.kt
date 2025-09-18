@@ -15,7 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import timber.log.Timber
+import android.util.Log
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -30,7 +30,7 @@ class ToastmasterApplication : Application() {
 //        FirebaseFirestore.setLoggingEnabled(true)
         // Initialize logging
         if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
+            // Using Android Log instead of Timber
         }
 
         // Create notification channels
@@ -70,9 +70,9 @@ class ToastmasterApplication : Application() {
                 // Subscribe to general topics
                 FirebaseMessaging.getInstance().subscribeToTopic("all_members")
 
-                Timber.d("FCM token initialized and updated: ${token.take(10)}...")
+                Log.d("ToastmasterApp", "FCM Token: $token")
             } catch (e: Exception) {
-                Timber.e(e, "Failed to initialize FCM token")
+                Log.e("ToastmasterApp", "Error getting FCM token", e)
             }
         }
     }

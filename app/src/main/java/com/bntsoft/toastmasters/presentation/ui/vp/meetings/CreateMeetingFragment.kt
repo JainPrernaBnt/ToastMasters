@@ -2,28 +2,20 @@ package com.bntsoft.toastmasters.presentation.ui.vp.meetings
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.text.InputFilter
-import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.children
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.Meeting
 import com.bntsoft.toastmasters.databinding.FragmentCreateMeetingBinding
 import com.bntsoft.toastmasters.databinding.ItemMeetingFormBinding
-import com.bntsoft.toastmasters.domain.model.MeetingFormData
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
 import com.google.android.material.chip.Chip
@@ -31,10 +23,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -71,7 +61,7 @@ class CreateMeetingFragment : Fragment() {
         // Initialize the first meeting form
         addNewMeetingForm()
 
-        // Set click listener for "Add Another Meeting" button
+        // Set click listener for "Add Another Meeting" button with smooth scroll
         binding.addAnotherMeetingButton.setOnClickListener {
             if (meetingForms.isNotEmpty()) {
                 // Get the last form's roles
@@ -79,22 +69,29 @@ class CreateMeetingFragment : Fragment() {
                 val roles = getRolesFromForm(lastForm.binding)
 
                 if (roles.isNotEmpty()) {
-                    // Show confirmation dialog
-                    MaterialAlertDialogBuilder(requireContext())
+                    // Show confirmation dialog with Material 3 style
+                    MaterialAlertDialogBuilder(
+                        requireContext(),
+                        com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog_Centered
+                    )
                         .setTitle("Copy Preferred Roles?")
                         .setMessage("Do you want to use the same preferred roles as the above meeting?")
                         .setPositiveButton("Yes") { _, _ ->
                             addNewMeetingForm(roles)
+                            scrollToBottom()
                         }
                         .setNegativeButton("No") { _, _ ->
                             addNewMeetingForm()
+                            scrollToBottom()
                         }
                         .show()
                 } else {
                     addNewMeetingForm()
+                    scrollToBottom()
                 }
             } else {
                 addNewMeetingForm()
+                scrollToBottom()
             }
         }
 
@@ -103,7 +100,7 @@ class CreateMeetingFragment : Fragment() {
             if (validateForms()) {
                 createMeetings()
             } else {
-                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                showError("Please fill all fields")
             }
         }
 
@@ -111,11 +108,7 @@ class CreateMeetingFragment : Fragment() {
             viewModel.createMeetingState.collect { state ->
                 when (state) {
                     is CreateMeetingState.Success -> {
-                        Toast.makeText(
-                            context,
-                            "Meeting '${state.meeting.theme}' created successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        showError("Meeting '${state.meeting.theme}' created successfully")
                         // Clear the form for new entry
                         binding.meetingFormsContainer.removeAllViews()
                         meetingForms.clear()
@@ -129,7 +122,7 @@ class CreateMeetingFragment : Fragment() {
                     }
 
                     is CreateMeetingState.Error -> {
-                        Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                        showError(state.message)
                         viewModel.resetCreateMeetingState()
                     }
 
@@ -183,7 +176,7 @@ class CreateMeetingFragment : Fragment() {
                 // Start from the last meeting date
                 Calendar.getInstance().apply { time = date }
             } ?: Calendar.getInstance() // No meetings exist, start from today
-            
+
             // Move to the next Saturday from the base date
             val dayOfWeek = baseCalendar.get(Calendar.DAY_OF_WEEK)
             val daysUntilSaturday = (Calendar.SATURDAY - dayOfWeek + 7) % 7
@@ -279,152 +272,6 @@ class CreateMeetingFragment : Fragment() {
                             text = "$role $i"
                             isCloseIconVisible = true
                             setOnCloseIconClickListener {
-                                formBinding.roleChipGroup.removeView(this) 
-                            }
-                            tag = role
-                            setChipBackgroundColorResource(R.color.chip_background)
-                            setTextAppearance(R.style.ChipTextAppearance)
-                        }
-                        formBinding.roleChipGroup.addView(chip)
-                    }
-                }
-            }
-            
-            setupRoleManagement(formBinding)
-        }
-
-        // Scroll to the bottom
-        binding.scrollView.post {
-            binding.scrollView.fullScroll(View.FOCUS_DOWN)
-        }
-    }
-
-    private fun setupRoleManagement(formBinding: ItemMeetingFormBinding) {
-        // Hide the manual input initially
-        formBinding.roleInputLayout.visibility = View.GONE
-        formBinding.saveRoleButton.visibility = View.GONE
-
-        // Get preferred roles from string array
-        val roles = resources.getStringArray(R.array.Preferred_roles).toList()
-        val adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            roles
-        )
-
-        // Set up the dropdown
-        formBinding.apply {
-            val dropdown = roleDropdown as MaterialAutoCompleteTextView
-            dropdown.apply {
-                setAdapter(adapter)
-                setOnClickListener {
-                    if (adapter.count > 0) {
-                        showDropDown()
-                    }
-                }
-                setOnFocusChangeListener { _, hasFocus ->
-                    if (hasFocus && adapter.count > 0) {
-                        showDropDown()
-                    }
-                }
-                setOnItemClickListener { _, _, position, _ ->
-                    val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
-
-                    if (position == 0) { // "+ Add new role" option
-                        roleDropdownLayout.visibility = View.VISIBLE
-                        saveRoleButton.visibility = View.VISIBLE
-                        roleDropdown.requestFocus()
-                        setText("", false) // Clear the text
-                    } else {
-                        if (selectedRole.equals("Toastmaster of the Day", ignoreCase = true)) {
-                            showTmodConfirmationDialog(formBinding, selectedRole)
-                        } else {
-                            addRoleChip(formBinding, selectedRole)
-                        }
-                        setText("", false)
-                    }
-                    clearFocus()
-                }
-                keyListener = null // Disable text input
-            }
-
-            // Make sure the TextInputLayout doesn't steal focus
-            roleDropdownLayout.isFocusable = false
-            roleDropdownLayout.isFocusableInTouchMode = false
-        }
-
-        // Handle manual role addition
-        formBinding.saveRoleButton.setOnClickListener {
-            val role = formBinding.roleInput.text.toString().trim()
-            if (role.isNotEmpty()) {
-                addRoleChip(formBinding, role)
-                formBinding.roleInput.text?.clear()
-                formBinding.roleInputLayout.visibility = View.GONE
-                formBinding.saveRoleButton.visibility = View.GONE
-            }
-        }
-
-        formBinding.roleInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
-                val role = formBinding.roleInput.text.toString().trim()
-                if (role.isNotEmpty()) {
-                    addRoleChip(formBinding, role)
-                    formBinding.roleInput.text?.clear()
-                    formBinding.roleInputLayout.visibility = View.GONE
-                    formBinding.saveRoleButton.visibility = View.GONE
-                }
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun addRoleChip(formBinding: ItemMeetingFormBinding, role: String) {
-        // For TMOD role, don't show count dialog
-        if (role.equals("Toastmaster of the Day", ignoreCase = true) || role.startsWith("TMOD:")) {
-            val chip = Chip(requireContext()).apply {
-                text = role
-                isCloseIconVisible = true
-                setOnCloseIconClickListener {
-                    formBinding.roleChipGroup.removeView(this)
-                    // Clear TMOD assignment when removed
-                    val formData = meetingForms.find { it.binding === formBinding }
-                    formData?.let { data ->
-                        data.selectedTmodId = null
-                        data.selectedTmodName = null
-                    }
-                }
-                tag = role
-                setChipBackgroundColorResource(R.color.chip_background)
-                setTextAppearance(R.style.ChipTextAppearance)
-            }
-            formBinding.roleChipGroup.addView(chip)
-            return
-        }
-
-        // For other roles, show count dialog
-        val dialogView = layoutInflater.inflate(R.layout.dialog_role_count, null)
-        val input = dialogView.findViewById<TextInputEditText>(R.id.roleCountInput).apply {
-            setText("1")  // Default to 1
-            setSelectAllOnFocus(true)
-            requestFocus()
-        }
-
-        val textInputLayout = dialogView.findViewById<TextInputLayout>(R.id.roleCountLayout)
-        textInputLayout.hint = "Number of $role"
-
-        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_ToastMasters_Dialog)
-            .setTitle("Add $role")
-            .setView(dialogView)
-            .setPositiveButton("Add") { dialogInterface, _ ->
-                val count = input.text.toString().toIntOrNull() ?: 0
-                if (count > 0) {
-                    for (i in 1..count) {
-                        val chip = Chip(context).apply {
-                            text = "$role $i"
-                            isCloseIconVisible = true
-                            setOnCloseIconClickListener {
                                 formBinding.roleChipGroup.removeView(this)
                             }
                             tag = role
@@ -434,33 +281,141 @@ class CreateMeetingFragment : Fragment() {
                         formBinding.roleChipGroup.addView(chip)
                     }
                 }
-                dialogInterface.dismiss()
             }
-            .setNegativeButton("Cancel") { dialogInterface, _ ->
-                dialogInterface.dismiss()
+
+            setupFormListeners(formBinding)
+        }
+
+        // Scroll to the bottom
+        binding.scrollView.post {
+            binding.scrollView.fullScroll(View.FOCUS_DOWN)
+        }
+    }
+
+    private fun setupFormListeners(binding: ItemMeetingFormBinding) {
+        // Set up date picker with ripple effect
+        binding.meetingDateInput.apply {
+            setOnClickListener {
+                val calendar = Calendar.getInstance()
+                showDatePicker(calendar, binding.meetingDateInput)
             }
-            .create()
+            background = null
+        }
 
-        // Show keyboard when dialog appears
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
-        dialog.show()
+        // Set up time pickers with ripple effect
+        binding.startTimeInput.apply {
+            setOnClickListener {
+                val calendar = Calendar.getInstance()
+                showTimePicker(calendar, binding.startTimeInput)
+            }
+            background = null
+        }
 
-        // Set input filter to allow only numbers 1-99
-        input.filters =
-            arrayOf<InputFilter>(InputFilter.LengthFilter(2), InputFilter { source, _, _, _, _, _ ->
-                if (source.isNotEmpty() && source.toString().matches("[0-9]+".toRegex())) {
-                    val value = source.toString().toInt()
-                    if (value in 1..99) {
-                        null // Accept the input
-                    } else {
-                        "" // Reject the input
-                    }
-                } else if (source.isEmpty()) {
-                    null // Allow empty input (for backspace)
-                } else {
-                    "" // Reject non-numeric input
+        binding.endTimeInput.apply {
+            setOnClickListener {
+                val calendar = Calendar.getInstance()
+                showTimePicker(calendar, binding.endTimeInput)
+            }
+            background = null
+        }
+
+        // Set up role dropdown with Material 3 style
+        setupRoleDropdown(binding)
+
+        // Set up remove button with confirmation dialog
+        binding.removeMeetingButton.setOnClickListener {
+            if (meetingForms.size > 1) {
+                val position = meetingForms.indexOfFirst { it.binding === binding }
+                if (position != -1) {
+                    showRemoveConfirmationDialog(binding, position)
                 }
-            })
+            } else {
+                // Show a more user-friendly message
+                Snackbar.make(
+                    requireView(),
+                    "You must have at least one meeting form",
+                    Snackbar.LENGTH_SHORT
+                ).setBackgroundTint(
+                    requireContext().getColor(com.google.android.material.R.color.design_default_color_error)
+                ).show()
+            }
+        }
+    }
+
+    private fun setupRoleDropdown(binding: ItemMeetingFormBinding) {
+        val roles = listOf(
+            "Toastmaster", "Speaker", "Evaluator", "Table Topics Master",
+            "General Evaluator", "Ah-Counter", "Grammarian", "Timer"
+        )
+
+        // Create a custom adapter with Material 3 style
+        val adapter = ArrayAdapter(
+            requireContext(),
+            com.google.android.material.R.layout.mtrl_auto_complete_simple_item,
+            roles
+        )
+
+        (binding.roleDropdown as? MaterialAutoCompleteTextView)?.apply {
+            setAdapter(adapter)
+            setOnItemClickListener { _, _, position, _ ->
+                val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
+                addRoleChip(binding, selectedRole)
+                setText("")
+            }
+
+            // Customize dropdown appearance
+            setDropDownBackgroundResource(com.google.android.material.R.color.m3_sys_color_dynamic_dark_background)
+            setTextColor(requireContext().getColor(com.google.android.material.R.color.m3_sys_color_dark_on_surface))
+            setHintTextColor(requireContext().getColor(com.google.android.material.R.color.m3_sys_color_dark_on_surface_variant))
+        }
+    }
+
+    private fun addRoleChip(binding: ItemMeetingFormBinding, role: String) {
+        // Check if chip already exists
+        for (i in 0 until binding.roleChipGroup.childCount) {
+            val view = binding.roleChipGroup.getChildAt(i)
+            if (view is Chip && view.text.toString() == role) {
+                // Show a gentle message that the role is already added
+                Snackbar.make(
+                    requireView(),
+                    "$role is already added",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+                return
+            }
+        }
+
+        val chip = Chip(
+            requireContext(),
+            null,
+            com.google.android.material.R.style.Widget_Material3_Chip_Assist
+        ).apply {
+            text = role
+            isCloseIconVisible = true
+            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+            setTextColor(requireContext().getColor(com.google.android.material.R.color.m3_sys_color_dark_on_surface))
+            chipBackgroundColor =
+                requireContext().getColorStateList(com.google.android.material.R.color.m3_sys_color_dark_primary_container)
+            setRippleColorResource(com.google.android.material.R.color.m3_sys_color_dark_primary)
+            setCloseIconTintResource(com.google.android.material.R.color.m3_sys_color_dark_on_surface_variant)
+            setOnCloseIconClickListener {
+                // Animate the chip removal
+                animate().alpha(0f).setDuration(200).withEndAction {
+                    binding.roleChipGroup.removeView(this)
+                }.start()
+            }
+            // Add animation when adding chip
+            alpha = 0f
+            scaleX = 0.8f
+            scaleY = 0.8f
+            animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(200)
+                .start()
+        }
+        binding.roleChipGroup.addView(chip)
     }
 
     private fun showTmodConfirmationDialog(
@@ -586,6 +541,58 @@ class CreateMeetingFragment : Fragment() {
             .show()
     }
 
+    private fun scrollToBottom() {
+        binding.scrollView.post {
+            binding.scrollView.fullScroll(View.FOCUS_DOWN)
+        }
+    }
+
+    private fun showRemoveConfirmationDialog(binding: ItemMeetingFormBinding, position: Int) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Remove Meeting?")
+            .setMessage("Are you sure you want to remove this meeting?")
+            .setPositiveButton("Remove") { _, _ ->
+                removeMeetingForm(binding, position)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun removeMeetingForm(formBinding: ItemMeetingFormBinding, position: Int) {
+        if (meetingForms.size > 1 && position in meetingForms.indices) {
+            // Remove the form from the container
+            binding.meetingFormsContainer.removeView(formBinding.root)
+            meetingForms.removeAt(position)
+            updateFormIndices()
+        } else {
+            showError("At least one meeting form is required")
+        }
+    }
+
+    private fun updateFormIndices() {
+        meetingForms.forEachIndexed { index, formData ->
+            formData.binding.formTitle.text = "Meeting ${index + 1}"
+            // Update the meeting number in the form if needed
+            // formData.binding.meetingNumberText?.text = "Meeting ${index + 1}"
+        }
+
+        // Show/hide the remove button based on the number of forms
+        meetingForms.forEachIndexed { index, formData ->
+            formData.binding.removeMeetingButton.visibility =
+                if (meetingForms.size > 1) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun showError(message: String) {
+        view?.let { view ->
+            Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setBackgroundTint(
+                    requireContext().getColor(com.google.android.material.R.color.design_default_color_error)
+                )
+                .show()
+        }
+    }
+
     private fun validateForms(): Boolean {
         if (meetingForms.isEmpty()) return false
 
@@ -648,14 +655,20 @@ class CreateMeetingFragment : Fragment() {
                         val tmodName = state.formData.selectedTmodName
 
                         if (!tmodId.isNullOrBlank() && !tmodName.isNullOrBlank()) {
-                            Log.d("CreateMeeting", "Attempting to assign TMOD: $tmodName ($tmodId) to meeting: ${state.meeting.id}")
-                            
+                            Log.d(
+                                "CreateMeeting",
+                                "Attempting to assign TMOD: $tmodName ($tmodId) to meeting: ${state.meeting.id}"
+                            )
+
                             // Save TMOD assignment and handle the result
                             saveTmodAssignment(state.meeting.id, tmodId, tmodName)
                                 .addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
                                         // TMOD assignment successful
-                                        Log.d("CreateMeeting", "TMOD assignment successful for meeting: ${state.meeting.id}")
+                                        Log.d(
+                                            "CreateMeeting",
+                                            "TMOD assignment successful for meeting: ${state.meeting.id}"
+                                        )
                                         activity?.runOnUiThread {
                                             Toast.makeText(
                                                 context,
@@ -666,15 +679,23 @@ class CreateMeetingFragment : Fragment() {
                                     } else {
                                         // Show error to user and provide retry option
                                         val error = task.exception?.message ?: "Unknown error"
-                                        Log.e("CreateMeeting", "TMOD assignment failed: $error", task.exception)
-                                        
+                                        Log.e(
+                                            "CreateMeeting",
+                                            "TMOD assignment failed: $error",
+                                            task.exception
+                                        )
+
                                         activity?.runOnUiThread {
                                             android.app.AlertDialog.Builder(requireContext())
                                                 .setTitle("TMOD Assignment Failed")
                                                 .setMessage("Meeting was created, but failed to assign Toastmaster of the Day. Would you like to retry?")
                                                 .setPositiveButton("Retry") { _, _ ->
                                                     // Retry TMOD assignment
-                                                    saveTmodAssignment(state.meeting.id, tmodId, tmodName)
+                                                    saveTmodAssignment(
+                                                        state.meeting.id,
+                                                        tmodId,
+                                                        tmodName
+                                                    )
                                                         .addOnCompleteListener { retryTask ->
                                                             if (retryTask.isSuccessful) {
                                                                 activity?.runOnUiThread {
@@ -708,7 +729,10 @@ class CreateMeetingFragment : Fragment() {
                                     }
                                 }
                         } else {
-                            Log.d("CreateMeeting", "No TMOD assigned for meeting: ${state.meeting.id}")
+                            Log.d(
+                                "CreateMeeting",
+                                "No TMOD assigned for meeting: ${state.meeting.id}"
+                            )
                             activity?.runOnUiThread {
                                 Toast.makeText(
                                     context,
@@ -721,7 +745,7 @@ class CreateMeetingFragment : Fragment() {
 
                     is CreateMeetingState.Error -> {
                         activity?.runOnUiThread {
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                            showError(state.message)
                         }
                     }
 
@@ -820,7 +844,10 @@ class CreateMeetingFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        Log.d("CreateMeeting", "onResume - Current createMeetingState: ${viewModel.createMeetingState}")
+        Log.d(
+            "CreateMeeting",
+            "onResume - Current createMeetingState: ${viewModel.createMeetingState}"
+        )
     }
 
     private fun saveTmodAssignment(
@@ -828,7 +855,10 @@ class CreateMeetingFragment : Fragment() {
         userId: String,
         memberName: String
     ): com.google.android.gms.tasks.Task<Void> {
-        Log.d("CreateMeeting", "saveTmodAssignment called with meetingId: $meetingId, userId: $userId, memberName: $memberName")
+        Log.d(
+            "CreateMeeting",
+            "saveTmodAssignment called with meetingId: $meetingId, userId: $userId, memberName: $memberName"
+        )
 
         if (meetingId.isBlank() || userId.isBlank()) {
             val errorMsg = "Invalid meetingId or userId - meetingId: $meetingId, userId: $userId"
@@ -857,12 +887,18 @@ class CreateMeetingFragment : Fragment() {
 
             assignedRoleRef.set(tmodAssignment)
                 .addOnSuccessListener {
-                    Log.d("CreateMeeting", "TMOD assignment saved successfully at meetings/$meetingId/assignedRole/$userId")
+                    Log.d(
+                        "CreateMeeting",
+                        "TMOD assignment saved successfully at meetings/$meetingId/assignedRole/$userId"
+                    )
                 }
                 .addOnFailureListener { e ->
                     Log.e("CreateMeeting", "Failed to save TMOD assignment", e)
                     if (e is com.google.firebase.firestore.FirebaseFirestoreException) {
-                        Log.e("CreateMeeting", "Firestore error - Code: ${e.code}, Message: ${e.message}")
+                        Log.e(
+                            "CreateMeeting",
+                            "Firestore error - Code: ${e.code}, Message: ${e.message}"
+                        )
                     }
                 }
 

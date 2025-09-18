@@ -6,7 +6,7 @@ import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import timber.log.Timber
+import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -148,7 +148,7 @@ class UserRepositoryImpl @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error fetching available members for meeting $meetingId")
+            Log.e("UserRepository", "Error fetching available members for meeting $meetingId", e)
             emptyList()
         }
     }
@@ -160,7 +160,7 @@ class UserRepositoryImpl @Inject constructor(
             userService.getUserRecentRoles(userId, limit) ?: emptyList()
         } catch (e: Exception) {
             // Log the error and return empty list
-            Timber.e(e, "Error fetching recent roles for user $userId")
+            Log.e("UserRepository", "Error fetching recent roles for user $userId", e)
             emptyList()
         }
     }
