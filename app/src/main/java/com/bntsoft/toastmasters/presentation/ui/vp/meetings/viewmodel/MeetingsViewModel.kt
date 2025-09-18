@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel
 
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.data.model.User
@@ -12,6 +13,7 @@ import com.bntsoft.toastmasters.domain.repository.MeetingAgendaRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
+import com.bntsoft.toastmasters.presentation.ui.vp.meetings.CreateMeetingFragment
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.MeetingsUiState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.UpcomingMeetingsState
@@ -23,8 +25,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -77,8 +81,10 @@ class MeetingsViewModel @Inject constructor(
     val upcomingMeetingsState: StateFlow<UpcomingMeetingsState> =
         _upcomingMeetingsState.asStateFlow()
 
-    private val _createMeetingState = MutableStateFlow<CreateMeetingState>(CreateMeetingState.Idle)
-    val createMeetingState: StateFlow<CreateMeetingState> = _createMeetingState.asStateFlow()
+    private val _createMeetingState = MutableSharedFlow<CreateMeetingState>(
+        replay = 0 // Do not replay old events
+    )
+    val createMeetingState = _createMeetingState.asSharedFlow()
 
     private val _updateMeetingState = MutableStateFlow<UpdateMeetingState>(UpdateMeetingState.Idle)
     val updateMeetingState: StateFlow<UpdateMeetingState> = _updateMeetingState.asStateFlow()
@@ -267,13 +273,13 @@ class MeetingsViewModel @Inject constructor(
             id = this.id,
             theme = this.theme,
             dateTime = dateTime,
-            endDateTime = this.endTime.let { 
+            endDateTime = this.endTime.let {
                 if (it.isNotEmpty()) {
                     LocalDateTime.of(
                         dateTime.toLocalDate(),
                         LocalTime.parse(it)
                     )
-                } else null 
+                } else null
             },
             location = this.venue,
             roleCounts = this.roleCounts,
@@ -297,16 +303,24 @@ class MeetingsViewModel @Inject constructor(
         }
     }
 
-    fun createMeeting(meeting: DataMeeting, forceCreate: Boolean = false) = viewModelScope.launch {
-        _createMeetingState.value = CreateMeetingState.Loading
+    fun createMeeting(
+        meeting: DataMeeting,
+        formData: CreateMeetingFragment.MeetingFormData,
+        forceCreate: Boolean = false
+    ) = viewModelScope.launch {
+        Log.d("CreateMeeting", "Starting createMeeting in ViewModel")
+        _createMeetingState.emit(CreateMeetingState.Loading)
+        Log.d("CreateMeeting", "Set state to Loading")
 
         try {
             // Convert to domain model for duplicate check
             val domainMeeting = meeting.toDomainModel()
+            Log.d("CreateMeeting", "Converted to domain model")
 
             // Check for duplicate meetings if not forcing creation
             if (!forceCreate && isDuplicateMeeting(domainMeeting)) {
-                _createMeetingState.value = CreateMeetingState.Duplicate(domainMeeting)
+                Log.d("CreateMeeting", "Duplicate meeting found")
+                _createMeetingState.emit(CreateMeetingState.Duplicate(domainMeeting))
                 return@launch
             }
 
@@ -315,57 +329,82 @@ class MeetingsViewModel @Inject constructor(
             val meetingResult = meetingRepository.createMeeting(meetingWithOfficers)
 
             if (meetingResult is Resource.Success) {
-                val createdMeeting = meetingResult.data!!
-                Timber.d("Meeting creation successful: $createdMeeting")
+                val createdMeeting = meetingResult.data
+                if (createdMeeting != null) {
+                    Log.d("CreateMeeting", "Meeting creation successful: ${createdMeeting.id}")
 
-                // Create a default agenda for the meeting
-                val defaultAgenda = MeetingAgenda(
-                    id = createdMeeting.id,
-                    meetingDate = Timestamp.now(),
-                    startTime = createdMeeting.dateTime.toLocalTime().toString(),
-                    endTime = createdMeeting.endDateTime?.toLocalTime()?.toString() ?: "",
-                    officers = _latestOfficers.value,
-                    agendaStatus = AgendaStatus.DRAFT,
-                    createdAt = Timestamp.now(),
-                    updatedAt = Timestamp.now()
-                )
+                    // Create a default agenda for the meeting
+                    val defaultAgenda = MeetingAgenda(
+                        id = createdMeeting.id,
+                        meetingDate = Timestamp.now(),
+                        startTime = createdMeeting.dateTime.toLocalTime().toString(),
+                        endTime = createdMeeting.endDateTime?.toLocalTime()?.toString() ?: "",
+                        officers = _latestOfficers.value,
+                        agendaStatus = AgendaStatus.DRAFT,
+                        createdAt = Timestamp.now(),
+                        updatedAt = Timestamp.now()
+                    )
 
-                try {
-                    val agendaResult = meetingAgendaRepository.saveMeetingAgenda(defaultAgenda)
-                    if (agendaResult is com.bntsoft.toastmasters.utils.Result.Success<*>) {
-                        Timber.d("Default agenda created successfully for meeting ${createdMeeting.id}")
-
-                        // Also update the meeting with the agenda ID
-                        meetingRepository.updateMeeting(
-                            createdMeeting.copy(
-                                agendaId = createdMeeting.id,
-                                updatedAt = System.currentTimeMillis()
+                    try {
+                        val agendaResult = meetingAgendaRepository.saveMeetingAgenda(defaultAgenda)
+                        if (agendaResult is com.bntsoft.toastmasters.utils.Result.Success<*>) {
+                            Log.d(
+                                "CreateMeeting",
+                                "Default agenda created successfully for meeting ${createdMeeting.id}"
                             )
-                        )
-                    } else if (agendaResult is com.bntsoft.toastmasters.utils.Result.Error) {
-                        Timber.e("Failed to create default agenda: ${agendaResult.exception?.message}")
+
+                            // Also update the meeting with the agenda ID
+                            meetingRepository.updateMeeting(
+                                createdMeeting.copy(
+                                    agendaId = createdMeeting.id,
+                                    updatedAt = System.currentTimeMillis()
+                                )
+                            )
+                        } else if (agendaResult is com.bntsoft.toastmasters.utils.Result.Error) {
+                            Log.e(
+                                "CreateMeeting",
+                                "Failed to create default agenda: ${agendaResult.exception?.message}"
+                            )
+                            // Even if agenda creation fails, we still consider the meeting creation successful
+                        }
+                    } catch (e: Exception) {
+                        Log.e("CreateMeeting", "Error saving default agenda", e)
                         // Even if agenda creation fails, we still consider the meeting creation successful
                     }
-                } catch (e: Exception) {
-                    Timber.e(e, "Error saving default agenda")
-                    // Even if agenda creation fails, we still consider the meeting creation successful
-                }
 
-                _createMeetingState.value = CreateMeetingState.Success(createdMeeting)
-                loadMeetings()
-                loadUpcomingMeetings()
+                    Log.d(
+                        "CreateMeeting",
+                        "Emitting Success state with meeting: ${createdMeeting.id}"
+                    )
+                    _createMeetingState.emit(CreateMeetingState.Success(createdMeeting, formData))
+
+                    // Refresh the meetings lists
+                    loadMeetings()
+                    loadUpcomingMeetings()
+                } else {
+                    val errorMsg = "Meeting was created but returned null data"
+                    Log.e("CreateMeeting", errorMsg)
+                    _createMeetingState.emit(CreateMeetingState.Error(errorMsg))
+                }
             } else if (meetingResult is Resource.Error) {
-                Timber.e("Meeting creation failed: ${meetingResult.message}")
-                _createMeetingState.value = CreateMeetingState.Error(
-                    meetingResult.message ?: "Failed to create meeting"
+                val errorMsg = "Meeting creation failed: ${meetingResult.message}"
+                Log.e("CreateMeeting", errorMsg)
+                _createMeetingState.emit(
+                    CreateMeetingState.Error(
+                        meetingResult.message ?: "Failed to create meeting"
+                    )
                 )
             }
         } catch (e: Exception) {
-            Timber.e(e, "Error in createMeeting")
-            _createMeetingState.value = CreateMeetingState.Error(
+            val errorMsg = "Error in createMeeting: ${e.message}"
+            Log.e("CreateMeeting", errorMsg, e)
+            _createMeetingState.emit(CreateMeetingState.Error(
                 e.message ?: "An unexpected error occurred"
-            )
+            ))
         }
+
+        // Log the final state
+        Log.d("CreateMeeting", "Final state after createMeeting: ${_createMeetingState.toString()}")
     }
 
     suspend fun getLastMeetingDate(): java.util.Date? {
@@ -375,7 +414,7 @@ class MeetingsViewModel @Inject constructor(
         }
     }
 
-    fun resetCreateMeetingState() {
-        _createMeetingState.value = CreateMeetingState.Idle
+    suspend fun resetCreateMeetingState() {
+        _createMeetingState.emit(CreateMeetingState.Idle)
     }
 }
