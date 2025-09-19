@@ -5,7 +5,6 @@
     <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 
     <string-array name="Preferred_roles">
-        <item>+ Add new role</item>
         <item>Sergeant-at-Arms</item>
         <item>Toastmaster of the Day</item>
         <item>Speaker</item>

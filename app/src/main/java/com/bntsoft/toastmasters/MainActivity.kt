@@ -6,6 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -49,6 +50,7 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        window.statusBarColor = ContextCompat.getColor(this, R.color.primary)
 
         // Set the toolbar as the action bar
         setSupportActionBar(binding.toolbar)
@@ -179,10 +181,13 @@ class MainActivity : BaseActivity() {
                     R.id.agendaTableFragment -> true
                     else -> false
                 } || destination.label.toString().contains("Agenda", ignoreCase = true)
-                
+
                 // Debug logging
-                Log.d("MainActivity", "Destination ID: ${destination.id}, Label: ${destination.label}, Should hide bottom nav: $shouldHideBottomNav")
-                
+                Log.d(
+                    "MainActivity",
+                    "Destination ID: ${destination.id}, Label: ${destination.label}, Should hide bottom nav: $shouldHideBottomNav"
+                )
+
                 bottomNav.visibility = if (shouldHideBottomNav) View.GONE else View.VISIBLE
 
             }

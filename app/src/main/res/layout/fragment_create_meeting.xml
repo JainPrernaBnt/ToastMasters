@@ -13,7 +13,7 @@
         android:clipToPadding="false"
         android:fillViewport="true"
         android:overScrollMode="never"
-        android:paddingHorizontal="20dp"
+        android:paddingHorizontal="10dp"
         android:paddingTop="16dp"
         android:paddingBottom="100dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -90,15 +90,18 @@
                     app:icon="@drawable/ic_add"
                     app:iconGravity="textStart"
                     app:iconSize="20dp"
-                    app:iconTint="@color/primary"
+                    app:iconTint="@color/on_primary"
                     app:iconPadding="0dp"
                     android:paddingStart="16dp"
+                    android:backgroundTint="@color/primary"
                     android:paddingEnd="16dp"
                     app:cornerRadius="12dp"
                     app:rippleColor="@color/primary_container"
                     app:strokeColor="@color/outline"
                     app:strokeWidth="1dp"
-                    android:textColor="@color/primary" />
+                    android:textColor="@color/on_primary"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent" />
+
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Create Meetings Button -->

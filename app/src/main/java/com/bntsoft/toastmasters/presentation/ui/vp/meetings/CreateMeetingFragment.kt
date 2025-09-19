@@ -1,13 +1,20 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.meetings
 
 import android.app.AlertDialog
+import android.content.res.ColorStateList
+import android.content.res.Resources
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.InputFilter
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -23,6 +30,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -343,47 +351,151 @@ class CreateMeetingFragment : Fragment() {
     }
 
     private fun setupRoleDropdown(binding: ItemMeetingFormBinding) {
-        val roles = listOf(
-            "Toastmaster", "Speaker", "Evaluator", "Table Topics Master",
-            "General Evaluator", "Ah-Counter", "Grammarian", "Timer"
-        )
+        val roles = resources.getStringArray(R.array.Preferred_roles).toMutableList()
+        roles.add(0, "+ Add new role") // Add at top
 
-        // Create a custom adapter with Material 3 style
-        val adapter = ArrayAdapter(
+        // Custom adapter to style "+ Add new role"
+        val adapter = object : ArrayAdapter<String>(
             requireContext(),
             com.google.android.material.R.layout.mtrl_auto_complete_simple_item,
             roles
-        )
-
-        (binding.roleDropdown as? MaterialAutoCompleteTextView)?.apply {
-            setAdapter(adapter)
-            setOnItemClickListener { _, _, position, _ ->
-                val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
-                addRoleChip(binding, selectedRole)
-                setText("")
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent) as TextView
+                if (position == 0) {
+                    // Style for "+ Add new role"
+                    view.setTypeface(view.typeface, Typeface.BOLD)
+                    view.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                } else {
+                    // Normal style for other items
+                    view.setTypeface(view.typeface, Typeface.NORMAL)
+                    view.setTextColor(ContextCompat.getColor(context, R.color.on_surface))
+                }
+                return view
             }
 
-            // Customize dropdown appearance
-            setDropDownBackgroundResource(com.google.android.material.R.color.m3_sys_color_dynamic_dark_background)
-            setTextColor(requireContext().getColor(com.google.android.material.R.color.m3_sys_color_dark_on_surface))
-            setHintTextColor(requireContext().getColor(com.google.android.material.R.color.m3_sys_color_dark_on_surface_variant))
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getDropDownView(position, convertView, parent) as TextView
+                if (position == 0) {
+                    view.setTypeface(view.typeface, Typeface.BOLD)
+                    view.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                } else {
+                    view.setTypeface(view.typeface, Typeface.NORMAL)
+                    view.setTextColor(ContextCompat.getColor(context, R.color.on_surface))
+                }
+                return view
+            }
+        }
+
+        binding.apply {
+            val dropdown = roleDropdown as MaterialAutoCompleteTextView
+            dropdown.setAdapter(adapter)
+            dropdown.keyListener = null
+            roleDropdownLayout.isFocusable = false
+            roleDropdownLayout.isFocusableInTouchMode = false
+
+            dropdown.setOnClickListener {
+                if (adapter.count > 0) dropdown.showDropDown()
+            }
+            dropdown.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus && adapter.count > 0) dropdown.showDropDown()
+            }
+
+            dropdown.setOnItemClickListener { _, _, position, _ ->
+                val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
+
+                if (position == 0) { // "+ Add new role"
+                    roleInputLayout.visibility = View.VISIBLE
+                    saveRoleButton.visibility = View.VISIBLE
+                    roleInput.requestFocus()
+                    dropdown.setText("", false)
+                } else {
+                    if (selectedRole.equals("Toastmaster of the Day", ignoreCase = true)) {
+                        showTmodConfirmationDialog(binding, selectedRole)
+                    } else {
+                        showRoleCountDialog(binding, selectedRole)
+                    }
+                    dropdown.setText("", false)
+                }
+                dropdown.clearFocus()
+            }
+
+            saveRoleButton.setOnClickListener {
+                val role = roleInput.text.toString().trim()
+                if (role.isNotEmpty()) {
+                    showRoleCountDialog(binding, role)
+                    roleInput.text?.clear()
+                    roleInputLayout.visibility = View.GONE
+                    saveRoleButton.visibility = View.GONE
+                }
+            }
+
+            roleInput.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                    val role = roleInput.text.toString().trim()
+                    if (role.isNotEmpty()) {
+                        showRoleCountDialog(binding, role)
+                        roleInput.text?.clear()
+                        roleInputLayout.visibility = View.GONE
+                        saveRoleButton.visibility = View.GONE
+                    }
+                    true
+                } else false
+            }
         }
     }
 
-    private fun addRoleChip(binding: ItemMeetingFormBinding, role: String) {
-        // Check if chip already exists
+    private fun showRoleCountDialog(binding: ItemMeetingFormBinding, role: String) {
+        if (role.equals("Toastmaster of the Day", ignoreCase = true) || role.startsWith("TMOD:")) {
+            // TMOD special chip
+            addRoleChip(binding, role, isTmod = true)
+            return
+        }
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_role_count, null)
+        val input = dialogView.findViewById<TextInputEditText>(R.id.roleCountInput).apply {
+            setText("1")
+            setSelectAllOnFocus(true)
+            requestFocus()
+        }
+
+        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_ToastMasters_Dialog)
+            .setTitle("Add $role")
+            .setView(dialogView)
+            .setPositiveButton("Add") { dialogInterface, _ ->
+                val count = input.text.toString().toIntOrNull() ?: 0
+                if (count > 0) {
+                    for (i in 1..count) {
+                        addRoleChip(binding, "$role $i")
+                    }
+                }
+                dialogInterface.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialogInterface, _ -> dialogInterface.dismiss() }
+            .create()
+
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+        dialog.show()
+    }
+
+    private fun addRoleChip(
+        binding: ItemMeetingFormBinding,
+        role: String,
+        isTmod: Boolean = false
+    ) {
+        // Avoid duplicates
         for (i in 0 until binding.roleChipGroup.childCount) {
             val view = binding.roleChipGroup.getChildAt(i)
             if (view is Chip && view.text.toString() == role) {
-                // Show a gentle message that the role is already added
-                Snackbar.make(
-                    requireView(),
-                    "$role is already added",
-                    Snackbar.LENGTH_SHORT
-                ).show()
+                Snackbar.make(requireView(), "$role is already added", Snackbar.LENGTH_SHORT).show()
                 return
             }
         }
+
+        val primaryContainerColor =
+            ContextCompat.getColorStateList(requireContext(), R.color.primary_container)
+        val onSurfaceVariantColor =
+            ContextCompat.getColorStateList(requireContext(), R.color.on_surface_variant)
 
         val chip = Chip(
             requireContext(),
@@ -393,30 +505,34 @@ class CreateMeetingFragment : Fragment() {
             text = role
             isCloseIconVisible = true
             setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
-            setTextColor(requireContext().getColor(com.google.android.material.R.color.m3_sys_color_dark_on_surface))
-            chipBackgroundColor =
-                requireContext().getColorStateList(com.google.android.material.R.color.m3_sys_color_dark_primary_container)
-            setRippleColorResource(com.google.android.material.R.color.m3_sys_color_dark_primary)
-            setCloseIconTintResource(com.google.android.material.R.color.m3_sys_color_dark_on_surface_variant)
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            chipBackgroundColor = requireContext().getColorStateList(R.color.chip_background)
+            chipStrokeWidth = 1f.dpToPx()
+            chipStrokeColor = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.black))
+            rippleColor = primaryContainerColor
+            closeIconTint = onSurfaceVariantColor
+
             setOnCloseIconClickListener {
-                // Animate the chip removal
-                animate().alpha(0f).setDuration(200).withEndAction {
-                    binding.roleChipGroup.removeView(this)
-                }.start()
+                binding.roleChipGroup.removeView(this)
+                if (isTmod) {
+                    // Clear TMOD assignment when removed
+                    val formData = meetingForms.find { it.binding === binding }
+                    formData?.let { data ->
+                        data.selectedTmodId = null
+                        data.selectedTmodName = null
+                    }
+                }
             }
-            // Add animation when adding chip
+
             alpha = 0f
             scaleX = 0.8f
             scaleY = 0.8f
-            animate()
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(200)
-                .start()
+            animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(200).start()
         }
         binding.roleChipGroup.addView(chip)
     }
+
+    fun Float.dpToPx(): Float = this * Resources.getSystem().displayMetrics.density
 
     private fun showTmodConfirmationDialog(
         formBinding: ItemMeetingFormBinding,
@@ -563,25 +679,11 @@ class CreateMeetingFragment : Fragment() {
             // Remove the form from the container
             binding.meetingFormsContainer.removeView(formBinding.root)
             meetingForms.removeAt(position)
-            updateFormIndices()
         } else {
             showError("At least one meeting form is required")
         }
     }
 
-    private fun updateFormIndices() {
-        meetingForms.forEachIndexed { index, formData ->
-            formData.binding.formTitle.text = "Meeting ${index + 1}"
-            // Update the meeting number in the form if needed
-            // formData.binding.meetingNumberText?.text = "Meeting ${index + 1}"
-        }
-
-        // Show/hide the remove button based on the number of forms
-        meetingForms.forEachIndexed { index, formData ->
-            formData.binding.removeMeetingButton.visibility =
-                if (meetingForms.size > 1) View.VISIBLE else View.GONE
-        }
-    }
 
     private fun showError(message: String) {
         view?.let { view ->

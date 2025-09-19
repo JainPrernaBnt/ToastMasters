@@ -20,18 +20,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="-0.02"
-                android:lineSpacingExtra="4sp"
-                android:text="Upcoming Meetings"
-                android:textColor="@color/on_background"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvMeetings"
                 android:layout_width="match_parent"
