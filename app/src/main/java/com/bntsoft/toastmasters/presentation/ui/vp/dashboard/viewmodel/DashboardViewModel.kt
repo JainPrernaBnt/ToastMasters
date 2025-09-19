@@ -61,21 +61,18 @@ class DashboardViewModel @Inject constructor(
                 val totalMembers = allMembers.size
 
                 // Combine the meetings flow with the responses flow
-                Log.d("DashboardDebug", "Getting upcoming meetings from repository")
-                meetingRepository.getUpcomingMeetings(LocalDate.now()).collectLatest { meetings ->
+                Log.d("DashboardDebug", "Getting all meetings from repository")
+                meetingRepository.getAllMeetings().collectLatest { meetings ->
                     Log.d("DashboardDebug", "Retrieved ${meetings.size} meetings from repository")
                     if (meetings.isEmpty()) {
                         Log.d("DashboardDebug", "No meetings found in repository")
                     } else {
                         meetings.forEachIndexed { index, meeting ->
-                            Log.d("DashboardDebug", "Meeting #${index + 1}: ${meeting.theme} (${meeting.id}) - " +
-                                    "Status: ${meeting.status}, " +
-                                    "Date: ${meeting.dateTime}")
+
                         }
                     }
 
                     if (meetings.isEmpty()) {
-                        Log.d("DashboardViewModel", "No upcoming meetings found")
                         _upcomingMeetingsStateWithCounts.value =
                             UpcomingMeetingsStateWithCounts.Empty
                         return@collectLatest
@@ -94,8 +91,6 @@ class DashboardViewModel @Inject constructor(
                                 val notRespondedCount =
                                     (totalMembers - responses.size).coerceAtLeast(0)
 
-                                Log.d("DashboardViewModel", "Meeting ${meeting.id} - Available: $availableCount, Not Available: $notAvailableCount, Not Confirmed: $notConfirmedCount, Not Responded: $notRespondedCount (Total members: $totalMembers, Responses: ${responses.size})")
-
                                 MeetingWithCounts(
                                     meeting = meeting,
                                     availableCount = availableCount,
@@ -111,16 +106,13 @@ class DashboardViewModel @Inject constructor(
                         meetingCounts.toList()
                     }.collect { meetingsWithCounts ->
                         val sortedMeetings = meetingsWithCounts.sortedBy { it.meeting.dateTime }
-                        Log.d("DashboardViewModel", "Successfully loaded ${meetingsWithCounts.size} upcoming meetings")
-                        sortedMeetings.forEach { 
-                            Log.d("DashboardViewModel", "Sending to UI: ${it.meeting.theme} - ${it.meeting.dateTime} - Status: ${it.meeting.status}")
+                        sortedMeetings.forEach {
                         }
                         _upcomingMeetingsStateWithCounts.value =
                             UpcomingMeetingsStateWithCounts.Success(sortedMeetings)
                     }
                 }
             } catch (e: Exception) {
-                Log.e("DashboardViewModel", "Error loading meetings", e)
                 _upcomingMeetingsStateWithCounts.value =
                     UpcomingMeetingsStateWithCounts.Error(e.message ?: "Failed to load meetings")
             }
@@ -133,7 +125,6 @@ class DashboardViewModel @Inject constructor(
             // Refresh the list after deletion
             loadUpcomingMeetings()
         } catch (e: Exception) {
-            Log.e("DashboardViewModel", "Error deleting meeting $meetingId", e)
         }
     }
 

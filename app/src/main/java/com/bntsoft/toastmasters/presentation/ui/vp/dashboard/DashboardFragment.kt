@@ -1,23 +1,35 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.dashboard
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.widget.ArrayAdapter
+import android.widget.ImageView
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.animation.doOnEnd
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.TableTopicSpeaker
 import com.bntsoft.toastmasters.data.model.Winner
 import com.bntsoft.toastmasters.databinding.DialogSelectWinnersBinding
 import com.bntsoft.toastmasters.databinding.DialogTableTopicSpeakersBinding
 import com.bntsoft.toastmasters.databinding.FragmentDashboardBinding
+import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
+import com.bntsoft.toastmasters.domain.models.MeetingStatus
 import com.bntsoft.toastmasters.domain.models.WinnerCategory
 import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter.MeetingAdapter
 import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter.TableTopicSpeakersAdapter
@@ -28,11 +40,15 @@ import com.bntsoft.toastmasters.utils.Constants.EXTRA_MEETING_ID
 import com.bntsoft.toastmasters.utils.Constants.MEETINGS_COLLECTION
 import com.bntsoft.toastmasters.utils.Constants.TABLE_TOPICS_COLLECTION
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textview.MaterialTextView
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-
-// Timber import removed, using Android Log instead
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @AndroidEntryPoint
 class DashboardFragment : Fragment() {
@@ -41,11 +57,11 @@ class DashboardFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: DashboardViewModel by viewModels()
-    private lateinit var meetingAdapter: MeetingAdapter
+    private lateinit var upcomingMeetingsAdapter: MeetingAdapter
+    private lateinit var pastMeetingsAdapter: MeetingAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private val searchQuery = MutableStateFlow("")
+    private var currentMeetings = listOf<MeetingWithCounts>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,35 +74,87 @@ class DashboardFragment : Fragment() {
         return binding.root
     }
 
+    private var isUpcomingExpanded = true
+    private var isPastExpanded = true
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("DashboardDebug", "onViewCreated: Fragment view created")
-        Log.d("DashboardDebug", "ViewModel: $viewModel")
-        Log.d("DashboardDebug", "Adapter initialized: ${::meetingAdapter.isInitialized}")
 
         // Set up RecyclerView if not already done
-        if (!::meetingAdapter.isInitialized) {
+        if (!::upcomingMeetingsAdapter.isInitialized || !::pastMeetingsAdapter.isInitialized) {
             setupRecyclerView()
         }
 
+        setupSearch()
+        setupSectionToggles()
         // Force refresh data
-        Log.d("DashboardDebug", "Loading upcoming meetings...")
         viewModel.loadUpcomingMeetings()
     }
+    private fun setupSectionToggles() {
+        binding.headerUpcoming.setOnClickListener {
+            isUpcomingExpanded = !isUpcomingExpanded
+            toggleSection(binding.rvUpcomingMeetings, binding.ivUpcomingArrow, isUpcomingExpanded)
+        }
 
-    private var isDialogShowing = false
-    private var currentMeetingId: String? = null
+        binding.headerPast.setOnClickListener {
+            isPastExpanded = !isPastExpanded
+            toggleSection(binding.rvPastMeetings, binding.ivPastArrow, isPastExpanded)
+        }
+    }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.loadUpcomingMeetings()
-        // Reset dialog state when coming back to this fragment
-        isDialogShowing = false
-        currentMeetingId = null
+    private fun toggleSection(
+        recyclerView: RecyclerView,
+        arrowView: ImageView,
+        isExpanded: Boolean
+    ) {
+        val startHeight = recyclerView.height
+
+        if (isExpanded) {
+            // EXPAND
+            recyclerView.measure(
+                View.MeasureSpec.makeMeasureSpec(recyclerView.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            )
+            val targetHeight = recyclerView.measuredHeight
+
+            recyclerView.visibility = View.VISIBLE
+
+            val animator = ValueAnimator.ofInt(0, targetHeight)
+            animator.addUpdateListener { valueAnimator ->
+                val layoutParams = recyclerView.layoutParams
+                layoutParams.height = valueAnimator.animatedValue as Int
+                recyclerView.layoutParams = layoutParams
+            }
+            animator.duration = 250
+            animator.start()
+
+        } else {
+            // COLLAPSE
+            val animator = ValueAnimator.ofInt(startHeight, 0)
+            animator.addUpdateListener { valueAnimator ->
+                val layoutParams = recyclerView.layoutParams
+                layoutParams.height = valueAnimator.animatedValue as Int
+                recyclerView.layoutParams = layoutParams
+            }
+            animator.duration = 250
+            animator.doOnEnd {
+                recyclerView.visibility = View.GONE
+                recyclerView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
+            animator.start()
+        }
+
+        // Rotate arrow
+        val rotation = if (isExpanded) 0f else 180f
+        arrowView.animate()
+            .rotation(rotation)
+            .setDuration(200)
+            .start()
     }
 
     private fun setupRecyclerView() {
-        meetingAdapter = MeetingAdapter(
+        // Upcoming Meetings Adapter (with edit option)
+        upcomingMeetingsAdapter = MeetingAdapter(
             onEdit = { meetingId ->
                 val bundle = bundleOf("meeting_id" to meetingId)
                 findNavController().navigate(
@@ -105,85 +173,157 @@ class DashboardFragment : Fragment() {
                     R.id.action_dashboardFragment_to_memberResponseFragment,
                     bundleOf(EXTRA_MEETING_ID to meetingId)
                 )
-            }
+            },
+            showOverflowMenu = true
         )
-        binding.rvMeetings.apply {
-            adapter = meetingAdapter
+
+        // Past Meetings Adapter (without edit option)
+        pastMeetingsAdapter = MeetingAdapter(
+            onEdit = { /* No edit for past meetings */ },
+            onDelete = { meetingId ->
+                showDeleteConfirmationDialog(meetingId)
+            },
+            onComplete = { /* No complete action for past meetings */ },
+            onItemClick = { meetingId ->
+                findNavController().navigate(
+                    R.id.action_dashboardFragment_to_memberResponseFragment,
+                    bundleOf(EXTRA_MEETING_ID to meetingId)
+                )
+            },
+            showOverflowMenu = false
+        )
+
+        binding.rvUpcomingMeetings.apply {
+            adapter = upcomingMeetingsAdapter
             layoutManager = LinearLayoutManager(context)
+            setHasFixedSize(true)
+        }
+
+        binding.rvPastMeetings.apply {
+            adapter = pastMeetingsAdapter
+            layoutManager = LinearLayoutManager(context)
+            setHasFixedSize(true)
         }
     }
 
     private fun observeUpcomingMeetings() {
         viewLifecycleOwner.lifecycleScope.launch {
-            Log.d("DashboardDebug", "Starting to observe upcoming meetings")
             viewModel.upcomingMeetingsStateWithCounts.collect { state ->
-                Log.d("DashboardDebug", "Received state: ${state.javaClass.simpleName}")
-                val message = when (state) {
+                when (state) {
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Success -> {
-                        Log.d(
-                            "DashboardDebug",
-                            "Received ${state.meetings.size} meetings from ViewModel"
-                        )
-                        if (state.meetings.isEmpty()) {
-                            Log.d("DashboardDebug", "No meetings received from ViewModel")
-                        } else {
-                            state.meetings.forEachIndexed { index, meeting ->
-                                Log.d(
-                                    "DashboardDebug",
-                                    "Meeting #${index + 1}: ${meeting.meeting.theme} (${meeting.meeting.id}) - " +
-                                            "Status: ${meeting.meeting.status}, " +
-                                            "Date: ${meeting.meeting.dateTime}, " +
-                                            "Available: ${meeting.availableCount}, " +
-                                            "Not Available: ${meeting.notAvailableCount}"
-                                )
-                            }
-                        }
-                        meetingAdapter.submitList(state.meetings) {
-                            Log.d(
-                                "DashboardDebug",
-                                "Adapter updated with ${state.meetings.size} meetings"
-                            )
-                            Log.d(
-                                "DashboardDebug",
-                                "RecyclerView child count: ${binding.rvMeetings.childCount}"
-                            )
-                            Log.d(
-                                "DashboardDebug",
-                                "RecyclerView adapter item count: ${meetingAdapter.itemCount}"
-                            )
-                        }
-                        "Loaded ${state.meetings.size} meetings"
+                        currentMeetings = state.meetings
+                        filterAndSortMeetings(searchQuery.value)
                     }
 
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Empty -> {
-                        meetingAdapter.submitList(emptyList())
-                        "No upcoming meetings found"
+                        currentMeetings = emptyList()
+                        upcomingMeetingsAdapter.submitList(emptyList())
+                        pastMeetingsAdapter.submitList(emptyList())
+
+                        // Also hide the sections
+                        binding.tvUpcomingMeetings.visibility = View.VISIBLE
+                        binding.rvUpcomingMeetings.visibility = View.GONE
+                        binding.tvPastMeetings.visibility = View.VISIBLE
+                        binding.rvPastMeetings.visibility = View.GONE
                     }
 
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Error -> {
-                        "Error: ${state.message}"
+                        // Handle error
+                        Log.e("DashboardFragment", "Error loading meetings: ${state.message}")
                     }
 
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Loading -> {
-                        "Loading meetings..."
-                    }
-                }
-
-                // Log to console for debugging
-                Log.d("DashboardDebug", message)
-                if (state is DashboardViewModel.UpcomingMeetingsStateWithCounts.Success) {
-                    state.meetings.forEach { meeting ->
-                        Log.d(
-                            "DashboardDebug",
-                            "Meeting: ${meeting.meeting.theme}, " +
-                                    "Available: ${meeting.availableCount}, " +
-                                    "Not Available: ${meeting.notAvailableCount}, " +
-                                    "Not Confirmed: ${meeting.notConfirmedCount}"
-                        )
+                        // Show loading state if needed
                     }
                 }
             }
         }
+    }
+
+    private fun setupSearch() {
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                searchQuery.value = s?.toString() ?: ""
+            }
+        })
+
+        binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                // Hide keyboard
+                val imm =
+                    context?.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.hideSoftInputFromWindow(binding.etSearch.windowToken, 0)
+                true
+            } else {
+                false
+            }
+        }
+
+        // Debounce search to avoid too many updates
+        viewLifecycleOwner.lifecycleScope.launch {
+            searchQuery
+                .debounce(300)
+                .collect { query ->
+                    filterAndSortMeetings(query)
+                }
+        }
+    }
+
+    private fun filterAndSortMeetings(query: String) {
+        val filtered = if (query.isBlank()) {
+            currentMeetings
+        } else {
+            currentMeetings.filter { meetingWithCounts ->
+                val meeting = meetingWithCounts.meeting
+                meeting.theme.contains(query, ignoreCase = true) ||
+                        meeting.location.contains(query, ignoreCase = true) ||
+                        formatDate(meeting.dateTime).contains(query, ignoreCase = true)
+            }
+        }
+
+        // Separate meetings by status and date
+        val now = LocalDateTime.now()
+        val upcomingMeetings = filtered.filter { 
+            it.meeting.status == MeetingStatus.NOT_COMPLETED && 
+            !it.meeting.dateTime.isBefore(now.minusDays(1)) // Include meetings from yesterday to catch any in-progress meetings
+        }.sortedBy { it.meeting.dateTime } // Sort upcoming meetings in ascending order (earliest first)
+
+        val pastMeetings = filtered.filter { 
+            it.meeting.status == MeetingStatus.COMPLETED || 
+            it.meeting.dateTime.isBefore(now.minusDays(1)) // Include any meetings older than yesterday as past
+        }.sortedByDescending { it.meeting.dateTime } // Sort past meetings in descending order (newest first)
+
+        Log.d("DashboardFragment", "Upcoming count=${upcomingMeetings.size}, Past count=${pastMeetings.size}")
+
+        // Update UI based on whether there are any meetings to show
+        if (upcomingMeetings.isNotEmpty()) {
+            binding.tvUpcomingMeetings.visibility = View.VISIBLE
+            binding.rvUpcomingMeetings.visibility = View.VISIBLE
+            upcomingMeetingsAdapter.submitList(upcomingMeetings)
+        } else {
+            binding.tvUpcomingMeetings.visibility = View.GONE
+            binding.rvUpcomingMeetings.visibility = View.GONE
+        }
+
+        if (pastMeetings.isNotEmpty()) {
+            binding.tvPastMeetings.visibility = View.VISIBLE
+            binding.rvPastMeetings.visibility = View.VISIBLE
+            pastMeetingsAdapter.submitList(pastMeetings)
+        } else {
+            binding.tvPastMeetings.visibility = View.GONE
+            binding.rvPastMeetings.visibility = View.GONE
+        }
+        binding.tvPastMeetings.visibility =
+            if (pastMeetings.isEmpty()) View.GONE else View.VISIBLE
+        binding.rvPastMeetings.visibility =
+            if (pastMeetings.isEmpty()) View.GONE else View.VISIBLE
+    }
+
+    private fun formatDate(dateTime: LocalDateTime): String {
+        val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
+        return dateTime.format(formatter)
     }
 
     private fun showDeleteConfirmationDialog(meetingId: String) {
@@ -380,24 +520,16 @@ class DashboardFragment : Fragment() {
             .get()
             .addOnSuccessListener { itemsSnapshot ->
                 if (itemsSnapshot.isEmpty) {
-                    Log.d("WinnersDebug", "No agenda items found for meeting: $meetingId")
                 } else {
                     itemsSnapshot.documents.forEach { item ->
                         item.getString("presenter")?.let { name ->
                             if (name.isNotBlank()) {
                                 presenters.add(name)
-                                Log.d("WinnersDebug", "Presenter fetched: $name")
                             } else {
-                                Log.d(
-                                    "WinnersDebug",
-                                    "Empty or null presenter name found in document: ${item.id}"
-                                )
+
                             }
                         } ?: run {
-                            Log.d(
-                                "WinnersDebug",
-                                "No 'presenter' field found in document: ${item.id}"
-                            )
+
                         }
                     }
                 }
@@ -411,18 +543,13 @@ class DashboardFragment : Fragment() {
                         topicsSnapshot.documents.forEach { doc ->
                             doc.getString("speakerName")?.let { name ->
                                 if (name.isNotBlank()) tableTopicSpeakers.add(name)
-                                Log.d("WinnersDebug", "Table Topic speaker added: $name")
                             }
                         }
-                        Log.d(
-                            "WinnersDebug",
-                            "All presenters: ${presenters.distinct()}, Speakers: ${tableTopicSpeakers.distinct()}"
-                        )
+
                         onComplete(presenters.distinct(), tableTopicSpeakers.distinct())
                     }
             }
             .addOnFailureListener { e ->
-                Log.e("WinnersDebug", "Error loading agenda items", e)
                 // Still try to load table topic speakers even if agenda items fail
                 loadTableTopicSpeakers(meetingId, emptyList(), onComplete)
             }
@@ -445,17 +572,12 @@ class DashboardFragment : Fragment() {
                 topicsSnapshot.documents.forEach { doc ->
                     doc.getString("speakerName")?.let { name ->
                         if (name.isNotBlank()) tableTopicSpeakers.add(name)
-                        Log.d("WinnersDebug", "Table Topic speaker added: $name")
                     }
                 }
-                Log.d(
-                    "WinnersDebug",
-                    "All presenters: $presenters, Speakers: ${tableTopicSpeakers.distinct()}"
-                )
+
                 onComplete(presenters, tableTopicSpeakers.distinct())
             }
             .addOnFailureListener { e ->
-                Log.e("WinnersDebug", "Error loading table topic speakers", e)
                 onComplete(presenters, emptyList())
             }
     }
@@ -464,7 +586,6 @@ class DashboardFragment : Fragment() {
         autoCompleteTextView: android.widget.AutoCompleteTextView,
         participants: List<String> = emptyList()
     ) {
-        Log.d("WinnersDebug", "Setting up dropdown with participants: $participants")
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
@@ -527,7 +648,6 @@ class DashboardFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        Log.d("DashboardFragment", "onDestroyView called")
         _binding = null
     }
 }
