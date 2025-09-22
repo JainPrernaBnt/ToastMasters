@@ -223,8 +223,11 @@ class DashboardFragment : Fragment() {
                         // Also hide the sections
                         binding.tvUpcomingMeetings.visibility = View.VISIBLE
                         binding.rvUpcomingMeetings.visibility = View.GONE
+                        binding.ivUpcomingArrow.visibility = View.GONE
+
                         binding.tvPastMeetings.visibility = View.VISIBLE
                         binding.rvPastMeetings.visibility = View.GONE
+                        binding.ivPastArrow.visibility = View.GONE
                     }
 
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Error -> {
@@ -315,10 +318,6 @@ class DashboardFragment : Fragment() {
             binding.tvPastMeetings.visibility = View.GONE
             binding.rvPastMeetings.visibility = View.GONE
         }
-        binding.tvPastMeetings.visibility =
-            if (pastMeetings.isEmpty()) View.GONE else View.VISIBLE
-        binding.rvPastMeetings.visibility =
-            if (pastMeetings.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun formatDate(dateTime: LocalDateTime): String {

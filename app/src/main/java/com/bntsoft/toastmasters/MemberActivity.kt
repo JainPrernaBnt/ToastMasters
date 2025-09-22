@@ -30,13 +30,12 @@ class MemberActivity : BaseActivity() {
 
             val navController = navHostFragment.navController
 
-            val navGraph = navController.navInflater.inflate(R.navigation.member_nav_graph)
-            navGraph.setStartDestination(R.id.navigation_dashboard)
-            navController.graph = navGraph
-
+            // Set up bottom navigation
             binding.bottomNavView.setupWithNavController(navController)
 
+            // Update action bar title and handle bottom nav visibility based on destination
             navController.addOnDestinationChangedListener { _, destination, _ ->
+                // Update the action bar title
                 supportActionBar?.title = when (destination.id) {
                     R.id.navigation_dashboard -> getString(R.string.title_dashboard)
                     R.id.navigation_meetings -> getString(R.string.title_upcoming_meetings)
@@ -59,6 +58,7 @@ class MemberActivity : BaseActivity() {
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Navigation error: ${e.message}", Toast.LENGTH_LONG).show()
+            Log.e("MemberActivity", "Navigation setup error", e)
         }
     }
 

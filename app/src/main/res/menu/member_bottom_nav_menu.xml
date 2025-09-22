@@ -7,7 +7,7 @@
     <item
         android:id="@+id/navigation_meetings"
         android:icon="@drawable/ic_notification_meeting"
-        android:title="@string/title_upcoming_meetings" />
+        android:title="@string/title_meetings" />
     <item
         android:id="@+id/navigation_leaderboard"
         android:icon="@drawable/ic_leaderboard"

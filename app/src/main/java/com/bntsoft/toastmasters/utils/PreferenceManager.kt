@@ -24,6 +24,7 @@ class PreferenceManager @Inject constructor(
         private const val KEY_FCM_TOKEN = "fcm_token"
         private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         private const val KEY_PENDING_TOKEN_UPDATE = "pending_token_update"
+        private const val KEY_DEVICE_ID = "device_id"
     }
 
     private val prefs: SharedPreferences = context.getSharedPreferences(
@@ -57,13 +58,7 @@ class PreferenceManager @Inject constructor(
 
     var pendingTokenUpdate: String?
         get() = prefs.getString(KEY_PENDING_TOKEN_UPDATE, null)
-        set(value) = prefs.edit {
-            if (value == null) {
-                remove(KEY_PENDING_TOKEN_UPDATE)
-            } else {
-                putString(KEY_PENDING_TOKEN_UPDATE, value)
-            }
-        }
+        set(value) = prefs.edit { putString(KEY_PENDING_TOKEN_UPDATE, value) }
 
     var isLoggedIn: Boolean
         get() = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
@@ -88,7 +83,16 @@ class PreferenceManager @Inject constructor(
        clearAll()
     }
 
+    var deviceId: String?
+        get() = prefs.getString(KEY_DEVICE_ID, null)
+        set(value) = prefs.edit { putString(KEY_DEVICE_ID, value) }
+
     fun clearAll() {
+        val deviceId = prefs.getString(KEY_DEVICE_ID, null)
         prefs.edit().clear().apply()
+        // Preserve the device ID across logouts
+        if (deviceId != null) {
+            prefs.edit { putString(KEY_DEVICE_ID, deviceId) }
+        }
     }
 }

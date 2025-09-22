@@ -1,8 +1,10 @@
 package com.bntsoft.toastmasters.presentation.auth
 
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,13 +19,22 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.bntsoft.toastmasters.MemberActivity
 import com.bntsoft.toastmasters.R
+import com.bntsoft.toastmasters.VpMainActivity
+import com.bntsoft.toastmasters.data.remote.FirestoreService
 import com.bntsoft.toastmasters.databinding.FragmentLoginBinding
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,10 +44,15 @@ class LoginFragment : Fragment() {
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
 
+
     @Inject
     lateinit var preferenceManager: PreferenceManager
 
+    @Inject
+    lateinit var firestoreService: FirestoreService
+
     private val viewModel: AuthViewModel by viewModels()
+    private val auth: FirebaseAuth by lazy { Firebase.auth }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -69,8 +85,21 @@ class LoginFragment : Fragment() {
         setupForm()
         setupClickListeners()
         observeViewModel()
+
+        // Check if user is already logged in and monitor session
+        preferenceManager.userId?.let { userId ->
+            monitorSessionChanges(userId)
+        }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Check if we were redirected from a session termination
+        if (preferenceManager.userId != null && Firebase.auth.currentUser == null) {
+            // Clear any stale data
+            preferenceManager.clearUserData()
+        }
+    }
 
     private fun setupForm() {
         // Set up text change listeners for form validation
@@ -114,7 +143,7 @@ class LoginFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collectLatest { state ->
+                viewModel.uiState.collect { state ->
                     when (state) {
                         is AuthViewModel.AuthUiState.Loading -> {
                             showLoading(true)
@@ -122,24 +151,32 @@ class LoginFragment : Fragment() {
 
                         is AuthViewModel.AuthUiState.Success -> {
                             showLoading(false)
-                            preferenceManager.isLoggedIn = true
-                            // Save user role
+                            // Handle successful login
+                            val user = state.user
+                            preferenceManager.userId = user.id
+                            preferenceManager.userEmail = user.email
+                            preferenceManager.userName = user.name
                             preferenceManager.saveUserRole(state.userRole)
 
-                            // Delegate to MainActivity to switch nav graph and bottom nav based on role
-                            (requireActivity() as? com.bntsoft.toastmasters.MainActivity)
-                                ?.let { it.navigateToRoleBasedScreen(state.userRole) }
+                            // Start monitoring session changes
+                            monitorSessionChanges(user.id)
+
+                            // Navigate to the appropriate activity based on role
+                            val intent = if (state.userRole == UserRole.VP_EDUCATION) {
+                                android.content.Intent(requireContext(), VpMainActivity::class.java)
+                            } else {
+                                android.content.Intent(requireContext(), MemberActivity::class.java)
+                            }
+                            // Clear the back stack so user can't go back to login with back button
+                            intent.flags =
+                                android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            activity?.finish()
                         }
 
-                        is AuthViewModel.AuthUiState.SignUpSuccess -> {
+                        is AuthViewModel.AuthUiState.DeviceConflict -> {
                             showLoading(false)
-                            // Show signup success message
-                            val message = if (state.requiresApproval) {
-                                getString(R.string.signup_success_pending_approval)
-                            } else {
-                                getString(R.string.signup_success_approved)
-                            }
-                            showSuccessSnackbar(message)
+                            showDeviceConflictDialog(state)
                         }
 
                         is AuthViewModel.AuthUiState.Error -> {
@@ -147,8 +184,15 @@ class LoginFragment : Fragment() {
                             showErrorSnackbar(state.message)
                         }
 
-                        else -> {
+                        is AuthViewModel.AuthUiState.SignUpSuccess -> {
+                            // Handle successful sign up if needed
                             showLoading(false)
+                        }
+
+                        is AuthViewModel.AuthUiState.Initial,
+                        is AuthViewModel.AuthUiState.Loading -> {
+                            // Initial state or loading, no action needed
+                            showLoading(state is AuthViewModel.AuthUiState.Loading)
                         }
                     }
                 }
@@ -233,12 +277,119 @@ class LoginFragment : Fragment() {
     }
 
     private fun hideKeyboard() {
-        val inputMethodManager =
-            requireContext().getSystemService(InputMethodManager::class.java)
-        inputMethodManager.hideSoftInputFromWindow(view?.windowToken, 0)
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view?.windowToken, 0)
+    }
+
+    private fun monitorSessionChanges(userId: String) {
+        // Cancel any existing session monitoring job
+        sessionMonitoringJob?.cancel()
+
+        sessionMonitoringJob = viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                firestoreService.listenForSessionChanges(userId)
+                    .catch { e ->
+                        Log.e("LoginFragment", "Error listening for session changes", e)
+                    }
+                    .collect { sessionData ->
+                        val isSessionActive = sessionData?.get("isActive") as? Boolean ?: false
+                        if (!isSessionActive && isAdded && isActivityActive()) {
+                            showSessionTerminatedDialog()
+                        }
+                    }
+            } catch (e: Exception) {
+                if (e is CancellationException) {
+                    // This is expected when the coroutine is cancelled
+                    Log.d("LoginFragment", "Session monitoring coroutine was cancelled")
+                } else {
+                    Log.e("LoginFragment", "Error in session monitoring", e)
+                }
+            }
+        }
+    }
+
+    private fun isActivityActive(): Boolean {
+        val activity = activity
+        return activity != null && !activity.isFinishing && !activity.isDestroyed
+    }
+
+    private var sessionTerminatedDialog: androidx.appcompat.app.AlertDialog? = null
+    private var sessionMonitoringJob: Job? = null
+
+    private fun showSessionTerminatedDialog() {
+        // Dismiss any existing dialog to prevent multiple dialogs
+        sessionTerminatedDialog?.dismiss()
+
+        if (!isAdded || !isActivityActive()) {
+            return
+        }
+
+        try {
+            sessionTerminatedDialog = MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Session Terminated")
+                .setMessage("Your session has been terminated by another device. Please log in again.")
+                .setCancelable(false)
+                .setPositiveButton("OK") { _, _ ->
+                    navigateToLogin()
+                }
+                .setOnDismissListener {
+                    sessionTerminatedDialog = null
+                }
+                .show()
+        } catch (e: Exception) {
+            Log.e("LoginFragment", "Error showing session terminated dialog", e)
+        }
+    }
+
+    private fun navigateToLogin() {
+        try {
+            // Clear user data
+            preferenceManager.clearUserData()
+
+            // Only navigate if we're still attached to an activity
+            if (isAdded) {
+                // Clear the back stack and navigate to login
+                findNavController().popBackStack(R.id.loginFragment, false)
+
+                // If we're not already on the login fragment, navigate to it
+                if (findNavController().currentDestination?.id != R.id.loginFragment) {
+                    findNavController().navigate(R.id.loginFragment)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("LoginFragment", "Error navigating to login", e)
+        }
+    }
+    private fun showDeviceConflictDialog(state: AuthViewModel.AuthUiState.DeviceConflict) {
+        if (!isAdded || isDetached) return
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Device Conflict")
+            .setMessage(state.message)
+            .setPositiveButton("Continue") { _, _ ->
+                state.onContinue()
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                state.onCancel()
+            }
+            .setOnDismissListener {
+                // Ensure we reset the state if dialog is dismissed
+                state.onCancel()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     override fun onDestroyView() {
+        // Cancel any ongoing session monitoring
+        sessionMonitoringJob?.cancel()
+        sessionMonitoringJob = null
+
+        // Dismiss any showing dialogs
+        sessionTerminatedDialog?.dismiss()
+        sessionTerminatedDialog = null
+
         super.onDestroyView()
         _binding = null
     }

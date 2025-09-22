@@ -25,6 +25,7 @@ class FirestoreService @Inject constructor(
         private const val USERS_COLLECTION = "users"
         private const val MEETINGS_COLLECTION = "meetings"
         private const val BACKOUTS_COLLECTION = "backoutMembers"
+        private const val USER_SESSIONS_COLLECTION = "user_sessions"
     }
 
     // User operations
@@ -38,6 +39,57 @@ class FirestoreService @Inject constructor(
 
     suspend fun updateUserField(userId: String, field: String, value: Any) {
         firestore.collection(USERS_COLLECTION).document(userId).update(field, value).await()
+    }
+
+    suspend fun updateUserSession(userId: String, deviceId: String) {
+        val updates = hashMapOf<String, Any>(
+            "deviceId" to deviceId,
+            "lastLogin" to System.currentTimeMillis()
+        )
+        
+        // Update user document
+        firestore.collection(USERS_COLLECTION).document(userId)
+            .update(updates).await()
+            
+        // Create/update session document
+        firestore.collection(USER_SESSIONS_COLLECTION).document(userId)
+            .set(updates).await()
+    }
+
+    suspend fun getUserSession(userId: String): Map<String, Any>? {
+        return try {
+            val doc = firestore.collection(USER_SESSIONS_COLLECTION)
+                .document(userId)
+                .get()
+                .await()
+            
+            if (doc.exists()) {
+                doc.data
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun listenForSessionChanges(userId: String) = callbackFlow<Map<String, Any>?> {
+        val listener = firestore.collection(USER_SESSIONS_COLLECTION)
+            .document(userId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    trySend(null).isSuccess
+                    return@addSnapshotListener
+                }
+                
+                if (snapshot != null && snapshot.exists()) {
+                    trySend(snapshot.data ?: emptyMap()).isSuccess
+                } else {
+                    trySend(null).isSuccess
+                }
+            }
+        
+        awaitClose { listener.remove() }
     }
 
     suspend fun getUserByEmail(email: String): QuerySnapshot {

@@ -24,5 +24,9 @@ data class User(
 ) {
     val isVpEducation: Boolean
         get() = role == UserRole.VP_EDUCATION
+        
+    // Device management fields
+    val deviceId: String? = null
+    val lastLogin: Long = System.currentTimeMillis()
 }
 

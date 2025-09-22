@@ -10,18 +10,19 @@ import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
+import com.bntsoft.toastmasters.utils.DeviceIdManager
 import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-// Timber import removed - using Android Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +31,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestoreService: FirestoreService,
     private val preferenceManager: PreferenceManager,
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val deviceIdManager: DeviceIdManager
 ) : AuthRepository {
 
     override suspend fun login(identifier: String, password: String): AuthResult<User> {
@@ -45,6 +47,30 @@ class AuthRepositoryImpl @Inject constructor(
                 doc?.getString("email") ?: identifier // fallback to original
             }
 
+            // Check if user exists and get their current session
+            val userQuery = firestoreService.getUserByEmail(emailToUse)
+            val userDoc = userQuery.documents.firstOrNull()
+            
+            if (userDoc != null) {
+                val userId = userDoc.id
+                val currentSession = firestoreService.getUserSession(userId)
+                val currentDeviceId = deviceIdManager.getDeviceId()
+                
+                // If there's an existing session on a different device
+                if (currentSession != null) {
+                    val sessionDeviceId = currentSession["deviceId"]?.toString()
+                    if (sessionDeviceId != null && sessionDeviceId != currentDeviceId) {
+                        // Return a special result indicating device conflict
+                        return AuthResult.DeviceConflict<User>(
+                            message = "This account is already logged in on another device. Do you want to sign out there and continue here?",
+                            email = emailToUse,
+                            password = password
+                        )
+                    }
+                }
+            }
+
+            // Proceed with normal login
             val result = firebaseAuth.signInWithEmailAndPassword(emailToUse, password).await()
             val firebaseUser = result.user
 
@@ -54,6 +80,10 @@ class AuthRepositoryImpl @Inject constructor(
                 if (userDoc.exists()) {
                     val user = UserDeserializer.fromDocument(userDoc)
                     if (user != null) {
+                        // Update user's session with current device ID
+                        val deviceId = deviceIdManager.getDeviceId()
+                        firestoreService.updateUserSession(firebaseUser.uid, deviceId)
+                        
                         // Log user details for debugging
                         Log.d("AuthRepositoryImpl", "User role: ${user.role}, isApproved: ${user.isApproved}, isVpEducation: ${user.isVpEducation}")
 
@@ -92,7 +122,6 @@ class AuthRepositoryImpl @Inject constructor(
                 is FirebaseAuthInvalidCredentialsException -> {
                     AuthResult.Error("Invalid email or password")
                 }
-
                 else -> {
                     AuthResult.Error(e.message ?: "Authentication failed")
                 }
@@ -173,15 +202,21 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun logout() {
         try {
-            firebaseAuth.signOut()
+            // Clear FCM token if user is logged in
+            preferenceManager.userId?.let { userId ->
+                // Use FieldValue.delete() to remove the field
+                firestoreService.getUserDocument(userId).update("fcmToken", FieldValue.delete()).await()
+                // Clear session data
+                firestoreService.updateUserSession(userId, "")
+            }
+            
+            // Clear all user data from preferences
             preferenceManager.clearUserData()
-            preferenceManager.isLoggedIn = false
-            preferenceManager.userId = null
-            preferenceManager.userEmail = null
-            preferenceManager.userName = null
-            preferenceManager.authToken = null
+            
+            // Sign out from Firebase Auth
+            firebaseAuth.signOut()
         } catch (e: Exception) {
-            Log.e("AuthRepository", "Error during logout", e)
+            Log.e("AuthRepositoryImpl", "Error during logout", e)
             throw e
         }
     }

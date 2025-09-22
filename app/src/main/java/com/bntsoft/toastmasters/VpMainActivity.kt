@@ -48,12 +48,11 @@ class VpMainActivity : BaseActivity() {
 
             // Set up the navigation graph programmatically to ensure it's properly initialized
             val navGraph = navController.navInflater.inflate(R.navigation.vp_nav_graph)
-            navGraph.setStartDestination(R.id.dashboardFragment)
-            navController.graph = navGraph
-
-            // Set up the bottom navigation with NavController
+            
+            // Set up bottom navigation
             binding.bottomNavView.setupWithNavController(navController)
-
+            
+            // Update action bar title based on destination
             // Add navigation listener for debugging and title updates
             navController.addOnDestinationChangedListener { _, destination, _ ->
 

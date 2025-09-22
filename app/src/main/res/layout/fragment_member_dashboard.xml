@@ -24,8 +24,7 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:layout_height="wrap_content">
 
                 <com.airbnb.lottie.LottieAnimationView
                     android:id="@+id/progressBar"
@@ -40,33 +39,17 @@
                     app:lottie_loop="true"
                     app:lottie_rawRes="@raw/loading_animation" />
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvUpcomingMeetings"
-                    style="@style/TextAppearance.MaterialComponents.Headline6"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:text="@string/title_upcoming_meetings"
-                    android:textColor="@color/on_background"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvMeetings"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    android:clipToPadding="false"
                     android:clipChildren="false"
-                    android:paddingStart="8dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="8dp"
+                    android:clipToPadding="false"
                     android:paddingBottom="100dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvUpcomingMeetings"
+                    app:layout_constraintTop_toTopOf="parent"
                     tools:listitem="@layout/item_member_assigned_role" />
 
                 <include

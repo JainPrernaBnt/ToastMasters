@@ -33,9 +33,6 @@ class FcmTokenManager @Inject constructor(
         getFcmToken()
     }
 
-    /**
-     * Get the current FCM token and update it on the server if needed
-     */
     fun getFcmToken() {
         ioScope.launch {
             try {
@@ -65,9 +62,6 @@ class FcmTokenManager @Inject constructor(
         }
     }
 
-    /**
-     * Update the FCM token in local storage and on the server
-     */
     suspend fun updateToken(token: String) {
         try {
             // Save to shared preferences
@@ -97,9 +91,6 @@ class FcmTokenManager @Inject constructor(
         }
     }
 
-    /**
-     * Verify if the token is still valid on the server
-     */
     private suspend fun verifyTokenOnServer(token: String) {
         try {
             firebaseAuth.currentUser?.uid?.let { userId ->
@@ -112,9 +103,6 @@ class FcmTokenManager @Inject constructor(
         }
     }
 
-    /**
-     * Queue a token update for retry
-     */
     private fun queueTokenForRetry(userId: String, token: String) {
         // Store in SharedPreferences for retry
         prefsManager.pendingTokenUpdate = "$userId:$token"
@@ -126,12 +114,17 @@ class FcmTokenManager @Inject constructor(
         }
     }
 
-    /**
-     * Retry any pending token updates
-     */
     private suspend fun retryPendingTokenUpdate() {
         val pendingUpdate = prefsManager.pendingTokenUpdate ?: return
-        val (userId, token) = pendingUpdate.split(":", limit = 2)
+        val parts = pendingUpdate.split(":", limit = 2)
+        if (parts.size != 2) {
+            Log.e(TAG, "Invalid pending token update format")
+            prefsManager.pendingTokenUpdate = null
+            return
+        }
+        
+        val userId = parts[0]
+        val token = parts[1]
 
         try {
             userRepository.updateFcmToken(userId, token)
@@ -143,9 +136,6 @@ class FcmTokenManager @Inject constructor(
         }
     }
 
-    /**
-     * Retry token fetch with exponential backoff
-     */
     private fun retryTokenFetch(attempt: Int = 1) {
         if (attempt > MAX_RETRY_ATTEMPTS) {
             Log.w(TAG, "Max retry attempts reached for FCM token fetch")
@@ -161,9 +151,6 @@ class FcmTokenManager @Inject constructor(
         }
     }
 
-    /**
-     * Delete the FCM token when user logs out
-     */
     fun deleteFcmToken() {
         ioScope.launch {
             try {

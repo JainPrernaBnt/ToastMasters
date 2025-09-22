@@ -68,7 +68,14 @@ class MainActivity : BaseActivity() {
 
         if (preferenceManager.isLoggedIn) {
             val role = preferenceManager.getUserRole() ?: UserRole.MEMBER
-            setupBottomNavForUser(role)
+            // Navigate to the appropriate activity based on role
+            val intent = if (role == UserRole.VP_EDUCATION) {
+                android.content.Intent(this, VpMainActivity::class.java)
+            } else {
+                android.content.Intent(this, MemberActivity::class.java)
+            }
+            startActivity(intent)
+            finish()
         } else {
             setupAuthNavigation()
         }
@@ -131,35 +138,6 @@ class MainActivity : BaseActivity() {
                     navController.popBackStack()
                 }
             }
-        }
-    }
-
-    private fun setupBottomNavForUser(role: UserRole) {
-        // Setup bottom navigation based on user role
-        val (navGraph, menuRes) = when (role) {
-            UserRole.VP_EDUCATION -> R.navigation.vp_nav_graph to R.menu.vp_bottom_nav_menu
-            else -> R.navigation.member_nav_graph to R.menu.member_bottom_nav_menu
-        }
-
-        // Inflate the navigation graph
-        val navGraphObj = navController.navInflater.inflate(navGraph)
-
-        // Set the navigation graph
-        navController.graph = navGraphObj
-
-        // Set the appropriate menu for bottom navigation
-        bottomNav.menu.clear()
-        bottomNav.inflateMenu(menuRes)
-
-        // Setup bottom navigation with nav controller
-        bottomNav.setupWithNavController(navController)
-
-        // Initial visibility
-        updateBottomNavVisibility()
-
-        // Handle destination changes
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            updateBottomNavVisibility()
         }
     }
 
@@ -227,7 +205,8 @@ class MainActivity : BaseActivity() {
     }
 
     fun navigateToRoleBasedScreen(role: UserRole) {
-        setupBottomNavForUser(role)
+        // This method is no longer needed as we're using separate activities for each role
+        // The navigation is now handled in the LoginFragment
     }
 
     private fun updateBottomNavVisibility() {

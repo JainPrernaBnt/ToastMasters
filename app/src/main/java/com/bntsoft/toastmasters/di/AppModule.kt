@@ -6,6 +6,7 @@ import android.content.Context
 import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.bntsoft.toastmasters.utils.PreferenceManager
+import com.bntsoft.toastmasters.utils.DeviceIdManager
 import com.bntsoft.toastmasters.utils.UserManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessaging
@@ -57,5 +58,16 @@ object AppModule {
     @Singleton
     fun provideCurrentUserId(
         firebaseAuth: FirebaseAuth
-    ): String = firebaseAuth.currentUser?.uid ?: ""
+    ): String? {
+        return firebaseAuth.currentUser?.uid
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeviceIdManager(
+        context: Context,
+        preferenceManager: PreferenceManager
+    ): DeviceIdManager {
+        return DeviceIdManager(context, preferenceManager)
+    }
 }
