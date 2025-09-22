@@ -322,6 +322,28 @@ class MeetingRepositoryImpl @Inject constructor(
             evaluatorId
         )
     }
+    
+    override suspend fun updateSpeakerEvaluators(
+        meetingId: String,
+        speakerId: String,
+        evaluatorIds: List<String>
+    ): Result<Unit> {
+        return try {
+            // Get the names of all evaluators
+            val evaluatorNames = evaluatorIds.mapNotNull { evaluatorId ->
+                firebaseDataSource.getUserDisplayName(evaluatorId)?.let { name ->
+                    evaluatorId to name
+                }
+            }.toMap()
+            
+            // Update the speaker's evaluators in Firestore
+            firebaseDataSource.updateSpeakerEvaluators(meetingId, speakerId, evaluatorIds, evaluatorNames)
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Log.e("MeetingRepository", "Error updating speaker evaluators", e)
+            Result.Error(e)
+        }
+    }
 
     override suspend fun updateMeetingRoleCounts(
         meetingId: String,

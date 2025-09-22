@@ -852,32 +852,112 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     private suspend fun getNextEvaluatorNumber(meetingId: String): Int {
         return try {
-            val snapshot = firestore.collection("meetings")
-                .document(meetingId)
-                .collection("assignedRole")
-                .get()
-                .await()
-
-            var maxNumber = 0
-            val evaluatorPattern = Regex("^Evaluator\\s+(\\d+)$")
-
-            for (doc in snapshot.documents) {
-                val roles = (doc["roles"] as? List<*>)?.filterIsInstance<String>() ?: continue
-
-                for (role in roles) {
-                    val match = evaluatorPattern.find(role)
-                    match?.groupValues?.get(1)?.toIntOrNull()?.let { number ->
-                        if (number > maxNumber) {
-                            maxNumber = number
-                        }
+            val meetingRef = firestore.collection("meetings").document(meetingId)
+            val doc = meetingRef.get().await()
+            doc.getLong("nextEvaluatorNumber")?.toInt() ?: 1
+        } catch (e: Exception) {
+            Log.e("FirebaseDS", "Error getting next evaluator number", e)
+            1
+        }
+    }
+    
+    override suspend fun updateSpeakerEvaluators(
+        meetingId: String,
+        speakerId: String,
+        evaluatorIds: List<String>,
+        evaluatorNames: Map<String, String>
+    ) {
+        try {
+            val meetingRef = firestore.collection("meetings").document(meetingId)
+            val speakerRef = meetingRef.collection("assignedRole").document(speakerId)
+            
+            // Get or create the speaker document
+            val speakerDoc = speakerRef.get().await()
+            if (!speakerDoc.exists()) {
+                // Create a new speaker document with basic information
+                val speakerData = hashMapOf(
+                    "userId" to speakerId,
+                    "memberName" to "",  // This should be set from the caller if available
+                    "roles" to listOf("Speaker"),
+                    "evaluatorIds" to emptyList<String>(),
+                    "createdAt" to com.google.firebase.Timestamp.now(),
+                    "updatedAt" to com.google.firebase.Timestamp.now()
+                )
+                speakerRef.set(speakerData).await()
+            }
+            
+            // Get the next available evaluator number
+            var nextEvaluatorNumber = getNextEvaluatorNumber(meetingId)
+            
+            // Create a batch to update all documents in a single transaction
+            val batch = firestore.batch()
+            
+            // Update the speaker document with the list of evaluator IDs
+            batch.update(speakerRef, "evaluatorIds", evaluatorIds)
+            
+            // For each evaluator, assign them the next available evaluator role
+            evaluatorIds.forEach { evaluatorId ->
+                val evaluatorName = evaluatorNames[evaluatorId] ?: ""
+                val evaluatorRole = "Evaluator $nextEvaluatorNumber"
+                nextEvaluatorNumber++
+                
+                val evaluatorRef = meetingRef.collection("assignedRole").document(evaluatorId)
+                
+                // Check if the evaluator document exists
+                val evaluatorDoc = evaluatorRef.get().await()
+                
+                // Create evaluator data with default values if it doesn't exist
+                if (!evaluatorDoc.exists()) {
+                    val evaluatorData = hashMapOf(
+                        "userId" to evaluatorId,
+                        "memberName" to evaluatorName,
+                        "roles" to mutableListOf(evaluatorRole),
+                        "createdAt" to com.google.firebase.Timestamp.now(),
+                        "updatedAt" to com.google.firebase.Timestamp.now()
+                    )
+                    batch.set(evaluatorRef, evaluatorData)
+                } else {
+                    // Document exists, update it
+                    val currentRoles = (evaluatorDoc.get("roles") as? List<*>) 
+                        ?.filterIsInstance<String>()
+                        ?.toMutableList() ?: mutableListOf()
+                    
+                    // Add the evaluator role if not already present
+                    if (!currentRoles.any { it.startsWith("Evaluator") }) {
+                        currentRoles.add(evaluatorRole)
+                        batch.update(evaluatorRef, "roles", currentRoles)
                     }
+                    
+                    // Update the evaluator's name if not already set
+                    if (!evaluatorDoc.contains("name") || (evaluatorDoc.getString("name")?.isEmpty() == true)) {
+                        batch.update(evaluatorRef, "name", evaluatorName)
+                    }
+                    
+                    // Update the updatedAt timestamp
+                    batch.update(evaluatorRef, "updatedAt", com.google.firebase.Timestamp.now())
                 }
             }
-
-            maxNumber + 1 // Return the next available number
+            
+            // Update the next evaluator number for future assignments
+            batch.update(meetingRef, "nextEvaluatorNumber", nextEvaluatorNumber)
+            
+            // Commit the batch
+            batch.commit().await()
+            
+            Log.d("FirebaseDS", "Updated speaker $speakerId with evaluators: $evaluatorIds")
         } catch (e: Exception) {
-            Log.e("FirebaseMeetingDataSource", "Error finding next evaluator number for meeting $meetingId", e)
-            1 // Default to 1 if there's an error
+            Log.e("FirebaseDS", "Error updating speaker evaluators", e)
+            throw e
+        }
+    }
+    
+    override suspend fun getUserDisplayName(userId: String): String? {
+        return try {
+            val userDoc = firestore.collection("users").document(userId).get().await()
+            userDoc.getString("displayName") ?: userDoc.getString("name") ?: userDoc.getString("email")
+        } catch (e: Exception) {
+            Log.e("FirebaseDS", "Error getting user display name", e)
+            null
         }
     }
 

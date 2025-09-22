@@ -44,6 +44,7 @@ interface MeetingRepository {
     suspend fun getMemberRolesForMeeting(meetingId: String): List<MemberRole>
 
     suspend fun updateSpeakerEvaluator(meetingId: String, speakerId: String, evaluatorName: String, evaluatorId: String): Result<Unit>
+    suspend fun updateSpeakerEvaluators(meetingId: String, speakerId: String, evaluatorIds: List<String>): Result<Unit>
     suspend fun updateMeetingRoleCounts(meetingId: String, roleCounts: Map<String, Int>): Result<Unit>
     
     // Recent roles functionality

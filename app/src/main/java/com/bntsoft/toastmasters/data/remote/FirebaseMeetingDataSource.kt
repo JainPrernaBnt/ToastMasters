@@ -52,6 +52,15 @@ interface FirebaseMeetingDataSource {
     suspend fun getMemberRolesForMeeting(meetingId: String): List<Pair<String, List<String>>>
 
     suspend fun updateSpeakerEvaluator(meetingId: String, speakerId: String, evaluatorName: String, evaluatorId: String): Result<Unit>
+    
+    suspend fun updateSpeakerEvaluators(
+        meetingId: String,
+        speakerId: String,
+        evaluatorIds: List<String>,
+        evaluatorNames: Map<String, String>
+    )
+    
+    suspend fun getUserDisplayName(userId: String): String?
 
     suspend fun updateMeetingRoleCounts(meetingId: String, roleCounts: Map<String, Int>)
 }

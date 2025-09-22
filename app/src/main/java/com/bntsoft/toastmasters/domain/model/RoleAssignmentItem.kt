@@ -10,7 +10,7 @@ data class RoleAssignmentItem(
     val assignedRole: String = "",
     val backupMemberId: String = "",
     val backupMemberName: String = "",
-    val evaluatorId: String = "",
+    val evaluatorIds: List<String> = emptyList(),
     val isEditable: Boolean = false,
     val roleCounts: Map<String, Int> = emptyMap(),
     val assignedRoleCounts: Map<String, Int> = emptyMap(),
@@ -87,6 +87,20 @@ data class RoleAssignmentItem(
         val maxCount = roleCounts[role] ?: 1 // Default to 1 if no count specified
         val assignedCount = assignedRoleCounts[role] ?: 0
         return maxOf(0, maxCount - assignedCount)
+    }
+
+    fun withEvaluatorAdded(evaluatorId: String): RoleAssignmentItem {
+        return if (evaluatorId.endsWith(":remove")) {
+            // Remove the evaluator
+            val idToRemove = evaluatorId.removeSuffix(":remove")
+            copy(evaluatorIds = evaluatorIds.filter { it != idToRemove })
+        } else if (!evaluatorIds.contains(evaluatorId)) {
+            // Add the evaluator if not already in the list
+            copy(evaluatorIds = evaluatorIds + evaluatorId)
+        } else {
+            // No change if evaluator already exists
+            this
+        }
     }
 
     fun getRoleDisplayName(role: String): String {

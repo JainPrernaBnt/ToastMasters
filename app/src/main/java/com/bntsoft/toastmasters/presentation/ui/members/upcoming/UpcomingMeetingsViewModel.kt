@@ -66,7 +66,8 @@ class UpcomingMeetingsListViewModel @Inject constructor(
         meetingId: String,
         status: AvailabilityStatus,
         preferredRoles: List<String>,
-        isBackout: Boolean = false
+        isBackout: Boolean = false,
+        backoutReason: String? = null
     ) {
         viewModelScope.launch {
             try {
@@ -82,7 +83,8 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                     status = if (isBackout) AvailabilityStatus.NOT_AVAILABLE else status,
                     preferredRoles = finalPreferredRoles,
                     timestamp = System.currentTimeMillis(),
-                    isBackout = isBackout
+                    isBackout = isBackout,
+                    backoutReason = if (isBackout) backoutReason else null
                 )
 
                 val batch = db.batch()
@@ -113,7 +115,9 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                     val backoutData = hashMapOf(
                         "userId" to currentUserId,
                         "timestamp" to System.currentTimeMillis(),
-                        "meetingId" to meetingId
+                        "meetingId" to meetingId,
+                        "reason" to (backoutReason ?: "No reason provided"),
+                        "userName" to (Firebase.auth.currentUser?.displayName ?: "Unknown User")
                     )
                     
                     batch.set(backoutRef, backoutData)

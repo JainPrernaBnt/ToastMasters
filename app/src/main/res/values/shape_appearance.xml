@@ -29,4 +29,11 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">12dp</item>
     </style>
+    
+    <!-- Chip Shape Appearance -->
+    <style name="ShapeAppearance.Material3.Chip" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    
 </resources>

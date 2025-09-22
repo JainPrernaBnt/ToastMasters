@@ -29,7 +29,7 @@ private class MeetingDiffCallback : DiffUtil.ItemCallback<Meeting>() {
 class UpcomingMeetingsAdapter :
     ListAdapter<Meeting, UpcomingMeetingsAdapter.MeetingViewHolder>(MeetingDiffCallback()) {
 
-    var onAvailabilitySubmitted: ((meetingId: String, status: AvailabilityStatus, preferredRoles: List<String>, isBackout: Boolean) -> Unit)? = null
+    var onAvailabilitySubmitted: ((meetingId: String, status: AvailabilityStatus, preferredRoles: List<String>, isBackout: Boolean, backoutReason: String?) -> Unit)? = null
     var onEditClicked: ((Meeting) -> Unit)? = null
 
     // Add current user ID property
@@ -74,10 +74,7 @@ class UpcomingMeetingsAdapter :
     inner class MeetingViewHolder(
         private val binding: ItemUpcomingMeetingBinding
     ) : RecyclerView.ViewHolder(binding.root) {
-        
-        private val btnBackout = binding.root.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnBackout)
 
-        private var isAvailable = false
         private val selectedRoles = linkedMapOf<String, Int>() // Role to priority map
         private var currentStatus: AvailabilityStatus = AvailabilityStatus.NOT_AVAILABLE
         private var nextPriority = 1
@@ -98,23 +95,29 @@ class UpcomingMeetingsAdapter :
                 tvMeetingDate.text = meeting.dateTime.format(dateFormatter)
                 tvMeetingTime.text = "${meeting.dateTime.format(timeFormatter)} - ${meeting.endDateTime?.format(timeFormatter) ?: ""}"
                 tvMeetingLocation.text = meeting.location.ifEmpty { itemView.context.getString(R.string.venue_not_specified) }
+                
+                // Setup chips
+                chipAvailable.chipBackgroundColor = itemView.context.getColorStateList(R.color.available_chip_background)
+                chipNotAvailable.chipBackgroundColor = itemView.context.getColorStateList(R.color.unavailable_chip_background)
+                chipNotConfirmed.chipBackgroundColor = itemView.context.getColorStateList(R.color.not_confirmed_chip_background)
 
                 // --- Decide Form vs Read-only ---
                 val showForm = canEdit && (userAvailability == null || meeting.isEditMode)
 
                 if (showForm) {
-                    // Show form (radio buttons + submit)
-                    rgAvailability.visibility = View.VISIBLE
+                    // Show form (chips + submit)
+                    cgAvailability.visibility = View.VISIBLE
                     btnSubmit.visibility = View.VISIBLE
                     tvRoleInstructions.visibility = View.VISIBLE
                     tvRoleInstructions.text =
                         "Select your preferred roles in order of priority.\nThe first role you select will be your highest priority."
 
-                    rgAvailability.clearCheck()
+                    // Set initial selection
+                    cgAvailability.clearCheck()
                     when (userAvailability?.status) {
-                        AvailabilityStatus.AVAILABLE -> rgAvailability.check(R.id.rbAvailable)
-                        AvailabilityStatus.NOT_CONFIRMED -> rgAvailability.check(R.id.rbNotConfirmed)
-                        AvailabilityStatus.NOT_AVAILABLE, null -> rgAvailability.check(R.id.rbNotAvailable)
+                        AvailabilityStatus.AVAILABLE -> chipAvailable.isChecked = true
+                        AvailabilityStatus.NOT_CONFIRMED -> chipNotConfirmed.isChecked = true
+                        AvailabilityStatus.NOT_AVAILABLE, null -> chipNotAvailable.isChecked = true
                     }
 
                     if (meeting.preferredRoles.isNotEmpty()) {
@@ -134,7 +137,7 @@ class UpcomingMeetingsAdapter :
                     tvAvailabilityStatus.visibility = View.VISIBLE
                     tvYourAvailability.visibility = View.GONE
                     tvPreferredRoles.visibility = View.GONE
-                    rgAvailability.visibility = View.GONE
+                    cgAvailability.visibility = View.GONE
                     btnSubmit.visibility = View.GONE
                     val statusText = when (userAvailability?.status) {
                         AvailabilityStatus.AVAILABLE -> "Available"
@@ -155,19 +158,40 @@ class UpcomingMeetingsAdapter :
                     if (isCutoff) {
                         btnBackout.visibility = View.VISIBLE
                         btnBackout.setOnClickListener {
-                            MaterialAlertDialogBuilder(itemView.context)
-                                .setTitle("Backout from Meeting")
-                                .setMessage("Are you sure you want to back out from this meeting? This will remove you from any assigned roles.")
-                                .setPositiveButton("Yes, Backout") { _, _ ->
-                                    onAvailabilitySubmitted?.invoke(
-                                        meeting.id,
-                                        AvailabilityStatus.NOT_AVAILABLE,
-                                        emptyList(),
-                                        true // backout mode
-                                    )
-                                }
-                                .setNegativeButton("Cancel", null)
-                                .show()
+                            // Toggle backout reason visibility
+                            val isReasonVisible = binding.tilBackoutReason.visibility == View.VISIBLE
+                            
+                            if (!isReasonVisible) {
+                                // Show backout reason input
+                                binding.tilBackoutReason.visibility = View.VISIBLE
+                                binding.btnSubmitBackout.visibility = View.VISIBLE
+                                binding.btnBackout.text = "Cancel Backout"
+                            } else {
+                                // Hide backout reason input
+                                binding.tilBackoutReason.visibility = View.GONE
+                                binding.btnSubmitBackout.visibility = View.GONE
+                                binding.btnBackout.text = "Backout"
+                                binding.etBackoutReason.text?.clear()
+                            }
+                        }
+                        
+                        // Handle backout submission
+                        binding.btnSubmitBackout.setOnClickListener {
+                            val reason = binding.etBackoutReason.text?.toString()?.trim()
+                            
+                            if (reason.isNullOrEmpty()) {
+                                // If no reason provided, show confirmation dialog
+                                MaterialAlertDialogBuilder(itemView.context)
+                                    .setTitle("Backout without reason?")
+                                    .setMessage("Are you sure you want to back out without providing a reason?")
+                                    .setPositiveButton("Yes, Backout") { _, _ ->
+                                        submitBackout(meeting.id, reason)
+                                    }
+                                    .setNegativeButton("Cancel", null)
+                                    .show()
+                            } else {
+                                submitBackout(meeting.id, reason)
+                            }
                         }
                     } else {
                         btnEdit.visibility = if (canEdit) View.VISIBLE else View.GONE
@@ -175,29 +199,35 @@ class UpcomingMeetingsAdapter :
                     }
                 }
 
-                // --- RadioGroup Listener ---
-                rgAvailability.setOnCheckedChangeListener { _, checkedId ->
-                    currentStatus = when (checkedId) {
-                        R.id.rbAvailable -> AvailabilityStatus.AVAILABLE
-                        R.id.rbNotConfirmed -> AvailabilityStatus.NOT_CONFIRMED
-                        else -> AvailabilityStatus.NOT_AVAILABLE
+                // --- ChipGroup Listeners ---
+                chipAvailable.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        currentStatus = AvailabilityStatus.AVAILABLE
+                        updatePreferredRolesVisibility()
                     }
-                    if (checkedId != R.id.rbAvailable) {
+                }
+                
+                chipNotAvailable.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        currentStatus = AvailabilityStatus.NOT_AVAILABLE
                         selectedRoles.clear()
                         cgRoles.clearCheck()
+                        updatePreferredRolesVisibility()
                     }
-                    updatePreferredRolesVisibility()
+                }
+                
+                chipNotConfirmed.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        currentStatus = AvailabilityStatus.NOT_CONFIRMED
+                        selectedRoles.clear()
+                        cgRoles.clearCheck()
+                        updatePreferredRolesVisibility()
+                    }
                 }
 
                 // --- Submit Button ---
                 btnSubmit.setOnClickListener {
-                    val status = when (rgAvailability.checkedRadioButtonId) {
-                        R.id.rbAvailable -> AvailabilityStatus.AVAILABLE
-                        R.id.rbNotAvailable -> AvailabilityStatus.NOT_AVAILABLE
-                        R.id.rbNotConfirmed -> AvailabilityStatus.NOT_CONFIRMED
-                        else -> AvailabilityStatus.NOT_AVAILABLE
-                    }
-                    onAvailabilitySubmitted?.invoke(meeting.id, status, selectedRoles.keys.toList(), false)
+                    onAvailabilitySubmitted?.invoke(meeting.id, currentStatus, selectedRoles.keys.toList(), false, null)
                 }
             }
         }
@@ -208,10 +238,16 @@ class UpcomingMeetingsAdapter :
                 cgRoles.visibility = View.GONE
                 tvNoRoles.visibility = View.GONE
                 selectedRoles.clear()
+                
+                // Reset backout UI
+                tilBackoutReason.visibility = View.GONE
+                btnSubmitBackout.visibility = View.GONE
+                btnBackout.text = "Backout"
+                etBackoutReason.text?.clear()
 
                 // Set default selection to Not Available if nothing is selected
-                if (rgAvailability.checkedRadioButtonId == -1) {
-                    rgAvailability.check(R.id.rbNotAvailable)
+                if (!chipAvailable.isChecked && !chipNotAvailable.isChecked && !chipNotConfirmed.isChecked) {
+                    chipNotAvailable.isChecked = true
                     currentStatus = AvailabilityStatus.NOT_AVAILABLE
                 }
 
@@ -301,18 +337,27 @@ class UpcomingMeetingsAdapter :
         }
 
         private fun updateRoleChips() {
+            // First, update the priority numbers based on the current selection order
+            val sortedEntries = selectedRoles.entries.sortedBy { it.value }
+            sortedEntries.forEachIndexed { index, entry ->
+                selectedRoles[entry.key] = index + 1
+            }
+            nextPriority = selectedRoles.size + 1
+            
+            // Then update the chip text and appearance
             for (i in 0 until binding.cgRoles.childCount) {
                 val chip = binding.cgRoles.getChildAt(i) as Chip
                 val currentText = chip.text.toString()
 
                 // Strip any existing priority like "1. " to get the clean role text
-                val roleText = currentText.substringAfter(". ")
+                val roleText = currentText.substringAfter(". ", currentText)
                 
                 // Extract the base role name, e.g., "Speaker" from "Speaker (1/2)"
                 val baseRole = roleText.substringBefore(" (")
 
                 val priority = selectedRoles[baseRole]
-
+                
+                // Update the chip text with the correct priority
                 chip.text = if (priority != null) "$priority. $roleText" else roleText
                 updateChipAppearance(chip, priority != null)
             }
@@ -346,6 +391,24 @@ class UpcomingMeetingsAdapter :
                     isEnabled = !isFullyAssigned
                 }
                 binding.cgRoles.addView(chip)
+            }
+        }
+
+        private fun submitBackout(meetingId: String, reason: String?) {
+            onAvailabilitySubmitted?.invoke(
+                meetingId,
+                AvailabilityStatus.NOT_AVAILABLE,
+                emptyList(),
+                true, // backout mode
+                reason
+            )
+
+            // Reset backout UI
+            binding.apply {
+                tilBackoutReason.visibility = View.GONE
+                btnSubmitBackout.visibility = View.GONE
+                btnBackout.text = "Backout"
+                etBackoutReason.text?.clear()
             }
         }
 

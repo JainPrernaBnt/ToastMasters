@@ -33,5 +33,6 @@ data class MeetingAvailability(
     val userId: Int,
     val preferredRole: String,
     val available: String,     // "yes", "no", "not sure"
-    val submittedOn: String    // e.g., "2025-07-30 14:50"
+    val submittedOn: String,   // e.g., "2025-07-30 14:50"
+    val backoutReason: String? = null  // Reason for backing out, if applicable
 )

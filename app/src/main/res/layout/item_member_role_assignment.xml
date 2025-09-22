@@ -51,6 +51,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="@string/edit"
+                android:textColor="@color/primary"
                 android:textAllCaps="false"
                 android:visibility="gone"
                 app:icon="@drawable/ic_edit"
@@ -277,7 +278,7 @@
             android:layout_marginTop="16dp"
             android:text="@string/assign_role"
             android:visibility="gone"
-            app:backgroundTint="@color/purple_500"
+            app:backgroundTint="@color/primary"
             app:icon="@drawable/ic_add"
             app:iconGravity="start"
             app:iconTint="@android:color/white" />

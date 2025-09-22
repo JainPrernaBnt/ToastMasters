@@ -2,36 +2,52 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:paddingStart="16dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="16dp"
     android:paddingBottom="8dp">
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvEvaluatorPrompt"
         android:layout_width="match_parent"
+        style="@style/TextAppearance.MaterialComponents.Caption"
         android:layout_height="wrap_content"
-        android:text="Assign an evaluator to this speaker"
+        android:textSize="16.90sp"
+        android:textColor="@color/grey_600"
+        android:text="Assign evaluators to this speaker"
         android:textAppearance="?attr/textAppearanceBodyMedium" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilEvaluator"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:layout_width="match_parent"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusTopStart="12dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="8dp"
+        app:startIconDrawable="@drawable/ic_person_add"
+        app:startIconTint="@color/primary">
 
         <AutoCompleteTextView
             android:id="@+id/actvEvaluator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="none"
-            android:hint="Select evaluator"
+            android:hint="Add evaluator"
             android:singleLine="true"
             android:focusable="false"
             android:clickable="true"
             android:focusableInTouchMode="false" />
     </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupEvaluators"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:chipSpacing="8dp"
+        app:singleLine="false"
+        app:singleSelection="false" />
 
 </LinearLayout>

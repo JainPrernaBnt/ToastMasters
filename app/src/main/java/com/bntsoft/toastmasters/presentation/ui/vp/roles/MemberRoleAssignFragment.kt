@@ -52,47 +52,28 @@ class MemberRoleAssignFragment : Fragment() {
         observeViewModel()
         viewModel.loadRoleAssignments(currentMeetingId)
 
-        // Log the current state
-        Log.d("MemberRoleAssignFrag", "View binding root visibility: ${binding.root.visibility}")
-        Log.d("MemberRoleAssignFrag", "RecyclerView visibility: ${binding.rvMembers.visibility}")
     }
 
     private fun setupRecyclerView() {
-        Log.d("MemberRoleAssignFrag", "Setting up RecyclerView")
 
         adapter = MemberRoleAssignAdapter().apply {
             setCallbacks(
                 onRoleSelected = { userId, role ->
-                    Log.d("MemberRoleAssignFrag", "Role selected - UserId: $userId, Role: $role")
                     handleRoleSelected(userId, role)
                 },
                 onRoleRemoved = { userId, role ->
-                    Log.d("MemberRoleAssignFrag", "Role removed - UserId: $userId, Role: $role")
                     handleRoleRemoved(userId, role)
                 },
                 onBackupMemberSelected = { userId, backupMemberId ->
-                    Log.d(
-                        "MemberRoleAssignFrag",
-                        "Backup member selected - UserId: $userId, BackupId: $backupMemberId"
-                    )
                     viewModel.setBackupMember(userId, backupMemberId)
                 },
                 onSaveRoles = { userId, _ ->
-                    Log.d("MemberRoleAssignFrag", "Saving role for user: $userId")
                     viewModel.saveRoleAssignments()
                 },
                 onToggleEditMode = { userId, isEditable ->
-                    Log.d(
-                        "MemberRoleAssignFrag",
-                        "Toggling edit mode - UserId: $userId, isEditable: $isEditable"
-                    )
                     viewModel.toggleEditMode(userId, isEditable)
                 },
                 onEvaluatorSelected = { speakerId, evaluatorId ->
-                    Log.d(
-                        "MemberRoleAssignFrag",
-                        "Evaluator selected - SpeakerId: $speakerId, EvaluatorId: $evaluatorId"
-                    )
                     viewModel.assignEvaluator(speakerId, evaluatorId)
                 }
             )
@@ -103,8 +84,6 @@ class MemberRoleAssignFragment : Fragment() {
 
         binding.rvMembers.adapter = adapter
         binding.rvMembers.layoutManager = LinearLayoutManager(requireContext())
-
-        Log.d("MemberRoleAssignFrag", "RecyclerView setup complete. Adapter: $adapter")
     }
 
     private fun handleRoleSelected(userId: String, role: String) {
@@ -133,7 +112,6 @@ class MemberRoleAssignFragment : Fragment() {
 
         viewModel.assignableRoles.observe(viewLifecycleOwner) { roles ->
             roles?.let { roleMap ->
-                Log.d("MemberRoleAssignFrag", "Assignable roles updated. Count: ${roleMap.size}")
                 // Update roles for all users in the adapter
                 viewModel.roleAssignments.value?.forEach { assignment ->
                     val availableRoles = viewModel.getAvailableRoles(assignment.userId)
@@ -143,12 +121,10 @@ class MemberRoleAssignFragment : Fragment() {
         }
 
         viewModel.availableMembers.observe(viewLifecycleOwner) { members ->
-            Log.d("MemberRoleAssignFrag", "Available members updated. Count: ${members.size}")
             adapter.updateAvailableMembers(members)
         }
 
         viewModel.recentRoles.observe(viewLifecycleOwner) { recentRoles ->
-            Log.d("MemberRoleAssignFrag", "Recent roles updated for ${recentRoles.size} users")
             adapter.setRecentRoles(recentRoles)
             
             // Hide loading, show members and button when loaded

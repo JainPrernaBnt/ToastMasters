@@ -4,6 +4,7 @@ import com.bntsoft.toastmasters.data.local.entity.MeetingEntity
 import com.bntsoft.toastmasters.data.model.dto.MeetingDto
 import com.bntsoft.toastmasters.domain.model.Meeting
 import android.util.Log
+import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

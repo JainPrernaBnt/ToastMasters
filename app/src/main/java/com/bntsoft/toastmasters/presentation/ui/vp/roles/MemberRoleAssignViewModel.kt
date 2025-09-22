@@ -10,16 +10,19 @@ import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.utils.Result
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class MemberRoleAssignViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val meetingRepository: MeetingRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val firestore: FirebaseFirestore
 ) : ViewModel() {
     private val _roleAssignments = MutableLiveData<List<RoleAssignmentItem>>()
     val roleAssignments: LiveData<List<RoleAssignmentItem>> = _roleAssignments
@@ -86,6 +89,12 @@ class MemberRoleAssignViewModel @Inject constructor(
 
                 val allAssignedRoles = meetingRepository.getAllAssignedRoles(meetingId)
 
+                // Load speaker to evaluators mapping
+                val speakerEvaluatorsMap = loadSpeakerEvaluators(meetingId)
+                Log.d("MemberRoleAssignVM", "Speaker to evaluators mapping: $speakerEvaluatorsMap")
+                
+                Log.d("MemberRoleAssignVM", "Loaded evaluator assignments: $speakerEvaluatorsMap")
+
                 // Create role assignments for available members
                 val assignments = availableMembers.map { member ->
                     // Get preferred roles for this member
@@ -132,6 +141,18 @@ class MemberRoleAssignViewModel @Inject constructor(
 
                     // Calculate assigned role counts for this member's roles
                     val assignedRoleCounts = selectedRoles.groupingBy { it }.eachCount()
+                    
+                    // Get evaluator IDs for this speaker if they are a speaker
+                    val evaluatorIds = if (selectedRoles.any { it.startsWith("Speaker") }) {
+                        speakerEvaluatorsMap[member.id] ?: emptyList()
+                    } else {
+                        emptyList()
+                    }
+                    
+                    Log.d(
+                        "MemberRoleAssignVM",
+                        "[loadRoleAssignments] Evaluators for speaker ${member.name}: $evaluatorIds"
+                    )
 
                     val roleItem = RoleAssignmentItem(
                         userId = member.id,
@@ -144,12 +165,13 @@ class MemberRoleAssignViewModel @Inject constructor(
                         isEditable = isEditable,
                         roleCounts = roles,
                         assignedRoleCounts = assignedRoleCounts,
-                        allAssignedRoles = allAssignedRoles
+                        allAssignedRoles = allAssignedRoles,
+                        evaluatorIds = evaluatorIds
                     )
                     Log.d(
                         "MemberRoleAssignVM",
                         "[loadRoleAssignments] Created RoleAssignmentItem for ${member.name}: " +
-                                "assignedRole=$assignedRole, selectedRoles=$selectedRoles, isEditable=$isEditable"
+                                "assignedRole=$assignedRole, selectedRoles=$selectedRoles, isEditable=$isEditable, evaluatorIds=$evaluatorIds"
                     )
                     roleItem
                 }
@@ -441,162 +463,151 @@ class MemberRoleAssignViewModel @Inject constructor(
         }
     }
 
+    private suspend fun loadSpeakerEvaluators(meetingId: String): Map<String, List<String>> {
+        return try {
+            val snapshot = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .whereArrayContains("roles", "Speaker")
+                .get()
+                .await()
+
+            Log.d("MemberRoleAssignVM", "Found ${snapshot.size()} speaker documents")
+            
+            snapshot.associate { doc ->
+                val userId = doc.getString("userId") ?: doc.id
+                val evaluatorIds = (doc["evaluatorIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                Log.d("MemberRoleAssignVM", "Speaker $userId has evaluators: $evaluatorIds")
+                userId to evaluatorIds
+            }
+        } catch (e: Exception) {
+            Log.e("MemberRoleAssignVM", "Error loading speaker evaluators", e)
+            emptyMap()
+        }
+    }
+    
+    private suspend fun saveEvaluatorAssignment(meetingId: String, speakerId: String, evaluatorId: String) {
+        try {
+            val speakerRef = firestore.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .document(speakerId)
+
+            val speakerDoc = speakerRef.get().await()
+            val currentEvaluatorIds = (speakerDoc["evaluatorIds"] as? List<*>)?.filterIsInstance<String>()?.toMutableList() ?: mutableListOf()
+
+            if (!currentEvaluatorIds.contains(evaluatorId)) {
+                currentEvaluatorIds.add(evaluatorId)
+                speakerRef.update("evaluatorIds", currentEvaluatorIds).await()
+                Log.d("MemberRoleAssignVM", "Added evaluator $evaluatorId to speaker $speakerId")
+            }
+        } catch (e: Exception) {
+            Log.e("MemberRoleAssignVM", "Error saving evaluator assignment", e)
+            throw e
+        }
+    }
+
     fun assignEvaluator(speakerId: String, evaluatorId: String) {
         viewModelScope.launch(Dispatchers.Main) {
             try {
-                // Check if speaker already has an evaluator assigned
                 val currentAssignments = _roleAssignments.value ?: emptyList()
-                val speakerAssignment = currentAssignments.find { it.userId == speakerId }
-
-                if (speakerAssignment?.evaluatorId == evaluatorId) {
-                    Log.d(
-                        "MemberRoleAssignVM",
-                        "Speaker $speakerId already has evaluator $evaluatorId assigned"
-                    )
-                    return@launch
+                val speakerAssignment = currentAssignments.find { it.userId == speakerId } ?: return@launch
+                
+                // Check if this is a removal request
+                val isRemoval = evaluatorId.endsWith(":remove")
+                val actualEvaluatorId = if (isRemoval) evaluatorId.removeSuffix(":remove") else evaluatorId
+                
+                // Update the speaker's evaluator list
+                val updatedEvaluatorIds = if (isRemoval) {
+                    speakerAssignment.evaluatorIds.filter { it != actualEvaluatorId }
+                } else {
+                    if (speakerAssignment.evaluatorIds.contains(actualEvaluatorId)) {
+                        // Already added, nothing to do
+                        return@launch
+                    }
+                    speakerAssignment.evaluatorIds + actualEvaluatorId
                 }
-
-                // Check if the evaluator already has an evaluator role
-                val evaluatorAssignment = currentAssignments.find { it.userId == evaluatorId }
-                val evaluatorName = availableMembers.value?.find { it.first == evaluatorId }?.second
-
-                if (evaluatorName == null) {
-                    val error = "Evaluator not found in available members. ID: $evaluatorId"
+                
+                // Find the evaluator's name
+                val evaluatorName = availableMembers.value?.find { it.first == actualEvaluatorId }?.second
+                if (evaluatorName == null && !isRemoval) {
+                    val error = "Evaluator not found in available members. ID: $actualEvaluatorId"
                     Log.e("MemberRoleAssignVM", error)
                     _errorMessage.value = error
                     return@launch
                 }
-
+                
                 Log.d(
                     "MemberRoleAssignVM",
-                    "Assigning evaluator: $evaluatorName (ID: $evaluatorId) to speaker: $speakerId"
+                    if (isRemoval) 
+                        "Removing evaluator: $evaluatorName (ID: $actualEvaluatorId) from speaker: $speakerId"
+                    else 
+                        "Assigning evaluator: $evaluatorName (ID: $actualEvaluatorId) to speaker: $speakerId"
                 )
-
-                // If evaluator doesn't have an evaluator role, assign one
-                val evaluatorRole =
-                    if (evaluatorAssignment?.selectedRoles?.any { it.startsWith("Evaluator") } != true) {
-                        // Get the next available evaluator number
-                        val nextNumber = (evaluatorAssignment?.selectedRoles
-                            ?.mapNotNull { role ->
-                                """Evaluator (\d+)""".toRegex().find(role)?.groupValues?.get(1)
-                                    ?.toInt()
-                            }?.maxOrNull() ?: 0) + 1
-                        "Evaluator $nextNumber"
-                    } else {
-                        // Use existing evaluator role
-                        evaluatorAssignment.selectedRoles.first { it.startsWith("Evaluator") }
-                    }
-
-                fun assignEvaluator(speakerId: String, evaluatorId: String) {
-                    viewModelScope.launch {
-                        try {
-                            val result = meetingRepository.updateSpeakerEvaluator(
-                                meetingId = meetingId,
-                                speakerId = speakerId,
-                                evaluatorName = "", // We'll update this after getting member name
-                                evaluatorId = evaluatorId
-                            )
-
-                            when (result) {
-                                is Result.Success -> {
-                                    // Update the UI by finding the speaker and evaluator in the current assignments
-                                    val currentAssignments = _roleAssignments.value ?: return@launch
-
-                                    val updatedAssignments = currentAssignments.map { assignment ->
-                                        when (assignment.userId) {
-                                            speakerId -> assignment.copy(evaluatorId = evaluatorId)
-                                            evaluatorId -> {
-                                                // Add evaluator role if not already present
-                                                if (!assignment.selectedRoles.any { it.startsWith("Evaluator") }) {
-                                                    assignment.copy(
-                                                        selectedRoles = (assignment.selectedRoles + "Evaluator").toMutableList(),
-                                                        assignedRole = "Evaluator".takeIf { assignment.assignedRole.isEmpty() }
-                                                            ?: assignment.assignedRole
-                                                    )
-                                                } else {
-                                                    assignment
-                                                }
-                                            }
-
-                                            else -> assignment
-                                        }
+                
+                // First, update the local state immediately for better UX
+                val updatedAssignments = currentAssignments.map { assignment ->
+                    when {
+                        assignment.userId == speakerId -> 
+                            assignment.copy(evaluatorIds = updatedEvaluatorIds)
+                        
+                        !isRemoval && assignment.userId == actualEvaluatorId -> {
+                            // Add evaluator role if not already present
+                            if (!assignment.selectedRoles.any { it.startsWith("Evaluator") }) {
+                                // Get the next available evaluator number
+                                val nextNumber = (currentAssignments
+                                    .flatMap { it.selectedRoles }
+                                    .mapNotNull { role ->
+                                        """Evaluator (\d+)""".toRegex().find(role)?.groupValues?.get(1)?.toInt()
                                     }
-
-                                    _roleAssignments.value = updatedAssignments
-                                    _evaluatorAssigned.value = speakerId to evaluatorId
-                                }
-
-                                is Result.Error -> {
-                                    val error =
-                                        "Failed to assign evaluator: ${result.exception?.message ?: "Unknown error"}"
-                                    Log.e("MemberRoleAssignVM", error, result.exception)
-                                    _errorMessage.value = error
-                                }
-
-                                is Result.Loading -> {
-                                    // Loading state handled by UI if needed
-                                }
+                                    .maxOrNull() ?: 0) + 1
+                                
+                                val evaluatorRole = "Evaluator $nextNumber"
+                                assignment.copy(
+                                    selectedRoles = (assignment.selectedRoles + evaluatorRole).toMutableList(),
+                                    assignedRole = evaluatorRole.takeIf { assignment.assignedRole.isEmpty() }
+                                        ?: assignment.assignedRole
+                                )
+                            } else {
+                                assignment
                             }
-                        } catch (e: Exception) {
-                            val error = "Error assigning evaluator: ${e.message}"
-                            Log.e("MemberRoleAssignVM", error, e)
-                            _errorMessage.value = error
                         }
+                        
+                        else -> assignment
                     }
                 }
-
-                // Update the speaker's document with evaluator info
-                when (val result = meetingRepository.updateSpeakerEvaluator(
+                
+                // Update the UI immediately
+                _roleAssignments.value = updatedAssignments
+                _evaluatorAssigned.value = speakerId to actualEvaluatorId
+                
+                // Then update Firestore
+                when (val result = meetingRepository.updateSpeakerEvaluators(
                     meetingId = meetingId,
                     speakerId = speakerId,
-                    evaluatorName = evaluatorName,
-                    evaluatorId = evaluatorId
+                    evaluatorIds = updatedEvaluatorIds
                 )) {
                     is Result.Success -> {
                         Log.d(
                             "MemberRoleAssignVM",
-                            "Successfully updated speaker evaluator in Firestore"
+                            "Successfully updated speaker evaluators in Firestore"
                         )
-
-                        // Update the role assignments
-                        val updatedAssignments = currentAssignments.map { assignment ->
-                            when (assignment.userId) {
-                                speakerId -> assignment.copy(evaluatorId = evaluatorId)
-                                evaluatorId -> {
-                                    // Add evaluator role if not already present
-                                    if (!assignment.selectedRoles.any { it.startsWith("Evaluator") }) {
-                                        assignment.copy(
-                                            selectedRoles = (assignment.selectedRoles + evaluatorRole).toMutableList(),
-                                            assignedRole = evaluatorRole.takeIf { assignment.assignedRole.isEmpty() }
-                                                ?: assignment.assignedRole
-                                        )
-                                    } else {
-                                        assignment
-                                    }
-
-                                }
-
-                                else -> assignment
-                            }
-                        }
-
-                        _roleAssignments.value = updatedAssignments
-                        _evaluatorAssigned.value = speakerId to evaluatorId
                     }
-
+                    
                     is Result.Error -> {
-                        val error =
-                            "Failed to assign evaluator: ${result.exception?.message ?: "Unknown error"}"
+                        // Revert the local state if the Firestore update fails
+                        _roleAssignments.value = currentAssignments
+                        val error = "Failed to ${if (isRemoval) "remove" else "assign"} evaluator: ${result.exception?.message ?: "Unknown error"}"
                         Log.e("MemberRoleAssignVM", error, result.exception)
                         _errorMessage.value = error
                     }
-
+                    
                     is Result.Loading -> {
                         // Loading state handled by UI if needed
                     }
                 }
             } catch (e: Exception) {
-                val error = "Error assigning evaluator: ${e.message}"
+                val error = "Error ${if (evaluatorId.endsWith(":remove")) "removing" else "assigning"} evaluator: ${e.message}"
                 Log.e("MemberRoleAssignVM", error, e)
                 _errorMessage.value = error
             }
