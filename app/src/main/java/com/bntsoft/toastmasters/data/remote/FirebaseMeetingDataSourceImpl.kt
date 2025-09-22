@@ -33,7 +33,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
 
     companion object {
         private const val MEETINGS_COLLECTION = "meetings"
-        private const val ROLES_COLLECTION = "meeting_roles"
         private const val ROLE_ASSIGNMENTS_COLLECTION = "role_assignments"
     }
 
@@ -322,15 +321,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         return try {
             val document = meetingsCollection.document()
             val dto = meetingMapper.mapToDto(meeting).copy(meetingID = document.id)
-            // Convert the MeetingDto to a map and set it in Firestore
-            // Ensure roleCounts and assignedCounts are not null and properly initialized
-            val safeRoleCounts = dto.roleCounts.ifEmpty { emptyMap() }
-            val safeAssignedCounts = if (dto.assignedCounts.isEmpty()) {
-                // If no assigned counts, initialize with all roles set to 0
-                safeRoleCounts.mapValues { 0 }
-            } else {
-                dto.assignedCounts
-            }
 
             val meetingMap = hashMapOf(
                 "meetingID" to dto.meetingID,
@@ -339,8 +329,8 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 "endTime" to dto.endTime,
                 "venue" to dto.venue,
                 "theme" to dto.theme,
-                "roleCounts" to safeRoleCounts,
-                "assignedCounts" to safeAssignedCounts,
+                "roleCounts" to dto.roleCounts,
+                "assignedCounts" to dto.assignedCounts,
                 "createdAt" to dto.createdAt,
                 "status" to dto.status.name,
                 "officers" to (dto.officers ?: emptyMap()),
@@ -350,6 +340,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 "createdBy" to (dto.createdBy ?: ""),
                 "updatedAt" to FieldValue.serverTimestamp()
             )
+            Log.d("FirebaseDS", "Creating meeting with roleCounts: ${dto.roleCounts}")
             document.set(meetingMap).await()
             val newMeeting = meetingMapper.mapToDomain(dto)
 
@@ -858,7 +849,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
             Result.Error(e)
         }
     }
-
 
     private suspend fun getNextEvaluatorNumber(meetingId: String): Int {
         return try {

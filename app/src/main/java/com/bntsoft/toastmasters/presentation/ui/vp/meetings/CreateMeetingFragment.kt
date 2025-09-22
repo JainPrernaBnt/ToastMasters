@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.meetings
 
 import android.app.AlertDialog
+import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Typeface
@@ -11,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
@@ -152,7 +154,7 @@ class CreateMeetingFragment : Fragment() {
 
         // Count occurrences of each role
         for (i in 0 until formBinding.roleChipGroup.childCount) {
-            val chip = formBinding.roleChipGroup.getChildAt(i) as? Chip
+            val chip = formBinding.roleChipGroup.getChildAt(i) as? Chip ?: continue
             chip?.let {
                 val roleText = it.text.toString()
                 val roleName = roleText.substringBeforeLast(' ').trim()
@@ -397,6 +399,7 @@ class CreateMeetingFragment : Fragment() {
             dropdown.setOnClickListener {
                 if (adapter.count > 0) dropdown.showDropDown()
             }
+
             dropdown.setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus && adapter.count > 0) dropdown.showDropDown()
             }
@@ -408,6 +411,11 @@ class CreateMeetingFragment : Fragment() {
                     roleInputLayout.visibility = View.VISIBLE
                     saveRoleButton.visibility = View.VISIBLE
                     roleInput.requestFocus()
+
+                    // Show keyboard
+                    val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(roleInput, InputMethodManager.SHOW_IMPLICIT)
+
                     dropdown.setText("", false)
                 } else {
                     if (selectedRole.equals("Toastmaster of the Day", ignoreCase = true)) {
@@ -427,6 +435,10 @@ class CreateMeetingFragment : Fragment() {
                     roleInput.text?.clear()
                     roleInputLayout.visibility = View.GONE
                     saveRoleButton.visibility = View.GONE
+
+                    // Hide keyboard
+                    val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(roleInput.windowToken, 0)
                 }
             }
 
@@ -438,6 +450,10 @@ class CreateMeetingFragment : Fragment() {
                         roleInput.text?.clear()
                         roleInputLayout.visibility = View.GONE
                         saveRoleButton.visibility = View.GONE
+
+                        // Hide keyboard
+                        val imm = context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        imm.hideSoftInputFromWindow(roleInput.windowToken, 0)
                     }
                     true
                 } else false
@@ -446,8 +462,7 @@ class CreateMeetingFragment : Fragment() {
     }
 
     private fun showRoleCountDialog(binding: ItemMeetingFormBinding, role: String) {
-        if (role.equals("Toastmaster of the Day", ignoreCase = true) || role.startsWith("TMOD:")) {
-            // TMOD special chip
+        if (role.equals("Toastmaster of the Day", ignoreCase = true)) {
             addRoleChip(binding, role, isTmod = true)
             return
         }
@@ -459,77 +474,88 @@ class CreateMeetingFragment : Fragment() {
             requestFocus()
         }
 
+        val textInputLayout = dialogView.findViewById<TextInputLayout>(R.id.roleCountLayout)
+        textInputLayout.hint = "Number of $role"
+
         val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_ToastMasters_Dialog)
             .setTitle("Add $role")
             .setView(dialogView)
-            .setPositiveButton("Add") { dialogInterface, _ ->
+            .setPositiveButton("Add") { d, _ ->
                 val count = input.text.toString().toIntOrNull() ?: 0
                 if (count > 0) {
-                    for (i in 1..count) {
-                        addRoleChip(binding, "$role $i")
-                    }
+                    addRoleChip(binding, role, isTmod = false, count = count)
                 }
-                dialogInterface.dismiss()
+                d.dismiss()
             }
-            .setNegativeButton("Cancel") { dialogInterface, _ -> dialogInterface.dismiss() }
+            .setNegativeButton("Cancel") { d, _ -> d.dismiss() }
             .create()
 
+        // Show keyboard
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         dialog.show()
+
+        // Input filter 1-99
+        input.filters = arrayOf(InputFilter.LengthFilter(2), InputFilter { source, _, _, _, _, _ ->
+            if (source.isEmpty()) return@InputFilter null
+            if (source.matches("[0-9]+".toRegex())) {
+                val value = source.toString().toInt()
+                if (value in 1..99) null else ""
+            } else ""
+        })
     }
+
 
     private fun addRoleChip(
         binding: ItemMeetingFormBinding,
         role: String,
-        isTmod: Boolean = false
+        isTmod: Boolean = false,
+        count: Int = 1
     ) {
-        // Avoid duplicates
-        for (i in 0 until binding.roleChipGroup.childCount) {
-            val view = binding.roleChipGroup.getChildAt(i)
-            if (view is Chip && view.text.toString() == role) {
-                Snackbar.make(requireView(), "$role is already added", Snackbar.LENGTH_SHORT).show()
-                return
-            }
-        }
-
-        val primaryContainerColor =
-            ContextCompat.getColorStateList(requireContext(), R.color.primary_container)
-        val onSurfaceVariantColor =
-            ContextCompat.getColorStateList(requireContext(), R.color.on_surface_variant)
-
-        val chip = Chip(
-            requireContext(),
-            null,
-            com.google.android.material.R.style.Widget_Material3_Chip_Assist
-        ).apply {
-            text = role
-            isCloseIconVisible = true
-            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
-            setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
-            chipBackgroundColor = requireContext().getColorStateList(R.color.chip_background)
-            chipStrokeWidth = 1f.dpToPx()
-            chipStrokeColor = ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.black))
-            rippleColor = primaryContainerColor
-            closeIconTint = onSurfaceVariantColor
-
-            setOnCloseIconClickListener {
-                binding.roleChipGroup.removeView(this)
-                if (isTmod) {
-                    // Clear TMOD assignment when removed
-                    val formData = meetingForms.find { it.binding === binding }
-                    formData?.let { data ->
-                        data.selectedTmodId = null
-                        data.selectedTmodName = null
+        if (isTmod || role.equals("Toastmaster of the Day", ignoreCase = true)) {
+            // TMOD / Toastmaster of the Day
+            val chip = Chip(requireContext()).apply {
+                text = role
+                isCloseIconVisible = true
+                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+                chipBackgroundColor = requireContext().getColorStateList(R.color.chip_background)
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+                tag = role // TMOD uses exact role name
+                setOnCloseIconClickListener {
+                    binding.roleChipGroup.removeView(this)
+                    if (isTmod) {
+                        val formData = meetingForms.find { it.binding === binding }
+                        formData?.let { data ->
+                            data.selectedTmodId = null
+                            data.selectedTmodName = null
+                        }
                     }
                 }
             }
-
-            alpha = 0f
-            scaleX = 0.8f
-            scaleY = 0.8f
-            animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(200).start()
+            binding.roleChipGroup.addView(chip)
+            return
         }
-        binding.roleChipGroup.addView(chip)
+
+        // Non-TMOD roles, possibly multiple chips
+        val startIndex = binding.roleChipGroup.children.count {
+            val chip = it as? Chip
+            chip != null && chip.tag == role
+        } + 1
+
+        for (i in 0 until count) {
+            val chipText = "$role ${startIndex + i}"
+            val chip = Chip(requireContext()).apply {
+                text = chipText
+                isCloseIconVisible = true
+                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+                chipBackgroundColor = requireContext().getColorStateList(R.color.chip_background)
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+                tag = role // keep tag as base role for counting
+                setOnCloseIconClickListener {
+                    binding.roleChipGroup.removeView(this)
+                }
+            }
+            binding.roleChipGroup.addView(chip)
+        }
     }
 
     fun Float.dpToPx(): Float = this * Resources.getSystem().displayMetrics.density
