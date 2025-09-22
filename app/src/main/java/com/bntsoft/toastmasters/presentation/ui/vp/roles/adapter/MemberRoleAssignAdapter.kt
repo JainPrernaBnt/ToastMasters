@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.roles.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -177,11 +178,16 @@ class MemberRoleAssignAdapter :
         }
         
         private fun isEvaluatorAlreadyAdded(evaluatorId: String): Boolean {
-            if (evaluatorBinding.chipGroupEvaluators.childCount == 0) return false
+            val count = evaluatorBinding.chipGroupEvaluators.childCount
+
+            if (count == 0) {
+                return false
+            }
             
-            for (i in 0 until evaluatorBinding.chipGroupEvaluators.childCount) {
+            for (i in 0 until count) {
                 val chip = evaluatorBinding.chipGroupEvaluators.getChildAt(i) as? Chip
-                if (chip?.tag?.toString() == evaluatorId) {
+                val chipTag = chip?.tag?.toString()
+                if (chipTag == evaluatorId) {
                     return true
                 }
             }
@@ -194,27 +200,35 @@ class MemberRoleAssignAdapter :
             item: RoleAssignmentItem,
             onEvaluatorSelected: ((String, String) -> Unit)?
         ) {
+
             // Only proceed if we don't already have this evaluator chip
             if (!isEvaluatorAlreadyAdded(evaluatorId)) {
+
                 val chip = createChip(
                     text = evaluatorName,
                     isCloseable = true,
                     onClose = {
-                        // Remove the evaluator when the chip is closed
                         evaluatorBinding.chipGroupEvaluators.removeView(it)
                         onEvaluatorSelected?.invoke(item.userId, "$evaluatorId:remove")
                     }
                 )
                 
-                // Style the chip
-                chip.setChipBackgroundColorResource(R.color.evaluator_bg)
-                chip.setTextColor(evaluatorBinding.root.context.getColor(R.color.evaluator_text))
-                
                 // Store the evaluator ID in the chip's tag for easy reference
                 chip.tag = evaluatorId
+
+                // Style the chip
+                try {
+                    chip.setChipBackgroundColorResource(R.color.evaluator_bg)
+                    chip.setTextColor(evaluatorBinding.root.context.getColor(R.color.evaluator_text))
+                } catch (e: Exception) {
+                }
                 
                 // Add the chip to the group
-                evaluatorBinding.chipGroupEvaluators.addView(chip)
+                try {
+                    evaluatorBinding.chipGroupEvaluators.addView(chip)
+                } catch (e: Exception) {
+                }
+            } else {
             }
         }
 
@@ -330,11 +344,10 @@ class MemberRoleAssignAdapter :
                     
                     // Clear existing evaluator chips
                     evaluatorBinding.chipGroupEvaluators.removeAllViews()
-                    
-                    // Add evaluator chips for all evaluator IDs
-                    item.evaluatorIds.forEach { evaluatorId ->
-                        availableMembers.find { it.first == evaluatorId }?.let { evaluator ->
-                            // Only add if not already added
+
+                    item.evaluatorIds.forEachIndexed { index, evaluatorId ->
+                        val evaluator = availableMembers.find { it.first == evaluatorId }
+                        if (evaluator != null) {
                             if (!isEvaluatorAlreadyAdded(evaluator.first)) {
                                 addEvaluatorChip(
                                     evaluatorId = evaluator.first,
@@ -342,7 +355,12 @@ class MemberRoleAssignAdapter :
                                     item = item,
                                     onEvaluatorSelected = onEvaluatorSelected
                                 )
+                            } else {
+                                Log.d("EvaluatorDebug", "Evaluator already added: ${evaluator.second}")
                             }
+                        } else {
+                            Log.d("EvaluatorDebug", "Evaluator not found in available members: $evaluatorId")
+                            Log.d("EvaluatorDebug", "Available members: $availableMembers")
                         }
                     }
                 }

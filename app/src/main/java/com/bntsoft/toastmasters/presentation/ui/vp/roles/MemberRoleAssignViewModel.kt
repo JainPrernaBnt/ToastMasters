@@ -325,13 +325,11 @@ class MemberRoleAssignViewModel @Inject constructor(
     }
 
     fun removeRole(userId: String, role: String) {
-        Log.d("MemberRoleAssignVM", "Removing role: $role from user: $userId")
 
         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
             when {
                 assignment.userId == userId -> {
                     val updated = assignment.withRoleRemoved(role)
-                    Log.d("MemberRoleAssignVM", "Role removed. Updated assignment: $updated")
                     updated
                 }
 
@@ -368,20 +366,14 @@ class MemberRoleAssignViewModel @Inject constructor(
     }
 
     fun toggleEditMode(userId: String, isEditable: Boolean) {
-        Log.d("MemberRoleAssignVM", "Toggling edit mode for user: $userId, isEditable: $isEditable")
         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
             if (assignment.userId == userId) {
                 val updated = assignment.copyWithEditMode(isEditable)
-                Log.d("MemberRoleAssignVM", "Updated assignment: $updated")
                 updated
             } else {
                 // If we're enabling edit mode for one user, ensure others are not in edit mode
                 if (isEditable && assignment.isEditable) {
                     val updated = assignment.copyWithEditMode(false)
-                    Log.d(
-                        "MemberRoleAssignVM",
-                        "Disabled edit mode for ${assignment.userId} as user $userId is now in edit mode"
-                    )
                     updated
                 } else {
                     assignment
@@ -394,28 +386,16 @@ class MemberRoleAssignViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val currentAssignments = _roleAssignments.value ?: run {
-                    Log.e(
-                        "MemberRoleAssignVM",
-                        "No assignments to save - currentAssignments is null"
-                    )
                     return@launch
                 }
 
                 if (currentAssignments.isEmpty()) {
-                    Log.w(
-                        "MemberRoleAssignVM",
-                        "No role assignments to save - assignments list is empty"
-                    )
                     return@launch
                 }
-
-                Log.d("MemberRoleAssignVM", "Saving role assignments for meeting: $meetingId")
-
                 // Filter out assignments without roles
                 val validAssignments = currentAssignments.filter { it.assignedRole.isNotBlank() }
 
                 if (validAssignments.isEmpty()) {
-                    Log.w("MemberRoleAssignVM", "No valid role assignments to save")
                     return@launch
                 }
 
@@ -431,7 +411,6 @@ class MemberRoleAssignViewModel @Inject constructor(
                 when (val result =
                     meetingRepository.saveRoleAssignments(meetingId, validAssignments)) {
                     is com.bntsoft.toastmasters.utils.Result.Success -> {
-                        Log.d("MemberRoleAssignVM", "Successfully saved role assignments")
                         // Update the UI to reflect the saved state
                         _roleAssignments.value = _roleAssignments.value?.map { assignment ->
                             if (validAssignments.any { it.userId == assignment.userId }) {
@@ -457,7 +436,6 @@ class MemberRoleAssignViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("MemberRoleAssignVM", "Error saving role assignments", e)
                 _errorMessage.value = "Error saving role assignments: ${e.message}"
             }
         }
@@ -465,45 +443,30 @@ class MemberRoleAssignViewModel @Inject constructor(
 
     private suspend fun loadSpeakerEvaluators(meetingId: String): Map<String, List<String>> {
         return try {
+            // First get all assigned roles
             val snapshot = firestore.collection("meetings")
                 .document(meetingId)
                 .collection("assignedRole")
-                .whereArrayContains("roles", "Speaker")
                 .get()
                 .await()
 
-            Log.d("MemberRoleAssignVM", "Found ${snapshot.size()} speaker documents")
-            
+
             snapshot.associate { doc ->
-                val userId = doc.getString("userId") ?: doc.id
-                val evaluatorIds = (doc["evaluatorIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                Log.d("MemberRoleAssignVM", "Speaker $userId has evaluators: $evaluatorIds")
-                userId to evaluatorIds
-            }
+                val userId = doc.id
+                val roles = doc.get("roles") as? List<*> ?: emptyList<String>()
+                val evaluatorIds = (doc.get("evaluatorIds") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+
+                // Only include if this user has a speaker role
+                val hasSpeakerRole = roles.any { it.toString().startsWith("Speaker") }
+
+                if (hasSpeakerRole) {
+                    userId to evaluatorIds
+                } else {
+                    userId to emptyList()
+                }
+            }.filterValues { it.isNotEmpty() }
         } catch (e: Exception) {
-            Log.e("MemberRoleAssignVM", "Error loading speaker evaluators", e)
             emptyMap()
-        }
-    }
-    
-    private suspend fun saveEvaluatorAssignment(meetingId: String, speakerId: String, evaluatorId: String) {
-        try {
-            val speakerRef = firestore.collection("meetings")
-                .document(meetingId)
-                .collection("assignedRole")
-                .document(speakerId)
-
-            val speakerDoc = speakerRef.get().await()
-            val currentEvaluatorIds = (speakerDoc["evaluatorIds"] as? List<*>)?.filterIsInstance<String>()?.toMutableList() ?: mutableListOf()
-
-            if (!currentEvaluatorIds.contains(evaluatorId)) {
-                currentEvaluatorIds.add(evaluatorId)
-                speakerRef.update("evaluatorIds", currentEvaluatorIds).await()
-                Log.d("MemberRoleAssignVM", "Added evaluator $evaluatorId to speaker $speakerId")
-            }
-        } catch (e: Exception) {
-            Log.e("MemberRoleAssignVM", "Error saving evaluator assignment", e)
-            throw e
         }
     }
 
@@ -659,11 +622,6 @@ class MemberRoleAssignViewModel @Inject constructor(
                 _recentRoles.postValue(emptyMap())
             }
         }
-    }
-
-
-    fun getRecentRolesForUser(userId: String): List<String> {
-        return _recentRoles.value?.get(userId) ?: emptyList()
     }
 
     data class RoleDisplayItem(
