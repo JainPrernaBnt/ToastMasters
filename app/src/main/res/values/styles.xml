@@ -1,18 +1,166 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Material 3 Theme Overlay -->
+    <style name="ThemeOverlay.ToastMasters.Material3" parent="">
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <!-- Remove windowLightNavigationBar as it requires API 27+ -->
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+    </style>
+
+    <!-- Text Appearances -->
+    <style name="TextAppearance.ToastMasters.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textSize">24sp</item>
+        <item name="android:lineHeight">32sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textStyle">bold</item>
+        <!-- Add fallback for API < 28 -->
+        <item name="android:lineSpacingMultiplier" tools:targetApi="28">1.33</item>
+    </style>
+    
+    <style name="TextAppearance.ToastMasters.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:textColor">@color/on_surface_medium</item>
+    </style>
+    
+    <style name="TextAppearance.ToastMasters.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textSize">12sp</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textColor">@color/on_surface_medium</item>
+    </style>
+    
+    <style name="TextAppearance.ToastMasters.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">20sp</item>
+        <item name="android:letterSpacing">0.01</item>
+        <item name="android:textColor">@color/on_surface</item>
+        <!-- Add fallback for API < 28 -->
+        <item name="android:lineSpacingMultiplier" tools:targetApi="28">1.43</item>
+    </style>
+
+    <style name="TextAppearance.ToastMasters.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:lineHeight">24sp</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <style name="TextAppearance.ToastMasters.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:lineHeight">24sp</item>
+        <item name="android:letterSpacing">0.01</item>
+    </style>
+
+    <!-- Card Styles -->
+    <style name="Card.Material3.Elevated" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardElevation">1dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">20dp</item>
+        <item name="cardPreventCornerOverlap">true</item>
+        <item name="contentPadding">0dp</item>
+    </style>
+    
+    <!-- Info Card Style -->
+    <style name="Card.Info" parent="Card.Material3.Elevated">
+        <item name="cardBackgroundColor">@color/surface_container_high</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/outline_variant</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">12dp</item>
+    </style>
+    
+    <!-- Meeting Card Style -->
+    <style name="Card.Meeting" parent="Card.Material3.Elevated">
+        <item name="android:layout_margin">8dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="strokeColor">@color/surface_variant</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <!-- Button Styles -->
+    <style name="Widget.ToastMasters.Button.Filled" parent="Widget.Material3.Button">
+        <item name="android:textAppearance">@style/TextAppearance.Material3.LabelLarge</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Material3.SmallComponent</item>
+    </style>
+
+    <style name="Widget.ToastMasters.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textAppearance">@style/TextAppearance.Material3.LabelLarge</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Material3.SmallComponent</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/outline</item>
+    </style>
+
+    <!-- Chip Styles -->
+    <style name="Chip.Material3.Assist" parent="Widget.Material3.Chip.Assist">
+        <item name="chipMinHeight">32dp</item>
+        <item name="chipStartPadding">8dp</item>
+        <item name="chipIconSize">18dp</item>
+        <item name="chipIconTint">@color/primary</item>
+        <item name="chipBackgroundColor">@color/surface_variant</item>
+        <item name="android:textAppearance">@style/TextAppearance.Material3.LabelMedium</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="android:checkable">false</item>
+        <item name="android:clickable">false</item>
+    </style>
+    
+    <!-- Meeting Chip Style -->
+    <style name="Chip.Meeting" parent="Chip.Material3.Assist">
+        <item name="chipMinHeight">36dp</item>
+        <item name="chipBackgroundColor">@color/surface_variant</item>
+        <item name="android:textColor">@color/on_surface_medium</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    
+    <!-- Role Chip Style -->
+    <style name="Chip.Role" parent="Chip.Meeting">
+        <item name="chipMinHeight">36dp</item>
+        <item name="chipBackgroundColor">@color/surface_variant</item>
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    
+    <!-- Filter Chip Style -->
+    <style name="Chip.Filter" parent="Chip.Meeting">
+        <item name="chipMinHeight">32dp</item>
+        <item name="chipBackgroundColor">@color/surface_variant</item>
+        <item name="android:textColor">@color/on_surface_medium</item>
+        <item name="chipIconTint">@color/on_surface_medium</item>
+        <item name="chipIconSize">16dp</item>
+        <item name="chipStartPadding">8dp</item>
+        <item name="chipEndPadding">8dp</item>
+        <item name="android:textSize">12sp</item>
+    </style>
     <!-- Bottom Navigation -->
-    <style name="BottomNavigationView.Text" parent="TextAppearance.AppCompat.Small">
+    <style name="BottomNavigationView.Text" parent="TextAppearance.Material3.LabelSmall">
         <item name="android:textSize">12sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
     <!-- Chip Styles -->
-    <style name="ChipTextAppearance" parent="TextAppearance.MaterialComponents.Chip">
+    <style name="ChipTextAppearance" parent="TextAppearance.Material3.LabelMedium">
         <item name="android:textColor">@color/on_surface</item>
         <item name="android:textSize">14sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
-    <style name="ChipStyle" parent="Widget.MaterialComponents.Chip.Choice">
+    <style name="ChipStyle" parent="Chip.Material3.Assist">
         <item name="chipBackgroundColor">@color/chip_background</item>
         <item name="chipStrokeColor">@color/outline_variant</item>
         <item name="chipStrokeWidth">1dp</item>

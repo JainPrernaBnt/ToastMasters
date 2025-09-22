@@ -60,6 +60,7 @@ dependencies {
     
     // Material Design Components (using latest stable version)
     implementation("com.google.android.material:material:1.12.0")
+    implementation("com.airbnb.android:lottie:6.1.0")
     
     // Material3 Components (if using Compose)
     implementation("androidx.compose.material3:material3:1.2.0")

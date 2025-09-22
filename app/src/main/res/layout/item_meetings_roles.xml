@@ -1,68 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Card.Meeting"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="4dp">
 
-    <com.google.android.material.card.MaterialCardView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="2dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:strokeColor="@color/card_elevated"
-        app:strokeWidth="1dp">
+        android:padding="16dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <!-- Member Name with Icon -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvMemberName"
+            style="@style/TextAppearance.ToastMasters.HeadlineSmall"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:drawablePadding="12dp"
+            android:drawableStart="@drawable/ic_person"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:drawableTint="@color/primary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Prerna Jain" />
+
+        <!-- Assigned Role Chip -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipRole"
+            style="@style/Chip.Role"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textAppearance="@style/TextAppearance.ToastMasters.LabelMedium"
+            app:chipIconTint="@color/primary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvMemberName"
+            tools:text="Speaker 1" />
+
+        <!-- Evaluator Section (initially hidden) -->
+        <LinearLayout
+            android:id="@+id/layoutEvaluator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/chipRole">
 
-            <!-- Member Name -->
-            <TextView
-                android:id="@+id/tvMemberName"
-                style="@style/TextAppearance.MaterialComponents.Headline6"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:drawableStart="@drawable/ic_person"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="@color/on_surface"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Prerna Jain" />
-
-            <!-- Assigned Roles -->
-            <TextView
-                android:id="@+id/tvMeetingRole"
-                style="@style/TextAppearance.MaterialComponents.Body1"
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:drawablePadding="4dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/evaluators"
+                android:textAppearance="@style/TextAppearance.ToastMasters.BodyMedium"
                 android:textColor="@color/on_surface_medium"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvMemberName"
-                tools:text="Assigned Role: Speaker 1" />
+                android:textStyle="bold" />
 
-            <!-- Evaluator -->
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvEvaluator"
-                style="@style/TextAppearance.MaterialComponents.Body2"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.ToastMasters.BodyMedium"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textColor="@color/on_surface_medium"
-                android:visibility="gone"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvMeetingRole"
-                tools:text="Evaluator: Aditi Pawar (Evaluator 1)" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/on_surface"
+                tools:text="• Aditi Pawar (Evaluator 1)\n• John Doe (Evaluator 2)" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

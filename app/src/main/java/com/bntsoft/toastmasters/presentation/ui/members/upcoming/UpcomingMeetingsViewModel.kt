@@ -97,14 +97,37 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                 
                 batch.set(availabilityRef, meetingAvailability)
                 
-                // If this is a backout, clear any assigned roles
+                // If this is a backout, clear any assigned roles and related details
                 if (isBackout) {
                     val roleRef = db.collection("meetings")
                         .document(meetingId)
                         .collection("assignedRole")
                         .document(currentUserId)
                     
+                    // Get the current role before deleting
+                    val roleDoc = roleRef.get().await()
+                    val roleType = roleDoc.getString("roleType")
+                    
+                    // Delete the assigned role
                     batch.delete(roleRef)
+                    
+                    // Delete speaker details if the member was a speaker
+                    if (roleType == "Speaker") {
+                        val speakerDetailsRef = db.collection("meetings")
+                            .document(meetingId)
+                            .collection("speakerDetails")
+                            .document(currentUserId)
+                        batch.delete(speakerDetailsRef)
+                    }
+                    
+                    // Delete grammarian details if the member was a grammarian
+                    if (roleType == "Grammarian") {
+                        val grammarianDetailsRef = db.collection("meetings")
+                            .document(meetingId)
+                            .collection("grammarianDetails")
+                            .document(currentUserId)
+                        batch.delete(grammarianDetailsRef)
+                    }
                     
                     // Add to backout members collection
                     val backoutRef = db.collection("meetings")

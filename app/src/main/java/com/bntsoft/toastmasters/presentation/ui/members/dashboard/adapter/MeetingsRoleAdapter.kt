@@ -73,18 +73,21 @@ class MeetingsRoleAdapter : ListAdapter<MeetingRoleItem, RecyclerView.ViewHolder
         fun bind(memberRole: MemberRole) {
             binding.apply {
                 tvMemberName.text = memberRole.memberName
-                tvMeetingRole.text = if (memberRole.roles.isNotEmpty()) {
+                chipRole.text = if (memberRole.roles.isNotEmpty()) {
                     "Assigned Roles: ${memberRole.roles.joinToString(", ")}"
                 } else {
                     itemView.context.getString(R.string.error_loading_roles)
                 }
 
-                if (!memberRole.evaluator.isNullOrBlank()) {
-                    tvEvaluator.visibility = View.VISIBLE
-                    tvEvaluator.text =
-                        "Evaluator: ${memberRole.evaluator} (${memberRole.evaluatorRole ?: ""})"
+                val evaluators = memberRole.getCombinedEvaluators()
+                if (evaluators.isNotEmpty()) {
+                    layoutEvaluator.visibility = View.VISIBLE
+                    val evaluatorsText = evaluators.joinToString("\n") { evaluator ->
+                        "• ${evaluator.name}${if (evaluator.role.isNotBlank()) " (${evaluator.role})" else ""}"
+                    }
+                    tvEvaluator.text = evaluatorsText
                 } else {
-                    tvEvaluator.visibility = View.GONE
+                    layoutEvaluator.visibility = View.GONE
                 }
             }
         }
@@ -111,11 +114,11 @@ class MeetingsRoleAdapter : ListAdapter<MeetingRoleItem, RecyclerView.ViewHolder
         fun bind(speaker: MeetingRoleItem.SpeakerDetails) {
             binding.apply {
                 tvSpeechTitle.text = speaker.speechTitle
-                tvLevel.text = speaker.level.toString()
-                tvPathwaysTrack.text = speaker.pathwaysTrack
-                tvProjectNumber.text = speaker.projectNumber.toString()
+                chipLevel.text = speaker.level.toString()
+                chipTrack.text = speaker.pathwaysTrack
+                chipProjectNumber.text = speaker.projectNumber.toString()
                 tvProjectTitle.text = speaker.projectTitle
-                tvSpeechObjectives.text = speaker.speechObjectives
+                tvObjectives.text = speaker.speechObjectives
                 tvSpeechTime.text = "${speaker.speechTime} minutes"
             }
         }

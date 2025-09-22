@@ -21,6 +21,12 @@ class MemberRoleAssignFragment : Fragment() {
     private val viewModel: MemberRoleAssignViewModel by viewModels()
     private lateinit var adapter: MemberRoleAssignAdapter
     private var currentMeetingId: String = ""
+    
+    // Flags to track data loading states
+    private var isRoleAssignmentsLoaded = false
+    private var isAssignableRolesLoaded = false
+    private var isAvailableMembersLoaded = false
+    private var isRecentRolesLoaded = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -100,17 +106,29 @@ class MemberRoleAssignFragment : Fragment() {
         adapter.updateAssignableRoles(roleItems)
     }
 
+    private fun checkAllDataLoaded() {
+        if (isRoleAssignmentsLoaded && isAssignableRolesLoaded && 
+            isAvailableMembersLoaded && isRecentRolesLoaded) {
+            // All data loaded, hide progress bar and show RecyclerView
+            binding.progressBar.visibility = View.GONE
+            binding.rvMembers.visibility = View.VISIBLE
+        }
+    }
+
     private fun observeViewModel() {
         viewModel.roleAssignments.observe(viewLifecycleOwner) { assignments ->
+            isRoleAssignmentsLoaded = true
             adapter.submitList(assignments)
             // Update available roles for each user when assignments change
             assignments.forEach { assignment ->
                 val roleItems = viewModel.getAvailableRoles(assignment.userId)
                 adapter.updateAssignableRoles(roleItems)
             }
+            checkAllDataLoaded()
         }
 
         viewModel.assignableRoles.observe(viewLifecycleOwner) { roles ->
+            isAssignableRolesLoaded = true
             roles?.let { roleMap ->
                 // Update roles for all users in the adapter
                 viewModel.roleAssignments.value?.forEach { assignment ->
@@ -118,18 +136,19 @@ class MemberRoleAssignFragment : Fragment() {
                     adapter.updateAssignableRoles(availableRoles)
                 }
             }
+            checkAllDataLoaded()
         }
 
         viewModel.availableMembers.observe(viewLifecycleOwner) { members ->
+            isAvailableMembersLoaded = true
             adapter.updateAvailableMembers(members)
+            checkAllDataLoaded()
         }
 
         viewModel.recentRoles.observe(viewLifecycleOwner) { recentRoles ->
+            isRecentRolesLoaded = true
             adapter.setRecentRoles(recentRoles)
-            
-            // Hide loading, show members and button when loaded
-            binding.progressBar.visibility = View.GONE
-            binding.rvMembers.visibility = View.VISIBLE
+            checkAllDataLoaded()
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->

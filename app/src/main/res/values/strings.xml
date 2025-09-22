@@ -437,5 +437,14 @@
     <string name="club_id_with_value">Club ID: %1$s</string>
     <string name="schedule_new_meeting">Schedule New Meeting</string>
     <string name="schedule_meeting_description">Create and schedule a new Toastmasters meeting with all the necessary details</string>
+    <string name="usage">Usage</string>
+    <string name="examples">Examples</string>
+    <string name="speaker_details">Speaker Details</string>
+    <string name="speech_title">Speech Title</string>
+    <string name="project_details">Project Details</string>
+    <string name="project">Project</string>
+    <string name="objectives">Objectives</string>
+    <string name="evaluator">Evaluator</string>
+    <string name="evaluators">Evaluators</string>
 </resources>
 

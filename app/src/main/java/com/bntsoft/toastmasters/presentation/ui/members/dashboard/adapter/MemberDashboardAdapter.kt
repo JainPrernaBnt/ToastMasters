@@ -32,7 +32,8 @@ class MemberDashboardAdapter(
  {
     private val TAG = "MeetingRoleAdapter"
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
+    private val shortDateFormatter = DateTimeFormatter.ofPattern("MMM d")
+    private val dayOfWeekFormatter = DateTimeFormatter.ofPattern("EEE")
     private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MeetingWithRoleViewHolder {
@@ -73,19 +74,15 @@ class MemberDashboardAdapter(
                 // Set venue/location
                 tvMeetingVenue.text = item.meeting.location.ifEmpty { "Location not specified" }
 
-                // Set day of week
-                val dayOfWeek = item.meeting.dateTime.dayOfWeek
-                    .getDisplayName(TextStyle.FULL, Locale.getDefault())
-                tvMeetingDay.text = dayOfWeek
-
-                // Set date
-                tvMeetingDate.text = item.meeting.dateTime.format(dateFormatter)
+                // Format date as "Mon, Aug 28"
+                val formattedDate = "${item.meeting.dateTime.format(dayOfWeekFormatter)}, ${item.meeting.dateTime.format(shortDateFormatter)}"
+                chipDate.text = formattedDate
 
                 // Set time - handle both dateTime and endDateTime
                 val startTime = item.meeting.dateTime.format(timeFormatter)
                 val endTime = item.meeting.endDateTime?.format(timeFormatter)
                     ?: item.meeting.dateTime.plusHours(2).format(timeFormatter)
-                tvMeetingTime.text = "$startTime - $endTime"
+                chipTime.text = "$startTime - $endTime"
 
                 // Set assigned roles with labels
                 val rolesText = if (item.assignedRoles.isNotEmpty()) {
@@ -93,7 +90,7 @@ class MemberDashboardAdapter(
                 } else {
                     "Assigned role: ${item.assignedRole}" // Fallback to single role if list is empty
                 }
-                tvMeetingRole.text = rolesText
+                chipRole.text = rolesText
 
                 // Show Fill Details button only if user is assigned as a Speaker
                 val isSpeaker = item.assignedRoles.any { role ->

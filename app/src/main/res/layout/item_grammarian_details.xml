@@ -2,183 +2,180 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Card.Meeting"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardBackgroundColor="@color/surface_container_highest"
+    app:cardElevation="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <!-- Title -->
-        <TextView
+        <!-- Header -->
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tvGrammarianTitle"
-            style="@style/TextAppearance.MaterialComponents.Headline6"
-            android:layout_width="wrap_content"
+            style="@style/TextAppearance.ToastMasters.HeadlineSmall"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Grammarian Details"
+            android:drawablePadding="12dp"
+            android:drawableTint="@color/primary"
+            android:text="@string/grammarian_details"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <View
-            android:id="@+id/divider1"
+        <!-- Word of the Day Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/wordCard"
+            style="@style/Card.Info"
             android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:background="?android:attr/listDivider"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvGrammarianTitle" />
-
-        <!-- Word of the Day -->
-        <TextView
-            android:id="@+id/tvWordOfTheDayLabel"
-            style="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Word of the Day:"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider1" />
-
-        <TextView
-            android:id="@+id/tvWordOfTheDay"
-            style="@style/TextAppearance.MaterialComponents.Body1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            app:cardBackgroundColor="@color/surface_container_high"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvWordOfTheDayLabel"
-            tools:text="Eloquent" />
+            app:layout_constraintTop_toBottomOf="@id/tvGrammarianTitle">
 
-        <!-- Word Meaning -->
-        <TextView
-            android:id="@+id/tvWordMeaningLabel"
-            style="@style/TextAppearance.MaterialComponents.Subtitle2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Word Meaning:"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvWordOfTheDay" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvWordMeaning"
-            style="@style/TextAppearance.MaterialComponents.Body2"
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.ToastMasters.LabelMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/word_of_the_day"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvWordOfTheDay"
+                    style="@style/TextAppearance.ToastMasters.HeadlineSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/on_surface"
+                    android:textStyle="bold"
+                    tools:text="Eloquent" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.ToastMasters.LabelSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/meaning"
+                    android:textColor="@color/on_surface_variant" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvWordMeaning"
+                    style="@style/TextAppearance.ToastMasters.BodyMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="4dp"
+                    tools:text="Fluent or persuasive in speaking or writing." />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.ToastMasters.LabelSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/examples"
+                    android:textColor="@color/on_surface_variant" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvWordExamples"
+                    style="@style/TextAppearance.ToastMasters.BodyMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="4dp"
+                    android:textIsSelectable="true"
+                    tools:text="• She delivered an eloquent speech that moved the audience.
+• His writing is both eloquent and persuasive." />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Idiom of the Day Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/idiomCard"
+            style="@style/Card.Info"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvWordMeaningLabel"
-            tools:text="Fluent in speaking or writing" />
-
-        <!-- Word Examples -->
-        <TextView
-            android:id="@+id/tvWordExamplesLabel"
-            style="@style/TextAppearance.MaterialComponents.Subtitle2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Word Examples:"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvWordMeaning" />
-
-        <TextView
-            android:id="@+id/tvWordExamples"
-            style="@style/TextAppearance.MaterialComponents.Caption"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:fontFamily="monospace"
-            android:textColor="?android:attr/textColorTertiary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvWordExamplesLabel"
-            tools:text="Her eloquent speech inspired everyone in the room" />
-
-        <!-- Divider -->
-        <View
-            android:id="@+id/divider2"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_marginTop="16dp"
-            android:background="?android:attr/listDivider"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvWordExamples" />
-
-        <!-- Idiom of the Day -->
-        <TextView
-            android:id="@+id/tvIdiomOfTheDayLabel"
-            style="@style/TextAppearance.MaterialComponents.Subtitle1"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Idiom of the Day:"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/divider2" />
-
-        <TextView
-            android:id="@+id/tvIdiomOfTheDay"
-            style="@style/TextAppearance.MaterialComponents.Body1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            app:cardBackgroundColor="@color/surface_container_high"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvIdiomOfTheDayLabel"
-            tools:text="Hit The Nail On The Head" />
+            app:layout_constraintTop_toBottomOf="@id/wordCard">
 
-        <!-- Idiom Meaning -->
-        <TextView
-            android:id="@+id/tvIdiomMeaningLabel"
-            style="@style/TextAppearance.MaterialComponents.Subtitle2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Idiom Meaning:"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvIdiomOfTheDay" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvIdiomMeaning"
-            style="@style/TextAppearance.MaterialComponents.Body2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvIdiomMeaningLabel"
-            tools:text="To describe exactly what is causing a situation or problem" />
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.ToastMasters.LabelMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="8dp"
+                    android:drawableTint="@color/primary"
+                    android:text="@string/idiom_phrase_of_the_day"
+                    android:textColor="@color/primary"
+                    android:textStyle="bold" />
 
-        <!-- Idiom Examples -->
-        <TextView
-            android:id="@+id/tvIdiomExamplesLabel"
-            style="@style/TextAppearance.MaterialComponents.Subtitle2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Idiom Examples:"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvIdiomMeaning" />
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvIdiomOfTheDay"
+                    style="@style/TextAppearance.ToastMasters.HeadlineSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/on_surface"
+                    android:textStyle="bold"
+                    tools:text="Break the ice" />
 
-        <TextView
-            android:id="@+id/tvIdiomExamples"
-            style="@style/TextAppearance.MaterialComponents.Caption"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:fontFamily="monospace"
-            android:textColor="?android:attr/textColorTertiary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvIdiomExamplesLabel"
-            tools:text="When Prerna said the team lacked communication, she really hit the nail on the head" />
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.ToastMasters.LabelSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/meaning"
+                    android:textColor="@color/on_surface_variant" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvIdiomMeaning"
+                    style="@style/TextAppearance.ToastMasters.BodyMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="4dp"
+                    tools:text="To do or say something to relieve tension or get conversation going in a strained situation" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    style="@style/TextAppearance.ToastMasters.LabelSmall"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/usage"
+                    android:textColor="@color/on_surface_variant" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvIdiomExamples"
+                    style="@style/TextAppearance.ToastMasters.BodyMedium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="4dp"
+                    android:textIsSelectable="true"
+                    tools:text="• He told a funny joke to break the ice at the beginning of his speech.
+• The team-building activities helped break the ice among the new members." />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -197,4 +197,9 @@
     <color name="role_timer">#00BCD4</color>
     <color name="role_ah_counter">#E91E63</color>
 
+    <!-- Missing Alpha Colors -->
+    <color name="primary_alpha_12">#1F00796B</color>
+    <color name="white_alpha_24">#3DFFFFFF</color>
+    <color name="black_alpha_08">#14000000</color>
+
 </resources>
