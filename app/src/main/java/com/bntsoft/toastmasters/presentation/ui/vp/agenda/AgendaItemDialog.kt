@@ -29,6 +29,11 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class AgendaItemDialog : DialogFragment() {
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.Theme_ToastMasters_Dialog)
+    }
     @Inject
     lateinit var assignedRoleRepository: AssignedRoleRepository
 
@@ -76,11 +81,12 @@ class AgendaItemDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         dialog.window?.let { window ->
+            // Set soft input mode for keyboard
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            
             // Set dialog width to 90% of screen width
             val width = (resources.displayMetrics.widthPixels * 0.90).toInt()
             window.setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT)
-            window.setBackgroundDrawableResource(android.R.color.transparent)
         }
         return dialog
     }
@@ -116,9 +122,14 @@ class AgendaItemDialog : DialogFragment() {
 
             val timeString = timeFormat.format(selectedTime.time)
 
+            // Get the selected display text and extract only the member name
+            val selectedDisplayText = binding.presenterInput.text.toString()
+            val presenterMap = binding.presenterInput.getTag(R.id.presenter_map) as? Map<String, String>
+            val memberNameOnly = presenterMap?.get(selectedDisplayText) ?: selectedDisplayText.split(" - ").firstOrNull() ?: selectedDisplayText
+            
             val updatedItem = agendaItem?.copy(
                 activity = binding.activityInput.text.toString(),
-                presenterName = binding.presenterInput.text.toString(),
+                presenterName = memberNameOnly,
                 greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
                 yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
                 redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
@@ -127,7 +138,7 @@ class AgendaItemDialog : DialogFragment() {
                 id = "",
                 meetingId = (parentFragment as? AgendaTableFragment)?.meetingId ?: "",
                 activity = binding.activityInput.text.toString(),
-                presenterName = binding.presenterInput.text.toString(),
+                presenterName = memberNameOnly,
                 greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
                 yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
                 redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
@@ -195,14 +206,19 @@ class AgendaItemDialog : DialogFragment() {
                     when (result) {
                         is Resource.Success -> {
                             val presenters = mutableListOf<String>()
+                            val presenterMap = mutableMapOf<String, String>() // displayText -> memberName
                             result.data?.forEach { assignedRole ->
                                 assignedRole.roles.forEach { role ->
                                     val displayText = "${assignedRole.memberName} - $role"
                                     if (!presenters.contains(displayText)) {
                                         presenters.add(displayText)
+                                        presenterMap[displayText] = assignedRole.memberName
                                     }
                                 }
                             }
+                            
+                            // Store the presenter mapping for later use
+                            binding.presenterInput.setTag(R.id.presenter_map, presenterMap)
 
                             presenters.sort()
                             Log.d("AgendaItemDialog", "Loaded ${presenters.size} presenters")
@@ -252,20 +268,39 @@ class AgendaItemDialog : DialogFragment() {
     private fun validateInputs(): Boolean {
         val isValid = binding.activityInput.text?.isNotBlank() == true
 
-        // Update redTime from input
-        binding.redCardInput.text?.toString()?.let {
-            if (it.isNotBlank()) {
-                redTime = parseTimeToSecondsOrMinutes(it)
-            }
+        // Parse all three times fresh from input fields
+        greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text?.toString() ?: "")
+        yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text?.toString() ?: "")
+        redTime   = parseTimeToSecondsOrMinutes(binding.redCardInput.text?.toString() ?: "")
+
+        // Ensure red time is at least 1 minute (if provided)
+        if (redTime <= 0) {
+            redTime = 60 // default to 1 minute
         }
 
-        // Ensure red time is at least 1 minute
-        if (redTime <= 0) {
-            redTime = 60 // Default to 1 minute if not set
+        // Validate that all three times are filled
+        if (greenTime <= 0 || yellowTime <= 0 || redTime <= 0) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.error)
+                .setMessage("Please fill Green, Yellow, and Red times.")
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+            return false
+        }
+
+        // Ensure they are all different
+        if (greenTime == yellowTime || yellowTime == redTime || greenTime == redTime) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.error)
+                .setMessage("Green, Yellow, and Red times must be different.")
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+            return false
         }
 
         return isValid
     }
+
 
     private fun populateFields(item: AgendaItemDto) {
         binding.apply {
@@ -308,10 +343,16 @@ class AgendaItemDialog : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        dialog?.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+
+        dialog?.window?.let { window ->
+            val params = window.attributes
+            val displayMetrics = resources.displayMetrics
+
+            params.width = (displayMetrics.widthPixels * 0.90f).toInt()
+            params.height = ViewGroup.LayoutParams.WRAP_CONTENT
+
+            window.attributes = params
+        }
     }
 
     override fun onDestroyView() {

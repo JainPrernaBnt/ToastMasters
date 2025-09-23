@@ -65,7 +65,6 @@ class AssignRolesFragment : Fragment() {
         }
     }
 
-
     private fun loadMeetings() {
         viewModel.loadMeetings()
     }

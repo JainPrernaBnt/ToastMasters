@@ -47,11 +47,9 @@ class MeetingDomainMapper @Inject constructor() {
             roleCounts = entity.roleCounts ?: emptyMap(),
             assignedCounts = entity.assignedCounts ?: emptyMap(),
             assignedRoles = entity.assignedRoles ?: emptyMap(),
-            officers = entity.officers ?: emptyMap(),
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt ?: entity.createdAt,
             status = entity.status,
-            agendaId = entity.agendaId ?: "",
             isRecurring = entity.isRecurring ?: false,
             createdBy = entity.createdBy ?: ""
         )
@@ -94,11 +92,9 @@ class MeetingDomainMapper @Inject constructor() {
             roleCounts = dto.roleCounts ?: emptyMap(),
             assignedRoles = dto.assignedRoles ?: emptyMap(),
             assignedCounts = finalAssignedCounts,
-            officers = dto.officers ?: emptyMap(),
             createdAt = dto.createdAt,
             updatedAt = dto.updatedAt,
             status = dto.status,
-            agendaId = dto.agendaId ?: "",
             isRecurring = dto.isRecurring ?: false,
             createdBy = dto.createdBy ?: ""
         )
@@ -121,11 +117,9 @@ class MeetingDomainMapper @Inject constructor() {
             roleCounts = meeting.roleCounts,
             assignedCounts = finalCounts,
             assignedRoles = meeting.assignedRoles,
-            officers = meeting.officers,
             createdAt = meeting.createdAt,
             updatedAt = meeting.updatedAt,
             status = meeting.status,
-            agendaId = meeting.agendaId.ifEmpty { null },
             isRecurring = meeting.isRecurring,
             createdBy = meeting.createdBy.ifEmpty { null }
         )
@@ -151,10 +145,8 @@ class MeetingDomainMapper @Inject constructor() {
             assignedRoles = meeting.assignedRoles,
             assignedCounts = finalCounts,
             updatedAt = meeting.updatedAt,
-            agendaId = meeting.agendaId,
             isRecurring = meeting.isRecurring,
             createdBy = meeting.createdBy,
-            officers = meeting.officers
         )
     }
 

@@ -286,12 +286,6 @@ class EditMeetingFragment : Fragment() {
             
             // Update current officers
             currentOfficers.clear()
-            currentOfficers.putAll(meeting.officers)
-            
-            // Update the latest officers in the ViewModel
-            if (meeting.officers.isNotEmpty()) {
-                meetingsViewModel.updateLatestOfficers(meeting.officers)
-            }
         }
     }
 
@@ -390,7 +384,6 @@ class EditMeetingFragment : Fragment() {
                 location = venue,
                 theme = theme,
                 roleCounts = roleCounts,
-                officers = currentOfficers,
                 isRecurring = current.isRecurring,
                 createdBy = current.createdBy,
                 createdAt = current.createdAt,

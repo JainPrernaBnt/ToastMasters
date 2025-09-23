@@ -29,11 +29,9 @@ data class MeetingEntity(
     @field:TypeConverters(MapStringConverter::class)
     val assignedRoles: Map<String, String> = emptyMap(),
     @field:TypeConverters(MapStringConverter::class)
-    val officers: Map<String, String> = emptyMap(),
     val createdAt: Long,
     val updatedAt: Long? = null,
     val status: MeetingStatus,
-    val agendaId: String? = null,
     val isRecurring: Boolean = false,
     val createdBy: String? = null
 )

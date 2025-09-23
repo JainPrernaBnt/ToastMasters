@@ -47,9 +47,11 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                 .document(meetingId)
                 .get()
                 .await()
-            meetingDoc.getString("agendaId") ?: "default"
+            val agendaId = meetingDoc.getString("agendaId") ?: "agendaId"
+            // Ensure agendaId is treated as a document ID, not a path
+            agendaId.split("/").last() // Take only the last segment if it contains slashes
         } catch (_: Exception) {
-            "default"
+            "agendaId"
         }
     }
 
@@ -66,14 +68,16 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             }
 
             // Get the agenda ID from the meeting document or use a default one
-            val agendaId = meetingDoc.getString("agendaId") ?: "default"
+            val agendaId = meetingDoc.getString("agendaId") ?: "agendaId"
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
 
             // Try to get agenda data from agenda/agendaId/agendaOfficers
             val agendaOfficersDocs = try {
                 firestore.collection(MEETINGS_COLLECTION)
                     .document(meetingId)
                     .collection("agenda")
-                    .document(agendaId)
+                    .document(sanitizedAgendaId)
                     .collection("agendaOfficers")
                     .limit(1)
                     .get()
@@ -186,12 +190,14 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                 "updatedAt" to FieldValue.serverTimestamp()
             )
 
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             firestore.collection(MEETINGS_COLLECTION)
                 .document(agenda.id)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .set(agendaOfficersData, SetOptions.merge())
                 .await()
 
@@ -233,12 +239,14 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                     return@addSnapshotListener
                 }
 
-                val agendaId = meetingSnapshot.getString("agendaId") ?: "default"
+                val agendaId = meetingSnapshot.getString("agendaId") ?: "agendaId"
+                // Ensure agendaId is treated as a document ID, not a path
+                val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
                 val agendaOfficersRef = meetingRef
                     .collection("agenda")
-                    .document(agendaId)
+                    .document(sanitizedAgendaId)
                     .collection("agendaOfficers")
-                    .document(agendaId)
+                    .document(sanitizedAgendaId)
 
                 // When meeting data changes, fetch the latest agenda officers
                 agendaOfficersRef.get()
@@ -281,15 +289,17 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             }
 
             // Get the agenda ID from the meeting document first
-            val agendaId = meetingRef.get().await().getString("agendaId") ?: "default"
+            val agendaId = meetingRef.get().await().getString("agendaId") ?: "agendaId"
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
 
             // Then listen to changes in the agendaOfficers document for this meeting
             val registration2 = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)  // Use agendaId as the document ID
+                .document(sanitizedAgendaId)  // Use sanitized agendaId as the document ID
                 .addSnapshotListener { documentSnapshot, error ->
                     if (error != null) {
                         trySend(Error(Exception(error)))
@@ -350,10 +360,12 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     override suspend fun getAgendaItem(meetingId: String, itemId: String): Result<AgendaItem> {
         return try {
             val agendaId = resolveAgendaId(meetingId)
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val document = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaItems")
                 .document(itemId)
                 .get()
@@ -388,8 +400,9 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
 
     override suspend fun getAgendaItems(meetingId: String): List<AgendaItem> {
         return try {
-            val agendaId = resolveAgendaId(meetingId)
-            val itemsSnapshot = firestore.collection(MEETINGS_COLLECTION)
+            val agendaId = resolveAgendaId(meetingId).split("/").last() // sanitized
+
+            val agendaItemsSnapshot = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
                 .document(agendaId)
@@ -398,69 +411,27 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                 .get()
                 .await()
 
-            var items = itemsSnapshot.documents.mapNotNull { doc ->
-                try {
-                    val data = doc.data ?: return@mapNotNull null
-                    val cardSequence = data["cardSequence"] as? Map<*, *> ?: emptyMap<String, Any>()
-
-                    AgendaItem(
-                        id = doc.id,
-                        meetingId = meetingId,
-                        activity = data["activity"] as? String ?: "",
-                        presenterName = data["presenter"] as? String ?: "",
-                        time = data["time"] as? String ?: "",
-                        orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
-                        greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
-                        yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
-                        redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
-                        isSessionHeader = (data["isSessionHeader"] as? Boolean) ?: false,
-                        updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
-                            ?: com.google.firebase.Timestamp.now()
-                    )
-                } catch (e: Exception) {
-                    null
-                }
+            var items = agendaItemsSnapshot.documents.mapNotNull { doc ->
+                doc.toAgendaItem(meetingId)
             }
 
+            // Fallback: If no items, iterate all agendas under this meeting
             if (items.isEmpty()) {
-                // Fallback: iterate all agendas under this meeting
-                val agendaDocs = firestore.collection(MEETINGS_COLLECTION)
+                val agendasSnapshot = firestore.collection(MEETINGS_COLLECTION)
                     .document(meetingId)
                     .collection("agenda")
                     .get()
                     .await()
 
                 val aggregated = mutableListOf<AgendaItem>()
-                for (agendaDoc in agendaDocs) {
+                for (agendaDoc in agendasSnapshot.documents) {
                     val snap = agendaDoc.reference
                         .collection("agendaItems")
                         .orderBy("order")
                         .get()
                         .await()
-                    aggregated += snap.documents.mapNotNull { doc ->
-                        try {
-                            val data = doc.data ?: return@mapNotNull null
-                            val cardSequence =
-                                data["cardSequence"] as? Map<*, *> ?: emptyMap<String, Any>()
-                            AgendaItem(
-                                id = doc.id,
-                                meetingId = meetingId,
-                                activity = data["activity"] as? String ?: "",
-                                presenterName = data["presenter"] as? String ?: "",
-                                time = data["time"] as? String ?: "",
-                                orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
-                                isSessionHeader = data["isSessionHeader"] as? Boolean ?: false,
-                                duration = (data["duration"] as? Number)?.toInt() ?: 0,
-                                greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
-                                yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
-                                redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
-                                updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp
-                                    ?: com.google.firebase.Timestamp.now()
-                            )
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
+
+                    aggregated += snap.documents.mapNotNull { it.toAgendaItem(meetingId) }
                 }
                 items = aggregated
             }
@@ -468,6 +439,30 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             items.sortedBy { it.orderIndex }
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    private fun com.google.firebase.firestore.DocumentSnapshot.toAgendaItem(meetingId: String): AgendaItem? {
+        return try {
+            val data = data ?: return null
+            val cardSequence = data["cardSequence"] as? Map<*, *> ?: emptyMap<String, Any>()
+
+            AgendaItem(
+                id = id,
+                meetingId = meetingId,
+                activity = data["activity"] as? String ?: "",
+                presenterName = data["presenter"] as? String ?: "",
+                time = data["time"] as? String ?: "",
+                orderIndex = (data["order"] as? Number)?.toInt() ?: 0,
+                isSessionHeader = data["isSessionHeader"] as? Boolean ?: false,
+                duration = (data["duration"] as? Number)?.toInt() ?: 0,
+                greenTime = (cardSequence["green"] as? Number)?.toInt() ?: 0,
+                yellowTime = (cardSequence["yellow"] as? Number)?.toInt() ?: 0,
+                redTime = (cardSequence["red"] as? Number)?.toInt() ?: 0,
+                updatedAt = data["updatedAt"] as? com.google.firebase.Timestamp ?: com.google.firebase.Timestamp.now()
+            )
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -479,11 +474,13 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             .document(meetingId)
             .get()
             .addOnSuccessListener { snapshot ->
-                val agendaId = snapshot.getString("agendaId") ?: "default"
+                val agendaId = snapshot.getString("agendaId") ?: "agendaId"
+                // Ensure agendaId is treated as a document ID, not a path
+                val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
                 val ref = firestore.collection(MEETINGS_COLLECTION)
                     .document(meetingId)
                     .collection("agenda")
-                    .document(agendaId)
+                    .document(sanitizedAgendaId)
                     .collection("agendaItems")
                     .orderBy("order")
 
@@ -528,25 +525,25 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             registration?.remove()
         }
     }
-
     override suspend fun saveAgendaItem(
         meetingId: String,
         item: AgendaItem
     ): Result<String> {
         return try {
             val agendaId = resolveAgendaId(meetingId)
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val itemData = hashMapOf(
                 "time" to (item.time ?: ""),
                 "activity" to (item.activity ?: ""),
                 "presenter" to (item.presenterName ?: ""),
                 "order" to item.orderIndex,
-                "meetingId" to meetingId,
-                "isSessionHeader" to (item.isSessionHeader ?: false),
-                "duration" to (item.duration ?: 0),
-                "cardSequence" to mapOf(
-                    "green" to (item.greenTime ?: 0),
-                    "yellow" to (item.yellowTime ?: 0),
-                    "red" to (item.redTime ?: 0)
+                "duration" to item.duration,
+                "isSessionHeader" to item.isSessionHeader,
+                "cardSequence" to hashMapOf(
+                    "green" to item.greenTime,
+                    "yellow" to item.yellowTime,
+                    "red" to item.redTime
                 ),
                 "updatedAt" to FieldValue.serverTimestamp()
             )
@@ -554,7 +551,7 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             val itemRef = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaItems")
                 .document(item.id)
 
@@ -574,10 +571,12 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     override suspend fun deleteAgendaItem(meetingId: String, itemId: String): Result<Unit> {
         return try {
             val agendaId = resolveAgendaId(meetingId)
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaItems")
                 .document(itemId)
                 .delete()
@@ -602,10 +601,12 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             val batch = firestore.batch()
             val now = Timestamp.now()
             val agendaId = resolveAgendaId(meetingId)
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val itemsRef = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaItems")
 
             for (item in items) {
@@ -636,10 +637,13 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     ): Result<Unit> {
         return try {
             val batch = firestore.batch()
+            val agendaId = resolveAgendaId(meetingId)
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val agendaRef = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(resolveAgendaId(meetingId))
+                .document(sanitizedAgendaId)
 
             // First, clear existing items if needed
             // Note: Be careful with this in production - you might want to merge instead
@@ -873,12 +877,14 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
 
     override suspend fun getAbbreviations(meetingId: String, agendaId: String): Abbreviations {
         return try {
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val doc = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .get()
                 .await()
 
@@ -900,12 +906,14 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         abbreviations: Abbreviations
     ): Result<Unit> {
         return try {
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val docRef = firestore.collection(MEETINGS_COLLECTION)
                     .document(meetingId)
                     .collection("agenda")
-                    .document(agendaId)
+                    .document(sanitizedAgendaId)
                     .collection("agendaOfficers")
-                    .document(agendaId)
+                    .document(sanitizedAgendaId)
 
             // Create a new map to ensure we're not storing any null values
             val cleanAbbreviations =
@@ -931,12 +939,14 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         abbreviationKey: String
     ): Result<Unit> {
         return try {
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val docRef = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
 
             // Use FieldValue.delete() to remove the specific abbreviation from the map
             val updates = hashMapOf<String, Any>(
@@ -957,6 +967,8 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     ): Result<Unit> {
         return try {
             val agendaId = resolveAgendaId(meetingId)
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
 
             // Only update the provided officer fields, leave others untouched
             val officerData = hashMapOf<String, Any>(
@@ -968,9 +980,9 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .set(officerData, SetOptions.merge())
                 .await()
 
@@ -997,6 +1009,8 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     ): Result<Unit> {
         return try {
             val agendaId = resolveAgendaId(meetingId)
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val clubInfo = mapOf(
                 "clubName" to clubName,
                 "clubNumber" to clubNumber,
@@ -1010,9 +1024,9 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             val agendaOfficersDoc = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
 
             // Always update all club info fields together
             val clubInfoUpdate = mapOf(
@@ -1055,12 +1069,14 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         agendaId: String
     ): Result<Map<String, String>> {
         return try {
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val docSnapshot = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection(AGENDA_ITEMS_SUBCOLLECTION)
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .get()
                 .await()
 
@@ -1076,12 +1092,14 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
 
     override suspend fun getClubInfo(meetingId: String, agendaId: String): Result<ClubInfo> {
         return try {
+            // Ensure agendaId is treated as a document ID, not a path
+            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
             val docSnapshot = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection(AGENDA_ITEMS_SUBCOLLECTION)
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .collection("agendaOfficers")
-                .document(agendaId)
+                .document(sanitizedAgendaId)
                 .get()
                 .await()
 

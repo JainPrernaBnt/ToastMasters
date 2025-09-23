@@ -949,7 +949,6 @@ class CreateMeetingFragment : Fragment() {
                 startTime = startLocalDateTime.toLocalTime().toString(),
                 endTime = endLocalDateTime.toLocalTime().toString(),
                 venue = venue,
-                officers = emptyMap(), // Empty officers as they will be set by the ViewModel
                 roleCounts = roleCounts, // Add role counts
                 assignedCounts = roleCounts.mapValues { 0 } // Initialize assigned counts to 0
             )

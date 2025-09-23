@@ -36,18 +36,19 @@ data class CreateAgendaUiState(
             theme = "",
             status = MeetingStatus.NOT_COMPLETED,
             createdBy = "",
-            clubName = "",
-            clubNumber = "",
-            area = "",
-            district = "",
-            mission = ""
+
         ),
         meetingDate = Timestamp.now(),
         startTime = "",
         endTime = "",
         officers = emptyMap(),
         agendaStatus = AgendaStatus.DRAFT,
-        abbreviations = emptyMap()
+        abbreviations = emptyMap(),
+        clubName = "",
+        clubNumber = "",
+        area = "",
+        district = "",
+        mission = ""
     ),
     val grammarianDetails: GrammarianDetails = GrammarianDetails(),
     val isGrammarianDetailsLoading: Boolean = false,
@@ -217,11 +218,11 @@ class CreateAgendaViewModel @Inject constructor(
                                 state.copy(
                                     agenda = agenda,
                                     // Initialize club info fields from the agenda
-                                    clubName = agenda.meeting.clubName,
-                                    clubNumber = agenda.meeting.clubNumber,
-                                    district = agenda.meeting.district,
-                                    area = agenda.meeting.area,
-                                    mission = agenda.meeting.mission,
+                                    clubName = agenda.clubName,
+                                    clubNumber = agenda.clubNumber,
+                                    district = agenda.district,
+                                    area = agenda.area,
+                                    mission = agenda.mission,
                                     isLoading = false,
                                     isSaved = false
                                 )
@@ -315,11 +316,11 @@ class CreateAgendaViewModel @Inject constructor(
                 // When entering edit mode, ensure we have the latest data from the agenda
                 state.copy(
                     isClubInfoEditable = true,
-                    clubName = state.agenda.meeting.clubName,
-                    clubNumber = state.agenda.meeting.clubNumber,
-                    district = state.agenda.meeting.district,
-                    area = state.agenda.meeting.area,
-                    mission = state.agenda.meeting.mission
+                    clubName = state.agenda.clubName,
+                    clubNumber = state.agenda.clubNumber,
+                    district = state.agenda.district,
+                    area = state.agenda.area,
+                    mission = state.agenda.mission
                 )
             } else {
                 // When exiting edit mode without saving
@@ -377,85 +378,85 @@ class CreateAgendaViewModel @Inject constructor(
         }
     }
 
-    fun saveClubInfo() {
-        viewModelScope.launch {
-            try {
-                // First, update the local state to ensure all fields are captured
-                _uiState.update { state ->
-                    val updatedAgenda = state.agenda.copy(
-                        meeting = state.agenda.meeting.copy(
-                            clubName = state.clubName,
-                            clubNumber = state.clubNumber,
-                            district = state.district,
-                            area = state.area,
-                            mission = state.mission
-                        )
-                    )
-                    state.copy(
-                        agenda = updatedAgenda,
-                        isSaving = true,
-                        error = null
-                    )
-                }
-
-                // Get the latest state after updating
-                val currentState = _uiState.value
-
-                Log.d("SaveClubInfo", "Saving club info: ${currentState.agenda.meeting.clubName}, ${currentState.agenda.meeting.clubNumber}, ${currentState.agenda.meeting.district}, ${currentState.agenda.meeting.area}, ${currentState.agenda.meeting.mission}")
-
-                val result = withContext(Dispatchers.IO) {
-                    try {
-                        repository.updateClubInfo(
-                            meetingId = currentState.agenda.id,
-                            clubName = currentState.agenda.meeting.clubName,
-                            clubNumber = currentState.agenda.meeting.clubNumber,
-                            district = currentState.agenda.meeting.district,
-                            area = currentState.agenda.meeting.area,
-                            mission = currentState.agenda.meeting.mission
-                        )
-                    } catch (e: Exception) {
-                        Log.e("SaveClubInfo", "Error saving club info", e)
-                        Result.Error(e)
-                    }
-                }
-
-                _uiState.update { state ->
-                    when (result) {
-                        is Result.Success -> {
-                            // Update the local agenda with the new club info
-                            val updatedAgenda = state.agenda.copy(
-                                meeting = state.agenda.meeting.copy(
-                                    clubName = state.clubName,
-                                    clubNumber = state.clubNumber,
-                                    district = state.district,
-                                    area = state.area,
-                                    mission = state.mission
-                                )
-                            )
-                            state.copy(
-                                agenda = updatedAgenda,
-                                isSaving = false,
-                                isClubInfoEditable = false,
-                                isSaved = true
-                            )
-                        }
-                        is Result.Error -> state.copy(
-                            isSaving = false,
-                            error = result.exception?.message ?: "Failed to save club info"
-                        )
-                        Result.Loading -> state
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isSaving = false,
-                        error = e.message ?: "Error saving club info"
-                    )
-                }
-            }
-        }
-    }
+//    fun saveClubInfo() {
+//        viewModelScope.launch {
+//            try {
+//                // First, update the local state to ensure all fields are captured
+//                _uiState.update { state ->
+//                    val updatedAgenda = state.agenda.copy(
+//                        meeting = state.agenda.meeting.copy(
+//                            clubName = state.clubName,
+//                            clubNumber = state.clubNumber,
+//                            district = state.district,
+//                            area = state.area,
+//                            mission = state.mission
+//                        )
+//                    )
+//                    state.copy(
+//                        agenda = updatedAgenda,
+//                        isSaving = true,
+//                        error = null
+//                    )
+//                }
+//
+//                // Get the latest state after updating
+//                val currentState = _uiState.value
+//
+//                Log.d("SaveClubInfo", "Saving club info: ${currentState.agenda.meeting.clubName}, ${currentState.agenda.meeting.clubNumber}, ${currentState.agenda.meeting.district}, ${currentState.agenda.meeting.area}, ${currentState.agenda.meeting.mission}")
+//
+//                val result = withContext(Dispatchers.IO) {
+//                    try {
+//                        repository.updateClubInfo(
+//                            meetingId = currentState.agenda.id,
+//                            clubName = currentState.agenda.meeting.clubName,
+//                            clubNumber = currentState.agenda.meeting.clubNumber,
+//                            district = currentState.agenda.meeting.district,
+//                            area = currentState.agenda.meeting.area,
+//                            mission = currentState.agenda.meeting.mission
+//                        )
+//                    } catch (e: Exception) {
+//                        Log.e("SaveClubInfo", "Error saving club info", e)
+//                        Result.Error(e)
+//                    }
+//                }
+//
+//                _uiState.update { state ->
+//                    when (result) {
+//                        is Result.Success -> {
+//                            // Update the local agenda with the new club info
+//                            val updatedAgenda = state.agenda.copy(
+//                                meeting = state.agenda.copy(
+//                                    clubName = state.clubName,
+//                                    clubNumber = state.clubNumber,
+//                                    district = state.district,
+//                                    area = state.area,
+//                                    mission = state.mission
+//                                )
+//                            )
+//                            state.copy(
+//                                agenda = updatedAgenda,
+//                                isSaving = false,
+//                                isClubInfoEditable = false,
+//                                isSaved = true
+//                            )
+//                        }
+//                        is Result.Error -> state.copy(
+//                            isSaving = false,
+//                            error = result.exception?.message ?: "Failed to save club info"
+//                        )
+//                        Result.Loading -> state
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                _uiState.update {
+//                    it.copy(
+//                        isSaving = false,
+//                        error = e.message ?: "Error saving club info"
+//                    )
+//                }
+//            }
+//        }
+//    }
 
     fun saveOfficers() {
         viewModelScope.launch(Dispatchers.IO) {

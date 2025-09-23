@@ -18,8 +18,6 @@ data class MeetingDto(
     val assignedRoles: Map<String, String> = emptyMap(),
     val status: MeetingStatus = MeetingStatus.NOT_COMPLETED,
     val updatedAt: Long = 0,
-    val agendaId: String = "",
     val isRecurring: Boolean = false,
     val createdBy: String = "",
-    val officers: Map<String, String> = emptyMap()
 )

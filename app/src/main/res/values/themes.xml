@@ -16,7 +16,7 @@
         <item name="colorOnSecondaryContainer">@color/teal_900</item>
 
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <item name="android:statusBarColor">@color/primary</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
 
         <!-- Color attributes -->
@@ -65,6 +65,16 @@
     <style name="Theme.ToastMasters.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar" />
 
     <style name="Theme.ToastMasters.PopupOverlay" parent="ThemeOverlay.Material3.Light" />
+
+    <!-- Dialog theme for proper popup behavior -->
+    <style name="Theme.ToastMasters.Dialog" parent="ThemeOverlay.Material3.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowCloseOnTouchOutside">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+    </style>
 
     <!-- Floating Action Button -->
     <style name="Widget.Material3.FloatingActionButton" parent="">

@@ -1,6 +1,5 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.agenda
 
-import android.app.Dialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.os.Bundle
 import android.util.Log
@@ -34,7 +33,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Collections
 import java.util.Locale
 import javax.inject.Inject
 
@@ -103,26 +101,29 @@ class AgendaTableFragment : Fragment() {
                 // Check if user is VP Education
                 isVpEducation = userManager.isVpEducation()
                 Log.d("AgendaTableFragment", "User is VP Education: $isVpEducation")
-                
+
                 // Check agenda status
                 val meeting = meetingRepository.getMeetingById(meetingId)
                 // For now, we'll assume agenda is published if meeting exists
                 // In a real implementation, you'd check the agenda status from the database
                 isAgendaPublished = meeting != null
                 Log.d("AgendaTableFragment", "Agenda is published: $isAgendaPublished")
-                
+
                 // Apply role-based UI visibility
                 applyRoleBasedVisibility()
-                
+
                 // If user is Member and agenda is not published, show message and go back
                 if (!isVpEducation && !isAgendaPublished) {
                     showMessage("Agenda is not yet published by VP Education")
                     findNavController().navigateUp()
                     return@launch
                 }
-                
+
             } catch (e: Exception) {
-                Log.e("AgendaTableFragment", "Error checking user role and agenda status: ${e.message}")
+                Log.e(
+                    "AgendaTableFragment",
+                    "Error checking user role and agenda status: ${e.message}"
+                )
                 // Default to Member view for safety
                 isVpEducation = false
                 isAgendaPublished = false
@@ -135,15 +136,13 @@ class AgendaTableFragment : Fragment() {
         if (isVpEducation) {
             // VP Education: Show all UI elements
             binding.publishAgendaButton.visibility = View.VISIBLE
-            binding.exportButton.visibility = View.VISIBLE
             binding.fabAddItem.visibility = View.VISIBLE
         } else {
             // Member: Hide editing UI elements
             binding.publishAgendaButton.visibility = View.GONE
-            binding.exportButton.visibility = View.GONE
             binding.fabAddItem.visibility = View.GONE
         }
-        
+
         // Update adapter with user role
         agendaAdapter.updateUserRole(isVpEducation)
     }
@@ -376,13 +375,13 @@ class AgendaTableFragment : Fragment() {
             dialog.dismiss()
         }
 
-
     }
 
     private fun setupRecyclerView() {
         Log.d("AgendaTableFragment", "Setting up RecyclerView")
 
         // Initialize the adapter with all necessary callbacks
+        Log.d("AgendaTableFragment", "Initializing adapter with isVpEducation=$isVpEducation")
         agendaAdapter = AgendaAdapter(
             onItemClick = { item ->
                 Log.d("AgendaTableFragment", "Item clicked: ${item.activity}")
@@ -514,15 +513,10 @@ class AgendaTableFragment : Fragment() {
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
-                // Only allow drag for VP Education users and normal items (not time breaks, sessions, or add button)
-                val dragFlags = if (isVpEducation) {
-                    when (viewHolder.itemViewType) {
-                        VIEW_TYPE_ITEM -> ItemTouchHelper.UP or ItemTouchHelper.DOWN
-                        else -> 0
-                    }
-                } else {
-                    0 // Disable drag for Members
-                }
+                val position = viewHolder.adapterPosition
+                val dragFlags = if (agendaAdapter.canDrag(position)) {
+                    ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                } else 0
                 return makeMovementFlags(dragFlags, 0)
             }
 
@@ -531,11 +525,6 @@ class AgendaTableFragment : Fragment() {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                // Don't move items if target is not a normal item or if source is not a normal item
-                if (target.itemViewType != VIEW_TYPE_ITEM || viewHolder.itemViewType != VIEW_TYPE_ITEM) {
-                    return false
-                }
-
                 val currentTime = System.currentTimeMillis()
                 if (currentTime - lastMoveTime < moveThrottle) {
                     return false // Throttle rapid moves
@@ -557,24 +546,16 @@ class AgendaTableFragment : Fragment() {
                     return false
                 }
 
-                // Don't allow moving time breaks or session headers
-                val fromItem = items[fromPosition]
-                val toItem = items[toPosition]
+                // Remove the item from the original position
+                val movedItem = items.removeAt(fromPosition)
 
-                if (fromItem.activity.contains("BREAK", ignoreCase = true) ||
-                    fromItem.isSessionHeader ||
-                    toItem.activity.contains("BREAK", ignoreCase = true) ||
-                    toItem.isSessionHeader
-                ) {
-                    return false
+                // Insert it at the new position
+                items.add(toPosition, movedItem)
+
+                // Update order indices for all items
+                items.forEachIndexed { index, item ->
+                    item.orderIndex = index
                 }
-
-                // Swap the items
-                Collections.swap(items, fromPosition, toPosition)
-
-                // Update order indices
-                items[fromPosition].orderIndex = fromPosition
-                items[toPosition].orderIndex = toPosition
 
                 // Update the adapter
                 agendaAdapter.submitList(items)
@@ -715,9 +696,11 @@ class AgendaTableFragment : Fragment() {
                         binding.publishAgendaButton.text = "Agenda Published"
                         binding.publishAgendaButton.isEnabled = false
                     }
+
                     is Resource.Error -> {
                         showMessage("Failed to publish agenda: ${result.message}")
                     }
+
                     is Resource.Loading -> {
                         showMessage("Publishing agenda...")
                     }
@@ -726,11 +709,6 @@ class AgendaTableFragment : Fragment() {
                 showMessage("Error publishing agenda: ${e.message}")
             }
         }
-    }
-
-    private fun exportAgendaToPdf() {
-        // TODO: Implement PDF export functionality
-        showMessage("PDF export functionality will be implemented")
     }
 
     private fun showEditDialog(item: AgendaItemDto) {
@@ -766,13 +744,6 @@ class AgendaTableFragment : Fragment() {
         binding.publishAgendaButton.setOnClickListener {
             if (isVpEducation) {
                 publishAgenda()
-            }
-        }
-
-        // Export button click listener (only for VP Education)
-        binding.exportButton.setOnClickListener {
-            if (isVpEducation) {
-                exportAgendaToPdf()
             }
         }
 

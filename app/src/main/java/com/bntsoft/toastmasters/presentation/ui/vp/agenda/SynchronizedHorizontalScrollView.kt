@@ -14,10 +14,6 @@ class SynchronizedHorizontalScrollView @JvmOverloads constructor(
     private var scrollView: HorizontalScrollView? = null
     private var isSyncing = false
 
-    fun syncWith(horizontalScrollView: HorizontalScrollView) {
-        this.scrollView = horizontalScrollView
-    }
-
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
         

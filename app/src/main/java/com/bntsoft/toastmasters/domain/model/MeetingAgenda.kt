@@ -23,7 +23,12 @@ data class MeetingAgenda(
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp
-    val updatedAt: Timestamp? = null
+    val updatedAt: Timestamp? = null,
+    val clubName: String =  "",
+    val clubNumber: String = "",
+    val area: String = "",
+    val district: String = "",
+    val mission: String = ""
 ) : Parcelable {
 
     fun withStatus(newStatus: AgendaStatus): MeetingAgenda = copy(agendaStatus = newStatus)

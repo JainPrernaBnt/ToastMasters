@@ -1,5 +1,6 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.dashboard
 
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,13 +9,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.widget.ArrayAdapter
 import android.widget.ImageView
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.animation.doOnEnd
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -40,7 +37,6 @@ import com.bntsoft.toastmasters.utils.Constants.EXTRA_MEETING_ID
 import com.bntsoft.toastmasters.utils.Constants.MEETINGS_COLLECTION
 import com.bntsoft.toastmasters.utils.Constants.TABLE_TOPICS_COLLECTION
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.textview.MaterialTextView
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -90,6 +86,7 @@ class DashboardFragment : Fragment() {
         // Force refresh data
         viewModel.loadUpcomingMeetings()
     }
+
     private fun setupSectionToggles() {
         binding.headerUpcoming.setOnClickListener {
             isUpcomingExpanded = !isUpcomingExpanded
@@ -288,35 +285,44 @@ class DashboardFragment : Fragment() {
 
         // Separate meetings by status and date
         val now = LocalDateTime.now()
-        val upcomingMeetings = filtered.filter { 
-            it.meeting.status == MeetingStatus.NOT_COMPLETED && 
-            !it.meeting.dateTime.isBefore(now.minusDays(1)) // Include meetings from yesterday to catch any in-progress meetings
-        }.sortedBy { it.meeting.dateTime } // Sort upcoming meetings in ascending order (earliest first)
+        val upcomingMeetings = filtered.filter {
+            it.meeting.status == MeetingStatus.NOT_COMPLETED &&
+                    !it.meeting.dateTime.isBefore(now.minusDays(1)) // Include meetings from yesterday to catch any in-progress meetings
+        }
+            .sortedBy { it.meeting.dateTime } // Sort upcoming meetings in ascending order (earliest first)
 
-        val pastMeetings = filtered.filter { 
-            it.meeting.status == MeetingStatus.COMPLETED || 
-            it.meeting.dateTime.isBefore(now.minusDays(1)) // Include any meetings older than yesterday as past
-        }.sortedByDescending { it.meeting.dateTime } // Sort past meetings in descending order (newest first)
+        val pastMeetings = filtered.filter {
+            it.meeting.status == MeetingStatus.COMPLETED ||
+                    it.meeting.dateTime.isBefore(now.minusDays(1)) // Include any meetings older than yesterday as past
+        }
+            .sortedByDescending { it.meeting.dateTime } // Sort past meetings in descending order (newest first)
 
-        Log.d("DashboardFragment", "Upcoming count=${upcomingMeetings.size}, Past count=${pastMeetings.size}")
+        Log.d(
+            "DashboardFragment",
+            "Upcoming count=${upcomingMeetings.size}, Past count=${pastMeetings.size}"
+        )
 
         // Update UI based on whether there are any meetings to show
         if (upcomingMeetings.isNotEmpty()) {
             binding.tvUpcomingMeetings.visibility = View.VISIBLE
             binding.rvUpcomingMeetings.visibility = View.VISIBLE
+            binding.ivUpcomingArrow.visibility = View.VISIBLE
             upcomingMeetingsAdapter.submitList(upcomingMeetings)
         } else {
             binding.tvUpcomingMeetings.visibility = View.GONE
             binding.rvUpcomingMeetings.visibility = View.GONE
+            binding.ivUpcomingArrow.visibility = View.GONE
         }
 
         if (pastMeetings.isNotEmpty()) {
             binding.tvPastMeetings.visibility = View.VISIBLE
             binding.rvPastMeetings.visibility = View.VISIBLE
+            binding.ivPastArrow.visibility = View.VISIBLE
             pastMeetingsAdapter.submitList(pastMeetings)
         } else {
             binding.tvPastMeetings.visibility = View.GONE
             binding.rvPastMeetings.visibility = View.GONE
+            binding.ivPastArrow.visibility = View.GONE
         }
     }
 
@@ -617,17 +623,34 @@ class DashboardFragment : Fragment() {
         val db = FirebaseFirestore.getInstance()
         val batch = db.batch()
         val winnersRef = db.collection("meetings").document(meetingId).collection("winners")
+        val meetingRef = db.collection("meetings").document(meetingId)
 
-        // Delete existing winners first
         winnersRef.get().addOnSuccessListener { snapshot ->
+            // 1. Delete existing winners first
+            snapshot.documents.forEach { doc ->
+                batch.delete(doc.reference)
+            }
+
+            val now = com.google.firebase.Timestamp.now()
+
+            // 2. Add new winners
             winners.forEach { winner ->
                 val winnerRef = winnersRef.document()
-                batch.set(winnerRef, winner)
+                val winnerWithTimestamps = winner.copy(
+                    id = winnerRef.id,  // store document ID inside object
+                    meetingId = meetingId,
+                    createdAt = now,
+                    updatedAt = now
+                )
+                batch.set(winnerRef, winnerWithTimestamps)
             }
-            // Commit the batch
+
+            // 3. Update the parent meeting's updatedAt
+            batch.update(meetingRef, "updatedAt", now)
+
+            // 4. Commit the batch
             batch.commit()
                 .addOnSuccessListener {
-                    // Show success message
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Success")
                         .setMessage("Winners saved successfully!")
@@ -635,7 +658,6 @@ class DashboardFragment : Fragment() {
                         .show()
                 }
                 .addOnFailureListener { e ->
-                    // Show error message
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Error")
                         .setMessage("Failed to save winners: ${e.message}")

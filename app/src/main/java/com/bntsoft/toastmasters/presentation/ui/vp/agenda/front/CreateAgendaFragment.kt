@@ -48,7 +48,6 @@ class CreateAgendaFragment : Fragment() {
 
     private var isAbbreviationEditing = false
 
-
     private fun setupAbbreviationAdapter() {
         abbreviationAdapter = AbbreviationAdapter(
             onItemRemoved = { position ->
@@ -61,10 +60,10 @@ class CreateAgendaFragment : Fragment() {
                     // If the item has an ID, delete it from Firebase
                     if (itemToRemove.abbreviation.isNotBlank()) {
                         viewLifecycleOwner.lifecycleScope.launch {
-                            viewModel.deleteAbbreviation(
-                                meetingId = meetingId,
-                                abbreviationKey = itemToRemove.abbreviation
-                            )
+//                            viewModel.deleteAbbreviation(
+//                                meetingId = meetingId,
+//                                abbreviationKey = itemToRemove.abbreviation
+//                            )
                         }
                     }
 
@@ -149,7 +148,7 @@ class CreateAgendaFragment : Fragment() {
                 binding.missionEditText.text?.toString().orEmpty()
             )
 
-            viewModel.saveClubInfo()
+//            viewModel.saveClubInfo()
         }
         binding.cancelClubInfoButton.setOnClickListener {
             viewModel.toggleClubInfoEdit()

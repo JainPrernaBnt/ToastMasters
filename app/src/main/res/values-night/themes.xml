@@ -15,7 +15,7 @@
         <item name="colorOnSecondaryContainer">@color/teal_900</item>
 
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <item name="android:statusBarColor">@color/primary</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
 
         <!-- Color attributes -->

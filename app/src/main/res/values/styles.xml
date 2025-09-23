@@ -9,7 +9,7 @@
         <item name="colorOnSecondary">@color/on_secondary</item>
         <item name="colorError">@color/error</item>
         <item name="colorOnError">@color/on_error</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/primary</item>
         <item name="android:navigationBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">true</item>
         <!-- Remove windowLightNavigationBar as it requires API 27+ -->
@@ -169,15 +169,15 @@
     </style>
 
     <!-- Dialog Theme -->
-    <style name="Theme.ToastMasters.Dialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryDark">@color/purple_700</item>
-        <item name="colorAccent">@color/teal_200</item>
-        <item name="android:textColorPrimary">@color/on_surface</item>
-        <item name="android:windowBackground">@android:color/white</item>
-        <item name="android:windowMinWidthMajor">@dimen/dialog_min_width</item>
-        <item name="android:windowMinWidthMinor">@dimen/dialog_min_width</item>
-    </style>
+<!--    <style name="Theme.ToastMasters.Dialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">-->
+<!--        <item name="colorPrimary">@color/purple_500</item>-->
+<!--        <item name="colorPrimaryDark">@color/purple_700</item>-->
+<!--        <item name="colorAccent">@color/teal_200</item>-->
+<!--        <item name="android:textColorPrimary">@color/on_surface</item>-->
+<!--        <item name="android:windowBackground">@android:color/white</item>-->
+<!--        <item name="android:windowMinWidthMajor">@dimen/dialog_min_width</item>-->
+<!--        <item name="android:windowMinWidthMinor">@dimen/dialog_min_width</item>-->
+<!--    </style>-->
 
 
     <!-- Setting Item Style -->

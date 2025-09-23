@@ -44,7 +44,6 @@ class UserEntityMapper @Inject constructor() {
             name = domain.name,
             email = domain.email,
             number = domain.phoneNumber.toIntOrNull() ?: 0,
-            password = "", // Password is managed by Firebase Auth
             address = domain.address,
             level = domain.level?.toIntOrNull() ?: 0,
             gender = domain.gender,

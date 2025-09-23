@@ -43,15 +43,34 @@ class FirestoreService @Inject constructor(
 
     suspend fun updateUserSession(userId: String, deviceId: String) {
         val updates = hashMapOf<String, Any>(
-            "deviceId" to deviceId,
             "lastLogin" to System.currentTimeMillis()
         )
         
-        // Update user document
-        firestore.collection(USERS_COLLECTION).document(userId)
-            .update(updates).await()
+        // Get current session data
+        val sessionDoc = firestore.collection(USER_SESSIONS_COLLECTION).document(userId).get().await()
+        
+        if (sessionDoc.exists()) {
+            // Add new device ID to existing list or create new list
+            val existingDevices = sessionDoc.get("deviceIds") as? List<String> ?: emptyList()
+            val updatedDevices = if (existingDevices.contains(deviceId)) {
+                existingDevices // Device already exists, no need to add
+            } else {
+                existingDevices + deviceId // Add new device
+            }
             
-        // Create/update session document
+            updates["deviceIds"] = updatedDevices
+            updates["isActive"] = true
+        } else {
+            // Create new session with this device
+            updates["deviceIds"] = listOf(deviceId)
+            updates["isActive"] = true
+        }
+        
+        // Update user document with current device (for backward compatibility)
+        firestore.collection(USERS_COLLECTION).document(userId)
+            .update(mapOf("deviceId" to deviceId, "lastLogin" to updates["lastLogin"]!!)).await()
+            
+        // Create/update session document with multiple device support
         firestore.collection(USER_SESSIONS_COLLECTION).document(userId)
             .set(updates).await()
     }

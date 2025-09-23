@@ -14,11 +14,10 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(userEntity: UserEntity)
 
-    @Query("""SELECT * FROM members WHERE (email = :identifier OR number = :numberIdentifier)AND password = :password LIMIT 1""")
+    @Query("""SELECT * FROM members WHERE (email = :identifier OR number = :numberIdentifier)""")
     suspend fun login(
         identifier: String,         // for email
-        numberIdentifier: Int?,     // for number
-        password: String
+        numberIdentifier: Int?    // for number
     ): UserEntity?
 
     @Query("UPDATE members SET isApproved = 1 WHERE id = :userId")

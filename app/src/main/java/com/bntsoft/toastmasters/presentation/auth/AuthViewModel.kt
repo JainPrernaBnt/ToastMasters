@@ -98,6 +98,7 @@ class AuthViewModel @Inject constructor(
                         Settings.Secure.ANDROID_ID
                     ) ?: UUID.randomUUID().toString()
                     
+                    // Update user session to include this new device alongside existing ones
                     firestoreService.updateUserSession(firebaseUser.uid, deviceId)
                     
                     // Get the updated user data

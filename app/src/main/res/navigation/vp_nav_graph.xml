@@ -75,6 +75,12 @@
         <action
             android:id="@+id/action_leaderboardFragment_to_dashboardFragment"
             app:destination="@id/dashboardFragment" />
+        <action
+            android:id="@+id/action_leaderboardFragment_to_recentMeetingDetailFragment"
+            app:destination="@id/recentMeetingDetailFragment" />
+        <action
+            android:id="@+id/action_leaderboardFragment_to_pastMeetingsFragment"
+            app:destination="@id/pastMeetingsFragment" />
     </fragment>
 
     <fragment
@@ -202,4 +208,22 @@
         android:id="@+id/reportsDataFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.reports.ReportsDataFragment"
         android:label="ReportsDataFragment" />
+    <fragment
+        android:id="@+id/pastMeetingsFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.PastMeetingsFragment"
+        android:label="PastMeetingsFragment"
+        tools:layout="@layout/fragment_past_meetings">
+        <action
+            android:id="@+id/action_pastMeetingsFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/recentMeetingDetailFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.RecentMeetingDetailFragment"
+        android:label="RecentMeetingDetailFragment"
+        tools:layout="@layout/fragment_recent_meeting_detail">
+        <action
+            android:id="@+id/action_recentMeetingDetailFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
+    </fragment>
 </navigation>

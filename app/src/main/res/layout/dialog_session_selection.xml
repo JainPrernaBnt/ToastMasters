@@ -4,80 +4,130 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
-    android:backgroundTint="@android:color/transparent"
-    app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="24dp"
-    app:cardElevation="2dp">
+    android:background="@drawable/dialog_background"
+    app:cardCornerRadius="24dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
+        android:padding="24dp"
         android:gravity="center_horizontal">
 
-        <!-- Title with playful emoji -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/dialogTitle"
+        <!-- Header with icon -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_sessions"
+                app:tint="@color/primary"
+                android:layout_marginEnd="12dp"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/dialogTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_medium"
+                android:gravity="center"
+                android:text="Select Session Type"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Session options with icons -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/primary_light"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPreparedSpeeches"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:fontFamily="@font/poppins"
+                android:text="Prepared Speeches"
+                android:textAllCaps="false"
+                android:textColor="@color/primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="start|center_vertical"
+                android:padding="16dp"
+                app:cornerRadius="14dp"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="0dp" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/primary_light"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEvaluation"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:fontFamily="@font/poppins"
+                android:text="Evaluation"
+                android:textAllCaps="false"
+                android:textColor="@color/primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="start|center_vertical"
+                android:padding="16dp"
+                app:cornerRadius="14dp"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="0dp" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
-            android:fontFamily="@font/poppins_medium"
-            android:gravity="center"
-            android:text="Select Session Type"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            app:cardBackgroundColor="@color/primary_light"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp">
 
-        <!-- Buttons - modern GenZ look -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnPreparedSpeeches"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:fontFamily="@font/poppins"
-            android:text="Prepared Speeches"
-            android:textAllCaps="false"
-            android:textColor="@color/purple_200"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:cornerRadius="20dp"
-            app:strokeColor="@color/purple_200"
-            app:strokeWidth="2dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRolePlayers"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:fontFamily="@font/poppins"
+                android:text="Role Players Report"
+                android:textAllCaps="false"
+                android:textColor="@color/primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="start|center_vertical"
+                android:padding="16dp"
+                app:cornerRadius="14dp"
+                app:strokeColor="@android:color/transparent"
+                app:strokeWidth="0dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnEvaluation"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:fontFamily="@font/poppins"
-            android:text="Evaluation"
-            android:textAllCaps="false"
-            android:textColor="@color/purple_200"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:cornerRadius="20dp"
-            app:strokeColor="@color/purple_200"
-            app:strokeWidth="2dp" />
+        </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnRolePlayers"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:fontFamily="@font/poppins"
-            android:text="Role Players Report"
-            android:textAllCaps="false"
-            android:textColor="@color/purple_200"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:cornerRadius="20dp"
-            app:strokeColor="@color/purple_200"
-            app:strokeWidth="2dp" />
-
+        <!-- Custom session button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCustomSession"
             style="@style/Widget.Material3.Button.TextButton"
@@ -85,10 +135,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:fontFamily="@font/poppins_medium"
-            android:text="+ Add Another Session"
+            android:text="+ Add Custom Session"
             android:textAllCaps="false"
-            android:textColor="@color/purple_200"
-            android:textSize="14sp" />
+            android:textColor="@color/primary"
+            android:textSize="16sp"
+            app:cornerRadius="20dp" />
 
     </LinearLayout>
 

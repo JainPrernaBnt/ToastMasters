@@ -14,24 +14,11 @@ data class Meeting(
     val roleCounts: Map<String, Int> = emptyMap(),
     val assignedRoles: Map<String, String> = emptyMap(),
     val assignedCounts: Map<String, Int> = emptyMap(),
-    val officers: Map<String, String> = emptyMap(),
     @get:Exclude
     val isLoading: Boolean = false,
     @get:Exclude
     val error: String? = null
 ) {
-    companion object {
-        val DEFAULT_OFFICER_ROLES = listOf(
-            "President",
-            "VP Education",
-            "VP Membership",
-            "VP Public Relations",
-            "SAA",
-            "Secretary",
-            "Treasurer",
-            "Immediate Past President"
-        )
-    }
 
     @Exclude
     fun toMap(): Map<String, Any> {
@@ -41,7 +28,6 @@ data class Meeting(
             "startTime" to startTime,
             "endTime" to endTime,
             "venue" to venue,
-            "officers" to officers
         )
     }
 }

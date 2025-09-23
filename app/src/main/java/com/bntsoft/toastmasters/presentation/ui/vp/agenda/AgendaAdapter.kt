@@ -178,25 +178,33 @@ class AgendaAdapter(
                     val viewType = getItemViewType(position)
                     holder.bind(item, viewType)
 
-                    // Only set click listeners for normal items
-                    if (viewType == VIEW_TYPE_ITEM) {
-                        // Set click listener for the item
-                        holder.itemView.setOnClickListener {
-                            onItemClick(item)
+                    // Set click listeners for draggable items
+                    if (viewType == VIEW_TYPE_ITEM ||
+                        viewType == VIEW_TYPE_TIME_BREAK ||
+                        viewType == VIEW_TYPE_SESSION) {
+
+                        // Click listener only for normal items
+                        if (viewType == VIEW_TYPE_ITEM) {
+                            holder.itemView.setOnClickListener {
+                                onItemClick(item)
+                            }
+                        } else {
+                            holder.itemView.setOnClickListener(null)
                         }
 
-                        // Set long click listener for drag (only for VP Education)
                         holder.itemView.setOnLongClickListener {
                             if (isVpEducation && canDrag(position)) {
                                 onStartDrag(holder)
                             }
                             true
                         }
+
                     } else {
-                        // Clear click listeners for non-normal items
+                        // For ADD button or other view types
                         holder.itemView.setOnClickListener(null)
                         holder.itemView.setOnLongClickListener(null)
                     }
+
                 }
             }
 
@@ -242,43 +250,6 @@ class AgendaAdapter(
                 else -> onBindViewHolder(holder, position)
             }
         }
-    }
-
-    private fun recalculateTimes() {
-        if (_items.isEmpty()) return
-
-        val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-        val calendar = Calendar.getInstance()
-
-        // Use the first item's time if it exists, otherwise use current time
-        val firstTime = if (_items[0].time.isNotBlank()) {
-            timeFormat.parse(_items[0].time) ?: Calendar.getInstance().time
-        } else {
-            Calendar.getInstance().time
-        }
-
-        // Update the first item's time
-        _items[0] = _items[0].copy(time = timeFormat.format(firstTime))
-
-        // Start with the first item's time
-        calendar.time = firstTime
-
-        // Recalculate times for all items
-        for (i in 0 until _items.size) {
-            if (i > 0) {
-                // For items after the first, add the previous item's red time (convert from seconds to minutes)
-                val prevItem = _items[i - 1]
-                calendar.add(Calendar.MINUTE, (prevItem.redTime / 60).coerceAtLeast(0))
-
-                // Update current item's time
-                _items[i] = _items[i].copy(time = timeFormat.format(calendar.time))
-            }
-
-            Log.d("AgendaAdapter", "Recalculated time for item $i: ${_items[i].time}")
-        }
-
-        // Notify the adapter that data has changed
-        notifyDataSetChanged()
     }
 
     inner class AddButtonViewHolder(
@@ -354,26 +325,26 @@ class AgendaAdapter(
                     itemView.isClickable = true
                     itemView.isFocusable = true
                 }
+                // Always allow long clicks for drag functionality
+                itemView.isLongClickable = true
             }
         }
     }
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
-        if (fromPosition < 0 || toPosition < 0 || fromPosition >= _items.size || toPosition >= _items.size) {
-            return false
+        if (fromPosition == toPosition) return false
+
+        val items = _items.toMutableList()
+        val movingItem = items.removeAt(fromPosition)
+        items.add(toPosition, movingItem)
+
+        // Update orderIndex
+        items.forEachIndexed { index, item ->
+            item.orderIndex = index
         }
 
-        val from = _items[fromPosition]
-        val to = _items[toPosition]
-
-        // Swap the items
-        _items[fromPosition] = to
-        _items[toPosition] = from
-
-        // Update order indices
-        _items[fromPosition].orderIndex = fromPosition
-        _items[toPosition].orderIndex = toPosition
-
+        _items.clear()
+        _items.addAll(items)
         notifyItemMoved(fromPosition, toPosition)
         onItemsUpdated(_items)
         return true
@@ -389,9 +360,13 @@ class AgendaAdapter(
     }
 
     override fun canDrag(position: Int): Boolean {
-        // Only allow dragging normal items (not time breaks, sessions, or the add button)
-        return position < _items.size &&
-                getItemViewType(position) == VIEW_TYPE_ITEM
+        // Allow dragging normal items, time breaks, and sessions (not the add button)
+        val canDrag = position < _items.size &&
+                (getItemViewType(position) == VIEW_TYPE_ITEM || 
+                 getItemViewType(position) == VIEW_TYPE_TIME_BREAK || 
+                 getItemViewType(position) == VIEW_TYPE_SESSION)
+        Log.d("AgendaAdapter", "canDrag($position): $canDrag, viewType=${getItemViewType(position)}, isVpEducation=$isVpEducation")
+        return canDrag
     }
 
     override fun canSwipe(position: Int): Boolean {
@@ -406,14 +381,3 @@ interface ItemTouchHelperAdapter {
     fun canDrag(position: Int): Boolean
     fun canSwipe(position: Int): Boolean
 }
-
-interface ItemTouchHelperViewHolder {
-    fun onItemSelected()
-    fun onItemClear()
-}
-
-interface OnStartDragListener {
-    fun onStartDrag(viewHolder: RecyclerView.ViewHolder)
-}
-
-

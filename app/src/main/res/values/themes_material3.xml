@@ -14,7 +14,7 @@
         <item name="colorOnSecondary">@color/black</item>
 
         <!-- Status bar -->
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">@color/primary</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
 
         <!-- Buttons -->

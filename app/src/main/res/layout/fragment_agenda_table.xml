@@ -130,22 +130,6 @@
             app:rippleColor="@color/green_500"
             app:strokeColor="@color/green_700"
             app:strokeWidth="1dp" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/exportButton"
-            style="@style/Widget.MaterialComponents.Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:drawablePadding="8dp"
-            android:text="Export as PDF"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            app:backgroundTint="@color/red_500"
-            app:cornerRadius="8dp"
-            app:iconGravity="textStart"
-            app:rippleColor="@color/red_200"
-            app:strokeColor="@color/red_700"
-            app:strokeWidth="1dp" />
     </LinearLayout>
 
     <!-- FAB positioned above the export button -->

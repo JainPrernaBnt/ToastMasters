@@ -54,20 +54,6 @@ class MeetingsViewModel @Inject constructor(
     private val auth: FirebaseAuth
 ) : ViewModel() {
 
-    companion object {
-        private const val PREF_LATEST_OFFICERS = "latest_officers"
-        private val DEFAULT_OFFICERS = mapOf(
-            "President" to "TM Raghvendra Tiwari",
-            "VPE" to "TM Sanchit Hundare",
-            "VPM" to "TM Harshada Pandure",
-            "Secretary" to "TM Manuel Tholath",
-            "Treasurer" to "TM Sushant Ulavi",
-            "SAA" to "TM Vaishali Menon",
-            "IPP" to "TM Kiran Nawale",
-            "VPPR" to "TM Suraj Krishnamoorthy"
-        )
-    }
-
     private val _uiState = MutableStateFlow<MeetingsUiState>(MeetingsUiState.Loading)
     val uiState: StateFlow<MeetingsUiState> = _uiState.asStateFlow()
 
@@ -89,24 +75,6 @@ class MeetingsViewModel @Inject constructor(
     private val _updateMeetingState = MutableStateFlow<UpdateMeetingState>(UpdateMeetingState.Idle)
     val updateMeetingState: StateFlow<UpdateMeetingState> = _updateMeetingState.asStateFlow()
 
-    // Store the latest officers to use for new meetings
-    private var _latestOfficers = MutableStateFlow(loadLatestOfficers())
-    val latestOfficers: StateFlow<Map<String, String>> = _latestOfficers.asStateFlow()
-
-    private fun loadLatestOfficers(): Map<String, String> {
-        return try {
-            val json = sharedPreferences.getString(PREF_LATEST_OFFICERS, null)
-            if (json.isNullOrEmpty()) {
-                DEFAULT_OFFICERS
-            } else {
-                val type = object : TypeToken<Map<String, String>>() {}.type
-                Gson().fromJson(json, type) ?: DEFAULT_OFFICERS
-            }
-        } catch (e: Exception) {
-            Log.e("MeetingsViewModel", "Error loading latest officers from SharedPreferences", e)
-            DEFAULT_OFFICERS
-        }
-    }
 
     init {
         loadMeetings()
@@ -285,23 +253,9 @@ class MeetingsViewModel @Inject constructor(
             location = this.venue,
             roleCounts = this.roleCounts,
             assignedCounts = this.assignedCounts,
-            officers = this.officers,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
-    }
-
-    // Call this method whenever officers are updated in a meeting
-    fun updateLatestOfficers(officers: Map<String, String>) {
-        try {
-            val json = Gson().toJson(officers)
-            sharedPreferences.edit()
-                .putString(PREF_LATEST_OFFICERS, json)
-                .apply()
-            _latestOfficers.value = officers
-        } catch (e: Exception) {
-            Log.e("MeetingsViewModel", "Error saving latest officers to SharedPreferences", e)
-        }
     }
 
     fun createMeeting(
@@ -325,53 +279,12 @@ class MeetingsViewModel @Inject constructor(
                 return@launch
             }
 
-            // Create the meeting with the latest officers
-            val meetingWithOfficers = domainMeeting.copy(officers = _latestOfficers.value)
-            val meetingResult = meetingRepository.createMeeting(meetingWithOfficers)
+            val meetingResult = meetingRepository.createMeeting(domainMeeting)
 
             if (meetingResult is Resource.Success) {
                 val createdMeeting = meetingResult.data
                 if (createdMeeting != null) {
                     Log.d("MeetingsViewModel", "Meeting creation successful: ${createdMeeting.id}")
-
-                    // Create a default agenda for the meeting
-                    val defaultAgenda = MeetingAgenda(
-                        id = createdMeeting.id,
-                        meetingDate = Timestamp.now(),
-                        startTime = createdMeeting.dateTime.toLocalTime().toString(),
-                        endTime = createdMeeting.endDateTime?.toLocalTime()?.toString() ?: "",
-                        officers = _latestOfficers.value,
-                        agendaStatus = AgendaStatus.DRAFT,
-                        createdAt = Timestamp.now(),
-                        updatedAt = Timestamp.now()
-                    )
-
-                    try {
-                        val agendaResult = meetingAgendaRepository.saveMeetingAgenda(defaultAgenda)
-                        if (agendaResult is com.bntsoft.toastmasters.utils.Result.Success<*>) {
-                            Log.d(
-                                "MeetingsViewModel",
-                                "Default agenda created successfully for meeting ${createdMeeting.id}"
-                            )
-
-                            // Also update the meeting with the agenda ID
-                            meetingRepository.updateMeeting(
-                                createdMeeting.copy(
-                                    agendaId = createdMeeting.id,
-                                    updatedAt = System.currentTimeMillis()
-                                )
-                            )
-                        } else if (agendaResult is com.bntsoft.toastmasters.utils.Result.Error) {
-                            Log.e(
-                                "MeetingsViewModel",
-                                "Failed to create default agenda: ${agendaResult.exception?.message}"
-                            )
-                            // Even if agenda creation fails, we still consider the meeting creation successful
-                        }
-                    } catch (e: Exception) {
-                        Log.e("MeetingsViewModel", "Error saving default agenda", e)
-                        // Even if agenda creation fails, we still consider the meeting creation successful
-                    }
 
                     Log.d(
                         "MeetingsViewModel",

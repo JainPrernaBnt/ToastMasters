@@ -58,11 +58,15 @@ class AuthRepositoryImpl @Inject constructor(
                 
                 // If there's an existing session on a different device
                 if (currentSession != null) {
-                    val sessionDeviceId = currentSession["deviceId"]?.toString()
-                    if (sessionDeviceId != null && sessionDeviceId != currentDeviceId) {
+                    val sessionDeviceIds = currentSession["deviceIds"] as? List<String>
+                    val singleDeviceId = currentSession["deviceId"]?.toString() // For backward compatibility
+                    
+                    val existingDevices = sessionDeviceIds ?: (singleDeviceId?.let { listOf(it) } ?: emptyList())
+                    
+                    if (existingDevices.isNotEmpty() && !existingDevices.contains(currentDeviceId)) {
                         // Return a special result indicating device conflict
                         return AuthResult.DeviceConflict<User>(
-                            message = "This account is already logged in on another device. Do you want to sign out there and continue here?",
+                            message = "This account is already logged in on another device. Do you want to continue logging in on this device as well?",
                             email = emailToUse,
                             password = password
                         )

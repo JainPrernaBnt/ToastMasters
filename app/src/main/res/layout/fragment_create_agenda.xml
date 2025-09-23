@@ -47,7 +47,7 @@
                     <View
                         android:layout_width="24dp"
                         android:layout_height="1dp"
-                        android:background="@color/purple_200" />
+                        android:background="@color/primary" />
 
                     <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step2Indicator"
@@ -62,7 +62,7 @@
                     <View
                         android:layout_width="24dp"
                         android:layout_height="1dp"
-                        android:background="@color/purple_200" />
+                        android:background="@color/primary" />
 
                     <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step3Indicator"
@@ -77,7 +77,7 @@
                     <View
                         android:layout_width="24dp"
                         android:layout_height="1dp"
-                        android:background="@color/purple_200" />
+                        android:background="@color/primary" />
 
                     <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step4Indicator"
@@ -92,7 +92,7 @@
                     <View
                         android:layout_width="24dp"
                         android:layout_height="1dp"
-                        android:background="@color/purple_200" />
+                        android:background="@color/primary" />
 
                     <com.bntsoft.toastmasters.utils.StepIndicatorView
                         android:id="@+id/step5Indicator"
@@ -121,9 +121,9 @@
                         android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:text="@string/previous"
-                        android:textColor="@color/purple_500"
+                        android:textColor="@color/primary"
                         android:visibility="invisible"
-                        app:strokeColor="@color/purple_500"
+                        app:strokeColor="@color/primary"
                         app:strokeWidth="1dp" />
 
                     <com.google.android.material.button.MaterialButton
@@ -132,12 +132,12 @@
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_weight="1"
-                        android:backgroundTint="@color/purple_500"
+                        android:backgroundTint="@color/primary"
                         android:text="@string/next"
                         android:textColor="@color/white"
                         app:cornerRadius="8dp"
-                        app:rippleColor="@color/purple_200"
-                        app:strokeColor="@color/purple_700"
+                        app:rippleColor="@color/primary"
+                        app:strokeColor="@color/primary"
                         app:strokeWidth="2dp" />
                 </LinearLayout>
             </LinearLayout>
@@ -166,7 +166,7 @@
                         android:layout_marginBottom="16dp"
                         android:text="@string/meeting_details"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                        android:textColor="@color/purple_700"
+                        android:textColor="@color/primary"
                         android:textStyle="bold" />
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -176,9 +176,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="@string/meeting_theme"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/themeEditText"
@@ -197,11 +197,11 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="@string/meeting_date"
-                        app:boxStrokeColor="@color/purple_200"
+                        app:boxStrokeColor="@color/primary"
                         app:endIconDrawable="@drawable/ic_calendar"
                         app:endIconMode="custom"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/dateEditText"
@@ -228,11 +228,11 @@
                             android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:hint="@string/start_time"
-                            app:boxStrokeColor="@color/purple_200"
+                            app:boxStrokeColor="@color/primary"
                             app:endIconDrawable="@drawable/ic_time"
                             app:endIconMode="custom"
-                            app:endIconTint="@color/purple_500"
-                            app:hintTextColor="@color/purple_500">
+                            app:endIconTint="@color/primary"
+                            app:hintTextColor="@color/primary">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/startTimeEditText"
@@ -252,11 +252,11 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:hint="@string/end_time"
-                            app:boxStrokeColor="@color/purple_200"
+                            app:boxStrokeColor="@color/primary"
                             app:endIconDrawable="@drawable/ic_time"
                             app:endIconMode="custom"
-                            app:endIconTint="@color/purple_500"
-                            app:hintTextColor="@color/purple_500">
+                            app:endIconTint="@color/primary"
+                            app:hintTextColor="@color/primary">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/endTimeEditText"
@@ -277,9 +277,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:hint="@string/venue"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/venueEditText"
@@ -323,7 +323,7 @@
                             android:layout_weight="1"
                             android:text="Club Information"
                             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-                            android:textColor="@color/purple_700"
+                            android:textColor="@color/primary"
                             android:textStyle="bold" />
 
                         <com.google.android.material.button.MaterialButton
@@ -332,11 +332,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/edit"
-                            android:textColor="@color/purple_500"
+                            android:textColor="@color/primary"
                             android:visibility="visible"
                             app:icon="@drawable/ic_edit"
                             app:iconGravity="textEnd"
-                            app:iconTint="@color/purple_500" />
+                            app:iconTint="@color/primary" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/saveClubInfoButton"
@@ -370,8 +370,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:hint="Club Name"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/clubNameEditText"
@@ -398,8 +398,8 @@
                             android:layout_marginEnd="8dp"
                             android:layout_weight="1"
                             android:hint="Club Number"
-                            app:boxStrokeColor="@color/purple_200"
-                            app:hintTextColor="@color/purple_500">
+                            app:boxStrokeColor="@color/primary"
+                            app:hintTextColor="@color/primary">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/clubNumberEditText"
@@ -419,8 +419,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:hint="Area"
-                            app:boxStrokeColor="@color/purple_200"
-                            app:hintTextColor="@color/purple_500">
+                            app:boxStrokeColor="@color/primary"
+                            app:hintTextColor="@color/primary">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/areaEditText"
@@ -441,8 +441,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="District"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/districtEditText"
@@ -461,8 +461,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Our Club Mission"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/missionEditText"
@@ -510,7 +510,7 @@
                             android:layout_weight="1"
                             android:text="@string/officers"
                             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                            android:textColor="@color/purple_700"
+                            android:textColor="@color/primary"
                             android:textStyle="bold" />
 
                         <com.google.android.material.button.MaterialButton
@@ -519,11 +519,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/edit"
-                            android:textColor="@color/purple_500"
+                            android:textColor="@color/primary"
                             android:visibility="visible"
                             app:icon="@drawable/ic_edit"
                             app:iconGravity="textEnd"
-                            app:iconTint="@color/purple_500" />
+                            app:iconTint="@color/primary" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/saveOfficersButton"
@@ -557,9 +557,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="President"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/presidentEditText"
@@ -581,9 +581,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="VP Education"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/vpEducationEditText"
@@ -605,9 +605,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="VP Membership"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/vpMembershipEditText"
@@ -629,9 +629,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="VP Public Relation"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/vpPublicRelationEditText"
@@ -653,9 +653,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="Secretary"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/secretaryEditText"
@@ -677,9 +677,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="Treasurer"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/treasurerEditText"
@@ -701,9 +701,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="Sergeant at Arms (SAA)"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/saaEditText"
@@ -725,9 +725,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="Immediate Past President (IPP)"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/ippEditText"
@@ -772,7 +772,7 @@
                             android:layout_weight="1"
                             android:text="@string/grammarian_details"
                             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                            android:textColor="@color/purple_700"
+                            android:textColor="@color/primary"
                             android:textStyle="bold" />
 
                         <com.google.android.material.button.MaterialButton
@@ -781,10 +781,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/edit"
-                            android:textColor="@color/purple_500"
+                            android:textColor="@color/primary"
                             app:icon="@drawable/ic_edit"
                             app:iconGravity="textStart"
-                            app:iconTint="@color/purple_500" />
+                            app:iconTint="@color/primary" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/saveGrammarianButton"
@@ -792,11 +792,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/save"
-                            android:textColor="@color/purple_500"
+                            android:textColor="@color/primary"
                             android:visibility="gone"
                             app:icon="@drawable/ic_save"
                             app:iconGravity="textStart"
-                            app:iconTint="@color/purple_500" />
+                            app:iconTint="@color/primary" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/cancelGrammarianButton"
@@ -804,11 +804,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/cancel"
-                            android:textColor="@color/purple_500"
+                            android:textColor="@color/primary"
                             android:visibility="gone"
                             app:icon="@drawable/ic_close"
                             app:iconGravity="textStart"
-                            app:iconTint="@color/purple_500" />
+                            app:iconTint="@color/primary" />
                     </LinearLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -818,9 +818,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:hint="@string/word_of_the_day"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/wordOfDayEditText"
@@ -840,9 +840,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:hint="@string/word_meaning"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/wordMeaningEditText"
@@ -862,9 +862,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:hint="@string/word_examples"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/wordExamplesEditText"
@@ -881,7 +881,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="16dp"
-                        android:background="@color/purple_200" />
+                        android:background="@color/primary" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/idiomInputLayout"
@@ -889,9 +889,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/idiom_phrase_of_the_day"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/idiomEditText"
@@ -911,9 +911,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:hint="@string/idiom_meaning"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/idiomMeaningEditText"
@@ -933,9 +933,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:hint="@string/idiom_examples"
-                        app:boxStrokeColor="@color/purple_200"
-                        app:endIconTint="@color/purple_500"
-                        app:hintTextColor="@color/purple_500">
+                        app:boxStrokeColor="@color/primary"
+                        app:endIconTint="@color/primary"
+                        app:hintTextColor="@color/primary">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/idiomExamplesEditText"
@@ -980,7 +980,7 @@
                             android:layout_weight="1"
                             android:text="@string/abbreviation"
                             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                            android:textColor="@color/purple_700"
+                            android:textColor="@color/primary"
                             android:textStyle="bold" />
 
                         <com.google.android.material.button.MaterialButton
@@ -991,7 +991,7 @@
                             android:text="@string/add"
                             app:icon="@drawable/ic_add"
                             app:iconGravity="textStart"
-                            app:iconTint="@color/purple_700" />
+                            app:iconTint="@color/primary" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/saveAbbreviationsButton"
@@ -1002,7 +1002,7 @@
                             android:visibility="gone"
                             app:icon="@drawable/ic_save"
                             app:iconGravity="textStart"
-                            app:iconTint="@color/purple_700" />
+                            app:iconTint="@color/primary" />
                     </LinearLayout>
 
                     <androidx.core.widget.ContentLoadingProgressBar
@@ -1056,8 +1056,8 @@
                         app:iconGravity="textStart"
                         app:iconPadding="12dp"
                         app:iconTint="@color/white"
-                        app:rippleColor="@color/purple_200"
-                        app:strokeColor="@color/purple_700"
+                        app:rippleColor="@color/primary"
+                        app:strokeColor="@color/primary"
                         app:strokeWidth="2dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -1070,7 +1070,7 @@
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:layout_gravity="center"
-        android:indeterminateTint="@color/purple_500"
+        android:indeterminateTint="@color/primary"
         android:visibility="gone"
         app:indicatorSize="64dp"
         app:trackThickness="4dp" />

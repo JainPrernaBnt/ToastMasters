@@ -2,11 +2,13 @@ package com.bntsoft.toastmasters.presentation.ui.vp.agenda
 
 import android.app.Dialog
 import android.content.Context
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.Window
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.fragment.app.DialogFragment.STYLE_NORMAL
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
 import com.bntsoft.toastmasters.databinding.DialogCustomSessionBinding
@@ -53,13 +55,20 @@ object AgendaDialogs {
 
         dialog.show()
         dialog.window?.apply {
-            setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            // Get display width in pixels
+            val displayMetrics = context.resources.displayMetrics
+            val dialogWidth = (displayMetrics.widthPixels * 0.90f).toInt() // 90% width, use 0.80f for 80%
+
+            setLayout(dialogWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
             setBackgroundDrawableResource(android.R.color.transparent)
+
             val lp = attributes
             lp.dimAmount = 0f
             attributes = lp
+
             clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         }
+
     }
 
     private fun showCustomSessionDialog(context: Context, listener: OnSessionSelectedListener) {
@@ -85,13 +94,20 @@ object AgendaDialogs {
 
         dialog.show()
         dialog.window?.apply {
-            setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            // Get display width in pixels
+            val displayMetrics = context.resources.displayMetrics
+            val dialogWidth = (displayMetrics.widthPixels * 0.90f).toInt() // 90% width, use 0.80f for 80%
+
+            setLayout(dialogWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
             setBackgroundDrawableResource(android.R.color.transparent)
+
             val lp = attributes
             lp.dimAmount = 0f
             attributes = lp
+
             clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         }
+
     }
 
     fun showTimeBreakDialog(context: Context, listener: OnTimeBreakSetListener) {
@@ -126,12 +142,19 @@ object AgendaDialogs {
 
         dialog.show()
         dialog.window?.apply {
-            setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            // Get display width in pixels
+            val displayMetrics = context.resources.displayMetrics
+            val dialogWidth = (displayMetrics.widthPixels * 0.90f).toInt() // 90% width, use 0.80f for 80%
+
+            setLayout(dialogWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
             setBackgroundDrawableResource(android.R.color.transparent)
+
             val lp = attributes
             lp.dimAmount = 0f
             attributes = lp
+
             clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         }
+
     }
 }

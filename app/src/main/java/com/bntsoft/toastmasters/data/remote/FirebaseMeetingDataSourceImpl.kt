@@ -333,9 +333,7 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                 "assignedCounts" to dto.assignedCounts,
                 "createdAt" to dto.createdAt,
                 "status" to dto.status.name,
-                "officers" to (dto.officers ?: emptyMap()),
                 "assignedRoles" to (dto.assignedRoles ?: emptyMap()),
-                "agendaId" to (dto.agendaId ?: ""),
                 "isRecurring" to (dto.isRecurring ?: false),
                 "createdBy" to (dto.createdBy ?: ""),
                 "updatedAt" to FieldValue.serverTimestamp()
@@ -371,8 +369,6 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
                     "theme" to dto.theme,
                     "updatedAt" to FieldValue.serverTimestamp(),
                     "status" to dto.status.name,
-                    "officers" to (dto.officers ?: emptyMap()),
-                    "agendaId" to dto.agendaId
                 )
 
                 // Update roleCounts if they're provided

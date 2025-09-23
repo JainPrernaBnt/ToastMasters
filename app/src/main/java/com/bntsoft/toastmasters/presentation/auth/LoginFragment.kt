@@ -294,8 +294,31 @@ class LoginFragment : Fragment() {
                     }
                     .collect { sessionData ->
                         val isSessionActive = sessionData?.get("isActive") as? Boolean ?: false
+                        
                         if (!isSessionActive && isAdded && isActivityActive()) {
-                            showSessionTerminatedDialog()
+                            // Check if this device is still in the allowed devices list
+                            val deviceIds = sessionData?.get("deviceIds") as? List<String>
+                            val singleDeviceId = sessionData?.get("deviceId")?.toString() // For backward compatibility
+                            
+                            val currentDeviceId = try {
+                                android.provider.Settings.Secure.getString(
+                                    requireContext().contentResolver,
+                                    android.provider.Settings.Secure.ANDROID_ID
+                                )
+                            } catch (e: Exception) {
+                                null
+                            }
+                            
+                            val allowedDevices = deviceIds ?: (singleDeviceId?.let { listOf(it) } ?: emptyList())
+                            
+                            // Only show session terminated dialog if this device is not in the allowed list
+                            // or if the session is explicitly deactivated (not just due to multi-device login)
+                            if (currentDeviceId != null && !allowedDevices.contains(currentDeviceId)) {
+                                showSessionTerminatedDialog()
+                            } else if (sessionData?.get("forceLogout") == true) {
+                                // Only force logout if explicitly requested
+                                showSessionTerminatedDialog()
+                            }
                         }
                     }
             } catch (e: Exception) {
