@@ -127,7 +127,7 @@ class RecentMeetingDetailFragment : Fragment() {
 
         firestore.collection(MEETINGS_COLLECTION)
             .whereEqualTo("status", MeetingStatus.COMPLETED)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .orderBy("updatedAt", Query.Direction.DESCENDING)
             .limit(1)
             .get()
             .addOnSuccessListener { snapshot ->
