@@ -42,6 +42,24 @@
                     android:textColorHint="@color/secondary" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Loading Progress Bar -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="32dp"
+                android:visibility="gone"
+                android:indeterminateTint="@color/primary" />
+
+            <!-- Meetings Content Container -->
+            <LinearLayout
+                android:id="@+id/contentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
             <!-- Upcoming Meetings Section -->
             <LinearLayout
                 android:id="@+id/headerUpcoming"
@@ -74,6 +92,7 @@
                 android:id="@+id/rvUpcomingMeetings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:minHeight="48dp"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
                 android:orientation="vertical"
@@ -115,6 +134,7 @@
                 android:id="@+id/rvPastMeetings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:minHeight="48dp"
                 android:clipToPadding="false"
                 android:nestedScrollingEnabled="false"
                 android:orientation="vertical"
@@ -123,6 +143,9 @@
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:itemCount="1"
                 tools:listitem="@layout/item_meeting_card" />
+
+            </LinearLayout>
+            <!-- End Meetings Content Container -->
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

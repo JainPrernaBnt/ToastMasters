@@ -12,11 +12,6 @@ fun View.setVisible(visible: Boolean) {
     visibility = if (visible) View.VISIBLE else View.GONE
 }
 
-@BindingAdapter("helperText")
-fun MaterialTextView.setHelperText(text: String?) {
-    this.text = text
-}
-
 @BindingAdapter("helperTextOrDefault")
 fun MaterialTextView.setHelperTextWithDefault(text: String?) {
     this.text = if (text.isNullOrEmpty()) {
@@ -56,27 +51,4 @@ fun MaterialTextView.setToastmastersIdHelperText(tmId: String?) {
 fun MaterialTextView.setClubIdHelperText(clubId: String?) {
     val value = clubId?.ifEmpty { context.getString(android.R.string.unknownName) }
     text = "Club ID: $value"
-}
-
-@BindingAdapter("textOrDefault")
-fun MaterialTextView.setTextWithDefault(text: String?) {
-    this.text = if (text.isNullOrEmpty()) {
-        context.getString(android.R.string.unknownName)
-    } else {
-        text
-    }
-}
-
-@BindingAdapter("hideIfLoading")
-fun View.hideIfLoading(isLoading: Boolean) {
-    visibility = if (isLoading) View.GONE else View.VISIBLE
-}
-
-@BindingAdapter("textOrLoading")
-fun MaterialTextView.setTextOrLoading(isLoading: Boolean) {
-    text = if (isLoading) {
-        context.getString(R.string.loading)
-    } else {
-        text // Keep existing text
-    }
 }

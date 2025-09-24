@@ -82,7 +82,7 @@ class PastMeetingsFragment : Fragment() {
 
         firestore.collection(MEETINGS_COLLECTION)
             .whereEqualTo("status", "COMPLETED")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .orderBy("updatedAt", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { meetingsSnapshot ->
                 val meetings = meetingsSnapshot.documents
@@ -125,6 +125,18 @@ class PastMeetingsFragment : Fragment() {
 
                     // Build a MeetingWithWinners object (only if winners exist)
                     if (winners.isNotEmpty()) {
+                        val createdAtTimestamp = when (val value = meetingDocument.get("createdAt")) {
+                            is com.google.firebase.Timestamp -> value
+                            is Long -> com.google.firebase.Timestamp(Date(value))
+                            else -> null
+                        }
+
+                        val updatedAtTimestamp = when (val value = meetingDocument.get("updatedAt")) {
+                            is com.google.firebase.Timestamp -> value
+                            is Long -> com.google.firebase.Timestamp(Date(value))
+                            else -> null
+                        }
+
                         MeetingWithWinners(
                             meetingId = meetingId,
                             date = dateFormat.format(
@@ -132,8 +144,8 @@ class PastMeetingsFragment : Fragment() {
                             ),
                             theme = meetingDocument.getString("theme") ?: "",
                             winners = winners.sortedBy { it.category.ordinal }, // Optional: sort winners by category
-                            createdAt = meetingDocument.getTimestamp("createdAt"),
-                            updatedAt = meetingDocument.getTimestamp("updatedAt")
+                            createdAt = createdAtTimestamp,
+                            updatedAt = updatedAtTimestamp
                         )
                     } else null
                 }

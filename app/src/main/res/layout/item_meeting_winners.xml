@@ -30,7 +30,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="@color/purple_700"
+                android:textColor="@color/primary"
                 android:textSize="14sp"
                 android:fontFamily="sans-serif-medium"
                 tools:text="Sep 12, 2023" />

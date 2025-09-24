@@ -29,7 +29,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="32dp"
                 android:text="@string/app_name"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/primary"
                 android:textSize="32sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.1" />
@@ -43,9 +43,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_email_or_phone"
-                app:boxStrokeColor="?attr/colorOnSurface"
                 app:endIconMode="clear_text"
-                app:hintTextColor="?attr/colorOnSurface"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
                 app:startIconDrawable="@drawable/ic_email"
                 app:startIconTint="?attr/colorOnSurface">
 
@@ -68,9 +68,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:hint="@string/hint_password"
-                app:boxStrokeColor="?attr/colorOnSurface"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
                 app:endIconMode="password_toggle"
-                app:hintTextColor="?attr/colorOnSurface"
                 app:startIconDrawable="@drawable/ic_lock"
                 app:startIconTint="?attr/colorOnSurface">
 
@@ -95,19 +95,19 @@
                 android:textSize="18sp"
                 android:layout_marginBottom="@dimen/space_medium"
                 android:text="@string/action_forgot_password"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/primary"
                 app:icon="@drawable/ic_key"
-                app:iconTint="?attr/colorPrimary" />
+                app:iconTint="@color/primary" />
 
             <!-- Login Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/loginButton"
-                style="@style/Widget.Material3.Button"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
-                android:backgroundTint="?attr/colorPrimary"
+                android:backgroundTint="@color/primary"
                 android:paddingVertical="@dimen/space_small"
                 android:text="@string/action_login"
                 android:textAllCaps="false"
@@ -127,7 +127,7 @@
                 android:paddingVertical="12dp"
                 android:text="@string/action_sign_up"
                 android:textAllCaps="false"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="@color/primary"
                 android:textSize="14sp"
                 android:drawableEnd="@drawable/ic_arrow_forward" />
 

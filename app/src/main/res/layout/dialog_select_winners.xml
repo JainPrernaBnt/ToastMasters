@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -8,11 +9,12 @@
     <com.google.android.material.textview.MaterialTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Select Meeting Winners"
-        android:textSize="20sp"
-        android:textStyle="bold"
         android:layout_marginBottom="16dp"
-        android:textAlignment="center"/>
+        android:text="Select Meeting Winners"
+        android:textAlignment="center"
+        android:textColor="@color/primary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/bestSpeakerLayout"
@@ -20,15 +22,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:hint="Best Speaker">
+        android:hint="Best Speaker"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary">
 
         <AutoCompleteTextView
             android:id="@+id/bestSpeakerInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none"
             android:clickable="true"
-            android:focusable="false"/>
+            android:focusable="false"
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -37,15 +41,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
         android:hint="Best Evaluator">
 
         <AutoCompleteTextView
             android:id="@+id/bestEvaluatorInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none"
             android:clickable="true"
-            android:focusable="false"/>
+            android:focusable="false"
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -53,6 +59,8 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
         android:layout_marginBottom="8dp"
         android:hint="Best Table Topics Speaker">
 
@@ -60,9 +68,9 @@
             android:id="@+id/bestTableTopicsInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none"
             android:clickable="true"
-            android:focusable="false"/>
+            android:focusable="false"
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -70,6 +78,8 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
         android:layout_marginBottom="8dp"
         android:hint="Best Main Role Player">
 
@@ -77,15 +87,17 @@
             android:id="@+id/bestMainRoleInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none"
             android:clickable="true"
-            android:focusable="false"/>
+            android:focusable="false"
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/bestAuxRoleLayout"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:layout_width="match_parent"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:hint="Best Auxiliary Role Player">
@@ -94,23 +106,29 @@
             android:id="@+id/bestAuxRoleInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="none"
             android:clickable="true"
-            android:focusable="false"/>
+            android:focusable="false"
+            android:inputType="none" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSaveWinners"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="@color/primary"
         android:text="Save Winners"
-        android:layout_marginTop="8dp"/>
+        android:textColor="@color/white" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCancel"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="@color/primary"
         android:text="Cancel"
-        android:layout_marginTop="8dp"/>
+        android:textColor="@color/white" />
 
 </LinearLayout>

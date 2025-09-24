@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base theme that inherits from the Material3 theme (match day theme) -->
-    <style name="Base.Theme.ToastMasters" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Base theme that inherits from the Material3 theme (light mode only) -->
+    <style name="Base.Theme.ToastMasters" parent="Theme.Material3.Light.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryDark">@color/purple_700</item>

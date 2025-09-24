@@ -11,7 +11,6 @@ import java.util.*
 class LeaderboardMeetingAdapter : RecyclerView.Adapter<LeaderboardMeetingAdapter.MeetingViewHolder>() {
 
     private val items = mutableListOf<MeetingWithWinners>()
-    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
     fun submitList(meetings: List<MeetingWithWinners>) {
         items.clear()

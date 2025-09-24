@@ -67,6 +67,8 @@ class DashboardFragment : Fragment() {
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         setupRecyclerView()
         observeUpcomingMeetings()
+        // Show loading initially
+        showLoading()
         return binding.root
     }
 
@@ -83,8 +85,21 @@ class DashboardFragment : Fragment() {
 
         setupSearch()
         setupSectionToggles()
+        // Show loading initially
+        showLoading()
         // Force refresh data
         viewModel.loadUpcomingMeetings()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Ensure RecyclerViews are properly laid out when fragment resumes
+        binding.rvUpcomingMeetings.post {
+            binding.rvUpcomingMeetings.requestLayout()
+        }
+        binding.rvPastMeetings.post {
+            binding.rvPastMeetings.requestLayout()
+        }
     }
 
     private fun setupSectionToggles() {
@@ -193,13 +208,23 @@ class DashboardFragment : Fragment() {
         binding.rvUpcomingMeetings.apply {
             adapter = upcomingMeetingsAdapter
             layoutManager = LinearLayoutManager(context)
-            setHasFixedSize(true)
+            setHasFixedSize(false) // Changed to false to allow proper height calculation
+            isNestedScrollingEnabled = false // Disable nested scrolling for better performance
+            // Ensure proper layout params
+            layoutParams = layoutParams.apply {
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
         }
 
         binding.rvPastMeetings.apply {
             adapter = pastMeetingsAdapter
             layoutManager = LinearLayoutManager(context)
-            setHasFixedSize(true)
+            setHasFixedSize(false) // Changed to false to allow proper height calculation
+            isNestedScrollingEnabled = false // Disable nested scrolling for better performance
+            // Ensure proper layout params
+            layoutParams = layoutParams.apply {
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
         }
     }
 
@@ -209,31 +234,34 @@ class DashboardFragment : Fragment() {
                 when (state) {
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Success -> {
                         currentMeetings = state.meetings
+                        hideLoading()
                         filterAndSortMeetings(searchQuery.value)
                     }
 
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Empty -> {
                         currentMeetings = emptyList()
+                        hideLoading()
                         upcomingMeetingsAdapter.submitList(emptyList())
                         pastMeetingsAdapter.submitList(emptyList())
 
                         // Also hide the sections
-                        binding.tvUpcomingMeetings.visibility = View.VISIBLE
+                        binding.tvUpcomingMeetings.visibility = View.GONE
                         binding.rvUpcomingMeetings.visibility = View.GONE
                         binding.ivUpcomingArrow.visibility = View.GONE
 
-                        binding.tvPastMeetings.visibility = View.VISIBLE
+                        binding.tvPastMeetings.visibility = View.GONE
                         binding.rvPastMeetings.visibility = View.GONE
                         binding.ivPastArrow.visibility = View.GONE
                     }
 
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Error -> {
+                        hideLoading()
                         // Handle error
                         Log.e("DashboardFragment", "Error loading meetings: ${state.message}")
                     }
 
                     is DashboardViewModel.UpcomingMeetingsStateWithCounts.Loading -> {
-                        // Show loading state if needed
+                        showLoading()
                     }
                 }
             }
@@ -302,12 +330,27 @@ class DashboardFragment : Fragment() {
             "Upcoming count=${upcomingMeetings.size}, Past count=${pastMeetings.size}"
         )
 
+        // Clear adapters first to prevent empty space during transitions
+        if (upcomingMeetings.isEmpty()) {
+            upcomingMeetingsAdapter.submitList(emptyList())
+        }
+        if (pastMeetings.isEmpty()) {
+            pastMeetingsAdapter.submitList(emptyList())
+        }
+
         // Update UI based on whether there are any meetings to show
         if (upcomingMeetings.isNotEmpty()) {
             binding.tvUpcomingMeetings.visibility = View.VISIBLE
             binding.rvUpcomingMeetings.visibility = View.VISIBLE
             binding.ivUpcomingArrow.visibility = View.VISIBLE
-            upcomingMeetingsAdapter.submitList(upcomingMeetings)
+            
+            // Submit list and force layout recalculation
+            upcomingMeetingsAdapter.submitList(upcomingMeetings) {
+                // Force RecyclerView to recalculate its layout after data is submitted
+                binding.rvUpcomingMeetings.post {
+                    binding.rvUpcomingMeetings.requestLayout()
+                }
+            }
         } else {
             binding.tvUpcomingMeetings.visibility = View.GONE
             binding.rvUpcomingMeetings.visibility = View.GONE
@@ -318,7 +361,14 @@ class DashboardFragment : Fragment() {
             binding.tvPastMeetings.visibility = View.VISIBLE
             binding.rvPastMeetings.visibility = View.VISIBLE
             binding.ivPastArrow.visibility = View.VISIBLE
-            pastMeetingsAdapter.submitList(pastMeetings)
+            
+            // Submit list and force layout recalculation
+            pastMeetingsAdapter.submitList(pastMeetings) {
+                // Force RecyclerView to recalculate its layout after data is submitted
+                binding.rvPastMeetings.post {
+                    binding.rvPastMeetings.requestLayout()
+                }
+            }
         } else {
             binding.tvPastMeetings.visibility = View.GONE
             binding.rvPastMeetings.visibility = View.GONE
@@ -329,6 +379,16 @@ class DashboardFragment : Fragment() {
     private fun formatDate(dateTime: LocalDateTime): String {
         val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
         return dateTime.format(formatter)
+    }
+
+    private fun showLoading() {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.GONE
+    }
+
+    private fun hideLoading() {
+        binding.progressBar.visibility = View.GONE
+        binding.contentContainer.visibility = View.VISIBLE
     }
 
     private fun showDeleteConfirmationDialog(meetingId: String) {
