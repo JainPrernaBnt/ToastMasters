@@ -47,7 +47,7 @@ class LeaderboardFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.gemOfMonthCard.setOnClickListener {
-            showComingSoonToast()
+            navigateToGemOfMonth()
         }
         
         binding.recentMeetingCard.setOnClickListener {
@@ -59,8 +59,8 @@ class LeaderboardFragment : Fragment() {
         }
     }
 
-    private fun showComingSoonToast() {
-        android.widget.Toast.makeText(requireContext(), "Gem of the Month - Coming Soon!", android.widget.Toast.LENGTH_SHORT).show()
+    private fun navigateToGemOfMonth() {
+        findNavController().navigate(R.id.action_leaderboardFragment_to_gemOfMonthFragment)
     }
 
     private fun navigateToRecentMeetingDetail() {

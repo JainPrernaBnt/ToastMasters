@@ -81,6 +81,9 @@
         <action
             android:id="@+id/action_leaderboardFragment_to_pastMeetingsFragment"
             app:destination="@id/pastMeetingsFragment" />
+        <action
+            android:id="@+id/action_leaderboardFragment_to_gemOfMonthFragment"
+            app:destination="@id/gemOfMonthFragment" />
     </fragment>
 
     <fragment
@@ -224,6 +227,15 @@
         tools:layout="@layout/fragment_recent_meeting_detail">
         <action
             android:id="@+id/action_recentMeetingDetailFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/gemOfMonthFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.GemOfMonthFragment"
+        android:label="Gem of the Month"
+        tools:layout="@layout/fragment_gem_of_month">
+        <action
+            android:id="@+id/action_gemOfMonthFragment_to_leaderboardFragment"
             app:destination="@id/leaderboardFragment" />
     </fragment>
 </navigation>

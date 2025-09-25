@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.data.remote
 
 import com.bntsoft.toastmasters.data.model.UserDeserializer
 import com.bntsoft.toastmasters.domain.model.User
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -236,6 +237,47 @@ class UserService @Inject constructor(
             
         } catch (e: Exception) {
             println("DEBUG: Error fetching recent roles for user $userId: ${e.message}")
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    suspend fun getAllApprovedUsers(): List<User> {
+        return try {
+            println("DEBUG: Starting getAllApprovedUsers query")
+            val querySnapshot = usersCollection
+                .whereEqualTo("isApproved", true)
+                .get()
+                .await()
+            
+            println("DEBUG: Found ${querySnapshot.documents.size} approved users")
+            
+            val users = querySnapshot.documents.mapNotNull { doc ->
+                try {
+                    val user = UserDeserializer.fromDocument(doc)
+                    println("DEBUG: Parsed user: ${user?.name} (${user?.id}) - Role: ${user?.role}, Approved: ${user?.isApproved}")
+                    user
+                } catch (e: Exception) {
+                    println("DEBUG: Error parsing user ${doc.id}: ${e.message}")
+                    null
+                }
+            }
+            
+            val filteredUsers = users.filter { user ->
+                // Exclude VP_EDUCATION role
+                val isNotVpEducation = user.role != UserRole.VP_EDUCATION
+                println("DEBUG: User ${user.name}: Role=${user.role}, IsNotVpEducation=$isNotVpEducation")
+                isNotVpEducation
+            }
+            
+            println("DEBUG: After filtering VP_EDUCATION: ${filteredUsers.size} users")
+            filteredUsers.forEach { user ->
+                println("DEBUG: Final user: ${user.name} (${user.id}) - Role: ${user.role}")
+            }
+            
+            filteredUsers
+        } catch (e: Exception) {
+            println("DEBUG: Error fetching approved users: ${e.message}")
             e.printStackTrace()
             emptyList()
         }

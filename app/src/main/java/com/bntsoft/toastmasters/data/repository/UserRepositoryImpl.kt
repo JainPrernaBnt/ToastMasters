@@ -165,4 +165,13 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAllApprovedUsers(): List<User> {
+        return try {
+            userService.getAllApprovedUsers()
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error fetching all approved users", e)
+            emptyList()
+        }
+    }
+
 }

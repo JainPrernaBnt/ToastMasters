@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.di
 
 import com.bntsoft.toastmasters.data.repository.AbbreviationRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.AuthRepositoryImpl
+import com.bntsoft.toastmasters.data.repository.GemOfMonthRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MeetingRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MemberRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MemberResponseRepositoryImpl
@@ -14,6 +15,7 @@ import com.bntsoft.toastmasters.domain.repository.AbbreviationRepository
 import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.AgendaRepository
+import com.bntsoft.toastmasters.domain.repository.GemOfMonthRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingAgendaRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
@@ -89,4 +91,10 @@ abstract class RepositoryModule {
     abstract fun bindAbbreviationRepository(
         impl: AbbreviationRepositoryImpl
     ): AbbreviationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGemOfMonthRepository(
+        gemOfMonthRepositoryImpl: GemOfMonthRepositoryImpl
+    ): GemOfMonthRepository
 }

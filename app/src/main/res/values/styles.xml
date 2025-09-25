@@ -236,4 +236,10 @@
             <item name="android:layout_width">150dp</item>
         </style>
 
+    <!-- Circular Image View Style -->
+    <style name="CircularImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
 </resources>
