@@ -41,4 +41,9 @@ interface GemOfMonthRepository {
         year: Int,
         month: Int
     ): Result<Unit>
+    
+    suspend fun getGemOfTheMonth(
+        year: Int,
+        month: Int
+    ): com.bntsoft.toastmasters.data.model.GemOfTheMonth?
 }

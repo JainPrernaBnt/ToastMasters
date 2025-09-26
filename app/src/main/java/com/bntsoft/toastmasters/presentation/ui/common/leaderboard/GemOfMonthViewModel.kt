@@ -1,8 +1,10 @@
 package com.bntsoft.toastmasters.presentation.ui.common.leaderboard
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.data.model.GemMemberData
+import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.GemOfMonthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GemOfMonthViewModel @Inject constructor(
-    private val gemOfMonthRepository: GemOfMonthRepository
+    private val gemOfMonthRepository: GemOfMonthRepository,
+    private val userRepository: com.bntsoft.toastmasters.domain.repository.UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GemOfMonthUiState())
@@ -28,11 +31,35 @@ class GemOfMonthViewModel @Inject constructor(
     val selectedYear: StateFlow<Int> = _selectedYear.asStateFlow()
 
     init {
+        loadCurrentUserRole()
         loadMemberData()
+    }
+    
+    private fun loadCurrentUserRole() {
+        viewModelScope.launch {
+            try {
+                val currentUser = userRepository.getCurrentUser()
+                Log.d("GemOfMonthViewModel", "Current user: ${currentUser?.name} (${currentUser?.id})")
+                Log.d("GemOfMonthViewModel", "Current user role: ${currentUser?.role}")
+                Log.d("GemOfMonthViewModel", "VP_EDUCATION enum: ${UserRole.VP_EDUCATION}")
+                
+                val isVpEducation = currentUser?.role == UserRole.VP_EDUCATION
+                Log.d("GemOfMonthViewModel", "Is VP Education: $isVpEducation")
+                
+                _uiState.value = _uiState.value.copy(isVpEducation = isVpEducation)
+            } catch (e: Exception) {
+                Log.e("GemOfMonthViewModel", "Error loading current user role", e)
+                // Default to member role if error
+                _uiState.value = _uiState.value.copy(isVpEducation = false)
+            }
+        }
     }
 
     fun loadMemberData() {
         viewModelScope.launch {
+            val startTime = System.currentTimeMillis()
+            Log.d("GemOfMonthViewModel", "Starting to load member data for ${_selectedYear.value}-${_selectedMonth.value}")
+            
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
@@ -40,11 +67,20 @@ class GemOfMonthViewModel @Inject constructor(
                     year = _selectedYear.value,
                     month = _selectedMonth.value
                 ).catch { exception ->
+                    Log.e("GemOfMonthViewModel", "Error in flow", exception)
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = exception.message ?: "Unknown error occurred"
                     )
                 }.collect { memberDataList ->
+                    Log.d("GemOfMonthViewModel", "Received ${memberDataList.size} members, loading existing gem selection...")
+                    
+                    // Load existing gem selection for this month
+                    loadExistingGemSelection(memberDataList)
+                    
+                    val loadTime = System.currentTimeMillis() - startTime
+                    Log.d("GemOfMonthViewModel", "Member data loaded in ${loadTime}ms")
+                    
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         memberDataList = memberDataList,
@@ -52,6 +88,7 @@ class GemOfMonthViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                Log.e("GemOfMonthViewModel", "Error loading member data", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = e.message ?: "Unknown error occurred"
@@ -59,11 +96,61 @@ class GemOfMonthViewModel @Inject constructor(
             }
         }
     }
+    
+    private suspend fun loadExistingGemSelection(memberDataList: List<GemMemberData>) {
+        try {
+            val existingGem = gemOfMonthRepository.getGemOfTheMonth(
+                year = _selectedYear.value,
+                month = _selectedMonth.value
+            )
+            
+            if (existingGem != null) {
+                // Find the selected member in the current list
+                val selectedMember = memberDataList.find { it.user.id == existingGem.userId }
+                Log.d("GemOfMonthViewModel", "Found existing gem: ${existingGem.memberName} (${existingGem.userId})")
+                Log.d("GemOfMonthViewModel", "Selected member found in list: ${selectedMember?.user?.name}")
+                
+                _uiState.value = _uiState.value.copy(
+                    selectedGem = selectedMember,
+                    isEditMode = false
+                )
+            } else {
+                Log.d("GemOfMonthViewModel", "No existing gem found for ${_selectedYear.value}-${_selectedMonth.value}")
+                _uiState.value = _uiState.value.copy(
+                    selectedGem = null,
+                    isEditMode = false
+                )
+            }
+        } catch (e: Exception) {
+            // No existing selection found
+            _uiState.value = _uiState.value.copy(
+                selectedGem = null,
+                isEditMode = false
+            )
+        }
+    }
 
     fun selectMonth(year: Int, month: Int) {
-        _selectedYear.value = year
-        _selectedMonth.value = month
-        loadMemberData()
+        Log.d("GemOfMonthViewModel", "Selecting month: $month/$year")
+        
+        // Only update if values actually changed
+        val yearChanged = _selectedYear.value != year
+        val monthChanged = _selectedMonth.value != month
+        
+        if (yearChanged || monthChanged) {
+            _selectedYear.value = year
+            _selectedMonth.value = month
+            
+            // Reset edit mode when changing months
+            _uiState.value = _uiState.value.copy(
+                isEditMode = false,
+                selectedGem = null
+            )
+            
+            loadMemberData()
+        } else {
+            Log.d("GemOfMonthViewModel", "Month/year unchanged, skipping reload")
+        }
     }
 
     fun sortMembers(sortType: SortType) {
@@ -99,6 +186,7 @@ class GemOfMonthViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         selectedGem = memberData,
+                        isEditMode = false,
                         showSuccessMessage = "Successfully selected ${memberData.user.name} as Gem of the Month for ${getMonthYearString()}!"
                     )
                     // Reload data to show updated gem history
@@ -116,6 +204,14 @@ class GemOfMonthViewModel @Inject constructor(
                 )
             }
         }
+    }
+    
+    fun enterEditMode() {
+        _uiState.value = _uiState.value.copy(isEditMode = true)
+    }
+    
+    fun exitEditMode() {
+        _uiState.value = _uiState.value.copy(isEditMode = false)
     }
 
     fun clearMessages() {
@@ -144,6 +240,8 @@ data class GemOfMonthUiState(
     val memberDataList: List<GemMemberData> = emptyList(),
     val selectedGem: GemMemberData? = null,
     val currentSortType: SortType = SortType.SCORE_DESC,
+    val isVpEducation: Boolean = false,
+    val isEditMode: Boolean = false,
     val error: String? = null,
     val showSuccessMessage: String? = null
 ) {
@@ -152,6 +250,15 @@ data class GemOfMonthUiState(
         
     val hasData: Boolean
         get() = memberDataList.isNotEmpty()
+        
+    val canEdit: Boolean
+        get() = isVpEducation
+        
+    val showAllMembers: Boolean
+        get() = selectedGem == null || isEditMode
+        
+    val showEditButton: Boolean
+        get() = isVpEducation && selectedGem != null && !isEditMode
 }
 
 enum class SortType(val displayName: String) {

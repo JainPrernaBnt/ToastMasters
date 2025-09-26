@@ -15,6 +15,13 @@ import com.google.android.material.chip.Chip
 class GemMemberAdapter(
     private val onMemberClick: (GemMemberData) -> Unit
 ) : ListAdapter<GemMemberData, GemMemberAdapter.GemMemberViewHolder>(GemMemberDiffCallback()) {
+    
+    private var selectedGemId: String? = null
+    
+    fun setSelectedGem(selectedGem: GemMemberData?) {
+        selectedGemId = selectedGem?.user?.id
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GemMemberViewHolder {
         val binding = ItemGemMemberBinding.inflate(
@@ -26,7 +33,9 @@ class GemMemberAdapter(
     }
 
     override fun onBindViewHolder(holder: GemMemberViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val memberData = getItem(position)
+        val isSelected = memberData.user.id == selectedGemId
+        holder.bind(memberData, isSelected)
     }
 
     class GemMemberViewHolder(
@@ -34,10 +43,10 @@ class GemMemberAdapter(
         private val onMemberClick: (GemMemberData) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(memberData: GemMemberData) {
+        fun bind(memberData: GemMemberData, isSelected: Boolean = false) {
             with(binding) {
                 memberName.text = memberData.user.name
-                memberRole.text = "Active Member"
+                memberRole.text = if (isSelected) "🏆 Gem of the Month" else "Active Member"
 
                 attendanceText.text = "${memberData.attendanceData.attendedMeetings}/${memberData.attendanceData.totalMeetings} meetings"
                 attendanceProgress.progress = memberData.attendanceData.attendancePercentage.toInt()
@@ -54,6 +63,15 @@ class GemMemberAdapter(
                     View.VISIBLE
                 } else {
                     View.GONE
+                }
+                
+                // Highlight selected gem
+                if (isSelected) {
+                    root.setBackgroundResource(R.drawable.bg_selected_gem_card)
+                    memberName.setTextColor(root.context.getColor(R.color.primary))
+                } else {
+                    root.setBackgroundResource(R.drawable.bg_card)
+                    memberName.setTextColor(root.context.getColor(R.color.on_surface))
                 }
                 
                 root.setOnClickListener {

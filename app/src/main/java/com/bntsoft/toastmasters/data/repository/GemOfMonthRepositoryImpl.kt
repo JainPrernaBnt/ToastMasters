@@ -476,4 +476,33 @@ class GemOfMonthRepositoryImpl @Inject constructor(
         
         return score
     }
+    
+    override suspend fun getGemOfTheMonth(
+        year: Int,
+        month: Int
+    ): com.bntsoft.toastmasters.data.model.GemOfTheMonth? {
+        return try {
+            Log.d("GemOfMonthRepository", "Getting gem of the month for $year-$month")
+            
+            val snapshot = firestore.collection("gemOfTheMonth")
+                .whereEqualTo("year", year)
+                .whereEqualTo("month", month)
+                .limit(1)
+                .get()
+                .await()
+            
+            if (snapshot.documents.isNotEmpty()) {
+                val doc = snapshot.documents.first()
+                val gemOfTheMonth = doc.toObject(com.bntsoft.toastmasters.data.model.GemOfTheMonth::class.java)
+                Log.d("GemOfMonthRepository", "Found existing gem: ${gemOfTheMonth?.memberName}")
+                gemOfTheMonth
+            } else {
+                Log.d("GemOfMonthRepository", "No gem found for $year-$month")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("GemOfMonthRepository", "Error getting gem of the month for $year-$month", e)
+            null
+        }
+    }
 }

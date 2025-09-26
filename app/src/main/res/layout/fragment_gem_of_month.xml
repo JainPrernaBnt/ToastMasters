@@ -18,9 +18,9 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="88dp"
-        android:paddingHorizontal="16dp"
         android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="88dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
@@ -29,81 +29,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/monthSelector"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_gravity="end"
-                android:layout_marginBottom="16dp"
-                android:text="December 2024"
-                android:textColor="@color/primary"
-                android:textSize="14sp"
-                app:icon="@drawable/ic_calendar"
-                app:iconSize="18dp"
-                app:iconTint="@color/primary" />
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/surface_container_low"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/outline_variant"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Perfect Attendance Members"
-                                android:textColor="@color/on_surface"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Members eligible for Gem of the Month"
-                                android:textColor="@color/on_surface_variant"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/memberCountChip"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="2dp"
-                            android:text="8 Members"
-                            android:textColor="@color/primary"
-                            app:chipBackgroundColor="@color/primary_container"
-                            app:chipStrokeWidth="0dp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -111,26 +36,83 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="0dp"
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/memberCountChip"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Member Performance"
-                    android:textColor="@color/on_surface"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:layout_marginStart="2dp"
+                    android:text="8 Members"
+                    android:textColor="@color/primary"
+                    app:chipBackgroundColor="@color/primary_container"
+                    app:chipStrokeWidth="0dp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/sortButton"
+                    android:id="@+id/monthSelector"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:text="Sort by Score"
-                    android:textColor="@color/on_surface_variant"
-                    android:textSize="12sp"
-                    app:icon="@drawable/ic_sort"
-                    app:iconSize="16dp"
-                    app:iconTint="@color/on_surface_variant" />
+                    android:text="December 2024"
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"
+                    app:icon="@drawable/ic_calendar"
+                    app:iconSize="18dp"
+                    app:iconTint="@color/primary" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/sortRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Members Eligible"
+                        android:textColor="@color/on_surface"
+                        android:textSize="16sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/sortButton"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Sort by Score"
+                        android:textColor="@color/primary"
+                        android:textSize="14sp"
+                        app:icon="@drawable/ic_sort"
+                        app:iconSize="18dp"
+                        app:iconTint="@color/primary" />
+
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/editSelectionButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text="Edit"
+                    android:textColor="@color/primary"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_edit"
+                    app:iconSize="18dp"
+                    app:iconTint="@color/primary"
+                    app:strokeColor="@color/primary" />
 
             </LinearLayout>
 
@@ -193,18 +175,5 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/selectGemFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:gravity="center"
-        android:text="Select Gem"
-        android:textColor="@color/on_primary"
-        app:backgroundTint="@color/primary"
-        app:icon="@drawable/ic_star"
-        app:iconTint="@color/on_primary"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

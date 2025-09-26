@@ -53,7 +53,26 @@ class GemOfMonthFragment : Fragment() {
 
     private fun setupUI() {
         gemMemberAdapter = GemMemberAdapter { memberData ->
-            showSelectGemDialog(memberData)
+            val uiState = viewModel.uiState.value
+            android.util.Log.d("GemOfMonthFragment", "Member clicked - canEdit: ${uiState.canEdit}, showAllMembers: ${uiState.showAllMembers}, isVpEducation: ${uiState.isVpEducation}, isEditMode: ${uiState.isEditMode}")
+            
+            when {
+                // VP_EDUCATION can always select if in edit mode or no gem selected
+                uiState.canEdit && uiState.showAllMembers -> {
+                    showSelectGemDialog(memberData)
+                }
+                // VP_EDUCATION viewing selected gem - show option to edit
+                uiState.canEdit && !uiState.showAllMembers && !uiState.isEditMode -> {
+                    Toast.makeText(requireContext(), "Click 'Edit Selection' to change the Gem of the Month", Toast.LENGTH_SHORT).show()
+                }
+                // Member role - read only
+                !uiState.canEdit -> {
+                    Toast.makeText(requireContext(), "Only VP Education can select Gem of the Month", Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    showSelectGemDialog(memberData)
+                }
+            }
         }
         
         binding.membersRecyclerView.apply {
@@ -72,8 +91,15 @@ class GemOfMonthFragment : Fragment() {
             showSortMenu()
         }
         
-        binding.selectGemFab.setOnClickListener {
-            Toast.makeText(requireContext(), "Please select a member from the list", Toast.LENGTH_SHORT).show()
+        binding.editSelectionButton.setOnClickListener {
+            val uiState = viewModel.uiState.value
+            if (uiState.isEditMode) {
+                // Cancel edit mode
+                viewModel.exitEditMode()
+            } else {
+                // Enter edit mode
+                viewModel.enterEditMode()
+            }
         }
     }
 
@@ -98,18 +124,50 @@ class GemOfMonthFragment : Fragment() {
     }
 
     private fun updateUI(uiState: GemOfMonthUiState) {
-        binding.progressBar.visibility = if (uiState.isLoading) View.VISIBLE else View.GONE
+        android.util.Log.d("GemOfMonthFragment", "UI State - isVpEducation: ${uiState.isVpEducation}, canEdit: ${uiState.canEdit}, showAllMembers: ${uiState.showAllMembers}, isLoading: ${uiState.isLoading}, hasData: ${uiState.hasData}")
         
+        // Hide member count chip and sort row for regular members
+        binding.memberCountChip.visibility = if (uiState.isVpEducation) View.VISIBLE else View.GONE
+        binding.sortRow.visibility = if (uiState.isVpEducation) View.VISIBLE else View.GONE
+        
+        // Update member count display
         binding.memberCountChip.text = "${uiState.eligibleMembersCount} Members"
         
-        if (uiState.hasData) {
-            binding.membersRecyclerView.visibility = View.VISIBLE
-            binding.emptyStateCard.visibility = View.GONE
-            gemMemberAdapter.submitList(uiState.memberDataList)
-        } else if (!uiState.isLoading) {
-            binding.membersRecyclerView.visibility = View.GONE
-            binding.emptyStateCard.visibility = View.VISIBLE
+        // Handle visibility based on loading state and data availability
+        when {
+            uiState.isLoading -> {
+                // Show progress bar, hide everything else
+                binding.progressBar.visibility = View.VISIBLE
+                binding.membersRecyclerView.visibility = View.GONE
+                binding.emptyStateCard.visibility = View.GONE
+            }
+            uiState.hasData -> {
+                // Show data, hide progress bar and empty state
+                binding.progressBar.visibility = View.GONE
+                binding.membersRecyclerView.visibility = View.VISIBLE
+                binding.emptyStateCard.visibility = View.GONE
+                
+                // Show all members or only selected gem based on state
+                val displayList = if (uiState.showAllMembers) {
+                    uiState.memberDataList
+                } else {
+                    // Show only selected gem
+                    uiState.selectedGem?.let { listOf(it) } ?: emptyList()
+                }
+                
+                gemMemberAdapter.submitList(displayList)
+                gemMemberAdapter.setSelectedGem(uiState.selectedGem)
+            }
+            else -> {
+                // No data and not loading - show empty state
+                binding.progressBar.visibility = View.GONE
+                binding.membersRecyclerView.visibility = View.GONE
+                binding.emptyStateCard.visibility = View.VISIBLE
+            }
         }
+        
+        // Update Edit button visibility and text
+        updateEditButtonVisibility(uiState)
         
         uiState.error?.let { error ->
             Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show()
@@ -121,6 +179,26 @@ class GemOfMonthFragment : Fragment() {
             viewModel.clearMessages()
         }
     }
+    
+    private fun updateEditButtonVisibility(uiState: GemOfMonthUiState) {
+        // Show edit button only for VP_EDUCATION when there's a selected gem
+        val shouldShowEditButton = uiState.isVpEducation && uiState.selectedGem != null
+        
+        android.util.Log.d("GemOfMonthFragment", "Edit button - isVpEducation: ${uiState.isVpEducation}, selectedGem: ${uiState.selectedGem?.user?.name}, showEditButton: $shouldShowEditButton, isEditMode: ${uiState.isEditMode}")
+        
+        binding.editSelectionButton.visibility = if (shouldShowEditButton) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+        
+        // Update button text based on edit mode
+        binding.editSelectionButton.text = if (uiState.isEditMode) {
+            "Cancel Edit"
+        } else {
+            "Edit Selection"
+        }
+    }
 
     private fun updateMonthDisplay() {
         binding.monthSelector.text = viewModel.getMonthYearString()
@@ -130,39 +208,44 @@ class GemOfMonthFragment : Fragment() {
         val dialog = Dialog(requireContext())
         dialog.setContentView(R.layout.dialog_month_year_picker)
         dialog.setCancelable(true)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
         val monthPicker = dialog.findViewById<NumberPicker>(R.id.monthPicker)
         val yearPicker = dialog.findViewById<NumberPicker>(R.id.yearPicker)
-        val okButton = dialog.findViewById<Button>(R.id.okButton)
-        val cancelButton = dialog.findViewById<Button>(R.id.cancelButton)
+        val okButton = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.okButton)
+        val cancelButton = dialog.findViewById<com.google.android.material.button.MaterialButton>(R.id.cancelButton)
 
-        // Months Jan-Dec
+        // Get current selected values from ViewModel
+        val currentMonth = viewModel.selectedMonth.value - 1 // Convert to 0-based
+        val currentYear = viewModel.selectedYear.value
+
+        // Setup month picker
         monthPicker.minValue = 0
         monthPicker.maxValue = 11
         monthPicker.displayedValues = arrayOf(
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
         )
         monthPicker.wrapSelectorWheel = true
+        monthPicker.value = currentMonth // Set current selected month
 
-        // Year range
-        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        yearPicker.minValue = currentYear - 10
-        yearPicker.maxValue = currentYear + 10
-        yearPicker.value = currentYear
+        // Setup year picker
+        val calendarYear = Calendar.getInstance().get(Calendar.YEAR)
+        yearPicker.minValue = calendarYear - 5
+        yearPicker.maxValue = calendarYear + 5
+        yearPicker.wrapSelectorWheel = false
+        yearPicker.value = currentYear // Set current selected year
 
         okButton.setOnClickListener {
-            val selectedMonth = monthPicker.value      // 0-based
+            val selectedMonth = monthPicker.value + 1 // Convert to 1-based
             val selectedYear = yearPicker.value
 
-            // Calculate last day of month
-            val calendar = Calendar.getInstance()
-            calendar.set(Calendar.YEAR, selectedYear)
-            calendar.set(Calendar.MONTH, selectedMonth)
-            calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+            android.util.Log.d("GemOfMonthFragment", "Month selected: $selectedMonth/$selectedYear")
 
-            // Pass month/year to ViewModel
-            viewModel.selectMonth(selectedYear, selectedMonth + 1)
+            // Only reload if month/year actually changed
+            if (selectedMonth != viewModel.selectedMonth.value || selectedYear != viewModel.selectedYear.value) {
+                viewModel.selectMonth(selectedYear, selectedMonth)
+            }
 
             dialog.dismiss()
         }
