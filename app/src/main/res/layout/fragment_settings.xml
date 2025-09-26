@@ -87,6 +87,7 @@
                             app:icon="@drawable/ic_edit"
                             app:iconGravity="textStart"
                             app:iconPadding="8dp"
+                            android:textColor="@color/primary"
                             app:iconTint="@color/primary"
                             app:strokeColor="@color/outline"
                             app:strokeWidth="1dp"
@@ -261,27 +262,30 @@
                             android:paddingEnd="16dp"
                             android:paddingVertical="12dp"
                             android:text="@string/level"
-                            app:helperTextOrDefault="@{user.level}" />
+                            app:helperTextForLevel="@{user.level}" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- App Settings Section ... (no change needed) -->
+                <!-- Club Management Section (VP_EDUCATION only) -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/clubManagementSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     app:cardBackgroundColor="@color/surface_container_high"
                     app:cardCornerRadius="20dp"
                     app:cardElevation="0dp"
                     app:strokeColor="@color/outline_variant"
-                    app:strokeWidth="1dp">
+                    app:strokeWidth="1dp"
+                    app:visibleIf="@{user != null &amp;&amp; user.role.name == `VP_EDUCATION`}">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:paddingVertical="4dp">
 
                         <TextView
                             android:layout_width="match_parent"
@@ -290,46 +294,117 @@
                             android:paddingTop="16dp"
                             android:paddingEnd="16dp"
                             android:paddingBottom="8dp"
-                            android:text="@string/app_settings"
+                            android:text="@string/club_management"
                             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                             android:textColor="@color/on_surface_variant" />
 
-                        <!-- Theme Toggle -->
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switchTheme"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp"
-                            android:paddingVertical="12dp"
-                            android:checked="false"
-                            android:enabled="@{!viewModel.uiState.isLoading}"
-                            android:text="@string/dark_theme"
-                            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                            app:thumbTint="@color/surface"
-                            app:trackTint="@color/surface_variant"
-                            app:trackDecorationTint="@color/primary" />
-
-                        <!-- Notifications -->
+                        <!-- Club Members -->
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1px"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="4dp"
                             android:background="@color/outline_variant"/>
 
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switchNotifications"
+                        <LinearLayout
+                            android:id="@+id/btnClubMembers"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="8dp"
+                            android:paddingTop="12dp"
+                            android:paddingEnd="16dp"
+                            android:paddingBottom="12dp">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="16dp"
+                                android:src="@drawable/ic_people"
+                                app:tint="@color/primary" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/club_members"
+                                android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                                android:textColor="@color/on_surface" />
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_arrow_forward"
+                                app:tint="@color/on_surface_variant" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Mentors Section (MEMBER only) -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/mentorsSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    app:cardBackgroundColor="@color/surface_container_high"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/outline_variant"
+                    app:strokeWidth="1dp"
+                    app:visibleIf="@{user != null &amp;&amp; user.role.name == `MEMBER`}">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingVertical="4dp">
+
+                        <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:paddingStart="16dp"
+                            android:paddingTop="16dp"
                             android:paddingEnd="16dp"
-                            android:paddingVertical="12dp"
-                            android:checked="true"
-                            android:enabled="@{!viewModel.uiState.isLoading}"
-                            android:text="@string/notification"
-                            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                            app:thumbTint="@color/surface"
-                            app:trackTint="@color/surface_variant"
-                            app:trackDecorationTint="@color/primary" />
+                            android:paddingBottom="8dp"
+                            android:text="@string/mentors"
+                            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                            android:textColor="@color/on_surface_variant" />
+
+                        <!-- Mentors List -->
+                        <LinearLayout
+                            android:id="@+id/mentorsContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingHorizontal="16dp"
+                            android:paddingBottom="8dp">
+
+                            <!-- Dynamic mentor items will be added here -->
+
+                        </LinearLayout>
+
+                        <!-- No Mentors Message -->
+                        <TextView
+                            android:id="@+id/tvNoMentors"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:paddingHorizontal="16dp"
+                            android:paddingBottom="16dp"
+                            android:text="@string/no_mentors_assigned"
+                            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                            android:textColor="@color/on_surface_variant"
+                            android:gravity="center"
+                            android:visibility="gone" />
+
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

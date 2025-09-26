@@ -52,3 +52,9 @@ fun MaterialTextView.setClubIdHelperText(clubId: String?) {
     val value = clubId?.ifEmpty { context.getString(android.R.string.unknownName) }
     text = "Club ID: $value"
 }
+
+@BindingAdapter("helperTextForLevel")
+fun MaterialTextView.setLevelHelperText(level: String?) {
+    val value = level?.ifEmpty { context.getString(android.R.string.unknownName) }
+    text = "Level: $value"
+}

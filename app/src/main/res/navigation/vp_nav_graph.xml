@@ -119,7 +119,14 @@
         android:id="@+id/settingsFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.SettingsFragment"
         android:label="Settings"
-        tools:layout="@layout/fragment_settings" />
+        tools:layout="@layout/fragment_settings">
+        <action
+            android:id="@+id/action_settingsFragment_to_clubMembersFragment"
+            app:destination="@id/clubMembersFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_profileEditFragment"
+            app:destination="@id/profileEditFragment" />
+    </fragment>
     <fragment
         android:id="@+id/memberApprovalFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.memberapproval.MemberApprovalFragment"
@@ -238,4 +245,31 @@
             android:id="@+id/action_gemOfMonthFragment_to_leaderboardFragment"
             app:destination="@id/leaderboardFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/clubMembersFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.clubmembers.ClubMembersFragment"
+        android:label="Club Members"
+        tools:layout="@layout/fragment_club_members">
+        <action
+            android:id="@+id/action_clubMembersFragment_to_memberEditFragment"
+            app:destination="@id/memberEditFragment">
+            <argument
+                android:name="memberId"
+                app:argType="string" />
+        </action>
+    </fragment>
+    <fragment
+        android:id="@+id/memberEditFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.clubmembers.MemberEditFragment"
+        android:label="Edit Member"
+        tools:layout="@layout/fragment_member_edit">
+        <argument
+            android:name="memberId"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/profileEditFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.ProfileEditFragment"
+        android:label="Edit Profile"
+        tools:layout="@layout/fragment_profile_edit" />
 </navigation>

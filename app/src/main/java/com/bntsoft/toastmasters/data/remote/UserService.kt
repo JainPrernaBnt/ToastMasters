@@ -283,4 +283,25 @@ class UserService @Inject constructor(
         }
     }
 
+    suspend fun getClubMembers(clubId: String): List<User> {
+        return try {
+            val querySnapshot = usersCollection
+                .whereEqualTo("clubId", clubId)
+                .whereEqualTo("isApproved", true)
+                .get()
+                .await()
+            
+            querySnapshot.documents.mapNotNull { doc ->
+                try {
+                    UserDeserializer.fromDocument(doc)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
 }

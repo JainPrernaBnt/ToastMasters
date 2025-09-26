@@ -21,4 +21,5 @@ interface UserRepository {
     suspend fun getAvailableMembers(meetingId: String): List<com.bntsoft.toastmasters.data.model.User>
     suspend fun getRecentRoles(userId: String, limit: Int): List<String>
     suspend fun getAllApprovedUsers(): List<User>
+    suspend fun getClubMembers(clubId: String): List<User>
 }

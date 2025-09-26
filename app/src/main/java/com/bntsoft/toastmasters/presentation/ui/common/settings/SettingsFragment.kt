@@ -114,9 +114,11 @@ class SettingsFragment : Fragment() {
             tvMemberSince.text = formattedDate
             tvUserRole.text = formattedRole
             tvLevel.text = user.level?.ifEmpty { getString(R.string.not_provided) }
+            
+            // Update mentors section for MEMBER role
+            updateMentorsSection(user)
         }
     }
-
 
     private fun showError(message: String) {
         Snackbar.make(
@@ -132,7 +134,11 @@ class SettingsFragment : Fragment() {
         }
 
         binding.btnEditProfile.setOnClickListener {
-            // TODO: Implement edit profile
+            navigateToEditProfile()
+        }
+
+        binding.btnClubMembers.setOnClickListener {
+            navigateToClubMembers()
         }
     }
 
@@ -178,6 +184,65 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    private fun navigateToClubMembers() {
+        try {
+            val navController = requireActivity().findNavController(R.id.nav_host_fragment)
+            navController.navigate(R.id.action_settingsFragment_to_clubMembersFragment)
+        } catch (e: Exception) {
+            showError("Navigation failed: ${e.message}")
+        }
+    }
+
+    private fun navigateToEditProfile() {
+        try {
+            val navController = requireActivity().findNavController(R.id.nav_host_fragment)
+            navController.navigate(R.id.action_settingsFragment_to_profileEditFragment)
+        } catch (e: Exception) {
+            showError("Navigation failed: ${e.message}")
+        }
+    }
+
+    private fun updateMentorsSection(user: com.bntsoft.toastmasters.domain.model.User) {
+        val mentorsContainer = binding.mentorsContainer
+        val noMentorsText = binding.tvNoMentors
+        
+        // Clear existing mentor views
+        mentorsContainer.removeAllViews()
+        
+        if (user.mentorNames.isEmpty()) {
+            noMentorsText.visibility = View.VISIBLE
+        } else {
+            noMentorsText.visibility = View.GONE
+            
+            // Add mentor items
+            user.mentorNames.forEach { mentorName ->
+                val mentorView = createMentorItemView(mentorName)
+                mentorsContainer.addView(mentorView)
+            }
+        }
+    }
+
+    private fun createMentorItemView(mentorName: String): View {
+        val mentorView = LayoutInflater.from(requireContext()).inflate(
+            android.R.layout.simple_list_item_1, 
+            binding.mentorsContainer, 
+            false
+        )
+        
+        val textView = mentorView.findViewById<android.widget.TextView>(android.R.id.text1)
+        textView.text = mentorName
+        textView.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
+        textView.setTextColor(resources.getColor(android.R.color.primary_text_light, null))
+        textView.setPadding(0, 8, 0, 8)
+        
+        // Add mentor icon
+        textView.setCompoundDrawablesWithIntrinsicBounds(
+            R.drawable.ic_mentor, 0, 0, 0
+        )
+        textView.compoundDrawablePadding = 16
+        
+        return mentorView
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

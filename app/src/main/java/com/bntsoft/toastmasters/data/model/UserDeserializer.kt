@@ -79,6 +79,7 @@ object UserDeserializer {
                 email = user.email,
                 phoneNumber = user.phoneNumber,
                 address = user.address,
+                level = data["level"] as? String,
                 gender = user.gender,
                 joinedDate = user.joinedDate,
                 toastmastersId = user.toastmastersId,

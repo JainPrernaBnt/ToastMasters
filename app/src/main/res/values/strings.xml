@@ -1,6 +1,30 @@
 <resources>
     <string name="save_changes">Save changes</string>
     <string name="app_name">ToastMasters</string>
+    
+    <!-- Club Members -->
+    <string name="club_management">Club Management</string>
+    <string name="club_members">Club Members</string>
+    <string name="edit_member">Edit Member</string>
+    <string name="no_members_found">No Members Found</string>
+    <string name="no_members_found_description">There are no club members to display at the moment.</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="toastmasters_information">Toastmasters Information</string>
+    <string name="full_name">Full Name</string>
+    <string name="email">Email</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="address">Address</string>
+    <string name="gender">Gender</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="toastmasters_id">Toastmasters ID</string>
+    <string name="level">Level</string>
+    <string name="mentor_names">Mentor Names</string>
+    <string name="mentor_names_helper">Separate multiple names with commas</string>
+    <string name="cancel">Cancel</string>
+    <string name="saving">Saving...</string>
+    <string name="my_mentors">My Mentors</string>
+    <string name="no_mentors_assigned">No mentors assigned yet</string>
     <string name="title_sign_up">Sign Up</string>
     <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
 
@@ -166,9 +190,6 @@
 
     <!-- Member Info -->
     <string name="name">Name</string>
-    <string name="email">Email</string>
-    <string name="level">Level</string>
-    <string name="gender">Gender</string>
     <string name="password">Password</string>
     <string name="club_id">Club Unique ID</string>
     <string name="vp_education">VP Education (Admin)</string>
@@ -182,7 +203,6 @@
 
     <!-- General -->
     <string name="ok">OK</string>
-    <string name="cancel">Cancel</string>
     <string name="confirm_save_title">Save Agenda</string>
     <string name="confirm_save_message">Are you sure you want to save the agenda details and continue to agenda table?</string>
     <string name="no">No</string>
@@ -362,9 +382,6 @@
 
     <string name="joined_date">Member Since</string>
     <string name="role">Role</string>
-    <string name="phone_number">Phone Number</string>
-    <string name="toastmasters_id">Toastmasters ID</string>
-    <string name="address">Address</string>
     <string name="logout">Logout</string>
     <string name="logout_confirmation">Are you sure you want to logout?</string>
     <string name="yes">Yes</string>
@@ -396,7 +413,6 @@
     <string name="create_agenda">Create Agenda</string>
     <string name="meeting_theme">Meeting Theme</string>
     <string name="officers">Officers</string>
-    <string name="saving">Saving...</string>
     <string name="agenda_saved">Agenda saved successfully</string>
     <string name="fill_details">Fill Details</string>
     <string name="your_name">Name</string>

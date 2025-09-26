@@ -174,4 +174,13 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getClubMembers(clubId: String): List<User> {
+        return try {
+            userService.getClubMembers(clubId)
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error fetching club members for club $clubId", e)
+            emptyList()
+        }
+    }
+
 }
