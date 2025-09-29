@@ -1,9 +1,12 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.agenda
 
 import android.util.Log
+import android.view.GestureDetector
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
@@ -27,16 +30,12 @@ class AgendaAdapter(
     private var meetingStartTime: String? = null,
     private val onItemMove: (Int, Int) -> Boolean = { _, _ -> false },
     private val onAddItemClick: () -> Unit = {},
-    private var isVpEducation: Boolean = true
+    private var isVpEducation: Boolean = true,
+    private val onTimeRowClick: (AgendaItemDto) -> Unit = {},
+    private val onSessionRowClick: (AgendaItemDto) -> Unit = {}
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), ItemTouchHelperAdapter {
 
     private val _items = mutableListOf<AgendaItemDto>()
-
-    private var dragStartListener: ((RecyclerView.ViewHolder) -> Unit)? = null
-
-    fun setOnStartDragListener(listener: (RecyclerView.ViewHolder) -> Unit) {
-        this.dragStartListener = listener
-    }
 
     fun updateMeetingStartTime(startTime: String?) {
         this.meetingStartTime = startTime
@@ -108,31 +107,6 @@ class AgendaAdapter(
         }
     }
 
-    fun addItem(item: AgendaItemDto) {
-        _items.add(item)
-        notifyItemInserted(_items.size - 1)
-    }
-
-    fun updateItem(updatedItem: AgendaItemDto) {
-        val position = _items.indexOfFirst { it.id == updatedItem.id }
-        if (position != -1) {
-            _items[position] = updatedItem
-            notifyItemChanged(position)
-        }
-    }
-
-    fun removeItem(item: AgendaItemDto) {
-        val position = _items.indexOfFirst { it.id == item.id }
-        if (position != -1) {
-            _items.removeAt(position)
-            notifyItemRemoved(position)
-            // Notify items after the removed position to update their positions
-            if (position < _items.size) {
-                notifyItemRangeChanged(position, _items.size - position)
-            }
-        }
-    }
-
     override fun getItemViewType(position: Int): Int {
         return if (position == _items.size && isVpEducation) {
             // Last position is the add button only for VP Education
@@ -183,13 +157,42 @@ class AgendaAdapter(
                         viewType == VIEW_TYPE_TIME_BREAK ||
                         viewType == VIEW_TYPE_SESSION) {
 
-                        // Click listener only for normal items
-                        if (viewType == VIEW_TYPE_ITEM) {
-                            holder.itemView.setOnClickListener {
-                                onItemClick(item)
+                        // Create GestureDetector for this item
+                        val gestureDetector = GestureDetectorCompat(holder.itemView.context, object : GestureDetector.SimpleOnGestureListener() {
+                            override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                                Log.d("AgendaAdapter", "Single tap confirmed for: ${item.activity}")
+                                // Single tap confirmed - trigger edit based on type
+                                when (viewType) {
+                                    VIEW_TYPE_ITEM -> {
+                                        onItemClick(item)
+                                    }
+                                    VIEW_TYPE_TIME_BREAK -> {
+                                        if (isVpEducation) {
+                                            onTimeRowClick(item)
+                                        }
+                                    }
+                                    VIEW_TYPE_SESSION -> {
+                                        if (isVpEducation) {
+                                            onSessionRowClick(item)
+                                        }
+                                    }
+                                }
+                                return true
                             }
-                        } else {
-                            holder.itemView.setOnClickListener(null)
+
+                            override fun onDoubleTap(e: MotionEvent): Boolean {
+                                Log.d("AgendaAdapter", "Double tap detected for delete: ${item.activity}")
+                                // Double tap detected - trigger delete
+                                if (isVpEducation) {
+                                    onItemDelete(item)
+                                }
+                                return true
+                            }
+                        })
+
+                        // Set touch listener to use GestureDetector
+                        holder.itemView.setOnTouchListener { _, event ->
+                            gestureDetector.onTouchEvent(event)
                         }
 
                         holder.itemView.setOnLongClickListener {
@@ -201,7 +204,7 @@ class AgendaAdapter(
 
                     } else {
                         // For ADD button or other view types
-                        holder.itemView.setOnClickListener(null)
+                        holder.itemView.setOnTouchListener(null)
                         holder.itemView.setOnLongClickListener(null)
                     }
 
@@ -317,14 +320,9 @@ class AgendaAdapter(
                 // Set position tag for drag and drop
                 itemView.tag = item.orderIndex
 
-                // Disable click for non-normal items to prevent selection
-                if (viewType != VIEW_TYPE_ITEM) {
-                    itemView.isClickable = false
-                    itemView.isFocusable = false
-                } else {
-                    itemView.isClickable = true
-                    itemView.isFocusable = true
-                }
+                // Enable clicks for all item types when VP Education
+                itemView.isClickable = true
+                itemView.isFocusable = true
                 // Always allow long clicks for drag functionality
                 itemView.isLongClickable = true
             }

@@ -30,6 +30,7 @@ import java.util.*
 import javax.inject.Inject
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import com.bntsoft.toastmasters.presentation.ui.common.leaderboard.adapter.WinnerAdapter
 import com.google.firebase.Timestamp
 
 @AndroidEntryPoint

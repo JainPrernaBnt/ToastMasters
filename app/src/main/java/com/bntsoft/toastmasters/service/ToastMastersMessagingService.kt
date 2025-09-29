@@ -55,6 +55,10 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
         private const val TYPE_MEETING_CREATED = "MEETING_CREATED"
         private const val TYPE_MEETING_UPDATED = "MEETING_UPDATED"
         private const val TYPE_MEETING_REMINDER = "MEETING_REMINDER"
+        private const val TYPE_NEW_MEMBER_SIGNUP = "new_member_signup"
+        private const val TYPE_MEMBER_BACKOUT = "member_backout"
+        private const val TYPE_REQUEST_APPROVED = "request_approved"
+        private const val TYPE_REQUEST_REJECTED = "request_rejected"
 
         // Intent extras
         private const val EXTRA_MEETING_ID = "meetingId"
@@ -102,6 +106,10 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                     TYPE_MEETING_CREATED -> handleMeetingCreated(remoteMessage)
                     TYPE_MEETING_UPDATED -> handleMeetingUpdated(remoteMessage)
                     TYPE_MEETING_REMINDER -> handleMeetingReminder(remoteMessage)
+                    TYPE_NEW_MEMBER_SIGNUP -> handleNewMemberSignup(remoteMessage)
+                    TYPE_MEMBER_BACKOUT -> handleMemberBackout(remoteMessage)
+                    TYPE_REQUEST_APPROVED -> handleRequestApproved(remoteMessage)
+                    TYPE_REQUEST_REJECTED -> handleRequestRejected(remoteMessage)
                     else -> handleMessageInBackground(remoteMessage)
                 }
             }
@@ -197,8 +205,35 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
                 meetingId?.let {
                     // TODO: Refresh the meetings list
                     Log.d("ToastMastersMsgSvc", "New meeting created: $meetingId")
-                    // No need to update token here as it's unrelated to meeting creation
                 }
+            }
+
+            NotificationHelper.TYPE_NEW_MEMBER_SIGNUP -> {
+                // Handle new member signup notification
+                val userId = data["userId"]
+                val userName = data["userName"]
+                Log.d("ToastMastersMsgSvc", "New member signup - User: $userName, ID: $userId")
+            }
+
+            NotificationHelper.TYPE_MEMBER_BACKOUT -> {
+                // Handle member backout notification
+                val meetingId = data["meetingId"]
+                val memberName = data["memberName"]
+                val roleName = data["roleName"]
+                Log.d("ToastMastersMsgSvc", "Member backout - Meeting: $meetingId, Member: $memberName, Role: $roleName")
+            }
+
+            NotificationHelper.TYPE_REQUEST_APPROVED -> {
+                // Handle request approved notification
+                val requestType = data["requestType"]
+                Log.d("ToastMastersMsgSvc", "Request approved - Type: $requestType")
+            }
+
+            NotificationHelper.TYPE_REQUEST_REJECTED -> {
+                // Handle request rejected notification
+                val requestType = data["requestType"]
+                val reason = data["reason"]
+                Log.d("ToastMastersMsgSvc", "Request rejected - Type: $requestType, Reason: $reason")
             }
 
             else -> {
@@ -307,6 +342,97 @@ class ToastMastersMessagingService : FirebaseMessagingService() {
             )
         } catch (e: Exception) {
             Log.e("ToastMastersMsgSvc", "Failed to handle meeting reminder notification", e)
+        }
+    }
+
+    private fun handleNewMemberSignup(remoteMessage: RemoteMessage) {
+        try {
+            val data = remoteMessage.data
+            val title = data["title"] ?: "New Member Signup"
+            val body = data["message"] ?: "A new member has signed up."
+            val userName = data["userName"] ?: "Unknown"
+            val userEmail = data["userEmail"] ?: ""
+
+            notificationHelper.showNotification(
+                title = title,
+                message = body,
+                channelId = NotificationHelper.CHANNEL_ID_IMPORTANT,
+                notificationId = NotificationHelper.NOTIFICATION_ID_NEW_MEMBER_SIGNUP,
+                priority = NotificationCompat.PRIORITY_HIGH,
+                data = data
+            )
+
+            Log.d("ToastMastersMsgSvc", "New member signup notification shown for: $userName")
+        } catch (e: Exception) {
+            Log.e("ToastMastersMsgSvc", "Failed to handle new member signup notification", e)
+        }
+    }
+
+    private fun handleMemberBackout(remoteMessage: RemoteMessage) {
+        try {
+            val data = remoteMessage.data
+            val title = data["title"] ?: "Member Backed Out"
+            val body = data["message"] ?: "A member has backed out from their role."
+            val memberName = data["memberName"] ?: "Unknown"
+            val roleName = data["roleName"] ?: "Unknown Role"
+
+            notificationHelper.showNotification(
+                title = title,
+                message = body,
+                channelId = NotificationHelper.CHANNEL_ID_IMPORTANT,
+                notificationId = NotificationHelper.NOTIFICATION_ID_MEMBER_BACKOUT,
+                priority = NotificationCompat.PRIORITY_HIGH,
+                data = data
+            )
+
+            Log.d("ToastMastersMsgSvc", "Member backout notification shown for: $memberName from role: $roleName")
+        } catch (e: Exception) {
+            Log.e("ToastMastersMsgSvc", "Failed to handle member backout notification", e)
+        }
+    }
+
+    private fun handleRequestApproved(remoteMessage: RemoteMessage) {
+        try {
+            val data = remoteMessage.data
+            val title = data["title"] ?: "Request Approved"
+            val body = data["message"] ?: "Your request has been approved."
+            val requestType = data["requestType"] ?: "request"
+
+            notificationHelper.showNotification(
+                title = title,
+                message = body,
+                channelId = NotificationHelper.CHANNEL_ID_IMPORTANT,
+                notificationId = NotificationHelper.NOTIFICATION_ID_REQUEST_APPROVED,
+                priority = NotificationCompat.PRIORITY_HIGH,
+                data = data
+            )
+
+            Log.d("ToastMastersMsgSvc", "Request approved notification shown for: $requestType")
+        } catch (e: Exception) {
+            Log.e("ToastMastersMsgSvc", "Failed to handle request approved notification", e)
+        }
+    }
+
+    private fun handleRequestRejected(remoteMessage: RemoteMessage) {
+        try {
+            val data = remoteMessage.data
+            val title = data["title"] ?: "Request Rejected"
+            val body = data["message"] ?: "Your request has been rejected."
+            val requestType = data["requestType"] ?: "request"
+            val reason = data["reason"] ?: ""
+
+            notificationHelper.showNotification(
+                title = title,
+                message = body,
+                channelId = NotificationHelper.CHANNEL_ID_IMPORTANT,
+                notificationId = NotificationHelper.NOTIFICATION_ID_REQUEST_REJECTED,
+                priority = NotificationCompat.PRIORITY_DEFAULT,
+                data = data
+            )
+
+            Log.d("ToastMastersMsgSvc", "Request rejected notification shown for: $requestType, reason: $reason")
+        } catch (e: Exception) {
+            Log.e("ToastMastersMsgSvc", "Failed to handle request rejected notification", e)
         }
     }
 }

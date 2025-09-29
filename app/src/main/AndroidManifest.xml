@@ -65,6 +65,10 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        
+        <service
+            android:name=".service.NotificationListenerService"
+            android:exported="false" />
 
         <meta-data
             android:name="preloaded_fonts"

@@ -80,42 +80,40 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
-    
     private fun confirmLoginOnNewDevice(email: String, password: String) {
         viewModelScope.launch {
             try {
                 _uiState.value = AuthUiState.Loading
                 
-                // Re-authenticate the user
-                val credential = EmailAuthProvider.getCredential(email, password)
-                val user = FirebaseAuth.getInstance().currentUser
-                user?.reauthenticate(credential)?.await()
+                // Perform fresh login instead of re-authentication since user might be logged out
+                val result = FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password).await()
+                val firebaseUser = result.user
                 
-                // If re-authentication is successful, update the session
-                user?.let { firebaseUser ->
+                // If login is successful, update the session
+                firebaseUser?.let { user ->
                     val deviceId = Settings.Secure.getString(
                         context.contentResolver,
                         Settings.Secure.ANDROID_ID
                     ) ?: UUID.randomUUID().toString()
                     
                     // Update user session to include this new device alongside existing ones
-                    firestoreService.updateUserSession(firebaseUser.uid, deviceId)
+                    firestoreService.updateUserSession(user.uid, deviceId)
                     
                     // Get the updated user data
-                    val userDoc = firestoreService.getUserDocument(firebaseUser.uid).get().await()
+                    val userDoc = firestoreService.getUserDocument(user.uid).get().await()
                     val userData = userDoc.toObject(com.bntsoft.toastmasters.data.model.User::class.java)
                     
-                    userData?.let { user ->
+                    userData?.let { userData ->
                         // Get the highest role if multiple exist, default to MEMBER
-                        val userRole = user.roles.firstOrNull() ?: UserRole.MEMBER
+                        val userRole = userData.roles.firstOrNull() ?: UserRole.MEMBER
                         
                         val domainUser = User(
-                            id = user.id ?: "",
-                            email = user.email ?: "",
-                            name = user.name ?: "",
-                            phoneNumber = user.phoneNumber ?: "",
+                            id = userData.id ?: "",
+                            email = userData.email ?: "",
+                            name = userData.name ?: "",
+                            phoneNumber = userData.phoneNumber ?: "",
                             role = userRole,
-                            isApproved = user.status == com.bntsoft.toastmasters.data.model.User.Status.APPROVED
+                            isApproved = userData.status == com.bntsoft.toastmasters.data.model.User.Status.APPROVED
                         )
                         _uiState.value = AuthUiState.Success(domainUser, domainUser.role)
                     } ?: run {
@@ -123,17 +121,15 @@ class AuthViewModel @Inject constructor(
                         authRepository.logout()
                     }
                 } ?: run {
-                    _uiState.value = AuthUiState.Error("User not found")
+                    _uiState.value = AuthUiState.Error("Login failed")
                 }
             } catch (e: Exception) {
                 _uiState.value = AuthUiState.Error("Authentication failed: ${e.message}")
-                authRepository.logout()
             }
         }
     }
-
+    
     fun signUp(user: User, password: String) {
-        _uiState.value = AuthUiState.Loading
 
         viewModelScope.launch {
             try {

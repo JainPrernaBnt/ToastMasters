@@ -1,19 +1,23 @@
 package com.bntsoft.toastmasters
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
 import com.bntsoft.toastmasters.databinding.ActivityMainBinding
 import com.bntsoft.toastmasters.domain.models.UserRole
+import com.bntsoft.toastmasters.utils.NotificationPermissionManager
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,7 +31,16 @@ class MainActivity : BaseActivity() {
     @Inject
     lateinit var preferenceManager: PreferenceManager
 
+    @Inject
+    lateinit var notificationPermissionManager: NotificationPermissionManager
+
     private val viewModel: MainViewModel by viewModels()
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        handleNotificationPermissionResult(isGranted)
+    }
 
     private lateinit var navController: NavController
     private lateinit var bottomNav: BottomNavigationView
@@ -213,7 +226,6 @@ class MainActivity : BaseActivity() {
         val currentDestination = navController.currentDestination?.id ?: return
         val isAuthScreen = currentDestination == R.id.loginFragment ||
                 currentDestination == R.id.signUpFragment
-
         val bottomNavHide = currentDestination == R.id.editMeetingFragment
         // Hide bottom nav for auth screens
         bottomNav.visibility = if (isAuthScreen && bottomNavHide) View.GONE else View.VISIBLE
@@ -224,5 +236,39 @@ class MainActivity : BaseActivity() {
         } else {
             window.decorView.systemUiVisibility = 0
         }
+    }
+
+    fun requestNotificationPermissionForFreshInstall() {
+        if (notificationPermissionManager.shouldRequestPermission(this)) {
+            notificationPermissionManager.requestNotificationPermission(this) { isGranted ->
+                handleNotificationPermissionResult(isGranted)
+            }
+        }
+    }
+
+    private fun handleNotificationPermissionResult(isGranted: Boolean) {
+        if (isGranted) {
+            Log.d("MainActivity", "Notification permission granted")
+        } else {
+            Log.d("MainActivity", "Notification permission denied")
+
+            val userRole = preferenceManager.getUserRole()?.name ?: "member"
+
+            if (notificationPermissionManager.hasReachedMaxDenials()) {
+                notificationPermissionManager.showPermissionExplanationDialog(
+                    context = this,
+                    userRole = userRole
+                ) {
+                    openAppSettings()
+                }
+            }
+        }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
     }
 }

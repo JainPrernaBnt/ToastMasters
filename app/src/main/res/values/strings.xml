@@ -327,14 +327,6 @@
     <string name="more_options">More options</string>
     <string name="btn_edit">Edit</string>
 
-    <!-- Notification Channels -->
-    <string name="default_notification_channel_name">Default Notifications</string>
-    <string name="default_notification_channel_description">General notifications</string>
-    <string name="important_notification_channel_name">Important Notifications</string>
-    <string name="important_notification_channel_description">Important and time-sensitive notifications</string>
-    <string name="meetings_notification_channel_name">Meetings</string>
-    <string name="meetings_notification_channel_description">Meeting-related notifications</string>
-
     <!-- Notification Actions -->
     <string name="view_meeting">View Meeting</string>
 
@@ -462,5 +454,28 @@
     <string name="objectives">Objectives</string>
     <string name="evaluator">Evaluator</string>
     <string name="evaluators">Evaluators</string>
+    
+    <!-- Notification Permission Strings -->
+    <string name="notification_permission_title">Enable Notifications</string>
+    <string name="notification_permission_message">ToastMasters needs notification permission to keep you updated about important club activities.</string>
+    <string name="allow">Allow</string>
+    <string name="not_now">Not Now</string>
+    <string name="maybe_later">Maybe Later</string>
+    <string name="enable_notifications">Enable Notifications</string>
+    <string name="go_to_settings">Go to Settings</string>
+    
+    <string name="notification_permission_vp_education_explanation">As VP Education, you\'ll receive important notifications about:\n\n• New member signups requiring approval\n• Members backing out from assigned roles\n• Meeting updates and changes\n\nEnable notifications to stay informed and manage your club effectively.</string>
+    
+    <string name="notification_permission_member_explanation">As a club member, you\'ll receive notifications about:\n\n• Approval status of your membership requests\n• New meetings scheduled by VP Education\n• Updates to existing meetings\n• Important club announcements\n\nEnable notifications to stay connected with your club activities.</string>
+    
+    <string name="notification_permission_general_explanation">Enable notifications to receive important updates about club activities, meetings, and announcements.</string>
+    
+    <!-- Notification Channel Names -->
+    <string name="default_notification_channel_name">General</string>
+    <string name="default_notification_channel_description">General notifications from ToastMasters</string>
+    <string name="important_notification_channel_name">Important</string>
+    <string name="important_notification_channel_description">Important notifications that require immediate attention</string>
+    <string name="meetings_notification_channel_name">Meetings</string>
+    <string name="meetings_notification_channel_description">Meeting-related notifications and reminders</string>
 </resources>
 

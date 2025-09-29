@@ -1,12 +1,10 @@
-package com.bntsoft.toastmasters.presentation.ui.common.leaderboard
+package com.bntsoft.toastmasters.presentation.ui.common.leaderboard.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.data.model.MeetingWithWinners
 import com.bntsoft.toastmasters.databinding.ItemMeetingWinnersBinding
-import java.text.SimpleDateFormat
-import java.util.*
 
 class LeaderboardMeetingAdapter : RecyclerView.Adapter<LeaderboardMeetingAdapter.MeetingViewHolder>() {
 

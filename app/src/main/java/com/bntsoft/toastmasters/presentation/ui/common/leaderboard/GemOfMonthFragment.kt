@@ -1,26 +1,22 @@
 package com.bntsoft.toastmasters.presentation.ui.common.leaderboard
 
-import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.NumberPicker
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.GemMemberData
 import com.bntsoft.toastmasters.databinding.FragmentGemOfMonthBinding
-import com.google.android.material.datepicker.CalendarConstraints
-import com.google.android.material.datepicker.DateValidatorPointForward
-import com.google.android.material.datepicker.MaterialDatePicker
+import com.bntsoft.toastmasters.presentation.ui.common.leaderboard.adapter.GemMemberAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -54,7 +50,7 @@ class GemOfMonthFragment : Fragment() {
     private fun setupUI() {
         gemMemberAdapter = GemMemberAdapter { memberData ->
             val uiState = viewModel.uiState.value
-            android.util.Log.d("GemOfMonthFragment", "Member clicked - canEdit: ${uiState.canEdit}, showAllMembers: ${uiState.showAllMembers}, isVpEducation: ${uiState.isVpEducation}, isEditMode: ${uiState.isEditMode}")
+            Log.d("GemOfMonthFragment", "Member clicked - canEdit: ${uiState.canEdit}, showAllMembers: ${uiState.showAllMembers}, isVpEducation: ${uiState.isVpEducation}, isEditMode: ${uiState.isEditMode}")
             
             when {
                 // VP_EDUCATION can always select if in edit mode or no gem selected

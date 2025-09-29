@@ -157,4 +157,71 @@ object AgendaDialogs {
         }
 
     }
+
+    fun showEditTimeBreakDialog(context: Context, currentBreakText: String, listener: OnTimeBreakSetListener) {
+        val dialog = Dialog(context)
+        val binding = DialogTimeBreakBinding.inflate(LayoutInflater.from(context))
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(binding.root)
+        dialog.setCancelable(true)
+
+        // Parse current break text to extract minutes and seconds
+        val (currentMinutes, currentSeconds) = parseBreakText(currentBreakText)
+
+        // Use explicit minutes/seconds NumberPickers from the layout
+        val npMinutes = binding.root.findViewById<android.widget.NumberPicker>(R.id.npMinutes)
+        val npSeconds = binding.root.findViewById<android.widget.NumberPicker>(R.id.npSeconds)
+        npMinutes.minValue = 0
+        npMinutes.maxValue = 59
+        npMinutes.value = currentMinutes
+        npMinutes.wrapSelectorWheel = true
+        npSeconds.minValue = 0
+        npSeconds.maxValue = 59
+        npSeconds.value = currentSeconds
+        npSeconds.wrapSelectorWheel = true
+
+        binding.btnSet.setOnClickListener {
+            val minutes = npMinutes.value
+            val seconds = npSeconds.value
+            listener.onTimeBreakSet(minutes, seconds)
+            dialog.dismiss()
+        }
+
+        binding.btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+        dialog.window?.apply {
+            val displayMetrics = context.resources.displayMetrics
+            val dialogWidth = (displayMetrics.widthPixels * 0.90f).toInt()
+
+            setLayout(dialogWidth, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            setBackgroundDrawableResource(android.R.color.transparent)
+
+            val lp = attributes
+            lp.dimAmount = 0f
+            attributes = lp
+
+            clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        }
+    }
+
+    private fun parseBreakText(breakText: String): Pair<Int, Int> {
+        return try {
+            when {
+                breakText.contains("MINUTE") -> {
+                    val minutes = breakText.split(" ")[0].toIntOrNull() ?: 5
+                    Pair(minutes, 0)
+                }
+                breakText.contains("SECOND") -> {
+                    val seconds = breakText.split(" ")[0].toIntOrNull() ?: 30
+                    Pair(0, seconds)
+                }
+                else -> Pair(5, 0) // Default
+            }
+        } catch (e: Exception) {
+            Pair(5, 0) // Default fallback
+        }
+    }
 }

@@ -1,20 +1,36 @@
 package com.bntsoft.toastmasters
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.bntsoft.toastmasters.databinding.ActivityVpMainBinding
+import com.bntsoft.toastmasters.utils.NotificationPermissionManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
-
+import javax.inject.Inject
 @AndroidEntryPoint
 class VpMainActivity : BaseActivity() {
     private lateinit var binding: ActivityVpMainBinding
+    
+    @Inject
+    lateinit var notificationPermissionManager: NotificationPermissionManager
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        handleNotificationPermissionResult(isGranted)
+    }
     
     fun hideBottomNavigation() {
         binding.bottomNavView.visibility = View.GONE
@@ -34,6 +50,9 @@ class VpMainActivity : BaseActivity() {
         supportActionBar?.title = getString(R.string.title_dashboard)
 
         setupNavigation()
+        
+        // Request notification permission for fresh installs
+        requestNotificationPermissionForFreshInstall()
     }
 
     private fun setupNavigation() {
@@ -120,7 +139,48 @@ class VpMainActivity : BaseActivity() {
                 true
             }
 
+            R.id.action_notifications -> {
+                val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+                val navController = navHostFragment.navController
+                navController.navigate(R.id.memberApprovalFragment)
+                val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
+                bottomNav.visibility = View.GONE
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun requestNotificationPermissionForFreshInstall() {
+        if (notificationPermissionManager.shouldRequestPermission(this)) {
+            notificationPermissionManager.requestNotificationPermission(this) { isGranted ->
+                handleNotificationPermissionResult(isGranted)
+            }
+        }
+    }
+
+    private fun handleNotificationPermissionResult(isGranted: Boolean) {
+        if (isGranted) {
+            Log.d("VpMainActivity", "Notification permission granted for VP Education")
+        } else {
+            Log.d("VpMainActivity", "Notification permission denied for VP Education")
+            
+            if (notificationPermissionManager.hasReachedMaxDenials()) {
+                notificationPermissionManager.showPermissionExplanationDialog(
+                    context = this,
+                    userRole = "vp_education"
+                ) {
+                    openAppSettings()
+                }
+            }
+        }
+    }
+
+    private fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", packageName, null)
+        }
+        startActivity(intent)
     }
 } 

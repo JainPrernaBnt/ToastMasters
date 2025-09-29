@@ -11,6 +11,7 @@ import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
 import com.bntsoft.toastmasters.domain.models.MeetingStatus
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
+import com.bntsoft.toastmasters.domain.usecase.notification.NotificationTriggerUseCase
 import com.bntsoft.toastmasters.utils.Resource
 import com.bntsoft.toastmasters.utils.Result
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,7 +32,8 @@ import javax.inject.Singleton
 @Singleton
 class MeetingRepositoryImpl @Inject constructor(
     private val firebaseDataSource: FirebaseMeetingDataSource,
-    private val memberResponseRepository: MemberResponseRepository
+    private val memberResponseRepository: MemberResponseRepository,
+    private val notificationTriggerUseCase: NotificationTriggerUseCase
 ) : MeetingRepository {
 
     override fun getAllMeetings(): Flow<List<Meeting>> {
@@ -71,6 +73,14 @@ class MeetingRepositoryImpl @Inject constructor(
                 is Result.Success -> {
                     val newMeeting = result.data
                     firebaseDataSource.sendMeetingNotification(newMeeting)
+                    
+                    // Send notification to all members about new meeting
+                    try {
+                        notificationTriggerUseCase.notifyAllMembersOfNewMeeting(newMeeting)
+                    } catch (e: Exception) {
+                        Log.e("MeetingRepository", "Error sending new meeting notification", e)
+                    }
+                    
                     Resource.Success(newMeeting)
                 }
 
@@ -93,7 +103,15 @@ class MeetingRepositoryImpl @Inject constructor(
         return try {
             val result = firebaseDataSource.updateMeeting(meeting)
             when (result) {
-                is Result.Success -> Resource.Success(Unit)
+                is Result.Success -> {
+                    // Send notification to all members about meeting update
+                    try {
+                        notificationTriggerUseCase.notifyAllMembersOfMeetingUpdate(meeting)
+                    } catch (e: Exception) {
+                        Log.e("MeetingRepository", "Error sending meeting update notification", e)
+                    }
+                    Resource.Success(Unit)
+                }
                 is Result.Error -> Resource.Error("Failed to update meeting in Firebase: ${result.exception.message}")
                 Result.Loading -> Resource.Error("Unexpected loading state while updating meeting")
             }

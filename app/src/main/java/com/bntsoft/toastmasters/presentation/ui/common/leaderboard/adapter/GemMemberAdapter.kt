@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.ui.common.leaderboard
+package com.bntsoft.toastmasters.presentation.ui.common.leaderboard.adapter
 
 import android.view.LayoutInflater
 import android.view.View

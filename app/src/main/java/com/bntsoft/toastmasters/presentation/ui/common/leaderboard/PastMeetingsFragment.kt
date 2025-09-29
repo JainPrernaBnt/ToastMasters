@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.data.model.MeetingWithWinners
 import com.bntsoft.toastmasters.data.model.Winner
 import com.bntsoft.toastmasters.databinding.FragmentPastMeetingsBinding
+import com.bntsoft.toastmasters.presentation.ui.common.leaderboard.adapter.LeaderboardMeetingAdapter
 import com.bntsoft.toastmasters.utils.Constants.MEETINGS_COLLECTION
 import com.bntsoft.toastmasters.utils.Constants.WINNERS_COLLECTION
 import com.google.android.gms.tasks.Tasks

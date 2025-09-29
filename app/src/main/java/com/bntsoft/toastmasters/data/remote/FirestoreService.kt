@@ -25,7 +25,7 @@ class FirestoreService @Inject constructor(
         private const val USERS_COLLECTION = "users"
         private const val MEETINGS_COLLECTION = "meetings"
         private const val BACKOUTS_COLLECTION = "backoutMembers"
-        private const val USER_SESSIONS_COLLECTION = "user_sessions"
+        private const val USER_SESSIONS_COLLECTION = "userSessions"
     }
 
     // User operations
@@ -42,6 +42,16 @@ class FirestoreService @Inject constructor(
     }
 
     suspend fun updateUserSession(userId: String, deviceId: String) {
+        // Handle logout case (empty deviceId)
+        if (deviceId.isEmpty()) {
+            // Clear session completely
+            firestore.collection(USER_SESSIONS_COLLECTION).document(userId).delete().await()
+            // Clear device ID from user document
+            firestore.collection(USERS_COLLECTION).document(userId)
+                .update(mapOf("deviceId" to "", "lastLogin" to System.currentTimeMillis())).await()
+            return
+        }
+        
         val updates = hashMapOf<String, Any>(
             "lastLogin" to System.currentTimeMillis()
         )
@@ -125,22 +135,6 @@ class FirestoreService @Inject constructor(
             .limit(1)
             .get()
             .await()
-    }
-
-    fun getCollection(collectionPath: String) = firestore.collection(collectionPath)
-
-    fun getAllUsers(): Flow<List<DocumentSnapshot>> = callbackFlow {
-        val subscription = firestore.collection(USERS_COLLECTION)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                if (snapshot != null && !snapshot.isEmpty) {
-                    trySend(snapshot.documents).isSuccess
-                }
-            }
-        awaitClose { subscription.remove() }
     }
 
     fun observeUser(userId: String): Flow<DocumentSnapshot> = callbackFlow {

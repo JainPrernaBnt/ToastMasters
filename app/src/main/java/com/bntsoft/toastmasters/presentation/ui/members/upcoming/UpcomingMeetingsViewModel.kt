@@ -11,6 +11,7 @@ import com.bntsoft.toastmasters.domain.model.MeetingAvailability
 import com.bntsoft.toastmasters.domain.models.AvailabilityStatus
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.domain.usecase.notification.NotificationTriggerUseCase
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -24,6 +25,7 @@ import javax.inject.Inject
 class UpcomingMeetingsListViewModel @Inject constructor(
     private val meetingRepository: MeetingRepository,
     private val userRepository: UserRepository,
+    private val notificationTriggerUseCase: NotificationTriggerUseCase,
     private val application: Application
 ) : ViewModel() {
 
@@ -148,6 +150,28 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                 
                 batch.commit().await()
 
+                // If this is a backout, notify VP Education
+                if (isBackout) {
+                    try {
+                        val meeting = _meetings.value?.find { it.id == meetingId }
+                        val memberName = Firebase.auth.currentUser?.displayName ?: "Unknown User"
+                        val assignedRoles = getAssignedRolesForUser(meetingId, currentUserId)
+                        val roleName = assignedRoles.firstOrNull() ?: "Unknown Role"
+                        
+                        meeting?.let {
+                            notificationTriggerUseCase.notifyVPEducationOfMemberBackout(
+                                meetingId = meetingId,
+                                meetingTheme = it.theme,
+                                memberName = memberName,
+                                roleName = roleName,
+                                memberId = currentUserId
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // Don't fail the operation if notification fails
+                    }
+                }
+
                 // Update the meetings list directly to avoid a full refresh
                 _meetings.value = _meetings.value?.map { meeting ->
                     if (meeting.id == meetingId) {
@@ -234,6 +258,25 @@ class UpcomingMeetingsListViewModel @Inject constructor(
                     e.message ?: "Error fetching meetings"
                 )
             }
+        }
+    }
+
+    private suspend fun getAssignedRolesForUser(meetingId: String, userId: String): List<String> {
+        return try {
+            val roleDoc = db.collection("meetings")
+                .document(meetingId)
+                .collection("assignedRole")
+                .document(userId)
+                .get()
+                .await()
+            
+            if (roleDoc.exists()) {
+                roleDoc.get("roles") as? List<String> ?: emptyList()
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

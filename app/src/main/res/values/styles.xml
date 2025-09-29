@@ -169,15 +169,17 @@
     </style>
 
     <!-- Dialog Theme -->
-<!--    <style name="Theme.ToastMasters.Dialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">-->
-<!--        <item name="colorPrimary">@color/purple_500</item>-->
-<!--        <item name="colorPrimaryDark">@color/purple_700</item>-->
-<!--        <item name="colorAccent">@color/teal_200</item>-->
-<!--        <item name="android:textColorPrimary">@color/on_surface</item>-->
-<!--        <item name="android:windowBackground">@android:color/white</item>-->
-<!--        <item name="android:windowMinWidthMajor">@dimen/dialog_min_width</item>-->
-<!--        <item name="android:windowMinWidthMinor">@dimen/dialog_min_width</item>-->
-<!--    </style>-->
+    <style name="Theme.ToastMasters.RoleDialog" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/TextAppearance.ToastMasters.BodyMedium</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/TextAppearance.ToastMasters.TitleMedium</item>
+    </style>
 
 
     <!-- Setting Item Style -->

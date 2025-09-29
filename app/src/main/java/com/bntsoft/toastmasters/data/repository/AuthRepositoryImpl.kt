@@ -10,6 +10,7 @@ import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
+import com.bntsoft.toastmasters.domain.usecase.notification.NotificationTriggerUseCase
 import com.bntsoft.toastmasters.utils.DeviceIdManager
 import com.bntsoft.toastmasters.utils.NotificationHelper
 import com.bntsoft.toastmasters.utils.PreferenceManager
@@ -32,6 +33,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val firestoreService: FirestoreService,
     private val preferenceManager: PreferenceManager,
     private val notificationRepository: NotificationRepository,
+    private val notificationTriggerUseCase: NotificationTriggerUseCase,
     private val deviceIdManager: DeviceIdManager
 ) : AuthRepository {
 
@@ -153,17 +155,12 @@ class AuthRepositoryImpl @Inject constructor(
                 firebaseUser.sendEmailVerification().await()
 
                 // Notify VP Education about new signup (pending approval)
-                val vpNotification = NotificationData(
-                    title = "New member signup",
-                    message = "${userWithId.name} has signed up and is pending approval.",
-                    type = NotificationHelper.TYPE_MEMBER_APPROVAL,
-                    data = mapOf(
-                        NotificationHelper.EXTRA_USER_ID to userWithId.id
-                    )
-                )
                 try {
-                    notificationRepository.sendNotificationToRole("VP_EDUCATION", vpNotification)
-                } catch (_: Exception) {
+                    Log.d("AuthRepositoryImpl", "Attempting to notify VP Education of new member signup: ${userWithId.name}")
+                    notificationTriggerUseCase.notifyVPEducationOfNewMemberSignup(userWithId)
+                    Log.d("AuthRepositoryImpl", "Successfully notified VP Education of new member signup")
+                } catch (e: Exception) {
+                    Log.e("AuthRepositoryImpl", "Failed to notify VP Education of new member signup", e)
                     // Don't fail signup on notification errors
                 }
 

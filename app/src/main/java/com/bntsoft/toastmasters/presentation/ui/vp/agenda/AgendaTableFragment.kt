@@ -385,10 +385,16 @@ class AgendaTableFragment : Fragment() {
         agendaAdapter = AgendaAdapter(
             onItemClick = { item ->
                 Log.d("AgendaTableFragment", "Item clicked: ${item.activity}")
-                // Handle item click if needed
+                if (isVpEducation) {
+                    showEditDialog(item)
+                }
             },
             onItemDelete = { item ->
-                viewModel.deleteAgendaItem(meetingId, item.id)
+                // Find the position of the item for the delete confirmation dialog
+                val position = agendaAdapter.getCurrentList().indexOfFirst { it.id == item.id }
+                if (position != -1) {
+                    showDeleteConfirmationDialog(position, item)
+                }
             },
             onStartDrag = { viewHolder ->
                 itemTouchHelper.startDrag(viewHolder)
@@ -420,7 +426,17 @@ class AgendaTableFragment : Fragment() {
                 viewModel.saveAllAgendaItems(meetingId, items)
                 true
             },
-            isVpEducation = isVpEducation
+            isVpEducation = isVpEducation,
+            onTimeRowClick = { item ->
+                if (isVpEducation) {
+                    showEditTimeBreakDialog(item)
+                }
+            },
+            onSessionRowClick = { item ->
+                if (isVpEducation) {
+                    showEditSessionDialog(item)
+                }
+            }
         )
 
         // Initialize with empty list to avoid NPE
@@ -446,61 +462,6 @@ class AgendaTableFragment : Fragment() {
             setHasFixedSize(false)
             isNestedScrollingEnabled = false
 
-            // Add long press listener for delete (only for VP Education)
-            if (isVpEducation) {
-                addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
-                    private var longPressStartTime: Long = 0
-                    private val longPressDuration = 1000L // 1 second for long press
-                    private var longPressRunnable: Runnable? = null
-                    private var currentChild: View? = null
-
-                    override fun onInterceptTouchEvent(
-                        rv: RecyclerView,
-                        e: android.view.MotionEvent
-                    ): Boolean {
-                        when (e.action) {
-                            android.view.MotionEvent.ACTION_DOWN -> {
-                                longPressStartTime = System.currentTimeMillis()
-                                currentChild = rv.findChildViewUnder(e.x, e.y)
-
-                                // Start long press detection
-                                longPressRunnable = Runnable {
-                                    Log.d("AgendaTableFragment", "Long press detected!")
-                                    val position = rv.getChildAdapterPosition(
-                                        currentChild ?: return@Runnable
-                                    )
-                                    Log.d(
-                                        "AgendaTableFragment",
-                                        "Long press position: $position"
-                                    )
-                                    if (position != RecyclerView.NO_POSITION) {
-                                        val itemToDelete = agendaAdapter.getItemAt(position)
-                                        Log.d(
-                                            "AgendaTableFragment",
-                                            "Item to delete: ${itemToDelete?.activity}"
-                                        )
-                                        if (itemToDelete != null) {
-                                            showDeleteConfirmationDialog(
-                                                position,
-                                                itemToDelete
-                                            )
-                                        }
-                                    }
-                                }
-                                rv.postDelayed(longPressRunnable!!, longPressDuration)
-                            }
-
-                            android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
-                                // Cancel long press if finger is lifted
-                                longPressRunnable?.let { rv.removeCallbacks(it) }
-                                longPressRunnable = null
-                                currentChild = null
-                            }
-                        }
-                        return false
-                    }
-                })
-            }
         }
 
         // Set up item touch helper for drag and drop
@@ -735,6 +696,67 @@ class AgendaTableFragment : Fragment() {
             }
         )
         dialog.show(parentFragmentManager, "EditAgendaItemDialog")
+    }
+
+    private fun showEditTimeBreakDialog(item: AgendaItemDto) {
+        AgendaDialogs.showEditTimeBreakDialog(
+            requireContext(),
+            item.activity ?: "",
+            object : AgendaDialogs.OnTimeBreakSetListener {
+                override fun onTimeBreakSet(minutes: Int, seconds: Int) {
+                    val totalSeconds = (minutes * 60) + seconds
+                    val timeBreakText = if (minutes > 0) {
+                        "$minutes MINUTE${if (minutes > 1) "S" else ""} BREAK"
+                    } else {
+                        "$seconds SECOND${if (seconds > 1) "S" else ""} BREAK"
+                    }
+
+                    // Update the item
+                    val updatedItem = item.copy(
+                        activity = timeBreakText,
+                        redTime = totalSeconds
+                    )
+
+                    // Update in the list and recalculate times
+                    val currentItems = agendaAdapter.getCurrentList().toMutableList()
+                    val itemIndex = currentItems.indexOfFirst { it.id == item.id }
+                    if (itemIndex != -1) {
+                        currentItems[itemIndex] = updatedItem
+                        // Recalculate times for all items
+                        val updatedItems = AgendaTimeCalculator.recalculateTimesFromPosition(
+                            currentItems,
+                            0,
+                            meetingStartTime
+                        )
+                        agendaAdapter.submitList(updatedItems)
+                        viewModel.saveAllAgendaItems(meetingId, updatedItems)
+                    }
+                }
+            }
+        )
+    }
+
+    private fun showEditSessionDialog(item: AgendaItemDto) {
+        AgendaDialogs.showSessionSelectionDialog(
+            requireContext(),
+            object : AgendaDialogs.OnSessionSelectedListener {
+                override fun onSessionSelected(sessionName: String) {
+                    // Update the item
+                    val updatedItem = item.copy(
+                        activity = sessionName.uppercase()
+                    )
+
+                    // Update in the list
+                    val currentItems = agendaAdapter.getCurrentList().toMutableList()
+                    val itemIndex = currentItems.indexOfFirst { it.id == item.id }
+                    if (itemIndex != -1) {
+                        currentItems[itemIndex] = updatedItem
+                        agendaAdapter.submitList(currentItems)
+                        viewModel.saveAllAgendaItems(meetingId, currentItems)
+                    }
+                }
+            }
+        )
     }
 
 // Removed onStartDrag as it's now handled by the adapter

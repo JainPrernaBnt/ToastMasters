@@ -160,6 +160,11 @@ class LoginFragment : Fragment() {
                             // Start monitoring session changes
                             monitorSessionChanges(user.id)
 
+                            // Start notification listener service
+                            val notificationServiceIntent = android.content.Intent(requireContext(), com.bntsoft.toastmasters.service.NotificationListenerService::class.java)
+                            val serviceResult = requireContext().startService(notificationServiceIntent)
+                            android.util.Log.d("LoginFragment", "Started NotificationListenerService: $serviceResult")
+
                             // Navigate to the appropriate activity based on role
                             val intent = if (state.userRole == UserRole.VP_EDUCATION) {
                                 android.content.Intent(requireContext(), VpMainActivity::class.java)

@@ -2,15 +2,12 @@ package com.bntsoft.toastmasters.data.repository
 
 import android.util.Log
 import com.bntsoft.toastmasters.data.model.GemMemberData
-import com.bntsoft.toastmasters.data.model.User
-import com.bntsoft.toastmasters.data.model.Winner
-import com.bntsoft.toastmasters.domain.models.WinnerCategory
 import com.bntsoft.toastmasters.domain.repository.GemOfMonthRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,15 +28,21 @@ class GemOfMonthRepositoryImpl @Inject constructor(
     ): Flow<List<GemMemberData>> = flow {
         try {
             Log.d("GemOfMonthRepository", "Starting getMemberPerformanceData for $year-$month")
-            
+
             val meetingIds = getMeetingsForMonth(year, month)
-            Log.d("GemOfMonthRepository", "Found ${meetingIds.size} meetings for $year-$month: $meetingIds")
-            
+            Log.d(
+                "GemOfMonthRepository",
+                "Found ${meetingIds.size} meetings for $year-$month: $meetingIds"
+            )
+
             val domainUsers = userRepository.getAllApprovedUsers()
             Log.d("GemOfMonthRepository", "Found ${domainUsers.size} approved users")
-            
+
             val memberDataList = domainUsers.map { domainUser ->
-                Log.d("GemOfMonthRepository", "Processing user: ${domainUser.name} (${domainUser.id}) - Role: ${domainUser.role}")
+                Log.d(
+                    "GemOfMonthRepository",
+                    "Processing user: ${domainUser.name} (${domainUser.id}) - Role: ${domainUser.role}"
+                )
                 // Convert domain User to data User
                 val dataUser = com.bntsoft.toastmasters.data.model.User(
                     id = domainUser.id,
@@ -55,34 +58,49 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     fcmToken = domainUser.fcmToken ?: "",
                     mentorNames = domainUser.mentorNames,
                     roles = listOf(com.bntsoft.toastmasters.domain.models.UserRole.MEMBER),
-                    status = if (domainUser.isApproved) 
-                        com.bntsoft.toastmasters.data.model.User.Status.APPROVED 
-                    else 
+                    status = if (domainUser.isApproved)
+                        com.bntsoft.toastmasters.data.model.User.Status.APPROVED
+                    else
                         com.bntsoft.toastmasters.data.model.User.Status.PENDING_APPROVAL,
                     lastLogin = null,
                     createdAt = domainUser.createdAt,
                     updatedAt = domainUser.updatedAt
                 )
-                
+
                 val attendanceData = getAttendanceForMember(domainUser.id, meetingIds)
-                Log.d("GemOfMonthRepository", "User ${domainUser.name}: Attendance ${attendanceData.attendedMeetings}/${attendanceData.totalMeetings}")
-                
+                Log.d(
+                    "GemOfMonthRepository",
+                    "User ${domainUser.name}: Attendance ${attendanceData.attendedMeetings}/${attendanceData.totalMeetings}"
+                )
+
                 val roleData = getRoleDataForMember(domainUser.id, meetingIds)
-                Log.d("GemOfMonthRepository", "User ${domainUser.name}: Roles - Speaker:${roleData.speakerCount}, Evaluator:${roleData.evaluatorCount}, Other:${roleData.otherRolesCount}")
-                
+                Log.d(
+                    "GemOfMonthRepository",
+                    "User ${domainUser.name}: Roles - Speaker:${roleData.speakerCount}, Evaluator:${roleData.evaluatorCount}, Other:${roleData.otherRolesCount}"
+                )
+
                 val awards = getAwardsForMember(domainUser.id, meetingIds)
-                Log.d("GemOfMonthRepository", "User ${domainUser.name}: Awards count: ${awards.size}")
-                
+                Log.d(
+                    "GemOfMonthRepository",
+                    "User ${domainUser.name}: Awards count: ${awards.size}"
+                )
+
                 val gemHistory = getGemHistoryForMember(domainUser.id)
-                Log.d("GemOfMonthRepository", "User ${domainUser.name}: Gem history: ${gemHistory.size} entries")
-                
+                Log.d(
+                    "GemOfMonthRepository",
+                    "User ${domainUser.name}: Gem history: ${gemHistory.size} entries"
+                )
+
                 val performanceScore = calculatePerformanceScore(
                     attendanceData,
                     roleData,
                     awards
                 )
-                Log.d("GemOfMonthRepository", "User ${domainUser.name}: Performance score: $performanceScore")
-                
+                Log.d(
+                    "GemOfMonthRepository",
+                    "User ${domainUser.name}: Performance score: $performanceScore"
+                )
+
                 val memberData = GemMemberData(
                     user = dataUser,
                     attendanceData = attendanceData,
@@ -91,12 +109,18 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     gemHistory = gemHistory,
                     performanceScore = performanceScore
                 )
-                
-                Log.d("GemOfMonthRepository", "User ${domainUser.name}: Is eligible: ${memberData.isEligible}")
+
+                Log.d(
+                    "GemOfMonthRepository",
+                    "User ${domainUser.name}: Is eligible: ${memberData.isEligible}"
+                )
                 memberData
             }.filter { it.isEligible }
-            
-            Log.d("GemOfMonthRepository", "After filtering: ${memberDataList.size} eligible members")
+
+            Log.d(
+                "GemOfMonthRepository",
+                "After filtering: ${memberDataList.size} eligible members"
+            )
             emit(memberDataList.sortedByDescending { it.performanceScore })
         } catch (e: Exception) {
             Log.e("GemOfMonthRepository", "Error getting member performance data", e)
@@ -116,9 +140,12 @@ class GemOfMonthRepositoryImpl @Inject constructor(
             } else {
                 String.format("%04d-%02d-01", year, month + 1)
             }
-            
+
             Log.d("GemOfMonthRepository", "Date range: $startDate <= date < $endDate")
-            Log.d("GemOfMonthRepository", "For October 2025, this would be: 2025-10-01 <= date < 2025-11-01")
+            Log.d(
+                "GemOfMonthRepository",
+                "For October 2025, this would be: 2025-10-01 <= date < 2025-11-01"
+            )
 
             Log.d("GemOfMonthRepository", "Querying meetings between $startDate and $endDate")
 
@@ -127,12 +154,18 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                 .limit(5)
                 .get()
                 .await()
-            
-            Log.d("GemOfMonthRepository", "Total meetings in database: ${allMeetingsSnapshot.size()}")
+
+            Log.d(
+                "GemOfMonthRepository",
+                "Total meetings in database: ${allMeetingsSnapshot.size()}"
+            )
             allMeetingsSnapshot.documents.forEach { doc ->
                 val date = doc.getString("date")
                 val meetingId = doc.getString("meetingID")
-                Log.d("GemOfMonthRepository", "Sample meeting: doc=${doc.id}, date=$date, meetingID=$meetingId")
+                Log.d(
+                    "GemOfMonthRepository",
+                    "Sample meeting: doc=${doc.id}, date=$date, meetingID=$meetingId"
+                )
             }
 
             val snapshot = firestore.collection("meetings")
@@ -145,15 +178,18 @@ class GemOfMonthRepositoryImpl @Inject constructor(
             val meetingIds = snapshot.documents.mapNotNull { it.getString("meetingID") }
 
             Log.d("GemOfMonthRepository", "Found meetings: $meetingIds")
-            
+
             // Log meeting details for debugging
             snapshot.documents.forEach { doc ->
                 val date = doc.getString("date")
                 val status = doc.getString("status")
                 val meetingId = doc.getString("meetingID")
-                Log.d("GemOfMonthRepository", "Meeting doc ${doc.id}: date=$date, status=$status, meetingID=$meetingId")
+                Log.d(
+                    "GemOfMonthRepository",
+                    "Meeting doc ${doc.id}: date=$date, status=$status, meetingID=$meetingId"
+                )
             }
-            
+
             meetingIds
         } catch (e: Exception) {
             Log.e("GemOfMonthRepository", "Error getting meetings for month", e)
@@ -167,8 +203,11 @@ class GemOfMonthRepositoryImpl @Inject constructor(
     ): GemMemberData.AttendanceData {
         return try {
             var attendedCount = 0
-            Log.d("GemOfMonthRepository", "Checking attendance for user $userId in ${meetingIds.size} meetings")
-            
+            Log.d(
+                "GemOfMonthRepository",
+                "Checking attendance for user $userId in ${meetingIds.size} meetings"
+            )
+
             for (meetingId in meetingIds) {
                 // Check if user has any assigned role in this meeting
                 val assignedRoleSnapshot = firestore.collection("meetings")
@@ -177,14 +216,17 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     .whereEqualTo("userId", userId)
                     .get()
                     .await()
-                
-                Log.d("GemOfMonthRepository", "Meeting $meetingId: Found ${assignedRoleSnapshot.size()} role assignments for user $userId")
-                
+
+                Log.d(
+                    "GemOfMonthRepository",
+                    "Meeting $meetingId: Found ${assignedRoleSnapshot.size()} role assignments for user $userId"
+                )
+
                 // If user has any assigned role, they attended the meeting
                 if (!assignedRoleSnapshot.isEmpty) {
                     attendedCount++
                     Log.d("GemOfMonthRepository", "User $userId attended meeting $meetingId")
-                    
+
                     // Log the roles assigned
                     assignedRoleSnapshot.documents.forEach { doc ->
                         val roles = doc.get("roles") as? List<String> ?: emptyList()
@@ -195,9 +237,12 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     Log.d("GemOfMonthRepository", "User $userId did NOT attend meeting $meetingId")
                 }
             }
-            
-            Log.d("GemOfMonthRepository", "Final attendance for user $userId: $attendedCount/${meetingIds.size}")
-            
+
+            Log.d(
+                "GemOfMonthRepository",
+                "Final attendance for user $userId: $attendedCount/${meetingIds.size}"
+            )
+
             GemMemberData.AttendanceData(
                 attendedMeetings = attendedCount,
                 totalMeetings = meetingIds.size
@@ -217,9 +262,12 @@ class GemOfMonthRepositoryImpl @Inject constructor(
             var speakerCount = 0
             var evaluatorCount = 0
             var otherRolesCount = 0
-            
-            Log.d("GemOfMonthRepository", "Getting role data for user $userId in ${meetingIds.size} meetings")
-            
+
+            Log.d(
+                "GemOfMonthRepository",
+                "Getting role data for user $userId in ${meetingIds.size} meetings"
+            )
+
             for (meetingId in meetingIds) {
                 val assignedRolesSnapshot = firestore.collection("meetings")
                     .document(meetingId)
@@ -227,16 +275,19 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     .whereEqualTo("userId", userId)
                     .get()
                     .await()
-                
-                Log.d("GemOfMonthRepository", "Meeting $meetingId: Found ${assignedRolesSnapshot.size()} role documents for user $userId")
-                
+
+                Log.d(
+                    "GemOfMonthRepository",
+                    "Meeting $meetingId: Found ${assignedRolesSnapshot.size()} role documents for user $userId"
+                )
+
                 val meetingDate = getMeetingDate(meetingId)
-                
+
                 for (roleDoc in assignedRolesSnapshot.documents) {
                     // Get roles array from the document
                     val roles = roleDoc.get("roles") as? List<String> ?: emptyList()
                     Log.d("GemOfMonthRepository", "  Role document ${roleDoc.id}: roles = $roles")
-                    
+
                     // Process each role assigned to this user
                     for (roleName in roles) {
                         allRoles.add(
@@ -246,16 +297,18 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                                 meetingDate = meetingDate
                             )
                         )
-                        
+
                         when {
                             roleName.contains("Speaker", ignoreCase = true) -> {
                                 speakerCount++
                                 Log.d("GemOfMonthRepository", "    Found Speaker role: $roleName")
                             }
+
                             roleName.contains("Evaluator", ignoreCase = true) -> {
                                 evaluatorCount++
                                 Log.d("GemOfMonthRepository", "    Found Evaluator role: $roleName")
                             }
+
                             else -> {
                                 otherRolesCount++
                                 Log.d("GemOfMonthRepository", "    Found Other role: $roleName")
@@ -264,14 +317,17 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     }
                 }
             }
-            
+
             val recentRoles = allRoles
                 .sortedByDescending { it.meetingDate }
                 .take(4)
                 .map { it.roleName }
-            
-            Log.d("GemOfMonthRepository", "User $userId role summary: Speaker=$speakerCount, Evaluator=$evaluatorCount, Other=$otherRolesCount, Recent roles=$recentRoles")
-            
+
+            Log.d(
+                "GemOfMonthRepository",
+                "User $userId role summary: Speaker=$speakerCount, Evaluator=$evaluatorCount, Other=$otherRolesCount, Recent roles=$recentRoles"
+            )
+
             GemMemberData.RoleData(
                 recentRoles = recentRoles,
                 speakerCount = speakerCount,
@@ -297,17 +353,23 @@ class GemOfMonthRepositoryImpl @Inject constructor(
     ): List<GemMemberData.Award> {
         return try {
             val awards = mutableListOf<GemMemberData.Award>()
-            
-            Log.d("GemOfMonthRepository", "Getting awards for user $userId in ${meetingIds.size} meetings")
-            
+
+            Log.d(
+                "GemOfMonthRepository",
+                "Getting awards for user $userId in ${meetingIds.size} meetings"
+            )
+
             // First, get the user's name to match against memberName field
             val userDoc = firestore.collection("users").document(userId).get().await()
             val userName = userDoc.getString("name") ?: ""
             Log.d("GemOfMonthRepository", "User $userId name: $userName")
-            
+
             for (meetingId in meetingIds) {
-                Log.d("GemOfMonthRepository", "Checking awards in meeting $meetingId for user $userName")
-                
+                Log.d(
+                    "GemOfMonthRepository",
+                    "Checking awards in meeting $meetingId for user $userName"
+                )
+
                 val winnersSnapshot = firestore.collection("meetings")
                     .document(meetingId)
                     .collection("winners")
@@ -315,16 +377,22 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     .whereEqualTo("member", true)
                     .get()
                     .await()
-                
-                Log.d("GemOfMonthRepository", "Found ${winnersSnapshot.size()} awards for $userName in meeting $meetingId")
-                
+
+                Log.d(
+                    "GemOfMonthRepository",
+                    "Found ${winnersSnapshot.size()} awards for $userName in meeting $meetingId"
+                )
+
                 for (winnerDoc in winnersSnapshot.documents) {
                     val categoryString = winnerDoc.getString("category") ?: ""
                     val memberName = winnerDoc.getString("memberName") ?: ""
                     val member = winnerDoc.getBoolean("member") ?: false
-                    
-                    Log.d("GemOfMonthRepository", "Award: category=$categoryString, memberName=$memberName, member=$member")
-                    
+
+                    Log.d(
+                        "GemOfMonthRepository",
+                        "Award: category=$categoryString, memberName=$memberName, member=$member"
+                    )
+
                     // Convert string to WinnerCategory enum
                     val winnerCategory = try {
                         com.bntsoft.toastmasters.domain.models.WinnerCategory.valueOf(categoryString)
@@ -332,7 +400,7 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                         Log.w("GemOfMonthRepository", "Unknown winner category: $categoryString")
                         null
                     }
-                    
+
                     if (winnerCategory != null) {
                         awards.add(
                             GemMemberData.Award(
@@ -344,12 +412,12 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                     }
                 }
             }
-            
+
             Log.d("GemOfMonthRepository", "Total awards found for user $userName: ${awards.size}")
             awards.forEach { award ->
                 Log.d("GemOfMonthRepository", "  - ${award.displayName} (${award.category})")
             }
-            
+
             awards
         } catch (e: Exception) {
             Log.e("GemOfMonthRepository", "Error getting awards for member $userId", e)
@@ -367,7 +435,7 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                 .orderBy("month")
                 .get()
                 .await()
-            
+
             gemHistorySnapshot.documents.mapNotNull { doc ->
                 val year = doc.getLong("year")?.toInt()
                 val month = doc.getLong("month")?.toInt()
@@ -392,19 +460,25 @@ class GemOfMonthRepositoryImpl @Inject constructor(
         month: Int
     ): Result<Unit> {
         return try {
-            // Get member data for the record
+            Log.d("GemOfMonthRepository", "Saving gem of the month: $userId for $year-$month")
+
+            // Get member performance data to save with the gem record
+            val memberDataFlow = getMemberPerformanceData(year, month)
             var memberData: GemMemberData? = null
-            getMemberPerformanceData(year, month).collect { memberList ->
+
+            memberDataFlow.collect { memberList ->
                 memberData = memberList.find { it.user.id == userId }
             }
-            
+
             if (memberData == null) {
                 return Result.failure(Exception("Member data not found"))
             }
-            
-            // Create document ID as "userId_year_month"
-            val documentId = "${userId}_${year}_${month}"
-            
+
+            // Use consistent document ID based only on year and month (one gem per month)
+            val documentId = "${year}_${month}"
+
+            Log.d("GemOfMonthRepository", "Using document ID: $documentId for gem selection")
+
             val gemRecord = com.bntsoft.toastmasters.data.model.GemOfTheMonth(
                 id = documentId,
                 userId = userId,
@@ -424,12 +498,12 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                 ),
                 awards = memberData!!.awards.map { it.displayName }
             )
-            
+
             firestore.collection("gemOfTheMonth")
                 .document(documentId)
                 .set(gemRecord)
                 .await()
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("GemOfMonthRepository", "Error saving gem of the month", e)
@@ -443,13 +517,13 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                 .document(meetingId)
                 .get()
                 .await()
-            
+
             // Try to get date as string first (based on your Firebase structure)
             val dateString = meetingDoc.getString("date")
             if (!dateString.isNullOrEmpty()) {
                 return dateString
             }
-            
+
             // Fallback to timestamp if date is stored as timestamp
             val date = meetingDoc.getDate("date")
             date?.let { dateFormat.format(it) } ?: ""
@@ -465,32 +539,32 @@ class GemOfMonthRepositoryImpl @Inject constructor(
         awards: List<GemMemberData.Award>
     ): Int {
         var score = 0
-        
+
         score += (attendanceData.attendancePercentage * 0.3).toInt()
-        
+
         score += roleData.speakerCount * 15
         score += roleData.evaluatorCount * 10
         score += roleData.otherRolesCount * 5
-        
+
         score += awards.size * 20
-        
+
         return score
     }
-    
+
     override suspend fun getGemOfTheMonth(
         year: Int,
         month: Int
     ): com.bntsoft.toastmasters.data.model.GemOfTheMonth? {
         return try {
             Log.d("GemOfMonthRepository", "Getting gem of the month for $year-$month")
-            
+
             val snapshot = firestore.collection("gemOfTheMonth")
                 .whereEqualTo("year", year)
                 .whereEqualTo("month", month)
                 .limit(1)
                 .get()
                 .await()
-            
+
             if (snapshot.documents.isNotEmpty()) {
                 val doc = snapshot.documents.first()
                 val gemOfTheMonth = doc.toObject(com.bntsoft.toastmasters.data.model.GemOfTheMonth::class.java)

@@ -56,24 +56,29 @@ class SettingsFragment : Fragment() {
     private fun observeUserData() {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.uiState.collectLatest { state ->
-                when {
-                    state.isLoading -> {
-                        // Show loading state if needed
-                    }
-
-                    state.navigateToLogin -> {
-                        // Navigate to login screen
-                        navigateToLogin()
-                        viewModel.onNavigationComplete()
-                    }
-
-                    state.user != null -> {
-                        binding.user = state.user
-                        updateUserDetails(state.user)
-                    }
-
-                    !state.error.isNullOrEmpty() -> {
-                        showError(state.error)
+                when (state) {
+                    is SettingsUiState -> {
+                        if (state.navigateToLogin) {
+                            // Stop notification listener service
+                            try {
+                                val notificationServiceIntent = android.content.Intent(requireContext(), com.bntsoft.toastmasters.service.NotificationListenerService::class.java)
+                                requireContext().stopService(notificationServiceIntent)
+                            } catch (e: Exception) {
+                                // Ignore errors when stopping service
+                            }
+                            
+                            navigateToLogin()
+                            viewModel.onNavigationComplete()
+                        }
+                        
+                        state.user?.let { user ->
+                            binding.user = user
+                            updateUserDetails(user)
+                        }
+                        
+                        state.error?.let { error ->
+                            showError(error)
+                        }
                     }
                 }
             }

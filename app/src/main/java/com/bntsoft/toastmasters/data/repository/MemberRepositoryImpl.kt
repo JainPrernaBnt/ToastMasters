@@ -5,6 +5,7 @@ import com.bntsoft.toastmasters.data.remote.FirestoreService
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
+import com.bntsoft.toastmasters.domain.usecase.notification.NotificationTriggerUseCase
 import com.bntsoft.toastmasters.utils.NotificationHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -20,6 +21,7 @@ import javax.inject.Singleton
 class MemberRepositoryImpl @Inject constructor(
     private val firestoreService: FirestoreService,
     private val notificationRepository: NotificationRepository,
+    private val notificationTriggerUseCase: NotificationTriggerUseCase,
     private val firestore: com.google.firebase.firestore.FirebaseFirestore
 ) : MemberRepository {
 
@@ -70,17 +72,17 @@ class MemberRepositoryImpl @Inject constructor(
 
                 if (updateSuccess) {
                     // Send notification only if update was successful
-                    val notification = NotificationData(
-                        title = "Membership approved",
-                        message = "Your account has been approved. You can now sign in and use the app.",
-                        type = NotificationHelper.TYPE_MEMBER_APPROVAL,
-                        data = mapOf(NotificationHelper.EXTRA_USER_ID to userId)
-                    )
                     try {
-                        notificationRepository.sendNotificationToUser(userId, notification)
+                        val userDoc = firestoreService.getUserDocument(userId).get().await()
+                        val userName = userDoc.getString("name") ?: "Member"
+                        notificationTriggerUseCase.notifyMemberOfRequestApproval(
+                            memberId = userId,
+                            memberName = userName,
+                            requestType = "membership"
+                        )
                     } catch (e: Exception) {
                         // Log error but don't fail the operation
-                        Log.e("MemberRepository", "Error in getMemberById", e)
+                        Log.e("MemberRepository", "Error sending approval notification", e)
                     }
                 }
             }
@@ -95,20 +97,17 @@ class MemberRepositoryImpl @Inject constructor(
     override suspend fun rejectMember(userId: String, reason: String?): Boolean {
         val ok = firestoreService.rejectMember(userId, reason)
         if (ok) {
-            val msg = if (!reason.isNullOrBlank()) {
-                "Your account has been rejected. Reason: $reason"
-            } else {
-                "Your account has been rejected. Please contact club officers."
-            }
-            val notification = NotificationData(
-                title = "Membership rejected",
-                message = msg,
-                type = NotificationHelper.TYPE_MEMBER_APPROVAL,
-                data = mapOf(NotificationHelper.EXTRA_USER_ID to userId)
-            )
             try {
-                notificationRepository.sendNotificationToUser(userId, notification)
-            } catch (_: Exception) {
+                val userDoc = firestoreService.getUserDocument(userId).get().await()
+                val userName = userDoc.getString("name") ?: "Member"
+                notificationTriggerUseCase.notifyMemberOfRequestRejection(
+                    memberId = userId,
+                    memberName = userName,
+                    requestType = "membership",
+                    reason = reason
+                )
+            } catch (e: Exception) {
+                Log.e("MemberRepository", "Error sending rejection notification", e)
             }
         }
         return ok

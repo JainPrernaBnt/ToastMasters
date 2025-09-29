@@ -13,13 +13,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.bntsoft.toastmasters.MainActivity
 import com.bntsoft.toastmasters.R
-import com.bntsoft.toastmasters.domain.models.NotificationAudience
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import android.util.Log
+import com.bntsoft.toastmasters.domain.models.NotificationAudience
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,6 +44,10 @@ class NotificationHelper @Inject constructor(
         const val NOTIFICATION_ID_MEETING_CREATED = 1003
         const val NOTIFICATION_ID_MEETING_UPDATED = 1004
         const val NOTIFICATION_ID_MEETING_REMINDER = 1005
+        const val NOTIFICATION_ID_NEW_MEMBER_SIGNUP = 1006
+        const val NOTIFICATION_ID_MEMBER_BACKOUT = 1007
+        const val NOTIFICATION_ID_REQUEST_APPROVED = 1008
+        const val NOTIFICATION_ID_REQUEST_REJECTED = 1009
 
         // Notification types
 
@@ -66,7 +71,12 @@ class NotificationHelper @Inject constructor(
         const val TYPE_MEMBER_APPROVAL = "member_approval"
         const val TYPE_MENTOR_ASSIGNMENT = "mentor_assignment"
         const val TYPE_MEETING_CREATED = "meeting_created"
+        const val TYPE_MEETING_UPDATED = "meeting_updated"
         const val TYPE_MEETING_REMINDER = "meeting_reminder"
+        const val TYPE_NEW_MEMBER_SIGNUP = "new_member_signup"
+        const val TYPE_MEMBER_BACKOUT = "member_backout"
+        const val TYPE_REQUEST_APPROVED = "request_approved"
+        const val TYPE_REQUEST_REJECTED = "request_rejected"
 
         // Intent extras
         const val EXTRA_NOTIFICATION_TYPE = "notification_type"
@@ -172,6 +182,17 @@ class NotificationHelper @Inject constructor(
         }
     }
 
+    private fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Permissions not required for older versions
+        }
+    }
+
     fun showNotification(
         title: String,
         message: String,
@@ -196,14 +217,26 @@ class NotificationHelper @Inject constructor(
                 actions.forEach { addAction(it) }
             }
 
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            NotificationManagerCompat.from(context).notify(notificationId, builder.build())
+        // Check for notification permission before showing notification
+        if (hasNotificationPermission()) {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
+            notificationManager.notify(notificationId, builder.build())
+        } else {
+            Log.w("NotificationHelper", "Notification permission not granted, skipping notification: $title")
         }
-        notificationManager.notify(notificationId, builder.build())
     }
 
     fun handleRemoteMessage(remoteMessage: RemoteMessage) {
@@ -235,6 +268,26 @@ class NotificationHelper @Inject constructor(
 
                 TYPE_MEETING_CREATED -> {
                     handleMeetingCreatedNotification(title, message, data)
+                }
+
+                TYPE_MEETING_UPDATED -> {
+                    handleMeetingUpdatedNotification(title, message, data)
+                }
+
+                TYPE_NEW_MEMBER_SIGNUP -> {
+                    handleNewMemberSignupNotification(title, message, data)
+                }
+
+                TYPE_MEMBER_BACKOUT -> {
+                    handleMemberBackoutNotification(title, message, data)
+                }
+
+                TYPE_REQUEST_APPROVED -> {
+                    handleRequestApprovedNotification(title, message, data)
+                }
+
+                TYPE_REQUEST_REJECTED -> {
+                    handleRequestRejectedNotification(title, message, data)
                 }
 
                 else -> {
@@ -374,6 +427,81 @@ class NotificationHelper @Inject constructor(
             date?.let { append("\n\nDate: $it") }
             location?.let { append("\nLocation: $it") }
         }
+    }
+
+    private fun handleMeetingUpdatedNotification(
+        title: String,
+        message: String,
+        data: Map<String, String>
+    ) {
+        showNotification(
+            title = title,
+            message = message,
+            notificationId = NOTIFICATION_ID_MEETING_UPDATED,
+            channelId = CHANNEL_ID_MEETINGS,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            data = data
+        )
+    }
+
+    private fun handleNewMemberSignupNotification(
+        title: String,
+        message: String,
+        data: Map<String, String>
+    ) {
+        showNotification(
+            title = title,
+            message = message,
+            notificationId = NOTIFICATION_ID_NEW_MEMBER_SIGNUP,
+            channelId = CHANNEL_ID_IMPORTANT,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            data = data
+        )
+    }
+
+    private fun handleMemberBackoutNotification(
+        title: String,
+        message: String,
+        data: Map<String, String>
+    ) {
+        showNotification(
+            title = title,
+            message = message,
+            notificationId = NOTIFICATION_ID_MEMBER_BACKOUT,
+            channelId = CHANNEL_ID_IMPORTANT,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            data = data
+        )
+    }
+
+    private fun handleRequestApprovedNotification(
+        title: String,
+        message: String,
+        data: Map<String, String>
+    ) {
+        showNotification(
+            title = title,
+            message = message,
+            notificationId = NOTIFICATION_ID_REQUEST_APPROVED,
+            channelId = CHANNEL_ID_IMPORTANT,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            data = data
+        )
+    }
+
+    private fun handleRequestRejectedNotification(
+        title: String,
+        message: String,
+        data: Map<String, String>
+    ) {
+        showNotification(
+            title = title,
+            message = message,
+            notificationId = NOTIFICATION_ID_REQUEST_REJECTED,
+            channelId = CHANNEL_ID_IMPORTANT,
+            priority = NotificationCompat.PRIORITY_DEFAULT,
+            data = data
+        )
     }
 }
 

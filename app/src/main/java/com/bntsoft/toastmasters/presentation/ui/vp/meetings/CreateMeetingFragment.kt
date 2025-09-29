@@ -477,7 +477,7 @@ class CreateMeetingFragment : Fragment() {
         val textInputLayout = dialogView.findViewById<TextInputLayout>(R.id.roleCountLayout)
         textInputLayout.hint = "Number of $role"
 
-        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_ToastMasters_Dialog)
+        val dialog = AlertDialog.Builder(requireContext(), R.style.Theme_ToastMasters_RoleDialog)
             .setTitle("Add $role")
             .setView(dialogView)
             .setPositiveButton("Add") { d, _ ->
