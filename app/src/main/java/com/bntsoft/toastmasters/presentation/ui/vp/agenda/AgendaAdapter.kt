@@ -398,11 +398,12 @@ class AgendaAdapter(
     override fun canDrag(position: Int): Boolean {
         // Allow dragging normal items, time breaks, and sessions (not the add button)
         val canDrag = position < _items.size &&
-                (getItemViewType(position) == VIEW_TYPE_ITEM || 
-                 getItemViewType(position) == VIEW_TYPE_TIME_BREAK || 
+                (getItemViewType(position) == VIEW_TYPE_ITEM ||
+                 getItemViewType(position) == VIEW_TYPE_TIME_BREAK ||
                  getItemViewType(position) == VIEW_TYPE_SESSION)
-        Log.d("AgendaAdapter", "canDrag($position): $canDrag, viewType=${getItemViewType(position)}, isVpEducation=$isVpEducation")
-        return canDrag
+        val allowed = isVpEducation && canDrag
+        Log.d("AgendaAdapter", "canDrag($position): $allowed, viewType=${getItemViewType(position)}, isVpEducation=$isVpEducation")
+        return allowed
     }
 
     override fun canSwipe(position: Int): Boolean {

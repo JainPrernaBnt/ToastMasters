@@ -31,6 +31,9 @@
                 android:defaultValue=""
                 app:argType="string" />
         </action>
+        <action
+            android:id="@+id/action_memberDashboardFragment_to_createAgendaFragment"
+            app:destination="@id/createAgendaFragment" />
     </fragment>
 
     <fragment
@@ -91,6 +94,27 @@
         <action
             android:id="@+id/action_agendaTableFragment_to_navigation_dashboard"
             app:destination="@id/navigation_dashboard" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createAgendaFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.vp.agenda.front.CreateAgendaFragment"
+        android:label="Create Agenda"
+        tools:layout="@layout/fragment_create_agenda">
+        <argument
+            android:name="meeting_id"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_createAgendaFragment_to_agendaTableFragment"
+            app:destination="@id/agendaTableFragment"
+            app:popUpTo="@id/createAgendaFragment"
+            app:popUpToInclusive="false">
+            <argument
+                android:name="meetingId"
+                android:defaultValue="@null"
+                app:argType="string"
+                app:nullable="true" />
+        </action>
     </fragment>
 
     <fragment

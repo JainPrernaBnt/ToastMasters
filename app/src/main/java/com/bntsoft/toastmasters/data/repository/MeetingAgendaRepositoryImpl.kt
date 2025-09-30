@@ -107,32 +107,5 @@ class MeetingAgendaRepositoryImpl @Inject constructor(
     override suspend fun saveAbbreviations(meetingId: String, agendaId: String, abbreviations: Map<String, String>): Result<Unit> {
         return agendaDataSource.saveAbbreviations(meetingId, agendaId, abbreviations)
     }
-    
-    override suspend fun updateOfficers(
-        meetingId: String,
-        officers: Map<String, String>
-    ): Result<Unit> {
-        return agendaDataSource.updateOfficers(
-            meetingId = meetingId,
-            officers = officers
-        )
-    }
-    
-    override suspend fun updateClubInfo(
-        meetingId: String,
-        clubName: String,
-        clubNumber: String,
-        district: String,
-        area: String,
-        mission: String
-    ): Result<Unit> {
-        return agendaDataSource.updateClubInfo(
-            meetingId = meetingId,
-            clubName = clubName,
-            clubNumber = clubNumber,
-            district = district,
-            area = area,
-            mission = mission
-        )
-    }
+
 }

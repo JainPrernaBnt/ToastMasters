@@ -898,8 +898,6 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                 .document(meetingId)
                 .collection("agenda")
                 .document(sanitizedAgendaId)
-                .collection("agendaOfficers")
-                .document(sanitizedAgendaId)
                 .get()
                 .await()
 
@@ -926,8 +924,6 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
             val docRef = firestore.collection(MEETINGS_COLLECTION)
                     .document(meetingId)
                     .collection("agenda")
-                    .document(sanitizedAgendaId)
-                    .collection("agendaOfficers")
                     .document(sanitizedAgendaId)
 
             // Create a new map to ensure we're not storing any null values
@@ -960,8 +956,6 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
                 .document(meetingId)
                 .collection("agenda")
                 .document(sanitizedAgendaId)
-                .collection("agendaOfficers")
-                .document(sanitizedAgendaId)
 
             // Use FieldValue.delete() to remove the specific abbreviation from the map
             val updates = hashMapOf<String, Any>(
@@ -976,167 +970,4 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateOfficers(
-        meetingId: String,
-        officers: Map<String, String>
-    ): Result<Unit> {
-        return try {
-            val agendaId = resolveAgendaId(meetingId)
-            // Ensure agendaId is treated as a document ID, not a path
-            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
-
-            // Only update the provided officer fields, leave others untouched
-            val officerData = hashMapOf<String, Any>(
-                "officers" to officers,
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
-
-            // Merge only the provided officers into the existing document
-            firestore.collection(MEETINGS_COLLECTION)
-                .document(meetingId)
-                .collection("agenda")
-                .document(sanitizedAgendaId)
-                .collection("agendaOfficers")
-                .document(sanitizedAgendaId)
-                .set(officerData, SetOptions.merge())
-                .await()
-
-            // Also update the main meeting document for quick access (merge)
-            firestore.collection(MEETINGS_COLLECTION)
-                .document(meetingId)
-                .set(mapOf("officers" to officers), SetOptions.merge())
-                .await()
-
-            Success(Unit)
-        } catch (e: Exception) {
-            Log.e("FirebaseAgendaDS", "Error updating officers", e)
-            Error(e)
-        }
-    }
-
-    override suspend fun updateClubInfo(
-        meetingId: String,
-        clubName: String,
-        clubNumber: String,
-        district: String,
-        area: String,
-        mission: String
-    ): Result<Unit> {
-        return try {
-            val agendaId = resolveAgendaId(meetingId)
-            // Ensure agendaId is treated as a document ID, not a path
-            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
-            val clubInfo = mapOf(
-                "clubName" to clubName,
-                "clubNumber" to clubNumber,
-                "district" to district,
-                "area" to area,
-                "mission" to mission,
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
-
-            // Save club info in the same document as officers data
-            val agendaOfficersDoc = firestore.collection(MEETINGS_COLLECTION)
-                .document(meetingId)
-                .collection("agenda")
-                .document(sanitizedAgendaId)
-                .collection("agendaOfficers")
-                .document(sanitizedAgendaId)
-
-            // Always update all club info fields together
-            val clubInfoUpdate = mapOf(
-                "clubInfo" to mapOf(
-                    "clubName" to clubName,
-                    "clubNumber" to clubNumber,
-                    "district" to district,
-                    "area" to area,
-                    "mission" to mission,
-                    "updatedAt" to FieldValue.serverTimestamp()
-                )
-            )
-
-            agendaOfficersDoc.set(clubInfoUpdate, SetOptions.merge()).await()
-
-            // Also update the main meeting document for quick access (merge)
-            firestore.collection(MEETINGS_COLLECTION)
-                .document(meetingId)
-                .set(
-                    mapOf(
-                        "clubName" to clubName,
-                        "clubNumber" to clubNumber,
-                        "district" to district,
-                        "area" to area,
-                        "mission" to mission
-                    ),
-                    SetOptions.merge()
-                )
-                .await()
-
-            Success(Unit)
-        } catch (e: Exception) {
-            Log.e("FirebaseAgendaDS", "Error updating club info", e)
-            Error(e)
-        }
-    }
-
-    override suspend fun getOfficers(
-        meetingId: String,
-        agendaId: String
-    ): Result<Map<String, String>> {
-        return try {
-            // Ensure agendaId is treated as a document ID, not a path
-            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
-            val docSnapshot = firestore.collection(MEETINGS_COLLECTION)
-                .document(meetingId)
-                .collection(AGENDA_ITEMS_SUBCOLLECTION)
-                .document(sanitizedAgendaId)
-                .collection("agendaOfficers")
-                .document(sanitizedAgendaId)
-                .get()
-                .await()
-
-            val officers = docSnapshot.get("officers") as? Map<String, String> ?: emptyMap()
-
-            Log.d("FirebaseAgendaDS", "Fetched officers: $officers")
-            Result.Success(officers)
-        } catch (e: Exception) {
-            Log.e("FirebaseAgendaDS", "Error fetching officers", e)
-            Result.Error(e)
-        }
-    }
-
-    override suspend fun getClubInfo(meetingId: String, agendaId: String): Result<ClubInfo> {
-        return try {
-            // Ensure agendaId is treated as a document ID, not a path
-            val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
-            val docSnapshot = firestore.collection(MEETINGS_COLLECTION)
-                .document(meetingId)
-                .collection(AGENDA_ITEMS_SUBCOLLECTION)
-                .document(sanitizedAgendaId)
-                .collection("agendaOfficers")
-                .document(sanitizedAgendaId)
-                .get()
-                .await()
-
-            val clubName = docSnapshot.getString("clubName") ?: ""
-            val clubNumber = docSnapshot.getString("clubNumber") ?: ""
-            val district = docSnapshot.getString("district") ?: ""
-            val area = docSnapshot.getString("area") ?: ""
-            val mission = docSnapshot.getString("mission") ?: ""
-
-            val clubInfo = ClubInfo(
-                clubName = clubName,
-                clubNumber = clubNumber,
-                district = district,
-                area = area,
-                mission = mission
-            )
-
-            Log.d("FirebaseAgendaDS", "Fetched club info: $clubInfo")
-            Result.Success(clubInfo)
-        } catch (e: Exception) {
-            Log.e("FirebaseAgendaDS", "Error fetching club info", e)
-            Result.Error(e)
-        }
-    }
 }

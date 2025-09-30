@@ -30,9 +30,9 @@ class MemberDashboardFragment : Fragment() {
             viewModel,
             viewModel.currentUserId ?: "",
             onAgendaClick = { meetingId ->
-                val bundle = Bundle().apply { putString("meetingId", meetingId) }
+                val bundle = Bundle().apply { putString("meeting_id", meetingId) }
                 findNavController().navigate(
-                    R.id.action_memberDashboardFragment_to_agendaTableFragment,
+                    R.id.action_memberDashboardFragment_to_createAgendaFragment,
                     bundle
                 )
             },

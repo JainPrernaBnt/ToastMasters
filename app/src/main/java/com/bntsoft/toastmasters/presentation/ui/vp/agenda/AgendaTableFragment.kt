@@ -112,11 +112,9 @@ class AgendaTableFragment : Fragment() {
                 // Apply role-based UI visibility
                 applyRoleBasedVisibility()
 
-                // If user is Member and agenda is not published, show message and go back
+                // Members can view in read-only mode even if not published
                 if (!isVpEducation && !isAgendaPublished) {
-                    showMessage("Agenda is not yet published by VP Education")
-                    findNavController().navigateUp()
-                    return@launch
+                    showMessage("Agenda is in draft. Viewing read-only.")
                 }
 
             } catch (e: Exception) {

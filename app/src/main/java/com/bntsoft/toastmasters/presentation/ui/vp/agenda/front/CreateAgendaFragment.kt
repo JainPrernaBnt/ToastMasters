@@ -18,10 +18,12 @@ import com.bntsoft.toastmasters.data.model.AbbreviationItem
 import com.bntsoft.toastmasters.databinding.FragmentCreateAgendaBinding
 import com.bntsoft.toastmasters.domain.model.MeetingAgenda
 import com.bntsoft.toastmasters.presentation.ui.vp.agenda.front.viewmodel.CreateAgendaViewModel
+import com.bntsoft.toastmasters.utils.UserManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
@@ -43,6 +45,10 @@ class CreateAgendaFragment : Fragment() {
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private lateinit var meetingId: String
     private var currentStep = 1
+
+    @Inject
+    lateinit var userManager: UserManager
+    private var isVpEducation: Boolean = false
 
     private lateinit var abbreviationAdapter: AbbreviationAdapter
 
@@ -102,6 +108,56 @@ class CreateAgendaFragment : Fragment() {
             setupMeetingDetails()
             observeViewModel()
             viewModel.loadMeeting(meetingId)
+            viewLifecycleOwner.lifecycleScope.launch {
+                try {
+                    isVpEducation = userManager.isVpEducation()
+                    applyRoleBasedAccess()
+                } catch (_: Exception) { }
+            }
+        }
+    }
+
+    private fun applyRoleBasedAccess() {
+        if (!isVpEducation) {
+            binding.editClubInfoButton.visibility = View.GONE
+            binding.saveClubInfoButton.visibility = View.GONE
+            binding.cancelClubInfoButton.visibility = View.GONE
+
+            binding.clubNameEditText.isEnabled = false
+            binding.clubNumberEditText.isEnabled = false
+            binding.districtEditText.isEnabled = false
+            binding.areaEditText.isEnabled = false
+            binding.missionEditText.isEnabled = false
+
+            binding.presidentInputLayout.isEnabled = false
+            binding.vpEducationInputLayout.isEnabled = false
+            binding.vpMembershipInputLayout.isEnabled = false
+            binding.secretaryInputLayout.isEnabled = false
+            binding.treasurerInputLayout.isEnabled = false
+            binding.saaInputLayout.isEnabled = false
+            binding.ippInputLayout.isEnabled = false
+            binding.vpPublicRelationInputLayout.isEnabled = false
+
+            binding.editOfficersButton.visibility = View.GONE
+            binding.saveOfficersButton.visibility = View.GONE
+            binding.cancelOfficersButton.visibility = View.GONE
+
+            binding.wordOfDayEditText.isEnabled = false
+            binding.wordMeaningEditText.isEnabled = false
+            binding.wordExamplesEditText.isEnabled = false
+            binding.idiomEditText.isEnabled = false
+            binding.idiomMeaningEditText.isEnabled = false
+            binding.idiomExamplesEditText.isEnabled = false
+
+            binding.editGrammarianButton.visibility = View.GONE
+            binding.saveGrammarianButton.visibility = View.GONE
+            binding.cancelGrammarianButton.visibility = View.GONE
+
+            isAbbreviationEditing = false
+            binding.abbreviationsSummaryText.isClickable = false
+            binding.saveAbbreviationsButton.visibility = View.GONE
+            binding.addAbbreviationsButton.visibility = View.GONE
+            abbreviationAdapter.setEditable(false)
         }
     }
 
@@ -195,7 +251,6 @@ class CreateAgendaFragment : Fragment() {
                 binding.vpPublicRelationEditText.text?.toString().orEmpty()
             )
 
-            viewModel.saveOfficers()
         }
         binding.cancelOfficersButton.setOnClickListener {
             viewModel.toggleOfficersEdit()
@@ -495,6 +550,7 @@ class CreateAgendaFragment : Fragment() {
                             }
 
                             updateUi(state.agenda)
+                            applyRoleBasedAccess()
                         } // End of withContext(Main)
                     } // End of collect
                 } // End of repeatOnLifecycle
