@@ -16,7 +16,6 @@
         android:layout_height="wrap_content"
         android:minHeight="48dp"
         android:padding="0dp"
-        android:layout_margin="0dp"
         android:orientation="horizontal">
 
         <!-- TIME -->
@@ -53,6 +52,7 @@
             <TextView
                 android:id="@+id/tvRedTime"
                 android:layout_width="0dp"
+                android:padding="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="#F44336"
@@ -62,11 +62,75 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-        <!-- ACTIVITY -->
-        <TextView
-            android:id="@+id/tvActivity"
-            style="@style/Cell.Activity"
-            android:text="Activity Name" />
+        <!-- ACTIVITY (includes speaker details) -->
+        <FrameLayout
+            android:layout_width="330dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/cell_border_no_padding"
+            android:padding="0dp">
+
+            <!-- Activity Text (centered for non-speakers) -->
+            <TextView
+                android:id="@+id/tvActivity"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:textSize="14sp"
+                android:text="Activity Name" />
+
+            <!-- Speaker Details Section (only visible for speakers) -->
+            <LinearLayout
+                android:id="@+id/speakerDetailsLayout"
+                android:layout_width="180dp"
+                android:padding="0dp"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_gravity="start"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvSpeakerTrack"
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/speaker_detail_border"
+                    android:text="" />
+
+                <TextView
+                    android:id="@+id/tvSpeakerLevel"
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/speaker_detail_border"
+                    android:text="" />
+
+                <TextView
+                    android:id="@+id/tvSpeakerProject"
+                    android:layout_width="60dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/speaker_detail_border"
+                    android:text="" />
+            </LinearLayout>
+
+            <!-- Activity Text for speakers (positioned to the right) -->
+            <TextView
+                android:id="@+id/tvActivitySpeaker"
+                android:layout_width="150dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="end|center_vertical"
+                android:gravity="center"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:text="" />
+        </FrameLayout>
 
         <!-- PRESENTER -->
         <TextView

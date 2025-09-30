@@ -387,13 +387,6 @@ class NotificationHelper @Inject constructor(
                 priority = priority,
                 pendingIntent = pendingIntent,
                 style = style,
-                actions = listOf(
-                    NotificationCompat.Action.Builder(
-                        R.drawable.ic_calendar,
-                        context.getString(R.string.view_meeting),
-                        pendingIntent
-                    ).build()
-                ),
                 data = data
             )
 

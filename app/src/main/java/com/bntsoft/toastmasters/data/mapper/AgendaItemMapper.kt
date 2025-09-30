@@ -21,6 +21,9 @@ class AgendaItemMapper @Inject constructor() : Mapper<AgendaItemDto, AgendaItem>
             presenterId = entity.presenterId,
             presenterName = entity.presenterName,
             isSessionHeader = entity.isSessionHeader,
+            speakerPathwaysTrack = entity.speakerPathwaysTrack,
+            speakerLevel = entity.speakerLevel,
+            speakerProjectNumber = entity.speakerProjectNumber,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt
         )
@@ -39,6 +42,9 @@ class AgendaItemMapper @Inject constructor() : Mapper<AgendaItemDto, AgendaItem>
             presenterId = dto.presenterId,
             presenterName = dto.presenterName,
             isSessionHeader = dto.isSessionHeader,
+            speakerPathwaysTrack = dto.speakerPathwaysTrack,
+            speakerLevel = dto.speakerLevel,
+            speakerProjectNumber = dto.speakerProjectNumber,
             createdAt = dto.createdAt,
             updatedAt = dto.updatedAt
         )

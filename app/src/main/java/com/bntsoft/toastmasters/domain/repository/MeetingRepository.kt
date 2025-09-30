@@ -34,6 +34,7 @@ interface MeetingRepository {
     // Speaker details
     suspend fun saveSpeakerDetails(meetingId: String, userId: String, speakerDetails: SpeakerDetails): Result<Unit>
     suspend fun getSpeakerDetails(meetingId: String, userId: String): SpeakerDetails?
+    suspend fun getSpeakerDetailsForMeetingDirect(meetingId: String): List<SpeakerDetails>
     fun getSpeakerDetailsForMeeting(meetingId: String): Flow<List<SpeakerDetails>>
 
     // Grammarian details

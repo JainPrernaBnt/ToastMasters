@@ -6,9 +6,12 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
 import com.bntsoft.toastmasters.databinding.ItemAddAgendaButtonBinding
 import com.bntsoft.toastmasters.databinding.ItemAgendaBinding
@@ -302,6 +305,41 @@ class AgendaAdapter(
                             tvRedTime.text = (it / 60).toString()
                             tvRedTime.visibility = View.VISIBLE
                         } ?: run { tvRedTime.visibility = View.GONE }
+
+                        // Handle speaker details with new layout structure
+                        val speakerDetailsLayout = itemView.findViewById<LinearLayout>(R.id.speakerDetailsLayout)
+                        val tvActivitySpeaker = itemView.findViewById<TextView>(R.id.tvActivitySpeaker)
+                        
+                        if (item.speakerPathwaysTrack.isNotEmpty() || item.speakerLevel > 0 || item.speakerProjectNumber.isNotEmpty()) {
+                            Log.d("AgendaAdapter", "Displaying speaker details: track=${item.speakerPathwaysTrack}, level=${item.speakerLevel}, project=${item.speakerProjectNumber}")
+                            
+                            // Show speaker details layout
+                            speakerDetailsLayout.visibility = View.VISIBLE
+                            tvActivitySpeaker.visibility = View.VISIBLE
+                            tvActivity.visibility = View.GONE
+                            
+                            // Set speaker details
+                            tvSpeakerTrack.text = if (item.speakerPathwaysTrack.isNotEmpty()) {
+                                formatPathwaysTrack(item.speakerPathwaysTrack)
+                            } else ""
+                            
+                            tvSpeakerLevel.text = if (item.speakerLevel > 0) {
+                                "L${item.speakerLevel}"
+                            } else ""
+                            
+                            tvSpeakerProject.text = if (item.speakerProjectNumber.isNotEmpty()) {
+                                formatProjectNumber(item.speakerProjectNumber)
+                            } else ""
+                            
+                            // Set activity text in speaker layout
+                            tvActivitySpeaker.text = item.activity ?: ""
+                        } else {
+                            // Hide speaker details, show centered activity text
+                            speakerDetailsLayout.visibility = View.GONE
+                            tvActivitySpeaker.visibility = View.GONE
+                            tvActivity.visibility = View.VISIBLE
+                            tvActivity.text = item.activity ?: ""
+                        }
                     }
 
                     VIEW_TYPE_SESSION -> {
@@ -370,6 +408,28 @@ class AgendaAdapter(
     override fun canSwipe(position: Int): Boolean {
         // Don't allow swiping any items (including time breaks and sessions)
         return false
+    }
+    
+    private fun formatPathwaysTrack(pathwaysTrack: String): String {
+        return when (pathwaysTrack.lowercase()) {
+            "visionary communication" -> "VC"
+            "dynamic leadership" -> "DL"
+            "persuasive influence" -> "PI"
+            "strategic relationships" -> "SR"
+            "innovative planning" -> "IP"
+            "team collaboration" -> "TC"
+            "effective coaching" -> "EC"
+            "presentation mastery" -> "PM"
+            else -> pathwaysTrack.take(2).uppercase() // Fallback: first 2 characters
+        }
+    }
+    
+    private fun formatProjectNumber(projectNumber: String): String {
+        return when {
+            projectNumber.equals("Elective Project", ignoreCase = true) -> "Elec"
+            projectNumber.matches(Regex("\\d+")) -> "P$projectNumber" // If it's a number, prefix with "P"
+            else -> projectNumber // Return as is for other cases
+        }
     }
 }
 

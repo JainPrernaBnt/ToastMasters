@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
 import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
+import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.databinding.DialogAddEditAgendaBinding
 import com.bntsoft.toastmasters.utils.Resource
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -36,6 +37,9 @@ class AgendaItemDialog : DialogFragment() {
     }
     @Inject
     lateinit var assignedRoleRepository: AssignedRoleRepository
+    
+    @Inject
+    lateinit var meetingRepository: MeetingRepository
 
     private var _binding: DialogAddEditAgendaBinding? = null
     private val binding get() = _binding!!
@@ -122,37 +126,23 @@ class AgendaItemDialog : DialogFragment() {
 
             val timeString = timeFormat.format(selectedTime.time)
 
-            // Get the selected display text and extract only the member name
+            // Get the selected display text and extract member name and role
             val selectedDisplayText = binding.presenterInput.text.toString()
             val presenterMap = binding.presenterInput.getTag(R.id.presenter_map) as? Map<String, String>
             val memberNameOnly = presenterMap?.get(selectedDisplayText) ?: selectedDisplayText.split(" - ").firstOrNull() ?: selectedDisplayText
             
-            val updatedItem = agendaItem?.copy(
-                activity = binding.activityInput.text.toString(),
-                presenterName = memberNameOnly,
-                greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
-                yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
-                redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
-                time = timeString
-            ) ?: AgendaItemDto(
-                id = "",
-                meetingId = (parentFragment as? AgendaTableFragment)?.meetingId ?: "",
-                activity = binding.activityInput.text.toString(),
-                presenterName = memberNameOnly,
-                greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
-                yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
-                redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
-                time = timeString
-            )
-
-            val finalItem = updatedItem.copy(
-                meetingId = updatedItem.meetingId.ifEmpty {
-                    (parentFragment as? AgendaTableFragment)?.meetingId ?: ""
-                }
-            )
-
-            onSaveClickListener?.invoke(finalItem)
-            dismiss()
+            // Extract role from display text
+            val role = selectedDisplayText.split(" - ").getOrNull(1) ?: ""
+            Log.d("AgendaItemDialog", "Selected role: $role for member: $memberNameOnly")
+            
+            // Check if role contains "Speaker" and fetch speaker details
+            if (role.contains("Speaker", ignoreCase = true)) {
+                Log.d("AgendaItemDialog", "Role contains Speaker, fetching speaker details...")
+                fetchSpeakerDetailsAndSave(memberNameOnly, timeString)
+            } else {
+                Log.d("AgendaItemDialog", "Role does not contain Speaker, saving without speaker details")
+                saveAgendaItem(memberNameOnly, timeString, "", 0, "")
+            }
         }
 
         binding.btnCancel.setOnClickListener {
@@ -391,5 +381,86 @@ class AgendaItemDialog : DialogFragment() {
         } else {
             "$minutes"
         }
+    }
+    
+    private fun fetchSpeakerDetailsAndSave(memberName: String, timeString: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                Log.d("AgendaItemDialog", "Fetching speaker details for member: $memberName in meeting: $meetingId")
+                
+                // Get all speaker details for the meeting using direct suspend function
+                val speakerDetailsList = meetingRepository.getSpeakerDetailsForMeetingDirect(meetingId)
+                Log.d("AgendaItemDialog", "Found ${speakerDetailsList.size} speaker details")
+                
+                // Log all speaker details for debugging
+                speakerDetailsList.forEach { details ->
+                    Log.d("AgendaItemDialog", "Speaker: ${details.name}, Track: ${details.pathwaysTrack}, Level: ${details.level}, Project: ${details.projectNumber}")
+                }
+                
+                // Find speaker details for the selected member
+                val speakerDetails = speakerDetailsList.find { it.name.equals(memberName, ignoreCase = true) }
+                
+                if (speakerDetails != null) {
+                    Log.d("AgendaItemDialog", "Found speaker details: track=${speakerDetails.pathwaysTrack}, level=${speakerDetails.level}, project=${speakerDetails.projectNumber}")
+                    saveAgendaItem(
+                        memberName, 
+                        timeString, 
+                        speakerDetails.pathwaysTrack, 
+                        speakerDetails.level, 
+                        speakerDetails.projectNumber
+                    )
+                } else {
+                    Log.w("AgendaItemDialog", "No speaker details found for member: $memberName")
+                    Log.w("AgendaItemDialog", "Available speakers: ${speakerDetailsList.map { it.name }}")
+                    saveAgendaItem(memberName, timeString, "", 0, "")
+                }
+            } catch (e: Exception) {
+                Log.e("AgendaItemDialog", "Error fetching speaker details", e)
+                saveAgendaItem(memberName, timeString, "", 0, "")
+            }
+        }
+    }
+    
+    private fun saveAgendaItem(
+        memberName: String, 
+        timeString: String, 
+        pathwaysTrack: String, 
+        level: Int, 
+        projectNumber: String
+    ) {
+        Log.d("AgendaItemDialog", "Saving agenda item with speaker details: track=$pathwaysTrack, level=$level, project=$projectNumber")
+        
+        val updatedItem = agendaItem?.copy(
+            activity = binding.activityInput.text.toString(),
+            presenterName = memberName,
+            greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
+            yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
+            redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
+            time = timeString,
+            speakerPathwaysTrack = pathwaysTrack,
+            speakerLevel = level,
+            speakerProjectNumber = projectNumber
+        ) ?: AgendaItemDto(
+            id = "",
+            meetingId = (parentFragment as? AgendaTableFragment)?.meetingId ?: "",
+            activity = binding.activityInput.text.toString(),
+            presenterName = memberName,
+            greenTime = parseTimeToSecondsOrMinutes(binding.greenCardInput.text.toString()),
+            yellowTime = parseTimeToSecondsOrMinutes(binding.yellowCardInput.text.toString()),
+            redTime = parseTimeToSecondsOrMinutes(binding.redCardInput.text.toString()),
+            time = timeString,
+            speakerPathwaysTrack = pathwaysTrack,
+            speakerLevel = level,
+            speakerProjectNumber = projectNumber
+        )
+
+        val finalItem = updatedItem.copy(
+            meetingId = updatedItem.meetingId.ifEmpty {
+                (parentFragment as? AgendaTableFragment)?.meetingId ?: ""
+            }
+        )
+
+        onSaveClickListener?.invoke(finalItem)
+        dismiss()
     }
 }

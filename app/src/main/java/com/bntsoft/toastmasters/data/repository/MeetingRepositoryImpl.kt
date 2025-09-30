@@ -266,6 +266,15 @@ class MeetingRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getSpeakerDetailsForMeetingDirect(meetingId: String): List<SpeakerDetails> {
+        return try {
+            firebaseDataSource.getSpeakerDetailsForMeeting(meetingId)
+        } catch (e: Exception) {
+            Log.e("MeetingRepository", "Error getting speaker details for meeting $meetingId", e)
+            emptyList()
+        }
+    }
+
     override fun getSpeakerDetailsForMeeting(meetingId: String): Flow<List<SpeakerDetails>> = flow {
         try {
             val details = firebaseDataSource.getSpeakerDetailsForMeeting(meetingId)

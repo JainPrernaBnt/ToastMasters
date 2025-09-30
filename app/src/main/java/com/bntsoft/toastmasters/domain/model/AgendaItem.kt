@@ -22,6 +22,9 @@ data class AgendaItem(
     val presenterName: String = "",
     val isSessionHeader: Boolean = false,
     val duration: Int = 0,
+    val speakerPathwaysTrack: String = "",
+    val speakerLevel: Int = 0,
+    val speakerProjectNumber: String = "",
     @ServerTimestamp
     val createdAt: Timestamp? = null,
     @ServerTimestamp

@@ -233,9 +233,17 @@
             <item name="android:layout_width">150dp</item>
         </style>
 
+
         <!-- Presenter column -->
         <style name="Cell.Presenter" parent="TableCell">
             <item name="android:layout_width">150dp</item>
+        </style>
+
+        <!-- Speaker Detail columns -->
+        <style name="Cell.SpeakerDetail" parent="TableCell">
+            <item name="android:layout_width">60dp</item>
+            <item name="android:textSize">12sp</item>
+            <item name="android:textStyle">bold</item>
         </style>
 
     <!-- Circular Image View Style -->
