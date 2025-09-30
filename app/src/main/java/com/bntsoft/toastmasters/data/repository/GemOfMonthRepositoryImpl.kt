@@ -2,6 +2,7 @@ package com.bntsoft.toastmasters.data.repository
 
 import android.util.Log
 import com.bntsoft.toastmasters.data.model.GemMemberData
+import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.GemOfMonthRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestore
@@ -9,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.awaitAll
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -21,6 +25,10 @@ class GemOfMonthRepositoryImpl @Inject constructor(
 ) : GemOfMonthRepository {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    
+    private val memberDataCache = mutableMapOf<String, List<GemMemberData>>()
+    private val cacheTimestamp = mutableMapOf<String, Long>()
+    private val cacheValidityDuration = 5 * 60 * 1000L // 5 minutes
 
     override suspend fun getMemberPerformanceData(
         year: Int,
@@ -28,104 +36,114 @@ class GemOfMonthRepositoryImpl @Inject constructor(
     ): Flow<List<GemMemberData>> = flow {
         try {
             Log.d("GemOfMonthRepository", "Starting getMemberPerformanceData for $year-$month")
+            
+            val cacheKey = "${year}_${month}"
+            val currentTime = System.currentTimeMillis()
+            
+            // Check cache first
+            val cachedData = memberDataCache[cacheKey]
+            val cacheTime = cacheTimestamp[cacheKey] ?: 0L
+            
+            if (cachedData != null && (currentTime - cacheTime) < cacheValidityDuration) {
+                Log.d("GemOfMonthRepository", "Returning cached data for $year-$month")
+                emit(cachedData)
+                return@flow
+            }
 
-            val meetingIds = getMeetingsForMonth(year, month)
-            Log.d(
-                "GemOfMonthRepository",
-                "Found ${meetingIds.size} meetings for $year-$month: $meetingIds"
-            )
-
-            val domainUsers = userRepository.getAllApprovedUsers()
-            Log.d("GemOfMonthRepository", "Found ${domainUsers.size} approved users")
-
-            val memberDataList = domainUsers.map { domainUser ->
+            coroutineScope {
+                // Fetch meetings and users in parallel
+                val meetingsDeferred = async { getMeetingsForMonth(year, month) }
+                val usersDeferred = async { userRepository.getAllApprovedUsers() }
+                
+                val meetingIds = meetingsDeferred.await()
+                val domainUsers = usersDeferred.await()
+                
                 Log.d(
                     "GemOfMonthRepository",
-                    "Processing user: ${domainUser.name} (${domainUser.id}) - Role: ${domainUser.role}"
-                )
-                // Convert domain User to data User
-                val dataUser = com.bntsoft.toastmasters.data.model.User(
-                    id = domainUser.id,
-                    name = domainUser.name,
-                    email = domainUser.email,
-                    phoneNumber = domainUser.phoneNumber,
-                    address = domainUser.address,
-                    gender = domainUser.gender,
-                    joinedDate = domainUser.joinedDate,
-                    toastmastersId = domainUser.toastmastersId,
-                    clubId = domainUser.clubId,
-                    profileImageUrl = "",
-                    fcmToken = domainUser.fcmToken ?: "",
-                    mentorNames = domainUser.mentorNames,
-                    roles = listOf(com.bntsoft.toastmasters.domain.models.UserRole.MEMBER),
-                    status = if (domainUser.isApproved)
-                        com.bntsoft.toastmasters.data.model.User.Status.APPROVED
-                    else
-                        com.bntsoft.toastmasters.data.model.User.Status.PENDING_APPROVAL,
-                    lastLogin = null,
-                    createdAt = domainUser.createdAt,
-                    updatedAt = domainUser.updatedAt
+                    "Found ${meetingIds.size} meetings and ${domainUsers.size} users for $year-$month"
                 )
 
-                val attendanceData = getAttendanceForMember(domainUser.id, meetingIds)
+                // Process users in parallel batches
+                val batchSize = 10
+                val memberDataList = domainUsers.chunked(batchSize).flatMap { userBatch ->
+                    userBatch.map { domainUser ->
+                        async {
+                            processMemberData(domainUser, meetingIds)
+                        }
+                    }.awaitAll()
+                }.filter { it.isEligible }
+
+                val sortedList = memberDataList.sortedByDescending { it.performanceScore }
+                
+                // Cache the result
+                memberDataCache[cacheKey] = sortedList
+                cacheTimestamp[cacheKey] = currentTime
+                
                 Log.d(
                     "GemOfMonthRepository",
-                    "User ${domainUser.name}: Attendance ${attendanceData.attendedMeetings}/${attendanceData.totalMeetings}"
+                    "Processed ${sortedList.size} eligible members, cached for future use"
                 )
-
-                val roleData = getRoleDataForMember(domainUser.id, meetingIds)
-                Log.d(
-                    "GemOfMonthRepository",
-                    "User ${domainUser.name}: Roles - Speaker:${roleData.speakerCount}, Evaluator:${roleData.evaluatorCount}, Other:${roleData.otherRolesCount}"
-                )
-
-                val awards = getAwardsForMember(domainUser.id, meetingIds)
-                Log.d(
-                    "GemOfMonthRepository",
-                    "User ${domainUser.name}: Awards count: ${awards.size}"
-                )
-
-                val gemHistory = getGemHistoryForMember(domainUser.id)
-                Log.d(
-                    "GemOfMonthRepository",
-                    "User ${domainUser.name}: Gem history: ${gemHistory.size} entries"
-                )
-
-                val performanceScore = calculatePerformanceScore(
-                    attendanceData,
-                    roleData,
-                    awards
-                )
-                Log.d(
-                    "GemOfMonthRepository",
-                    "User ${domainUser.name}: Performance score: $performanceScore"
-                )
-
-                val memberData = GemMemberData(
-                    user = dataUser,
-                    attendanceData = attendanceData,
-                    roleData = roleData,
-                    awards = awards,
-                    gemHistory = gemHistory,
-                    performanceScore = performanceScore
-                )
-
-                Log.d(
-                    "GemOfMonthRepository",
-                    "User ${domainUser.name}: Is eligible: ${memberData.isEligible}"
-                )
-                memberData
-            }.filter { it.isEligible }
-
-            Log.d(
-                "GemOfMonthRepository",
-                "After filtering: ${memberDataList.size} eligible members"
-            )
-            emit(memberDataList.sortedByDescending { it.performanceScore })
+                emit(sortedList)
+            }
         } catch (e: Exception) {
             Log.e("GemOfMonthRepository", "Error getting member performance data", e)
             emit(emptyList())
         }
+    }
+    
+    private suspend fun processMemberData(
+        domainUser: User,
+        meetingIds: List<String>
+    ): GemMemberData = coroutineScope {
+        // Convert domain User to data User
+        val dataUser = com.bntsoft.toastmasters.data.model.User(
+            id = domainUser.id,
+            name = domainUser.name,
+            email = domainUser.email,
+            phoneNumber = domainUser.phoneNumber,
+            address = domainUser.address,
+            gender = domainUser.gender,
+            joinedDate = domainUser.joinedDate,
+            toastmastersId = domainUser.toastmastersId,
+            clubId = domainUser.clubId,
+            profileImageUrl = "",
+            fcmToken = domainUser.fcmToken ?: "",
+            mentorNames = domainUser.mentorNames,
+            roles = listOf(com.bntsoft.toastmasters.domain.models.UserRole.MEMBER),
+            status = if (domainUser.isApproved)
+                com.bntsoft.toastmasters.data.model.User.Status.APPROVED
+            else
+                com.bntsoft.toastmasters.data.model.User.Status.PENDING_APPROVAL,
+            lastLogin = null,
+            createdAt = domainUser.createdAt,
+            updatedAt = domainUser.updatedAt
+        )
+
+        // Fetch all member data in parallel
+        val attendanceDeferred = async { getAttendanceForMember(domainUser.id, meetingIds) }
+        val roleDataDeferred = async { getRoleDataForMember(domainUser.id, meetingIds) }
+        val awardsDeferred = async { getAwardsForMember(domainUser.id, meetingIds) }
+        val gemHistoryDeferred = async { getGemHistoryForMember(domainUser.id) }
+        
+        val attendanceData = attendanceDeferred.await()
+        val roleData = roleDataDeferred.await()
+        val awards = awardsDeferred.await()
+        val gemHistory = gemHistoryDeferred.await()
+
+        val performanceScore = calculatePerformanceScore(
+            attendanceData,
+            roleData,
+            awards
+        )
+
+        GemMemberData(
+            user = dataUser,
+            attendanceData = attendanceData,
+            roleData = roleData,
+            awards = awards,
+            gemHistory = gemHistory,
+            performanceScore = performanceScore
+        )
     }
 
     override suspend fun getMeetingsForMonth(
@@ -462,53 +480,72 @@ class GemOfMonthRepositoryImpl @Inject constructor(
         return try {
             Log.d("GemOfMonthRepository", "Saving gem of the month: $userId for $year-$month")
 
-            // Get member performance data to save with the gem record
-            val memberDataFlow = getMemberPerformanceData(year, month)
-            var memberData: GemMemberData? = null
-
-            memberDataFlow.collect { memberList ->
-                memberData = memberList.find { it.user.id == userId }
+            val cacheKey = "${year}_${month}"
+            val cachedData = memberDataCache[cacheKey]
+            
+            val memberData = if (cachedData != null) {
+                // Use cached data if available
+                cachedData.find { it.user.id == userId }
+            } else {
+                // Fallback to fetching data
+                var foundMemberData: GemMemberData? = null
+                getMemberPerformanceData(year, month).collect { memberList ->
+                    foundMemberData = memberList.find { it.user.id == userId }
+                }
+                foundMemberData
             }
 
             if (memberData == null) {
                 return Result.failure(Exception("Member data not found"))
             }
 
-            // Use consistent document ID based only on year and month (one gem per month)
             val documentId = "${year}_${month}"
-
             Log.d("GemOfMonthRepository", "Using document ID: $documentId for gem selection")
 
             val gemRecord = com.bntsoft.toastmasters.data.model.GemOfTheMonth(
                 id = documentId,
                 userId = userId,
-                memberName = memberData!!.user.name,
+                memberName = memberData.user.name,
                 year = year,
                 month = month,
-                performanceScore = memberData!!.performanceScore,
+                performanceScore = memberData.performanceScore,
                 attendanceData = com.bntsoft.toastmasters.data.model.GemOfTheMonth.AttendanceData(
-                    attendedMeetings = memberData!!.attendanceData.attendedMeetings,
-                    totalMeetings = memberData!!.attendanceData.totalMeetings
+                    attendedMeetings = memberData.attendanceData.attendedMeetings,
+                    totalMeetings = memberData.attendanceData.totalMeetings
                 ),
                 roleData = com.bntsoft.toastmasters.data.model.GemOfTheMonth.RoleData(
-                    speakerCount = memberData!!.roleData.speakerCount,
-                    evaluatorCount = memberData!!.roleData.evaluatorCount,
-                    otherRolesCount = memberData!!.roleData.otherRolesCount,
-                    recentRoles = memberData!!.roleData.recentRoles
+                    speakerCount = memberData.roleData.speakerCount,
+                    evaluatorCount = memberData.roleData.evaluatorCount,
+                    otherRolesCount = memberData.roleData.otherRolesCount,
+                    recentRoles = memberData.roleData.recentRoles
                 ),
-                awards = memberData!!.awards.map { it.displayName }
+                awards = memberData.awards.map { it.displayName }
             )
 
-            firestore.collection("gemOfTheMonth")
-                .document(documentId)
-                .set(gemRecord)
-                .await()
+            // Use batched write for better performance
+            val batch = firestore.batch()
+            val gemRef = firestore.collection("gemOfTheMonth").document(documentId)
+            batch.set(gemRef, gemRecord)
+            batch.commit().await()
 
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("GemOfMonthRepository", "Error saving gem of the month", e)
             Result.failure(e)
         }
+    }
+    
+    fun invalidateCache(year: Int, month: Int) {
+        val cacheKey = "${year}_${month}"
+        memberDataCache.remove(cacheKey)
+        cacheTimestamp.remove(cacheKey)
+        Log.d("GemOfMonthRepository", "Cache invalidated for $year-$month")
+    }
+    
+    fun clearAllCache() {
+        memberDataCache.clear()
+        cacheTimestamp.clear()
+        Log.d("GemOfMonthRepository", "All cache cleared")
     }
 
     private suspend fun getMeetingDate(meetingId: String): String {

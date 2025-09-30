@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.data.model.GemMemberData
+import com.bntsoft.toastmasters.data.repository.GemOfMonthRepositoryImpl
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.GemOfMonthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.util.*
 import javax.inject.Inject
 
@@ -20,6 +23,8 @@ class GemOfMonthViewModel @Inject constructor(
     private val gemOfMonthRepository: GemOfMonthRepository,
     private val userRepository: com.bntsoft.toastmasters.domain.repository.UserRepository
 ) : ViewModel() {
+    
+    private val repositoryImpl = gemOfMonthRepository as? GemOfMonthRepositoryImpl
 
     private val _uiState = MutableStateFlow(GemOfMonthUiState())
     val uiState: StateFlow<GemOfMonthUiState> = _uiState.asStateFlow()
@@ -63,27 +68,54 @@ class GemOfMonthViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
-                gemOfMonthRepository.getMemberPerformanceData(
-                    year = _selectedYear.value,
-                    month = _selectedMonth.value
-                ).catch { exception ->
-                    Log.e("GemOfMonthViewModel", "Error in flow", exception)
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Unknown error occurred"
-                    )
-                }.collect { memberDataList ->
-                    Log.d("GemOfMonthViewModel", "Received ${memberDataList.size} members, loading existing gem selection...")
+                coroutineScope {
+                    // Load member data and existing gem selection in parallel
+                    val memberDataDeferred = async {
+                        var memberList: List<GemMemberData> = emptyList()
+                        gemOfMonthRepository.getMemberPerformanceData(
+                            year = _selectedYear.value,
+                            month = _selectedMonth.value
+                        ).catch { exception ->
+                            Log.e("GemOfMonthViewModel", "Error in member data flow", exception)
+                            throw exception
+                        }.collect { list ->
+                            memberList = list
+                        }
+                        memberList
+                    }
                     
-                    // Load existing gem selection for this month
-                    loadExistingGemSelection(memberDataList)
+                    val existingGemDeferred = async {
+                        try {
+                            gemOfMonthRepository.getGemOfTheMonth(
+                                year = _selectedYear.value,
+                                month = _selectedMonth.value
+                            )
+                        } catch (e: Exception) {
+                            Log.d("GemOfMonthViewModel", "No existing gem found: ${e.message}")
+                            null
+                        }
+                    }
+                    
+                    val memberDataList = memberDataDeferred.await()
+                    val existingGem = existingGemDeferred.await()
+                    
+                    Log.d("GemOfMonthViewModel", "Received ${memberDataList.size} members")
+                    
+                    // Find selected member in the list
+                    val selectedMember = if (existingGem != null) {
+                        memberDataList.find { it.user.id == existingGem.userId }
+                    } else {
+                        null
+                    }
                     
                     val loadTime = System.currentTimeMillis() - startTime
-                    Log.d("GemOfMonthViewModel", "Member data loaded in ${loadTime}ms")
+                    Log.d("GemOfMonthViewModel", "All data loaded in ${loadTime}ms")
                     
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         memberDataList = memberDataList,
+                        selectedGem = selectedMember,
+                        isEditMode = false,
                         error = null
                     )
                 }
@@ -97,38 +129,6 @@ class GemOfMonthViewModel @Inject constructor(
         }
     }
     
-    private suspend fun loadExistingGemSelection(memberDataList: List<GemMemberData>) {
-        try {
-            val existingGem = gemOfMonthRepository.getGemOfTheMonth(
-                year = _selectedYear.value,
-                month = _selectedMonth.value
-            )
-            
-            if (existingGem != null) {
-                // Find the selected member in the current list
-                val selectedMember = memberDataList.find { it.user.id == existingGem.userId }
-                Log.d("GemOfMonthViewModel", "Found existing gem: ${existingGem.memberName} (${existingGem.userId})")
-                Log.d("GemOfMonthViewModel", "Selected member found in list: ${selectedMember?.user?.name}")
-                
-                _uiState.value = _uiState.value.copy(
-                    selectedGem = selectedMember,
-                    isEditMode = false
-                )
-            } else {
-                Log.d("GemOfMonthViewModel", "No existing gem found for ${_selectedYear.value}-${_selectedMonth.value}")
-                _uiState.value = _uiState.value.copy(
-                    selectedGem = null,
-                    isEditMode = false
-                )
-            }
-        } catch (e: Exception) {
-            // No existing selection found
-            _uiState.value = _uiState.value.copy(
-                selectedGem = null,
-                isEditMode = false
-            )
-        }
-    }
 
     fun selectMonth(year: Int, month: Int) {
         Log.d("GemOfMonthViewModel", "Selecting month: $month/$year")
@@ -144,7 +144,8 @@ class GemOfMonthViewModel @Inject constructor(
             // Reset edit mode when changing months
             _uiState.value = _uiState.value.copy(
                 isEditMode = false,
-                selectedGem = null
+                selectedGem = null,
+                isLoading = true // Show loading immediately
             )
             
             loadMemberData()
@@ -183,14 +184,16 @@ class GemOfMonthViewModel @Inject constructor(
                 )
                 
                 if (result.isSuccess) {
+                    // Update UI state immediately without reloading all data
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         selectedGem = memberData,
                         isEditMode = false,
                         showSuccessMessage = "Successfully selected ${memberData.user.name} as Gem of the Month for ${getMonthYearString()}!"
                     )
-                    // Reload data to show updated gem history
-                    loadMemberData()
+                    
+                    // Invalidate cache for this month to ensure fresh data on next load
+                    repositoryImpl?.invalidateCache(_selectedYear.value, _selectedMonth.value)
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -256,9 +259,7 @@ data class GemOfMonthUiState(
         
     val showAllMembers: Boolean
         get() = selectedGem == null || isEditMode
-        
-    val showEditButton: Boolean
-        get() = isVpEducation && selectedGem != null && !isEditMode
+
 }
 
 enum class SortType(val displayName: String) {

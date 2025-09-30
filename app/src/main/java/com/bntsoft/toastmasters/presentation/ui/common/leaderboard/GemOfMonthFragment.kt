@@ -131,11 +131,27 @@ class GemOfMonthFragment : Fragment() {
         
         // Handle visibility based on loading state and data availability
         when {
-            uiState.isLoading -> {
-                // Show progress bar, hide everything else
+            uiState.isLoading && !uiState.hasData -> {
+                // First time loading - show progress bar
                 binding.progressBar.visibility = View.VISIBLE
                 binding.membersRecyclerView.visibility = View.GONE
                 binding.emptyStateCard.visibility = View.GONE
+            }
+            uiState.isLoading && uiState.hasData -> {
+                // Loading with existing data - show data with subtle loading indicator
+                binding.progressBar.visibility = View.GONE
+                binding.membersRecyclerView.visibility = View.VISIBLE
+                binding.emptyStateCard.visibility = View.GONE
+                
+                // Show existing data while loading
+                val displayList = if (uiState.showAllMembers) {
+                    uiState.memberDataList
+                } else {
+                    uiState.selectedGem?.let { listOf(it) } ?: emptyList()
+                }
+                
+                gemMemberAdapter.submitList(displayList)
+                gemMemberAdapter.setSelectedGem(uiState.selectedGem)
             }
             uiState.hasData -> {
                 // Show data, hide progress bar and empty state

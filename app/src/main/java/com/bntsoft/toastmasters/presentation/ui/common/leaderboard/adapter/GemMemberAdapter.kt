@@ -19,8 +19,29 @@ class GemMemberAdapter(
     private var selectedGemId: String? = null
     
     fun setSelectedGem(selectedGem: GemMemberData?) {
+        val oldSelectedId = selectedGemId
         selectedGemId = selectedGem?.user?.id
-        notifyDataSetChanged()
+        
+        // Only update affected items instead of the entire list
+        if (oldSelectedId != selectedGemId) {
+            val currentList = currentList
+            
+            // Find and update old selected item
+            oldSelectedId?.let { oldId ->
+                val oldIndex = currentList.indexOfFirst { it.user.id == oldId }
+                if (oldIndex != -1) {
+                    notifyItemChanged(oldIndex)
+                }
+            }
+            
+            // Find and update new selected item
+            selectedGemId?.let { newId ->
+                val newIndex = currentList.indexOfFirst { it.user.id == newId }
+                if (newIndex != -1) {
+                    notifyItemChanged(newIndex)
+                }
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GemMemberViewHolder {
@@ -36,6 +57,22 @@ class GemMemberAdapter(
         val memberData = getItem(position)
         val isSelected = memberData.user.id == selectedGemId
         holder.bind(memberData, isSelected)
+    }
+    
+    override fun onBindViewHolder(holder: GemMemberViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads)
+        } else {
+            val memberData = getItem(position)
+            val isSelected = memberData.user.id == selectedGemId
+            val changes = payloads.firstOrNull() as? List<String>
+            
+            if (changes != null) {
+                holder.bindPartial(memberData, isSelected, changes)
+            } else {
+                holder.bind(memberData, isSelected)
+            }
+        }
     }
 
     class GemMemberViewHolder(
@@ -65,17 +102,60 @@ class GemMemberAdapter(
                     View.GONE
                 }
                 
-                // Highlight selected gem
+                updateSelectionState(isSelected)
+                
+                root.setOnClickListener {
+                    onMemberClick(memberData)
+                }
+            }
+        }
+        
+        fun bindPartial(memberData: GemMemberData, isSelected: Boolean, changes: List<String>) {
+            with(binding) {
+                // Update only the changed parts for better performance
+                if (changes.contains("score")) {
+                    // Performance score affects sorting but not direct UI display
+                }
+                
+                if (changes.contains("attendance")) {
+                    attendanceText.text = "${memberData.attendanceData.attendedMeetings}/${memberData.attendanceData.totalMeetings} meetings"
+                    attendanceProgress.progress = memberData.attendanceData.attendancePercentage.toInt()
+                }
+                
+                if (changes.contains("roles")) {
+                    speakerCount.text = memberData.roleData.speakerCount.toString()
+                    evaluatorCount.text = memberData.roleData.evaluatorCount.toString()
+                    otherRolesCount.text = memberData.roleData.otherRolesCount.toString()
+                    setupRecentRoles(memberData.roleData.recentRoles)
+                }
+                
+                if (changes.contains("awards")) {
+                    setupAwards(memberData.awards)
+                }
+                
+                if (changes.contains("history")) {
+                    setupGemHistory(memberData.gemHistory)
+                    previousGemIcon.visibility = if (memberData.gemHistory.isNotEmpty()) {
+                        View.VISIBLE
+                    } else {
+                        View.GONE
+                    }
+                }
+                
+                updateSelectionState(isSelected)
+            }
+        }
+        
+        private fun updateSelectionState(isSelected: Boolean) {
+            with(binding) {
+                memberRole.text = if (isSelected) "🏆 Gem of the Month" else "Active Member"
+                
                 if (isSelected) {
                     root.setBackgroundResource(R.drawable.bg_selected_gem_card)
                     memberName.setTextColor(root.context.getColor(R.color.primary))
                 } else {
                     root.setBackgroundResource(R.drawable.bg_card)
                     memberName.setTextColor(root.context.getColor(R.color.on_surface))
-                }
-                
-                root.setOnClickListener {
-                    onMemberClick(memberData)
                 }
             }
         }
@@ -174,7 +254,40 @@ class GemMemberAdapter(
         }
 
         override fun areContentsTheSame(oldItem: GemMemberData, newItem: GemMemberData): Boolean {
-            return oldItem == newItem
+            // Compare only the fields that affect UI display to avoid unnecessary updates
+            return oldItem.user.name == newItem.user.name &&
+                    oldItem.performanceScore == newItem.performanceScore &&
+                    oldItem.attendanceData.attendedMeetings == newItem.attendanceData.attendedMeetings &&
+                    oldItem.attendanceData.totalMeetings == newItem.attendanceData.totalMeetings &&
+                    oldItem.roleData.speakerCount == newItem.roleData.speakerCount &&
+                    oldItem.roleData.evaluatorCount == newItem.roleData.evaluatorCount &&
+                    oldItem.roleData.otherRolesCount == newItem.roleData.otherRolesCount &&
+                    oldItem.roleData.recentRoles == newItem.roleData.recentRoles &&
+                    oldItem.awards.size == newItem.awards.size &&
+                    oldItem.gemHistory == newItem.gemHistory
+        }
+        
+        override fun getChangePayload(oldItem: GemMemberData, newItem: GemMemberData): Any? {
+            // Return a payload to enable partial updates
+            val changes = mutableListOf<String>()
+            
+            if (oldItem.performanceScore != newItem.performanceScore) {
+                changes.add("score")
+            }
+            if (oldItem.attendanceData != newItem.attendanceData) {
+                changes.add("attendance")
+            }
+            if (oldItem.roleData != newItem.roleData) {
+                changes.add("roles")
+            }
+            if (oldItem.awards != newItem.awards) {
+                changes.add("awards")
+            }
+            if (oldItem.gemHistory != newItem.gemHistory) {
+                changes.add("history")
+            }
+            
+            return if (changes.isNotEmpty()) changes else null
         }
     }
 }
