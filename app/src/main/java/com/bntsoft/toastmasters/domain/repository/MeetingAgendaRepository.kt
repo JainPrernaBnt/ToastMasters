@@ -23,4 +23,12 @@ interface MeetingAgendaRepository {
     suspend fun updateMeetingOfficers(agenda: MeetingAgenda): Result<Unit>
 
     suspend fun saveAbbreviations(meetingId: String, agendaId: String, abbreviations: Map<String, String>): Result<Unit>
+    
+    // Club Information methods
+    suspend fun getClubInformation(): Result<Map<String, Any>>
+    suspend fun saveClubInformation(clubInfo: Map<String, Any>): Result<Unit>
+    
+    // Club Officers methods
+    suspend fun getClubOfficers(): Result<Map<String, String>>
+    suspend fun saveClubOfficers(officers: Map<String, String>): Result<Unit>
 }

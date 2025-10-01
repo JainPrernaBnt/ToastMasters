@@ -1,6 +1,5 @@
 package com.bntsoft.toastmasters.data.repository
 
-import com.bntsoft.toastmasters.data.model.Abbreviations
 import com.bntsoft.toastmasters.data.remote.FirebaseAgendaDataSource
 import com.bntsoft.toastmasters.domain.repository.AbbreviationRepository
 import com.bntsoft.toastmasters.utils.Result
@@ -10,14 +9,14 @@ class AbbreviationRepositoryImpl @Inject constructor(
     private val firebaseAgendaDataSource: FirebaseAgendaDataSource
 ) : AbbreviationRepository {
 
-    override suspend fun getAbbreviations(meetingId: String, agendaId: String): Abbreviations {
+    override suspend fun getAbbreviations(meetingId: String, agendaId: String): Map<String, String> {
         return firebaseAgendaDataSource.getAbbreviations(meetingId, agendaId)
     }
 
     override suspend fun saveAbbreviations(
         meetingId: String,
         agendaId: String,
-        abbreviations: Abbreviations
+        abbreviations: Map<String, String>
     ): Result<Unit> {
         return firebaseAgendaDataSource.saveAbbreviations(meetingId, agendaId, abbreviations)
     }

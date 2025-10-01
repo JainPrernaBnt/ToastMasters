@@ -379,7 +379,6 @@
                             android:layout_height="wrap_content"
                             android:inputType="text"
                             android:maxLines="1"
-                            android:text="Pimpri Toastmasters Club"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -407,7 +406,6 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="number"
                                 android:maxLines="1"
-                                android:text="5965350"
                                 android:textColor="@color/black"
                                 android:textSize="16sp" />
                         </com.google.android.material.textfield.TextInputLayout>
@@ -428,7 +426,6 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="text"
                                 android:maxLines="1"
-                                android:text="C3"
                                 android:textColor="@color/black"
                                 android:textSize="16sp" />
                         </com.google.android.material.textfield.TextInputLayout>
@@ -450,7 +447,6 @@
                             android:layout_height="wrap_content"
                             android:inputType="number"
                             android:maxLines="1"
-                            android:text="125"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -473,7 +469,6 @@
                             android:minLines="3"
                             android:paddingTop="16dp"
                             android:paddingBottom="16dp"
-                            android:text="We provide a supportive and positive learning experience in which members are empowered to develop communication and leadership skills, resulting in greater self-confidence and personal growth."
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -569,7 +564,6 @@
                             android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Raghvendra Tiwari"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -593,7 +587,6 @@
                             android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Sanchit Hundare"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -617,7 +610,6 @@
                             android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Harshada Pandure"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -641,7 +633,6 @@
                             android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Suraj Krishnamoorthy"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -665,7 +656,6 @@
                             android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Manuel Tholath"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -689,7 +679,6 @@
                             android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Sushant Ulavi"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -713,7 +702,6 @@
                             android:imeOptions="actionNext"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Vaishali Menon"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -737,7 +725,6 @@
                             android:imeOptions="actionDone"
                             android:inputType="textPersonName"
                             android:maxLines="1"
-                            android:text="TM Kiran Nawale"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>

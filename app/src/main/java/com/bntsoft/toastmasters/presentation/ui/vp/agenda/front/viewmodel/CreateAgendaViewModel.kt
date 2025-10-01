@@ -150,7 +150,15 @@ class CreateAgendaViewModel @Inject constructor(
             }
             if (result is Result.Success) {
                 _abbreviations.value = abbreviations
-                _uiState.update { it.copy(isSaving = false, isSaved = true) }
+                // Also update the agenda with the new abbreviations
+                _uiState.update { state ->
+                    val updatedAgenda = state.agenda.copy(abbreviations = abbreviations)
+                    state.copy(
+                        agenda = updatedAgenda,
+                        isSaving = false, 
+                        isSaved = true
+                    )
+                }
             } else {
                 val errorMessage = (result as? Result.Error)?.exception?.message ?: "Failed to save abbreviations"
                 _uiState.update { it.copy(isSaving = false, error = errorMessage) }
@@ -165,16 +173,23 @@ class CreateAgendaViewModel @Inject constructor(
     
     suspend fun deleteAbbreviation(meetingId: String, abbreviationKey: String): Result<Unit> {
         return try {
+            Log.d("CreateAgendaViewModel", "deleteAbbreviation called - meetingId: $meetingId, key: $abbreviationKey")
             _uiState.update { it.copy(isSaving = true) }
+            
+            val agendaId = _uiState.value.agenda?.id ?: meetingId
+            Log.d("CreateAgendaViewModel", "Using agendaId: $agendaId")
+            
             val result = withContext(Dispatchers.IO) {
-                abbreviationRepository.deleteAbbreviation(meetingId, meetingId, abbreviationKey)
+                abbreviationRepository.deleteAbbreviation(meetingId, agendaId, abbreviationKey)
             }
             
             if (result is Result.Success) {
+                Log.d("CreateAgendaViewModel", "Abbreviation deleted successfully from Firebase")
                 // Update local state
                 val updatedAbbreviations = _abbreviations.value.toMutableMap()
                 updatedAbbreviations.remove(abbreviationKey)
                 _abbreviations.value = updatedAbbreviations
+                Log.d("CreateAgendaViewModel", "Updated local abbreviations: $updatedAbbreviations")
                 
                 // Update the agenda in the UI state
                 _uiState.update { state ->
@@ -188,6 +203,7 @@ class CreateAgendaViewModel @Inject constructor(
                     )
                 }
             } else {
+                Log.e("CreateAgendaViewModel", "Failed to delete abbreviation from Firebase: $result")
                 val errorMessage = (result as? Result.Error)?.exception?.message 
                     ?: "Failed to delete abbreviation"
                 _uiState.update { it.copy(
@@ -210,19 +226,53 @@ class CreateAgendaViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                repository.getMeetingAgenda(meetingId).collect { result ->
+                // Load meeting agenda, club information, and officers in parallel
+                val agendaDeferred = async { repository.getMeetingAgenda(meetingId) }
+                val clubInfoDeferred = async { repository.getClubInformation() }
+                val officersDeferred = async { repository.getClubOfficers() }
+                
+                // Collect meeting agenda
+                agendaDeferred.await().collect { result ->
                     when (result) {
                         is Result.Success -> {
                             val agenda = result.data
+                            
+                            // Load club information and officers
+                            val clubInfoResult = clubInfoDeferred.await()
+                            val officersResult = officersDeferred.await()
+                            
+                            val clubInfo = if (clubInfoResult is Result.Success) {
+                                clubInfoResult.data
+                            } else {
+                                emptyMap()
+                            }
+                            
+                            val officers = if (officersResult is Result.Success) {
+                                Log.d("CreateAgendaViewModel", "Loaded officers from Firebase: ${officersResult.data}")
+                                officersResult.data
+                            } else {
+                                Log.e("CreateAgendaViewModel", "Failed to load officers from Firebase")
+                                emptyMap()
+                            }
+                            
                             _uiState.update { state ->
+                                val updatedAgenda = agenda.copy(
+                                    clubName = clubInfo["clubName"]?.toString() ?: agenda.clubName,
+                                    clubNumber = clubInfo["clubNumber"]?.toString() ?: agenda.clubNumber,
+                                    district = clubInfo["district"]?.toString() ?: agenda.district,
+                                    area = clubInfo["area"]?.toString() ?: agenda.area,
+                                    mission = clubInfo["mission"]?.toString() ?: agenda.mission,
+                                    officers = officers.takeIf { it.isNotEmpty() } ?: agenda.officers
+                                )
+                                
                                 state.copy(
-                                    agenda = agenda,
-                                    // Initialize club info fields from the agenda
-                                    clubName = agenda.clubName,
-                                    clubNumber = agenda.clubNumber,
-                                    district = agenda.district,
-                                    area = agenda.area,
-                                    mission = agenda.mission,
+                                    agenda = updatedAgenda,
+                                    // Initialize club info fields from the loaded data
+                                    clubName = updatedAgenda.clubName,
+                                    clubNumber = updatedAgenda.clubNumber,
+                                    district = updatedAgenda.district,
+                                    area = updatedAgenda.area,
+                                    mission = updatedAgenda.mission,
                                     isLoading = false,
                                     isSaved = false
                                 )
@@ -256,16 +306,42 @@ class CreateAgendaViewModel @Inject constructor(
     }
 
     fun updateOfficer(role: String, name: String) {
+        Log.d("CreateAgendaViewModel", "updateOfficer called - Role: $role, Name: $name")
         viewModelScope.launch(Dispatchers.Main) {
             _uiState.update { state ->
+                val currentOfficers = state.agenda.officers
+                Log.d("CreateAgendaViewModel", "Current officers before update: $currentOfficers")
+                
                 val updatedOfficers = state.agenda.officers.toMutableMap().apply {
                     this[role] = name
                 }
+                
+                Log.d("CreateAgendaViewModel", "Updated officers after update: $updatedOfficers")
+                
                 state.copy(
                     agenda = state.agenda.copy(officers = updatedOfficers),
                     isSaved = false
                 )
             }
+        }
+    }
+    
+    fun updateAllOfficers(officers: Map<String, String>) {
+        Log.d("CreateAgendaViewModel", "updateAllOfficers called with: $officers")
+        _uiState.update { state ->
+            val currentOfficers = state.agenda.officers
+            Log.d("CreateAgendaViewModel", "Current officers before bulk update: $currentOfficers")
+            
+            val updatedOfficers = state.agenda.officers.toMutableMap().apply {
+                putAll(officers)
+            }
+            
+            Log.d("CreateAgendaViewModel", "Updated officers after bulk update: $updatedOfficers")
+            
+            state.copy(
+                agenda = state.agenda.copy(officers = updatedOfficers),
+                isSaved = false
+            )
         }
     }
 
@@ -375,6 +451,116 @@ class CreateAgendaViewModel @Inject constructor(
                 mission = mission,
                 isSaved = false
             )
+        }
+    }
+    
+    fun saveClubInfo() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, error = null) }
+            try {
+                val state = _uiState.value
+                val clubInfo: Map<String, Any> = mapOf(
+                    "clubName" to state.clubName,
+                    "clubNumber" to (state.clubNumber.toIntOrNull() ?: 0),
+                    "area" to state.area,
+                    "district" to state.district,
+                    "mission" to state.mission
+                )
+                
+                when (val result = repository.saveClubInformation(clubInfo)) {
+                    is Result.Success -> {
+                        // Update the agenda with the new club info
+                        val updatedAgenda = _uiState.value.agenda.copy(
+                            clubName = state.clubName,
+                            clubNumber = state.clubNumber,
+                            area = state.area,
+                            district = state.district,
+                            mission = state.mission
+                        )
+                        
+                        _uiState.update { 
+                            it.copy(
+                                agenda = updatedAgenda,
+                                isSaving = false, 
+                                isSaved = true,
+                                isClubInfoEditable = false
+                            ) 
+                        }
+                    }
+                    is Result.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                error = result.exception?.message ?: "Failed to save club information",
+                                isSaving = false
+                            )
+                        }
+                    }
+                    is Result.Loading -> {
+                        _uiState.update { it.copy(isSaving = true) }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        error = e.message ?: "An unexpected error occurred",
+                        isSaving = false
+                    )
+                }
+            }
+        }
+    }
+    
+    fun saveOfficers() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, error = null) }
+            try {
+                val currentState = _uiState.value
+                val officers = currentState.agenda.officers
+                Log.d("CreateAgendaViewModel", "saveOfficers called")
+                Log.d("CreateAgendaViewModel", "Current agenda ID: ${currentState.agenda.id}")
+                Log.d("CreateAgendaViewModel", "Officers to save: $officers")
+                Log.d("CreateAgendaViewModel", "Officers count: ${officers.size}")
+                
+                if (officers.isEmpty()) {
+                    Log.w("CreateAgendaViewModel", "WARNING: Attempting to save empty officers map!")
+                }
+                
+                when (val result = repository.saveClubOfficers(officers)) {
+                    is Result.Success -> {
+                        Log.d("CreateAgendaViewModel", "Officers saved successfully to Firebase")
+                        // Update the agenda with the saved officers to ensure consistency
+                        _uiState.update { state ->
+                            val updatedAgenda = state.agenda.copy(officers = officers)
+                            state.copy(
+                                agenda = updatedAgenda,
+                                isSaving = false, 
+                                isSaved = true,
+                                isOfficersEditable = false
+                            )
+                        }
+                    }
+                    is Result.Error -> {
+                        Log.e("CreateAgendaViewModel", "Failed to save officers: ${result.exception?.message}")
+                        _uiState.update {
+                            it.copy(
+                                error = result.exception?.message ?: "Failed to save officers",
+                                isSaving = false
+                            )
+                        }
+                    }
+                    is Result.Loading -> {
+                        _uiState.update { it.copy(isSaving = true) }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("CreateAgendaViewModel", "Exception saving officers", e)
+                _uiState.update {
+                    it.copy(
+                        error = e.message ?: "An unexpected error occurred",
+                        isSaving = false
+                    )
+                }
+            }
         }
     }
 

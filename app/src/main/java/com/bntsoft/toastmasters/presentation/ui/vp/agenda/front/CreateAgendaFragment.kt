@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.agenda.front
 
 import android.content.Context
+import android.util.Log
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +19,7 @@ import com.bntsoft.toastmasters.data.model.AbbreviationItem
 import com.bntsoft.toastmasters.databinding.FragmentCreateAgendaBinding
 import com.bntsoft.toastmasters.domain.model.MeetingAgenda
 import com.bntsoft.toastmasters.presentation.ui.vp.agenda.front.viewmodel.CreateAgendaViewModel
+import com.bntsoft.toastmasters.utils.Result
 import com.bntsoft.toastmasters.utils.UserManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -63,19 +65,26 @@ class CreateAgendaFragment : Fragment() {
                     currentList.removeAt(position)
                     abbreviationAdapter.submitList(currentList)
 
-                    // If the item has an ID, delete it from Firebase
+                    // If the item has an abbreviation, delete it from Firebase
                     if (itemToRemove.abbreviation.isNotBlank()) {
                         viewLifecycleOwner.lifecycleScope.launch {
-//                            viewModel.deleteAbbreviation(
-//                                meetingId = meetingId,
-//                                abbreviationKey = itemToRemove.abbreviation
-//                            )
+                            Log.d("CreateAgendaFragment", "Deleting abbreviation: ${itemToRemove.abbreviation}")
+                            val result = viewModel.deleteAbbreviation(meetingId, itemToRemove.abbreviation)
+                            when (result) {
+                                is Result.Success -> {
+                                    Log.d("CreateAgendaFragment", "Abbreviation deleted successfully from Firebase")
+                                    showMessage("Abbreviation deleted successfully")
+                                }
+                                is Result.Error -> {
+                                    Log.e("CreateAgendaFragment", "Failed to delete abbreviation: ${result.exception?.message}")
+                                    showError("Failed to delete abbreviation: ${result.exception?.message}")
+                                }
+                                else -> {
+                                    Log.e("CreateAgendaFragment", "Unknown error deleting abbreviation")
+                                    showError("Failed to delete abbreviation")
+                                }
+                            }
                         }
-                    }
-
-                    // If no items left, add an empty one if in edit mode
-                    if (currentList.isEmpty() && isAbbreviationEditing) {
-                        addNewAbbreviationItem()
                     }
 
                     updateAbbreviationUI()
@@ -111,14 +120,19 @@ class CreateAgendaFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 try {
                     isVpEducation = userManager.isVpEducation()
+                    Log.d("CreateAgendaFragment", "VP Education status: $isVpEducation")
                     applyRoleBasedAccess()
-                } catch (_: Exception) { }
+                } catch (e: Exception) { 
+                    Log.e("CreateAgendaFragment", "Error checking VP Education status", e)
+                }
             }
         }
     }
 
     private fun applyRoleBasedAccess() {
+        Log.d("CreateAgendaFragment", "Applying role-based access. isVpEducation: $isVpEducation")
         if (!isVpEducation) {
+            // Disable club information editing for non-VP Education users
             binding.editClubInfoButton.visibility = View.GONE
             binding.saveClubInfoButton.visibility = View.GONE
             binding.cancelClubInfoButton.visibility = View.GONE
@@ -129,6 +143,7 @@ class CreateAgendaFragment : Fragment() {
             binding.areaEditText.isEnabled = false
             binding.missionEditText.isEnabled = false
 
+            // Disable officers editing for non-VP Education users
             binding.presidentInputLayout.isEnabled = false
             binding.vpEducationInputLayout.isEnabled = false
             binding.vpMembershipInputLayout.isEnabled = false
@@ -142,6 +157,7 @@ class CreateAgendaFragment : Fragment() {
             binding.saveOfficersButton.visibility = View.GONE
             binding.cancelOfficersButton.visibility = View.GONE
 
+            // Disable grammarian editing for non-VP Education users
             binding.wordOfDayEditText.isEnabled = false
             binding.wordMeaningEditText.isEnabled = false
             binding.wordExamplesEditText.isEnabled = false
@@ -153,11 +169,33 @@ class CreateAgendaFragment : Fragment() {
             binding.saveGrammarianButton.visibility = View.GONE
             binding.cancelGrammarianButton.visibility = View.GONE
 
+            // Disable abbreviations editing for non-VP Education users
             isAbbreviationEditing = false
             binding.abbreviationsSummaryText.isClickable = false
             binding.saveAbbreviationsButton.visibility = View.GONE
             binding.addAbbreviationsButton.visibility = View.GONE
             abbreviationAdapter.setEditable(false)
+        } else {
+            // Enable functionality for VP Education users
+            Log.d("CreateAgendaFragment", "Enabling functionality for VP Education user")
+            binding.abbreviationsSummaryText.isClickable = true
+            
+            // For VP Education users, fields should start disabled (read mode) and be enabled only in edit mode
+            // This will be controlled by the observeViewModel() method based on edit state
+            binding.clubNameEditText.isEnabled = false
+            binding.clubNumberEditText.isEnabled = false
+            binding.districtEditText.isEnabled = false
+            binding.areaEditText.isEnabled = false
+            binding.missionEditText.isEnabled = false
+            
+            binding.presidentEditText.isEnabled = false
+            binding.vpEducationEditText.isEnabled = false
+            binding.vpMembershipEditText.isEnabled = false
+            binding.secretaryEditText.isEnabled = false
+            binding.treasurerEditText.isEnabled = false
+            binding.saaEditText.isEnabled = false
+            binding.ippEditText.isEnabled = false
+            binding.vpPublicRelationEditText.isEnabled = false
         }
     }
 
@@ -204,7 +242,7 @@ class CreateAgendaFragment : Fragment() {
                 binding.missionEditText.text?.toString().orEmpty()
             )
 
-//            viewModel.saveClubInfo()
+            viewModel.saveClubInfo()
         }
         binding.cancelClubInfoButton.setOnClickListener {
             viewModel.toggleClubInfoEdit()
@@ -217,40 +255,38 @@ class CreateAgendaFragment : Fragment() {
         }
 
         binding.saveOfficersButton.setOnClickListener {
+            Log.d("CreateAgendaFragment", "Save officers button clicked")
+            
             // Capture all officer fields from UI to ensure full save even if only one was edited
-            viewModel.updateOfficer(
-                "President",
-                binding.presidentEditText.text?.toString().orEmpty()
-            )
-            viewModel.updateOfficer(
-                "VPE",
-                binding.vpEducationEditText.text?.toString().orEmpty()
-            )
-            viewModel.updateOfficer(
-                "VPM",
-                binding.vpMembershipEditText.text?.toString().orEmpty()
-            )
-            viewModel.updateOfficer(
-                "Secretary",
-                binding.secretaryEditText.text?.toString().orEmpty()
-            )
-            viewModel.updateOfficer(
-                "Treasurer",
-                binding.treasurerEditText.text?.toString().orEmpty()
-            )
-            viewModel.updateOfficer(
-                "SAA",
-                binding.saaEditText.text?.toString().orEmpty()
-            )
-            viewModel.updateOfficer(
-                "IPP",
-                binding.ippEditText.text?.toString().orEmpty()
-            )
-            viewModel.updateOfficer(
-                "VPPR",
-                binding.vpPublicRelationEditText.text?.toString().orEmpty()
-            )
+            val presidentValue = binding.presidentEditText.text?.toString().orEmpty()
+            val vpeValue = binding.vpEducationEditText.text?.toString().orEmpty()
+            val vpmValue = binding.vpMembershipEditText.text?.toString().orEmpty()
+            val secretaryValue = binding.secretaryEditText.text?.toString().orEmpty()
+            val treasurerValue = binding.treasurerEditText.text?.toString().orEmpty()
+            val saaValue = binding.saaEditText.text?.toString().orEmpty()
+            val ippValue = binding.ippEditText.text?.toString().orEmpty()
+            val vpprValue = binding.vpPublicRelationEditText.text?.toString().orEmpty()
+            
+            Log.d("CreateAgendaFragment", "Officer values - President: $presidentValue, VPE: $vpeValue, VPM: $vpmValue, Secretary: $secretaryValue, Treasurer: $treasurerValue, SAA: $saaValue, IPP: $ippValue, VPPR: $vpprValue")
+            
+            // Update all officers synchronously to avoid race conditions
+            viewModel.updateAllOfficers(mapOf(
+                "President" to presidentValue,
+                "VPE" to vpeValue,
+                "VPM" to vpmValue,
+                "Secretary" to secretaryValue,
+                "Treasurer" to treasurerValue,
+                "SAA" to saaValue,
+                "IPP" to ippValue,
+                "VPPR" to vpprValue
+            ))
 
+            // Add a small delay to ensure state is updated before saving
+            viewLifecycleOwner.lifecycleScope.launch {
+                delay(100) // Small delay to ensure state update completes
+                Log.d("CreateAgendaFragment", "Calling viewModel.saveOfficers()")
+                viewModel.saveOfficers()
+            }
         }
         binding.cancelOfficersButton.setOnClickListener {
             viewModel.toggleOfficersEdit()
@@ -300,6 +336,7 @@ class CreateAgendaFragment : Fragment() {
 
         // Switch to edit mode on tapping summary
         binding.abbreviationsSummaryText.setOnClickListener {
+            Log.d("CreateAgendaFragment", "Abbreviation summary clicked. isAbbreviationEditing: $isAbbreviationEditing, isVpEducation: $isVpEducation, isClickable: ${binding.abbreviationsSummaryText.isClickable}")
             if (!isAbbreviationEditing) {
                 editAbbreviations()
             }
@@ -356,25 +393,43 @@ class CreateAgendaFragment : Fragment() {
         val hasItems = abbreviationAdapter.currentList.isNotEmpty()
 
         with(binding) {
-            abbreviationsRecyclerView.isVisible = hasItems || isAbbreviationEditing
-            abbreviationsSummaryText.isVisible = !hasItems && !isAbbreviationEditing
-
-            if (!hasItems && !isAbbreviationEditing) {
-                abbreviationsSummaryText.text = "No abbreviations added. Tap to add."
+            if (isAbbreviationEditing) {
+                // In edit mode: show RecyclerView, hide summary, show buttons
+                abbreviationsRecyclerView.isVisible = true
+                abbreviationsSummaryText.isVisible = false
+                saveAbbreviationsButton.isVisible = true
+                addAbbreviationsButton.isVisible = true
+            } else {
+                // In read mode: hide RecyclerView, show summary
+                abbreviationsRecyclerView.isVisible = false
+                abbreviationsSummaryText.isVisible = true
+                saveAbbreviationsButton.isVisible = false
+                addAbbreviationsButton.isVisible = false
+                
+                if (hasItems) {
+                    // Show abbreviations in summary format
+                    val abbreviationsText = abbreviationAdapter.currentList
+                        .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
+                        .joinToString(", ") { "${it.abbreviation} (${it.meaning})" }
+                    abbreviationsSummaryText.text = abbreviationsText
+                } else {
+                    // Show empty state message
+                    abbreviationsSummaryText.text = "No abbreviations added. Tap to add."
+                }
             }
-
-            saveAbbreviationsButton.isVisible = isAbbreviationEditing
-            addAbbreviationsButton.isVisible = isAbbreviationEditing
         }
     }
 
     private fun editAbbreviations() {
+        Log.d("CreateAgendaFragment", "Entering edit abbreviations mode")
         isAbbreviationEditing = true
         val currentList = abbreviationAdapter.currentList.toMutableList()
 
         if (currentList.isEmpty()) {
+            Log.d("CreateAgendaFragment", "No abbreviations found, adding new item")
             addNewAbbreviationItem()
         } else {
+            Log.d("CreateAgendaFragment", "Found ${currentList.size} abbreviations, making them editable")
             val updatedList = currentList.map { it.copy(isEditable = true) }
             abbreviationAdapter.submitList(updatedList)
         }
@@ -390,18 +445,47 @@ class CreateAgendaFragment : Fragment() {
                     .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
                     .associate { it.abbreviation to it.meaning }
 
+                if (abbreviations.isEmpty()) {
+                    showError("Please add at least one abbreviation")
+                    return@launch
+                }
+
                 val agendaId = viewModel.uiState.value.agenda?.id ?: ""
-                viewModel.saveAbbreviations(meetingId, agendaId, abbreviations)
+                val result = viewModel.saveAbbreviations(meetingId, agendaId, abbreviations)
 
-                // Switch back to read mode
-                isAbbreviationEditing = false
+                when (result) {
+                    is Result.Success -> {
+                        // Switch back to read mode
+                        isAbbreviationEditing = false
 
-                // Mark all items as read-only
-                val updatedList = currentList.map { it.copy(isEditable = false) }
-                abbreviationAdapter.submitList(updatedList)
+                        // Reload the agenda to get updated abbreviations from ViewModel
+                        val currentAgenda = viewModel.uiState.value.agenda
+                        if (currentAgenda != null) {
+                            // Update the agenda with the saved abbreviations
+                            val updatedAgenda = currentAgenda.copy(abbreviations = abbreviations)
+                            
+                            // Convert to AbbreviationItems for display
+                            val items = abbreviations.map { (abbr, meaning) ->
+                                AbbreviationItem(
+                                    id = abbr,
+                                    abbreviation = abbr,
+                                    meaning = meaning,
+                                    isEditable = false
+                                )
+                            }
+                            abbreviationAdapter.submitList(items)
+                        }
 
-                updateAbbreviationUI()
-                showMessage("Abbreviations saved successfully")
+                        updateAbbreviationUI()
+                        showMessage("Abbreviations saved successfully")
+                    }
+                    is Result.Error -> {
+                        showError("Failed to save abbreviations: ${result.exception?.message}")
+                    }
+                    else -> {
+                        showError("Failed to save abbreviations")
+                    }
+                }
             } catch (e: Exception) {
                 showError("Failed to save abbreviations: ${e.message}")
             }
@@ -523,12 +607,33 @@ class CreateAgendaFragment : Fragment() {
                                 if (state.isClubInfoEditable) View.VISIBLE else View.GONE
                             binding.cancelClubInfoButton.visibility =
                                 if (state.isClubInfoEditable) View.VISIBLE else View.GONE
+                            
+                            // Enable/disable club information fields based on edit mode (only for VP Education users)
+                            if (isVpEducation) {
+                                binding.clubNameEditText.isEnabled = state.isClubInfoEditable
+                                binding.clubNumberEditText.isEnabled = state.isClubInfoEditable
+                                binding.districtEditText.isEnabled = state.isClubInfoEditable
+                                binding.areaEditText.isEnabled = state.isClubInfoEditable
+                                binding.missionEditText.isEnabled = state.isClubInfoEditable
+                            }
                             binding.editOfficersButton.visibility =
                                 if (state.isOfficersEditable) View.GONE else View.VISIBLE
                             binding.saveOfficersButton.visibility =
                                 if (state.isOfficersEditable) View.VISIBLE else View.GONE
                             binding.cancelOfficersButton.visibility =
                                 if (state.isOfficersEditable) View.VISIBLE else View.GONE
+                            
+                            // Enable/disable officers fields based on edit mode (only for VP Education users)
+                            if (isVpEducation) {
+                                binding.presidentEditText.isEnabled = state.isOfficersEditable
+                                binding.vpEducationEditText.isEnabled = state.isOfficersEditable
+                                binding.vpMembershipEditText.isEnabled = state.isOfficersEditable
+                                binding.secretaryEditText.isEnabled = state.isOfficersEditable
+                                binding.treasurerEditText.isEnabled = state.isOfficersEditable
+                                binding.saaEditText.isEnabled = state.isOfficersEditable
+                                binding.ippEditText.isEnabled = state.isOfficersEditable
+                                binding.vpPublicRelationEditText.isEnabled = state.isOfficersEditable
+                            }
 
                             // Update abbreviations UI based on edit mode
                             binding.abbreviationsRecyclerView.isVisible = true
@@ -538,19 +643,11 @@ class CreateAgendaFragment : Fragment() {
                                 isAbbreviationEditing
 
                             if (state.isSaved) {
-                                showMessage(getString(R.string.agenda_saved))
-                                viewModel.toggleClubInfoEdit()
-                                viewModel.toggleOfficersEdit()
-
-                                view?.postDelayed({
-                                    if (isAdded && !isDetached) {
-                                        findNavController().navigateUp()
-                                    }
-                                }, 300) // Small delay to ensure UI updates complete
+                                showMessage("Data saved successfully")
+                                viewModel.clearSaveState()
                             }
 
                             updateUi(state.agenda)
-                            applyRoleBasedAccess()
                         } // End of withContext(Main)
                     } // End of collect
                 } // End of repeatOnLifecycle
@@ -744,6 +841,23 @@ class CreateAgendaFragment : Fragment() {
         if (binding.venueEditText.text?.toString() != agenda.meeting.location) {
             binding.venueEditText.setText(agenda.meeting.location)
         }
+        
+        // Update club information fields (only if not currently focused to prevent cursor jumping)
+        if (!binding.clubNameEditText.hasFocus() && binding.clubNameEditText.text?.toString() != agenda.clubName) {
+            binding.clubNameEditText.setText(agenda.clubName)
+        }
+        if (!binding.clubNumberEditText.hasFocus() && binding.clubNumberEditText.text?.toString() != agenda.clubNumber) {
+            binding.clubNumberEditText.setText(agenda.clubNumber)
+        }
+        if (!binding.districtEditText.hasFocus() && binding.districtEditText.text?.toString() != agenda.district) {
+            binding.districtEditText.setText(agenda.district)
+        }
+        if (!binding.areaEditText.hasFocus() && binding.areaEditText.text?.toString() != agenda.area) {
+            binding.areaEditText.setText(agenda.area)
+        }
+        if (!binding.missionEditText.hasFocus() && binding.missionEditText.text?.toString() != agenda.mission) {
+            binding.missionEditText.setText(agenda.mission)
+        }
 
         // Only update officer fields if they've actually changed
         if (currentOfficers != agenda.officers) {
@@ -763,33 +877,13 @@ class CreateAgendaFragment : Fragment() {
                     )
                 }
             abbreviationAdapter.submitList(items)
-
-            // Update UI based on edit mode
-            binding.abbreviationsRecyclerView.isVisible = true
-            binding.abbreviationsSummaryText.isVisible =
-                !isAbbreviationEditing
-            binding.saveAbbreviationsButton.isVisible =
-                isAbbreviationEditing
-            binding.addAbbreviationsButton.isVisible =
-                isAbbreviationEditing
-
-            if (!isAbbreviationEditing) {
-                val abbreviationsText = items
-                    .filter { it.abbreviation.isNotBlank() && it.meaning.isNotBlank() }
-                    .joinToString(", ") { "${it.abbreviation} (${it.meaning})" }
-                binding.abbreviationsSummaryText.text =
-                    abbreviationsText
-            }
         } else if (isAbbreviationEditing) {
             // If in edit mode but no abbreviations, add an empty item
             addNewAbbreviationItem()
-        } else {
-            // If not in edit mode and no abbreviations, show empty state
-            binding.abbreviationsSummaryText.text =
-                getString(R.string.no_abbreviations_added)
-            binding.abbreviationsSummaryText.isVisible = true
-            binding.abbreviationsRecyclerView.isVisible = false
         }
+        
+        // Always call updateAbbreviationUI to handle display logic consistently
+        updateAbbreviationUI()
 
         isInitialLoad = false
     }
@@ -808,12 +902,12 @@ class CreateAgendaFragment : Fragment() {
                 "VPPR"
             )
         }
-        // Only update text if it's different from current text
+        // Only update text if it's different from current text and field is not focused
         fun updateField(
             editText: TextInputEditText,
             value: String?
         ) {
-            if (editText.text?.toString() != value) {
+            if (!editText.hasFocus() && editText.text?.toString() != value) {
                 editText.setText(value ?: "")
             }
         }

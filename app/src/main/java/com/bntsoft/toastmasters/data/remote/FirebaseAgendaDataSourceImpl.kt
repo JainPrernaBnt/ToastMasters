@@ -916,7 +916,7 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
     override suspend fun saveAbbreviations(
         meetingId: String,
         agendaId: String,
-        abbreviations: Abbreviations
+        abbreviations: Map<String, String>
     ): Result<Unit> {
         return try {
             // Ensure agendaId is treated as a document ID, not a path
@@ -950,22 +950,116 @@ class FirebaseAgendaDataSourceImpl @Inject constructor(
         abbreviationKey: String
     ): Result<Unit> {
         return try {
+            Log.d("FirebaseAgendaDS", "Attempting to delete abbreviation - meetingId: $meetingId, agendaId: $agendaId, key: $abbreviationKey")
+            
             // Ensure agendaId is treated as a document ID, not a path
             val sanitizedAgendaId = agendaId.split("/").last() // Take only the last segment if it contains slashes
+            Log.d("FirebaseAgendaDS", "Sanitized agendaId: $sanitizedAgendaId")
+            
             val docRef = firestore.collection(MEETINGS_COLLECTION)
                 .document(meetingId)
                 .collection("agenda")
                 .document(sanitizedAgendaId)
+            
+            Log.d("FirebaseAgendaDS", "Document path: ${docRef.path}")
 
             // Use FieldValue.delete() to remove the specific abbreviation from the map
             val updates = hashMapOf<String, Any>(
                 "abbreviations.$abbreviationKey" to FieldValue.delete()
             )
+            
+            Log.d("FirebaseAgendaDS", "Update field: abbreviations.$abbreviationKey")
 
             docRef.update(updates).await()
+            Log.d("FirebaseAgendaDS", "Abbreviation deleted successfully from Firebase")
             Success(Unit)
         } catch (e: Exception) {
             Log.e("FirebaseAgendaDS", "Error deleting abbreviation", e)
+            Error(e)
+        }
+    }
+    
+    override suspend fun getClubInformation(): Result<Map<String, Any>> {
+        return try {
+            val doc = firestore.collection("clubInformation")
+                .document("infoDoc")
+                .get()
+                .await()
+            
+            if (doc.exists()) {
+                val data = doc.data ?: emptyMap()
+                Success(data)
+            } else {
+                // Return default values if document doesn't exist
+                val defaultData = mapOf(
+                    "clubName" to "Pimpri Toastmasters Club",
+                    "clubNumber" to 5965350,
+                    "area" to "C3",
+                    "district" to "125",
+                    "mission" to "We provide a supportive and positive learning experience in which members are empowered to develop communication and leadership skills."
+                )
+                Success(defaultData)
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseAgendaDS", "Error getting club information", e)
+            Error(e)
+        }
+    }
+    
+    override suspend fun saveClubInformation(clubInfo: Map<String, Any>): Result<Unit> {
+        return try {
+            firestore.collection("clubInformation")
+                .document("infoDoc")
+                .set(clubInfo, SetOptions.merge())
+                .await()
+            Success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseAgendaDS", "Error saving club information", e)
+            Error(e)
+        }
+    }
+    
+    override suspend fun getClubOfficers(): Result<Map<String, String>> {
+        return try {
+            val doc = firestore.collection("clubOfficers")
+                .document("officersDoc")
+                .get()
+                .await()
+            
+            if (doc.exists()) {
+                val data = doc.data?.mapValues { it.value.toString() } ?: emptyMap()
+                Success(data)
+            } else {
+                // Return default values if document doesn't exist
+                val defaultData = mapOf(
+                    "IPP" to "TM Kiran Nawale",
+                    "President" to "TM Raghvendra Tiwari",
+                    "SAA" to "TM Vaishali Menon",
+                    "Secretary" to "TM Manuel Tholath",
+                    "Treasurer" to "TM Sushant Ulavi",
+                    "VPE" to "TM Sanchit Hundare",
+                    "VPM" to "TM Harshada Pandure",
+                    "VPPR" to "TM Suraj Krishnamoorthy"
+                )
+                Success(defaultData)
+            }
+        } catch (e: Exception) {
+            Log.e("FirebaseAgendaDS", "Error getting club officers", e)
+            Error(e)
+        }
+    }
+    
+    override suspend fun saveClubOfficers(officers: Map<String, String>): Result<Unit> {
+        return try {
+            Log.d("FirebaseAgendaDS", "Attempting to save club officers: $officers")
+            firestore.collection("clubOfficers")
+                .document("officersDoc")
+                .set(officers, SetOptions.merge())
+                .await()
+            Log.d("FirebaseAgendaDS", "Club officers saved successfully")
+            Success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseAgendaDS", "Error saving club officers", e)
             Error(e)
         }
     }

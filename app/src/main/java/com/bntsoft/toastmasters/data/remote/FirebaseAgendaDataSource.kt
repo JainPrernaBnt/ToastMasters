@@ -38,7 +38,15 @@ interface FirebaseAgendaDataSource {
     
     // Abbreviation operations
     suspend fun getAbbreviations(meetingId: String, agendaId: String): Abbreviations
-    suspend fun saveAbbreviations(meetingId: String, agendaId: String, abbreviations: Abbreviations): Result<Unit>
+    suspend fun saveAbbreviations(meetingId: String, agendaId: String, abbreviations: Map<String, String>): Result<Unit>
     suspend fun deleteAbbreviation(meetingId: String, agendaId: String, abbreviationKey: String): Result<Unit>
+    
+    // Club Information operations
+    suspend fun getClubInformation(): Result<Map<String, Any>>
+    suspend fun saveClubInformation(clubInfo: Map<String, Any>): Result<Unit>
+    
+    // Club Officers operations
+    suspend fun getClubOfficers(): Result<Map<String, String>>
+    suspend fun saveClubOfficers(officers: Map<String, String>): Result<Unit>
 
 }
