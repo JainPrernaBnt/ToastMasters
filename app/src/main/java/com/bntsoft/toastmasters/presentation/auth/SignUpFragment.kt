@@ -1,6 +1,8 @@
 package com.bntsoft.toastmasters.presentation.auth
 
 import android.app.DatePickerDialog
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -9,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -16,12 +19,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentSignUpBinding
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.bntsoft.toastmasters.utils.UiUtils
+import com.bumptech.glide.Glide
+import com.bntsoft.toastmasters.utils.GlideExtensions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -46,8 +52,21 @@ class SignUpFragment : Fragment() {
     private val calendar = Calendar.getInstance()
 
     private var selectedGender: String? = null
+    private val selectedMentors = mutableListOf<String>()
+    private val availableMentors = mutableListOf<User>()
+    private lateinit var selectedMentorsAdapter: SelectedMentorsAdapter
+    private var selectedProfileImageUri: Uri? = null
 
     private var formSubmitted: Boolean = false
+
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            selectedProfileImageUri = it
+            loadProfileImage(it)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,8 +81,11 @@ class SignUpFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupForm()
+        setupMentorSelection()
+        setupProfilePicture()
         setupClickListeners()
         observeViewModel()
+        loadMentors()
 
     }
 
@@ -110,9 +132,11 @@ class SignUpFragment : Fragment() {
 
         // Setup mentor assignment toggle
         binding.hasMentorSwitch.setOnCheckedChangeListener { _, isChecked ->
-            binding.mentorInputLayout.isVisible = isChecked
+            binding.mentorSelectionLayout.isVisible = isChecked
             if (!isChecked) {
-                binding.mentorEditText.text?.clear()
+                selectedMentors.clear()
+                selectedMentorsAdapter.updateMentors(selectedMentors)
+                binding.selectedMentorsRecyclerView.isVisible = false
             }
             validateForm()
         }
@@ -159,6 +183,75 @@ class SignUpFragment : Fragment() {
 
     }
 
+    private fun setupMentorSelection() {
+        selectedMentorsAdapter = SelectedMentorsAdapter { mentorName ->
+            selectedMentors.remove(mentorName)
+            selectedMentorsAdapter.updateMentors(selectedMentors)
+            binding.selectedMentorsRecyclerView.isVisible = selectedMentors.isNotEmpty()
+            updateMentorDropdownText()
+            validateForm()
+        }
+        
+        binding.selectedMentorsRecyclerView.apply {
+            adapter = selectedMentorsAdapter
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        }
+        
+        binding.mentorAutoCompleteTextView.setOnItemClickListener { _, _, position, _ ->
+            val selectedMentor = availableMentors[position]
+            if (!selectedMentors.contains(selectedMentor.name)) {
+                selectedMentors.add(selectedMentor.name)
+                selectedMentorsAdapter.updateMentors(selectedMentors)
+                binding.selectedMentorsRecyclerView.isVisible = true
+                updateMentorDropdownText()
+                validateForm()
+            }
+            binding.mentorAutoCompleteTextView.setText("")
+        }
+    }
+    
+    private fun updateMentorDropdownText() {
+        binding.mentorAutoCompleteTextView.hint = when (selectedMentors.size) {
+            0 -> "Choose mentors..."
+            1 -> "${selectedMentors.size} mentor selected"
+            else -> "${selectedMentors.size} mentors selected"
+        }
+    }
+    
+    private fun loadMentors() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.getMentors().collect { mentors ->
+                availableMentors.clear()
+                availableMentors.addAll(mentors)
+                
+                val mentorNames = mentors.map { it.name }
+                val adapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    mentorNames
+                )
+                binding.mentorAutoCompleteTextView.setAdapter(adapter)
+            }
+        }
+    }
+
+    private fun setupProfilePicture() {
+        binding.profileImageView.setOnClickListener {
+            openImagePicker()
+        }
+    }
+
+    private fun openImagePicker() {
+        imagePickerLauncher.launch("image/*")
+    }
+
+    private fun loadProfileImage(uri: Uri) {
+        Glide.with(this)
+            .load(uri)
+            .circleCrop()
+            .into(binding.profileImageView)
+    }
+
     private fun showDatePicker() {
         val datePicker = DatePickerDialog(
             requireContext(),
@@ -191,10 +284,10 @@ class SignUpFragment : Fragment() {
         val clubId = binding.clubIdEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString()
         val confirmPassword = binding.confirmPasswordEditText.text.toString()
-        val mentorName = if (binding.mentorInputLayout.visibility == View.VISIBLE) {
-            binding.mentorEditText.text.toString().trim()
+        val mentorNames = if (binding.mentorSelectionLayout.visibility == View.VISIBLE) {
+            selectedMentors.toList()
         } else {
-            ""
+            emptyList()
         }
         val level = binding.levelEditText.text.toString().trim()
 
@@ -218,10 +311,10 @@ class SignUpFragment : Fragment() {
             level = level,
             role = role, // Use selected role
             isApproved = role == UserRole.VP_EDUCATION, // Auto-approve VP Education
-            mentorNames = if (mentorName.isNotBlank()) listOf(mentorName) else emptyList()
+            mentorNames = mentorNames
         )
 
-        viewModel.signUp(user, binding.passwordEditText.text.toString())
+        viewModel.signUp(user, binding.passwordEditText.text.toString(), selectedProfileImageUri)
     }
 
     private fun validateForm(): Boolean {
@@ -274,11 +367,12 @@ class SignUpFragment : Fragment() {
         }
 
         // Phone validation
-        if (binding.phoneEditText.text.isNullOrEmpty()) {
+        val phoneText = binding.phoneEditText.text.toString().trim()
+        if (phoneText.isEmpty()) {
             binding.phoneInputLayout.error = getString(R.string.error_field_required)
             isValid = false
-        } else if (binding.phoneEditText.text.toString().length < 10) {
-            binding.phoneInputLayout.error = getString(R.string.error_invalid_phone)
+        } else if (phoneText.length != 10 || !phoneText.all { it.isDigit() }) {
+            binding.phoneInputLayout.error = "Phone number must be exactly 10 digits"
             isValid = false
         } else {
             binding.phoneInputLayout.error = null
@@ -300,8 +394,8 @@ class SignUpFragment : Fragment() {
         }
 
         // Mentor validation (if has mentor is selected)
-        if (binding.hasMentorSwitch.isChecked && binding.mentorEditText.text.isNullOrEmpty()) {
-            binding.mentorInputLayout.error = getString(R.string.error_field_required)
+        if (binding.hasMentorSwitch.isChecked && selectedMentors.isEmpty()) {
+            binding.mentorInputLayout.error = "Please select at least one mentor"
             isValid = false
         } else {
             binding.mentorInputLayout.error = null

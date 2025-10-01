@@ -17,6 +17,8 @@ import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.bumptech.glide.Glide
+import com.bntsoft.toastmasters.utils.GlideExtensions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
@@ -74,6 +76,7 @@ class SettingsFragment : Fragment() {
                         state.user?.let { user ->
                             binding.user = user
                             updateUserDetails(user)
+                            loadProfilePicture(user)
                         }
                         
                         state.error?.let { error ->
@@ -132,18 +135,17 @@ class SettingsFragment : Fragment() {
             Snackbar.LENGTH_LONG
         ).show()
     }
-
     private fun setupClickListeners() {
         binding.btnLogout.setOnClickListener {
             showLogoutConfirmation()
         }
 
-        binding.btnEditProfile.setOnClickListener {
-            navigateToEditProfile()
-        }
-
         binding.btnClubMembers.setOnClickListener {
             navigateToClubMembers()
+        }
+
+        binding.btnEditProfile.setOnClickListener {
+            navigateToEditProfile()
         }
     }
 
@@ -247,6 +249,15 @@ class SettingsFragment : Fragment() {
         textView.compoundDrawablePadding = 16
         
         return mentorView
+    }
+
+
+    private fun loadProfilePicture(user: com.bntsoft.toastmasters.domain.model.User) {
+        GlideExtensions.loadProfilePicture(
+            binding.profileImageView,
+            user.profilePictureUrl,
+            R.drawable.ic_person
+        )
     }
 
     override fun onDestroyView() {

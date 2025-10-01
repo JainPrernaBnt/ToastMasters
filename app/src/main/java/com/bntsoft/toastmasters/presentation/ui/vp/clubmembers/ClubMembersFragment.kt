@@ -1,6 +1,8 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.clubmembers
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +15,7 @@ import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentClubMembersBinding
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
@@ -33,6 +36,7 @@ class ClubMembersFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        setupSearchFunctionality()
         observeUiState()
     }
 
@@ -47,15 +51,28 @@ class ClubMembersFragment : Fragment() {
         }
     }
 
+    private fun setupSearchFunctionality() {
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            
+            override fun afterTextChanged(s: Editable?) {
+                val query = s?.toString() ?: ""
+                viewModel.searchMembers(query)
+            }
+        })
+    }
+
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.uiState.collectLatest { state ->
                 binding.progressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
                 
-                if (state.members.isNotEmpty()) {
+                if (state.filteredMembers.isNotEmpty()) {
                     binding.recyclerViewMembers.visibility = View.VISIBLE
                     binding.tvEmptyState.visibility = View.GONE
-                    membersAdapter.submitList(state.members)
+                    membersAdapter.submitList(state.filteredMembers)
                 } else if (!state.isLoading) {
                     binding.recyclerViewMembers.visibility = View.GONE
                     binding.tvEmptyState.visibility = View.VISIBLE

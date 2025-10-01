@@ -95,22 +95,33 @@ class MemberRepositoryImpl @Inject constructor(
     }
 
     override suspend fun rejectMember(userId: String, reason: String?): Boolean {
-        val ok = firestoreService.rejectMember(userId, reason)
-        if (ok) {
-            try {
-                val userDoc = firestoreService.getUserDocument(userId).get().await()
-                val userName = userDoc.getString("name") ?: "Member"
-                notificationTriggerUseCase.notifyMemberOfRequestRejection(
-                    memberId = userId,
-                    memberName = userName,
-                    requestType = "membership",
-                    reason = reason
-                )
-            } catch (e: Exception) {
-                Log.e("MemberRepository", "Error sending rejection notification", e)
+        return try {
+            // Get user data before rejection (since it will be deleted from users collection)
+            val userDoc = firestoreService.getUserDocument(userId).get().await()
+            val userName = userDoc.getString("name") ?: "Member"
+            
+            // Perform rejection (moves user to rejectedMembers collection and deletes from users)
+            val ok = firestoreService.rejectMember(userId, reason)
+            
+            if (ok) {
+                try {
+                    // Send notification after successful rejection
+                    notificationTriggerUseCase.notifyMemberOfRequestRejection(
+                        memberId = userId,
+                        memberName = userName,
+                        requestType = "membership",
+                        reason = reason
+                    )
+                } catch (e: Exception) {
+                    Log.e("MemberRepository", "Error sending rejection notification", e)
+                }
             }
+            
+            ok
+        } catch (e: Exception) {
+            Log.e("MemberRepository", "Error in rejectMember", e)
+            false
         }
-        return ok
     }
 
     override suspend fun updateMember(user: User): Boolean {

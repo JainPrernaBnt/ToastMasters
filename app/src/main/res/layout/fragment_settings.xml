@@ -54,6 +54,26 @@
                         android:paddingVertical="12dp"
                         android:paddingHorizontal="16dp">
 
+                        <!-- Profile Picture Section -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            app:cardCornerRadius="50dp"
+                            app:cardElevation="4dp"
+                            app:strokeColor="@color/primary"
+                            app:strokeWidth="2dp">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/profileImageView"
+                                android:layout_width="100dp"
+                                android:layout_height="100dp"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_person"
+                                app:shapeAppearanceOverlay="@style/CircleImageView" />
+
+                        </com.google.android.material.card.MaterialCardView>
+
                         <TextView
                             android:id="@+id/tvUserName"
                             android:layout_width="wrap_content"

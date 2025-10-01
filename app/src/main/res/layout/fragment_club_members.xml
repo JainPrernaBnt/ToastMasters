@@ -20,6 +20,26 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/searchLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:endIconMode="clear_text"
+                app:startIconDrawable="@drawable/ic_search"
+                app:startIconTint="@color/primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Search members by name..."
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/secondary" />
+            </com.google.android.material.textfield.TextInputLayout>
+
             <!-- Members List -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewMembers"

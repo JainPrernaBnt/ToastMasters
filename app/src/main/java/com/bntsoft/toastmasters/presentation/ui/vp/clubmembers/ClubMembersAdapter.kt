@@ -5,8 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.ItemClubMemberBinding
 import com.bntsoft.toastmasters.domain.model.User
+import com.bntsoft.toastmasters.utils.GlideExtensions
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -35,6 +37,13 @@ class ClubMembersAdapter(
 
         fun bind(member: User) {
             binding.apply {
+                // Load profile picture
+                GlideExtensions.loadProfilePicture(
+                    profileImageView,
+                    member.profilePictureUrl,
+                    R.drawable.ic_person
+                )
+                
                 tvMemberName.text = member.name.ifEmpty { "N/A" }
                 tvMemberEmail.text = member.email
                 tvMemberPhone.text = member.phoneNumber.ifEmpty { "N/A" }

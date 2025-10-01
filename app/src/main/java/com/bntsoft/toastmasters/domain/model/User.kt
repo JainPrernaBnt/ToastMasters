@@ -18,6 +18,7 @@ data class User(
     val role: UserRole = UserRole.MEMBER,
     val isApproved: Boolean = false,
     val mentorNames: List<String> = emptyList(),
+    val profilePictureUrl: String? = null, // Base64 encoded image data
     val fcmToken: String? = null,
     val createdAt: Date = Date(),
     val updatedAt: Date = Date()

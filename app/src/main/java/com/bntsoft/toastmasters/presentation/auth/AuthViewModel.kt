@@ -12,7 +12,9 @@ import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
+import com.bntsoft.toastmasters.domain.repository.ProfileRepository
 import com.bntsoft.toastmasters.presentation.auth.AuthViewModel.AuthUiState.*
+import android.net.Uri
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
@@ -30,6 +32,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val memberRepository: MemberRepository,
+    private val profileRepository: ProfileRepository,
     private val firestoreService: FirestoreService,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -129,8 +132,9 @@ class AuthViewModel @Inject constructor(
         }
     }
     
-    fun signUp(user: User, password: String) {
-
+    fun signUp(user: User, password: String, profileImageUri: Uri? = null) {
+        _uiState.value = AuthUiState.Loading
+        
         viewModelScope.launch {
             try {
                 // Check if user already exists
@@ -144,10 +148,27 @@ class AuthViewModel @Inject constructor(
                     is AuthResult.Success -> {
                         val signupResult: SignupResult = result.data
                         val signedUpUser = signupResult.user
+                        
+                        // Upload profile picture if provided
+                        var updatedUser = signedUpUser
+                        profileImageUri?.let { uri ->
+                            try {
+                                val updateResult = profileRepository.updateProfilePicture(signedUpUser.id, uri)
+                                if (updateResult.isSuccess) {
+                                    // Get the updated user data from Firestore to get the base64 image
+                                    val userDoc = firestoreService.getUserDocument(signedUpUser.id).get().await()
+                                    val profilePictureUrl = userDoc.getString("profilePictureUrl")
+                                    updatedUser = signedUpUser.copy(profilePictureUrl = profilePictureUrl)
+                                }
+                            } catch (e: Exception) {
+                                // Profile picture upload failed, but continue with signup
+                            }
+                        }
+                        
                         val userRole =
-                            if (signedUpUser.isVpEducation) UserRole.VP_EDUCATION else UserRole.MEMBER
+                            if (updatedUser.isVpEducation) UserRole.VP_EDUCATION else UserRole.MEMBER
                         _uiState.value = SignUpSuccess(
-                            user = signedUpUser,
+                            user = updatedUser,
                             userRole = userRole,
                             requiresApproval = signupResult.requiresApproval
                         )
@@ -179,6 +200,8 @@ class AuthViewModel @Inject constructor(
     fun resetState() {
         _uiState.value = AuthUiState.Initial
     }
+
+    fun getMentors() = memberRepository.getMentors()
 
     fun sendPasswordResetEmail(email: String, onComplete: (Result<Boolean>) -> Unit) {
         viewModelScope.launch {

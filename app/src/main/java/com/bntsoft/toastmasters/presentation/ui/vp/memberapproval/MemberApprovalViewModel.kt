@@ -116,19 +116,24 @@ class MemberApprovalViewModel @Inject constructor(
         }
     }
 
-    fun rejectMember(member: DomainUser) {
+    fun rejectMember(member: DomainUser, reason: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                memberRepository.rejectMember(member.id)
-                _successMessages.value = "${member.name} has been rejected"
+                val success = memberRepository.rejectMember(member.id, reason)
+                
+                if (success) {
+                    _successMessages.value = "${member.name} has been rejected and moved to rejected members"
 
-                // Update the local list instead of reloading
-                val updatedList = _members.value.toMutableList().apply {
-                    removeAll { it.id == member.id }
+                    // Update the local list instead of reloading
+                    val updatedList = _members.value.toMutableList().apply {
+                        removeAll { it.id == member.id }
+                    }
+                    _members.value = updatedList
+                    applyFilter(currentFilter, updatedList)
+                } else {
+                    _errorMessages.value = "Failed to reject member. Please try again."
                 }
-                _members.value = updatedList
-                applyFilter(currentFilter, updatedList)
 
             } catch (e: Exception) {
                 _errorMessages.value = e.message ?: "Failed to reject member"

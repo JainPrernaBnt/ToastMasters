@@ -19,6 +19,8 @@ import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.presentation.ui.vp.memberapproval.adapter.MemberApprovalAdapter
 import com.bntsoft.toastmasters.utils.UiUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -97,6 +99,15 @@ class MemberApprovalFragment : Fragment() {
                 }
             }
         }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Observe mentors list
+                viewModel.mentors.collectLatest { mentors ->
+                    adapter.updateMentors(mentors)
+                }
+            }
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -151,11 +162,21 @@ class MemberApprovalFragment : Fragment() {
 
 
     private fun showRejectConfirmationDialog(member: User) {
+        // Create custom view for rejection reason input
+        val dialogView = LayoutInflater.from(requireContext()).inflate(
+            R.layout.dialog_rejection_reason, null
+        )
+        
+        val reasonInputLayout = dialogView.findViewById<TextInputLayout>(R.id.reasonInputLayout)
+        val reasonEditText = dialogView.findViewById<TextInputEditText>(R.id.reasonEditText)
+        
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.reject_member_title)
-            .setMessage(R.string.reject_member_message)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                viewModel.rejectMember(member)
+            .setTitle("Reject ${member.name}")
+            .setMessage("Please provide a reason for rejection (optional):")
+            .setView(dialogView)
+            .setPositiveButton("Reject") { _, _ ->
+                val reason = reasonEditText.text.toString().trim().takeIf { it.isNotEmpty() }
+                viewModel.rejectMember(member, reason)
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()

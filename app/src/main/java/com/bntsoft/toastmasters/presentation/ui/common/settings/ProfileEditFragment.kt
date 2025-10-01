@@ -1,10 +1,12 @@
 package com.bntsoft.toastmasters.presentation.ui.common.settings
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +17,7 @@ import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.bntsoft.toastmasters.utils.GlideExtensions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -23,6 +26,15 @@ class ProfileEditFragment : Fragment() {
     private var _binding: FragmentProfileEditBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ProfileEditViewModel by viewModels()
+    
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.updateProfilePicture(it)
+            loadProfileImage(it)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,6 +59,10 @@ class ProfileEditFragment : Fragment() {
         binding.btnCancel.setOnClickListener {
             showDiscardChangesDialog()
         }
+
+        binding.profileImageView.setOnClickListener {
+            openImagePicker()
+        }
     }
 
     private fun setupRoleSpinner() {
@@ -64,15 +80,7 @@ class ProfileEditFragment : Fragment() {
                 
                 state.user?.let { user ->
                     populateFields(user)
-                    setupRoleVisibility(user)
-                }
-                
-                if (state.isSaving) {
-                    binding.btnSave.isEnabled = false
-                    binding.btnSave.text = getString(R.string.saving)
-                } else {
-                    binding.btnSave.isEnabled = true
-                    binding.btnSave.text = getString(R.string.save_changes)
+                    loadCurrentProfilePicture(user)
                 }
                 
                 if (state.saveSuccess) {
@@ -188,6 +196,26 @@ class ProfileEditFragment : Fragment() {
 
     private fun showSuccess(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun openImagePicker() {
+        imagePickerLauncher.launch("image/*")
+    }
+
+    private fun loadProfileImage(uri: Uri) {
+        GlideExtensions.loadProfilePicture(
+            binding.profileImageView,
+            uri.toString(),
+            R.drawable.ic_person
+        )
+    }
+
+    private fun loadCurrentProfilePicture(user: User) {
+        GlideExtensions.loadProfilePicture(
+            binding.profileImageView,
+            user.profilePictureUrl,
+            R.drawable.ic_person
+        )
     }
 
     override fun onDestroyView() {

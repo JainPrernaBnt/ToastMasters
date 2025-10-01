@@ -46,6 +46,33 @@
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         android:textColor="@color/on_surface" />
 
+                    <!-- Profile Picture Section -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="24dp"
+                        app:cardCornerRadius="60dp"
+                        app:cardElevation="4dp"
+                        app:strokeColor="@color/primary"
+                        app:strokeWidth="2dp">
+
+                        <RelativeLayout
+                            android:layout_width="120dp"
+                            android:layout_height="120dp">
+
+                            <com.google.android.material.imageview.ShapeableImageView
+                                android:id="@+id/profileImageView"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_person"
+                                app:shapeAppearanceOverlay="@style/CircleImageView" />
+
+                        </RelativeLayout>
+
+                    </com.google.android.material.card.MaterialCardView>
+
                     <!-- Name -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"

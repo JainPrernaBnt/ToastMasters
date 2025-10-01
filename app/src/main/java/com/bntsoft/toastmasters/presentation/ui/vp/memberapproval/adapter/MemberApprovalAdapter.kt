@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -24,6 +26,13 @@ class MemberApprovalAdapter(
     private val onApplyMentors: (User, List<String>) -> Unit,
     private val onAssignVp: (User) -> Unit
 ) : ListAdapter<User, MemberApprovalAdapter.MemberViewHolder>(MemberDiffCallback()) {
+
+    private var availableMentors = listOf<User>()
+    
+    fun updateMentors(mentors: List<User>) {
+        availableMentors = mentors
+        notifyDataSetChanged()
+    }
 
     // Track mentor input visibility state per user
     private val mentorInputVisibility = mutableMapOf<String, Boolean>()
@@ -47,7 +56,7 @@ class MemberApprovalAdapter(
         private val approveButton = binding.approveButton
         private val rejectButton = binding.rejectButton
         private val mentorsChipGroup = binding.mentorsChipGroup
-        private val addMentorEditText = binding.mentorNamesEditText
+        private val addMentorAutoComplete = binding.mentorNamesEditText as AutoCompleteTextView
         private val applyMentorsButton = binding.applyMentorsButton
         private val assignMentor = binding.assignMentorButton
         private val assignVP = binding.vpMembershipSwitch
@@ -77,8 +86,8 @@ class MemberApprovalAdapter(
                 val chip = Chip(itemView.context).apply {
                     text = mentorName
                     isCloseIconVisible = true
-                    setChipBackgroundColorResource(R.color.chip_background)
-                    setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                    setChipBackgroundColorResource(R.color.purple_200)
+                    setTextColor(ContextCompat.getColor(context, android.R.color.black))
 
                     setOnCloseIconClickListener {
                         val updatedMentors =
@@ -92,17 +101,20 @@ class MemberApprovalAdapter(
                 mentorsChipGroup.addView(chip)
             }
 
-            // Add mentor
-            addMentorEditText.setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    applyMentorsButton.performClick()
-                    true
-                } else false
+            // Setup mentor dropdown
+            setupMentorDropdown()
+            
+            // Add mentor selection
+            addMentorAutoComplete.setOnItemClickListener { _, _, position, _ ->
+                if (position < availableMentors.size) {
+                    val selectedMentor = availableMentors[position]
+                    addMentorAutoComplete.setText(selectedMentor.name)
+                }
             }
 
             applyMentorsButton.setOnClickListener {
-                val newMentor = addMentorEditText.text.toString().trim()
-                if (newMentor.isNotEmpty()) {
+                val newMentor = addMentorAutoComplete.text.toString().trim()
+                if (newMentor.isNotEmpty() && !member.mentorNames.contains(newMentor)) {
                     val updatedMentors = member.mentorNames.toMutableList().apply { add(newMentor) }
                     val updatedMember = member.copy(mentorNames = updatedMentors)
 
@@ -124,7 +136,7 @@ class MemberApprovalAdapter(
                     }
                     mentorsChipGroup.addView(chip)
 
-                    addMentorEditText.text?.clear()
+                    addMentorAutoComplete.setText("")
                 }
             }
 
@@ -179,8 +191,18 @@ class MemberApprovalAdapter(
         private fun setMentorInputVisibility(visible: Boolean) {
             binding.mentorInputLayout.visibility = if (visible) View.VISIBLE else View.GONE
             if (!visible) {
-                addMentorEditText.text?.clear()
+                addMentorAutoComplete.setText("")
             }
+        }
+        
+        private fun setupMentorDropdown() {
+            val mentorNames = availableMentors.map { it.name }
+            val adapter = ArrayAdapter(
+                itemView.context,
+                android.R.layout.simple_dropdown_item_1line,
+                mentorNames
+            )
+            addMentorAutoComplete.setAdapter(adapter)
         }
 
         private fun refreshMember(updatedMember: User) {

@@ -234,7 +234,7 @@ class FirestoreService @Inject constructor(
     fun getMentors(): Flow<List<DocumentSnapshot>> = flow {
         val snapshot = firestore.collection(USERS_COLLECTION)
             .whereEqualTo("isApproved", true)
-            .whereEqualTo("role", "MENTOR") // Assuming we have a role field
+            .whereEqualTo("role", "MEMBER") // Fetch users with MEMBER role
             .get()
             .await()
         emit(snapshot.documents)
@@ -299,15 +299,33 @@ class FirestoreService @Inject constructor(
 
     suspend fun rejectMember(userId: String, reason: String?): Boolean {
         return try {
-            val updates = hashMapOf<String, Any>(
-                "isRejected" to true,
-                "rejectionReason" to (reason ?: ""),
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
+            // Get the user document first
+            val userDoc = firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .get()
+                .await()
 
+            if (!userDoc.exists()) {
+                return false
+            }
+
+            // Get user data and add rejection info
+            val userData = userDoc.data?.toMutableMap() ?: return false
+            userData["isRejected"] = true
+            userData["rejectionReason"] = reason ?: ""
+            userData["rejectedAt"] = FieldValue.serverTimestamp()
+            userData["updatedAt"] = FieldValue.serverTimestamp()
+
+            // Save to rejectedMembers collection
+            firestore.collection("rejectedMembers")
+                .document(userId)
+                .set(userData)
+                .await()
+
+            // Delete from users collection
             firestore.collection(USERS_COLLECTION)
                 .document(userId)
-                .update(updates)
+                .delete()
                 .await()
 
             true

@@ -11,6 +11,7 @@ import com.bntsoft.toastmasters.data.repository.AgendaRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.MeetingAgendaRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.AssignedRoleRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.UserRepositoryImpl
+import com.bntsoft.toastmasters.data.repository.ProfileRepositoryImpl
 import com.bntsoft.toastmasters.domain.repository.AbbreviationRepository
 import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
@@ -22,6 +23,7 @@ import com.bntsoft.toastmasters.domain.repository.MemberRepository
 import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.domain.repository.ProfileRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -97,4 +99,10 @@ abstract class RepositoryModule {
     abstract fun bindGemOfMonthRepository(
         gemOfMonthRepositoryImpl: GemOfMonthRepositoryImpl
     ): GemOfMonthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProfileRepository(
+        profileRepositoryImpl: ProfileRepositoryImpl
+    ): ProfileRepository
 }

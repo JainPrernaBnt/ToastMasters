@@ -89,4 +89,5 @@ class SettingsViewModel @Inject constructor(
     fun onNavigationComplete() {
         _uiState.update { it.copy(navigateToLogin = false) }
     }
+
 }

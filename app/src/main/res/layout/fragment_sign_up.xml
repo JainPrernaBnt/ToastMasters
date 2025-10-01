@@ -34,6 +34,34 @@
                 android:textStyle="bold"
                 android:letterSpacing="0.1" />
 
+            <!-- Profile Picture Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="@dimen/space_large"
+                app:cardCornerRadius="60dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="2dp">
+
+                <!-- FrameLayout is better for overlaying -->
+                <FrameLayout
+                    android:layout_width="120dp"
+                    android:layout_height="120dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/profileImageView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_person"
+                        app:shapeAppearanceOverlay="@style/CircleImageView" />
+
+                </FrameLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Name -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/nameInputLayout"
@@ -97,7 +125,9 @@
                     android:id="@+id/phoneEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="phone"
+                    android:inputType="number"
+                    android:digits="0123456789"
+                    android:maxLength="10"
                     android:maxLines="1"
                     android:textColor="?attr/colorOnSurface" />
 
@@ -391,29 +421,45 @@
                         android:text="@string/has_mentor"
                         android:textColor="?attr/colorOnSurface" />
 
-                    <!-- Mentor Input (Initially hidden) -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/mentorInputLayout"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    <!-- Mentor Selection (Initially hidden) -->
+                    <LinearLayout
+                        android:id="@+id/mentorSelectionLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_medium"
-                        android:hint="@string/hint_enter_mentor_name"
-                        android:visibility="gone"
-                        app:boxStrokeColor="?attr/colorOnSurface"
-                        app:hintTextColor="?attr/colorOnSurface"
-                        app:startIconDrawable="@drawable/ic_person"
-                        app:startIconTint="?attr/colorOnSurface">
+                        android:orientation="vertical"
+                        android:visibility="gone">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/mentorEditText"
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/mentorInputLayout"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textPersonName|textCapWords"
-                            android:maxLines="1"
-                            android:textColor="?attr/colorOnSurface" />
+                            android:hint="Select Mentors"
+                            app:boxStrokeColor="?attr/colorOnSurface"
+                            app:hintTextColor="?attr/colorOnSurface"
+                            app:startIconDrawable="@drawable/ic_person"
+                            app:startIconTint="?attr/colorOnSurface">
 
-                    </com.google.android.material.textfield.TextInputLayout>
+                            <AutoCompleteTextView
+                                android:id="@+id/mentorAutoCompleteTextView"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:textColor="?attr/colorOnSurface"
+                                android:hint="Choose mentors..." />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Selected Mentors Display -->
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/selectedMentorsRecyclerView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 

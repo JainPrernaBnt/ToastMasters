@@ -1,10 +1,12 @@
 package com.bntsoft.toastmasters.presentation.ui.common.settings
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.domain.repository.ProfileRepository
 import com.bntsoft.toastmasters.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +26,8 @@ data class ProfileEditUiState(
 
 @HiltViewModel
 class ProfileEditViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileEditUiState())
@@ -124,6 +127,33 @@ class ProfileEditViewModel @Inject constructor(
                         it.copy(isSaving = true)
                     }
                 }
+            }
+        }
+    }
+
+    fun updateProfilePicture(imageUri: Uri) {
+        val currentUser = _uiState.value.user ?: return
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, error = null) }
+            
+            try {
+                val updateResult = profileRepository.updateProfilePicture(currentUser.id, imageUri)
+                
+                if (updateResult.isSuccess) {
+                    // Reload user data to get the updated profile picture
+                    loadCurrentUser()
+                } else {
+                    _uiState.update { it.copy(
+                        isSaving = false,
+                        error = updateResult.exceptionOrNull()?.message ?: "Failed to update profile picture"
+                    )}
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(
+                    isSaving = false,
+                    error = e.message ?: "An error occurred while updating profile picture"
+                )}
             }
         }
     }

@@ -15,6 +15,8 @@ import javax.inject.Inject
 data class ClubMembersUiState(
     val isLoading: Boolean = true,
     val members: List<User> = emptyList(),
+    val filteredMembers: List<User> = emptyList(),
+    val searchQuery: String = "",
     val error: String? = null,
     val currentUser: User? = null
 )
@@ -58,10 +60,12 @@ class ClubMembersViewModel @Inject constructor(
                 }
 
                 val members = userRepository.getClubMembers(currentUser.clubId)
+                val sortedMembers = members.sortedByDescending { it.joinedDate }
                 _uiState.update { 
                     it.copy(
                         isLoading = false, 
-                        members = members,
+                        members = sortedMembers,
+                        filteredMembers = sortedMembers,
                         currentUser = currentUser
                     ) 
                 }
@@ -78,6 +82,24 @@ class ClubMembersViewModel @Inject constructor(
 
     fun refreshMembers() {
         loadClubMembers()
+    }
+
+    fun searchMembers(query: String) {
+        val currentState = _uiState.value
+        val filteredMembers = if (query.isBlank()) {
+            currentState.members
+        } else {
+            currentState.members.filter { member ->
+                member.name.contains(query, ignoreCase = true)
+            }
+        }
+        
+        _uiState.update { 
+            it.copy(
+                searchQuery = query,
+                filteredMembers = filteredMembers
+            ) 
+        }
     }
 
     fun clearError() {
