@@ -192,7 +192,7 @@ class AuthRepositoryImpl @Inject constructor(
         return if (firebaseUser != null) {
             try {
                 val userDoc = firestoreService.getUserDocument(firebaseUser.uid).get().await()
-                userDoc.toObject(User::class.java)?.copy(id = firebaseUser.uid)
+                UserDeserializer.fromDocument(userDoc)
             } catch (e: Exception) {
                 null
             }
@@ -265,8 +265,7 @@ class AuthRepositoryImpl @Inject constructor(
                         val userDoc =
                             firestoreService.getUserDocument(firebaseUser.uid).get().await()
                         if (userDoc.exists()) {
-                            val user =
-                                userDoc.toObject(User::class.java)?.copy(id = firebaseUser.uid)
+                            val user = UserDeserializer.fromDocument(userDoc)
                             if (user != null) {
                                 // Check if user is approved
                                 if (user.isVpEducation || (user.role == UserRole.MEMBER && user.isApproved)) {

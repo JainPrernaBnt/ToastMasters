@@ -45,14 +45,18 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
+                android.util.Log.d("SettingsViewModel", "Loading user data...")
                 val user = userRepository.getCurrentUser()
                 if (user != null) {
-                    _uiState.value = SettingsUiState.Success(user)
+                    android.util.Log.d("SettingsViewModel", "User loaded: ${user.name}, profilePictureUrl: ${if (user.profilePictureUrl.isNullOrEmpty()) "null/empty" else "has data (${user.profilePictureUrl?.length} chars)"}")
+                    _uiState.update { SettingsUiState.Success(user) }
                 } else {
-                    _uiState.value = SettingsUiState.Error("User not found")
+                    android.util.Log.d("SettingsViewModel", "User not found")
+                    _uiState.update { SettingsUiState.Error("User not found") }
                 }
             } catch (e: Exception) {
-                _uiState.value = SettingsUiState.Error(e.message ?: "An error occurred")
+                android.util.Log.e("SettingsViewModel", "Error loading user data", e)
+                _uiState.update { SettingsUiState.Error(e.message ?: "An error occurred") }
             }
         }
     }

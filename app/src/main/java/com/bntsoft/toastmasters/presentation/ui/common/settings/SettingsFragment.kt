@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.MainActivity
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.databinding.FragmentSettingsBinding
@@ -53,6 +54,24 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         observeUserData()
+        // Listen for updates from ProfileEditFragment
+        val navController = requireActivity().findNavController(R.id.nav_host_fragment)
+        navController.currentBackStackEntry?.savedStateHandle
+            ?.getLiveData<Boolean>("profileUpdated")
+            ?.observe(viewLifecycleOwner) { updated ->
+                if (updated == true) {
+                    android.util.Log.d("SettingsFragment", "Profile updated flag received, reloading user data")
+                    viewModel.loadUserData()
+                    navController.currentBackStackEntry?.savedStateHandle?.set("profileUpdated", false)
+                }
+            }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        android.util.Log.d("SettingsFragment", "onResume called, refreshing user data")
+        viewModel.loadUserData()
     }
 
     private fun observeUserData() {
@@ -253,6 +272,7 @@ class SettingsFragment : Fragment() {
 
 
     private fun loadProfilePicture(user: com.bntsoft.toastmasters.domain.model.User) {
+        android.util.Log.d("SettingsFragment", "Loading profile picture for user: ${user.name}, profilePictureUrl: ${if (user.profilePictureUrl.isNullOrEmpty()) "null/empty" else "has data"}")
         GlideExtensions.loadProfilePicture(
             binding.profileImageView,
             user.profilePictureUrl,

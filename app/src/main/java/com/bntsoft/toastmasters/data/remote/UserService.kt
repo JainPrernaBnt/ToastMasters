@@ -25,8 +25,11 @@ class UserService @Inject constructor(
         val currentUser = firebaseAuth.currentUser ?: return null
         return try {
             val document = usersCollection.document(currentUser.uid).get().await()
-            UserDeserializer.fromDocument(document)
+            val user = UserDeserializer.fromDocument(document)
+            android.util.Log.d("UserService", "getCurrentUser: ${user?.name}, profilePictureUrl: ${if (user?.profilePictureUrl.isNullOrEmpty()) "null/empty" else "has data (${user?.profilePictureUrl?.length} chars)"}")
+            user
         } catch (e: Exception) {
+            android.util.Log.e("UserService", "Error getting current user", e)
             e.printStackTrace()
             null
         }
@@ -60,6 +63,7 @@ class UserService @Inject constructor(
 
     suspend fun updateUser(user: User) {
         try {
+            android.util.Log.d("UserService", "Updating user ${user.id} with profilePictureUrl: ${if (user.profilePictureUrl.isNullOrEmpty()) "null/empty" else "has data (${user.profilePictureUrl?.length} chars)"}")
             val updates = mapOf(
                 "name" to user.name,
                 "email" to user.email,
@@ -72,11 +76,14 @@ class UserService @Inject constructor(
                 "role" to user.role,
                 "isApproved" to user.isApproved,
                 "mentorNames" to user.mentorNames,
+                "profilePictureUrl" to user.profilePictureUrl,
                 "fcmToken" to user.fcmToken,
                 "updatedAt" to FieldValue.serverTimestamp()
             )
             usersCollection.document(user.id).update(updates).await()
+            android.util.Log.d("UserService", "User update completed successfully")
         } catch (e: Exception) {
+            android.util.Log.e("UserService", "Error updating user", e)
             throw e
         }
     }
@@ -291,12 +298,17 @@ class UserService @Inject constructor(
                 .get()
                 .await()
             
-            querySnapshot.documents.mapNotNull { doc ->
+            val allUsers = querySnapshot.documents.mapNotNull { doc ->
                 try {
                     UserDeserializer.fromDocument(doc)
                 } catch (e: Exception) {
                     null
                 }
+            }
+            
+            // Filter out VP_EDUCATION users - only show regular members
+            allUsers.filter { user ->
+                user.role != UserRole.VP_EDUCATION
             }
         } catch (e: Exception) {
             e.printStackTrace()

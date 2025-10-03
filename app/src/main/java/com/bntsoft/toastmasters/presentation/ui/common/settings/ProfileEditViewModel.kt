@@ -21,7 +21,8 @@ data class ProfileEditUiState(
     val isSaving: Boolean = false,
     val user: User? = null,
     val saveSuccess: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val selectedImageUri: Uri? = null
 )
 
 @HiltViewModel
@@ -69,6 +70,10 @@ class ProfileEditViewModel @Inject constructor(
         }
     }
 
+    fun setSelectedImage(imageUri: Uri) {
+        _uiState.update { it.copy(selectedImageUri = imageUri) }
+    }
+
     fun updateProfile(
         name: String,
         email: String,
@@ -92,7 +97,9 @@ class ProfileEditViewModel @Inject constructor(
                 currentUser.role // Keep existing role for MEMBER users
             }
             
-            val updatedUser = currentUser.copy(
+            // Handle profile picture update if a new image was selected
+            val selectedImageUri = _uiState.value.selectedImageUri
+            var finalUpdatedUser = currentUser.copy(
                 name = name,
                 email = email,
                 phoneNumber = phoneNumber,
@@ -103,14 +110,49 @@ class ProfileEditViewModel @Inject constructor(
                 mentorNames = mentorNames,
                 role = finalRole
             )
+
+            // If there's a selected image, update profile picture first
+            if (selectedImageUri != null) {
+                try {
+                    android.util.Log.d("ProfileEditViewModel", "Updating profile picture during save...")
+                    val updateResult = profileRepository.updateProfilePicture(currentUser.id, selectedImageUri)
+                    
+                    if (updateResult.isSuccess) {
+                        val newUrl = updateResult.getOrNull()
+                        if (newUrl != null) {
+                            finalUpdatedUser = finalUpdatedUser.copy(profilePictureUrl = newUrl)
+                            android.util.Log.d("ProfileEditViewModel", "Profile picture updated successfully")
+                        }
+                    } else {
+                        android.util.Log.e("ProfileEditViewModel", "Failed to update profile picture: ${updateResult.exceptionOrNull()?.message}")
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                error = updateResult.exceptionOrNull()?.message ?: "Failed to update profile picture"
+                            )
+                        }
+                        return@launch
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("ProfileEditViewModel", "Exception during profile picture update", e)
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            error = e.message ?: "An error occurred while updating profile picture"
+                        )
+                    }
+                    return@launch
+                }
+            }
             
-            when (val result = userRepository.updateUser(updatedUser)) {
+            when (val result = userRepository.updateUser(finalUpdatedUser)) {
                 is Result.Success -> {
                     _uiState.update { 
                         it.copy(
                             isSaving = false, 
                             saveSuccess = true,
-                            user = updatedUser
+                            user = finalUpdatedUser,
+                            selectedImageUri = null // Clear selected image after save
                         ) 
                     }
                 }
@@ -131,34 +173,13 @@ class ProfileEditViewModel @Inject constructor(
         }
     }
 
-    fun updateProfilePicture(imageUri: Uri) {
-        val currentUser = _uiState.value.user ?: return
-        
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true, error = null) }
-            
-            try {
-                val updateResult = profileRepository.updateProfilePicture(currentUser.id, imageUri)
-                
-                if (updateResult.isSuccess) {
-                    // Reload user data to get the updated profile picture
-                    loadCurrentUser()
-                } else {
-                    _uiState.update { it.copy(
-                        isSaving = false,
-                        error = updateResult.exceptionOrNull()?.message ?: "Failed to update profile picture"
-                    )}
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(
-                    isSaving = false,
-                    error = e.message ?: "An error occurred while updating profile picture"
-                )}
-            }
-        }
-    }
+
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun clearSuccess() {
+        _uiState.update { it.copy(saveSuccess = false) }
     }
 }

@@ -67,6 +67,9 @@
                                 android:layout_height="match_parent"
                                 android:scaleType="centerCrop"
                                 android:src="@drawable/ic_person"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:background="?attr/selectableItemBackgroundBorderless"
                                 app:shapeAppearanceOverlay="@style/CircleImageView" />
 
                         </RelativeLayout>

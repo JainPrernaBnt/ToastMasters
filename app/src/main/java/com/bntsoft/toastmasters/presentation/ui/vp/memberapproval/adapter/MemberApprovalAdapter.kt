@@ -18,6 +18,7 @@ import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.request.RequestOptions
+import com.bntsoft.toastmasters.utils.GlideExtensions
 import com.google.android.material.chip.Chip
 
 class MemberApprovalAdapter(
@@ -62,12 +63,12 @@ class MemberApprovalAdapter(
         private val assignVP = binding.vpMembershipSwitch
 
         fun bind(member: User) {
-            // Load avatar with fallback
-            Glide.with(itemView)
-                .load(R.drawable.ic_person)
-                .apply(RequestOptions.bitmapTransform(CircleCrop()))
-                .placeholder(R.drawable.ic_person)
-                .into(avatarImageView)
+            // Load avatar with profile picture or fallback
+            GlideExtensions.loadProfilePicture(
+                avatarImageView,
+                member.profilePictureUrl,
+                R.drawable.ic_person
+            )
 
             nameTextView.text = member.name
             emailTextView.text = member.email

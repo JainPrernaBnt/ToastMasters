@@ -22,7 +22,7 @@ object UserDeserializer {
                 joinedDate = (data["joinedDate"] as? Timestamp)?.toDate() ?: Date(),
                 toastmastersId = data["toastmastersId"] as? String ?: "",
                 clubId = data["clubId"] as? String ?: "",
-                profileImageUrl = data["profileImageUrl"] as? String ?: "",
+                profileImageUrl = data["profilePictureUrl"] as? String ?: "",
                 fcmToken = data["fcmToken"] as? String ?: "",
                 mentorNames = (data["mentorNames"] as? List<*>)?.filterIsInstance<String>()
                     ?: emptyList(),
@@ -73,7 +73,7 @@ object UserDeserializer {
                 else -> false
             }
 
-            DomainUser(
+            val domainUser = DomainUser(
                 id = user.id,
                 name = user.name,
                 email = user.email,
@@ -84,6 +84,7 @@ object UserDeserializer {
                 joinedDate = user.joinedDate,
                 toastmastersId = user.toastmastersId,
                 clubId = user.clubId,
+                profilePictureUrl = user.profileImageUrl, // Map data model field to domain model field
                 fcmToken = user.fcmToken,
                 mentorNames = user.mentorNames,
                 role = role,
@@ -91,6 +92,9 @@ object UserDeserializer {
                 createdAt = user.createdAt,
                 updatedAt = user.updatedAt
             )
+            
+            android.util.Log.d("UserDeserializer", "Deserialized user ${domainUser.name}, profilePictureUrl: ${if (domainUser.profilePictureUrl.isNullOrEmpty()) "null/empty" else "has data (${domainUser.profilePictureUrl?.length} chars)"}")
+            domainUser
         } catch (e: Exception) {
             e.printStackTrace()
             null

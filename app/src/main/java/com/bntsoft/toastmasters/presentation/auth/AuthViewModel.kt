@@ -102,23 +102,12 @@ class AuthViewModel @Inject constructor(
                     // Update user session to include this new device alongside existing ones
                     firestoreService.updateUserSession(user.uid, deviceId)
                     
-                    // Get the updated user data
+                    // Get the updated user data using UserDeserializer to handle complex fields properly
                     val userDoc = firestoreService.getUserDocument(user.uid).get().await()
-                    val userData = userDoc.toObject(com.bntsoft.toastmasters.data.model.User::class.java)
+                    val domainUser = UserDeserializer.fromDocument(userDoc)
                     
-                    userData?.let { userData ->
-                        // Get the highest role if multiple exist, default to MEMBER
-                        val userRole = userData.roles.firstOrNull() ?: UserRole.MEMBER
-                        
-                        val domainUser = User(
-                            id = userData.id ?: "",
-                            email = userData.email ?: "",
-                            name = userData.name ?: "",
-                            phoneNumber = userData.phoneNumber ?: "",
-                            role = userRole,
-                            isApproved = userData.status == com.bntsoft.toastmasters.data.model.User.Status.APPROVED
-                        )
-                        _uiState.value = AuthUiState.Success(domainUser, domainUser.role)
+                    domainUser?.let { user ->
+                        _uiState.value = AuthUiState.Success(user, user.role)
                     } ?: run {
                         _uiState.value = AuthUiState.Error("Failed to load user data")
                         authRepository.logout()

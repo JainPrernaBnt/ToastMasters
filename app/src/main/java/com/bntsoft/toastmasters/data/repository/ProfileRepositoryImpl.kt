@@ -16,17 +16,16 @@ class ProfileRepositoryImpl @Inject constructor(
     private val firestoreService: FirestoreService
 ) : ProfileRepository {
 
-    override suspend fun updateProfilePicture(userId: String, imageUri: Uri): Result<Boolean> {
+    override suspend fun updateProfilePicture(userId: String, imageUri: Uri): Result<String> {
         return try {
-            // Compress image and convert to base64
             val base64Image = ImageUtils.compressImageToBase64(context, imageUri)
                 ?: return Result.failure(Exception("Failed to compress image"))
 
-            // Update Firestore with base64 image data
             val updates = mapOf("profilePictureUrl" to base64Image)
             firestoreService.getUserDocument(userId).update(updates).await()
-            
-            Result.success(true)
+
+            // Return the string (Base64) to ViewModel
+            Result.success(base64Image)
         } catch (e: Exception) {
             Result.failure(e)
         }

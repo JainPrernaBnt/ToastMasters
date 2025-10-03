@@ -18,6 +18,7 @@ import com.bntsoft.toastmasters.domain.models.UserRole
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.bntsoft.toastmasters.utils.GlideExtensions
+import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -31,7 +32,7 @@ class ProfileEditFragment : Fragment() {
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            viewModel.updateProfilePicture(it)
+            viewModel.setSelectedImage(it)
             loadProfileImage(it)
         }
     }
@@ -63,6 +64,7 @@ class ProfileEditFragment : Fragment() {
         binding.profileImageView.setOnClickListener {
             openImagePicker()
         }
+
     }
 
     private fun setupRoleSpinner() {
@@ -80,14 +82,32 @@ class ProfileEditFragment : Fragment() {
                 
                 state.user?.let { user ->
                     populateFields(user)
-                    loadCurrentProfilePicture(user)
+                    // Show selected image if available, otherwise show current profile picture
+                    if (state.selectedImageUri != null) {
+                        loadProfileImage(state.selectedImageUri)
+                    } else {
+                        loadCurrentProfilePicture(user)
+                    }
+                    setupRoleVisibility(user)
                 }
-                
+
                 if (state.saveSuccess) {
                     showSuccess("Profile updated successfully")
+
+                    android.util.Log.d("ProfileEditFragment", "Profile save success, setting profileUpdated flag")
+                    requireActivity().findNavController(R.id.nav_host_fragment)
+                        .previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("profileUpdated", true)
+
+                    // Clear success state to prevent repeated navigation
+                    viewModel.clearSuccess()
+
+                    // Navigate back
                     requireActivity().findNavController(R.id.nav_host_fragment).navigateUp()
                 }
-                
+
+
                 state.error?.let { error ->
                     showError(error)
                     viewModel.clearError()
@@ -203,11 +223,17 @@ class ProfileEditFragment : Fragment() {
     }
 
     private fun loadProfileImage(uri: Uri) {
-        GlideExtensions.loadProfilePicture(
-            binding.profileImageView,
-            uri.toString(),
-            R.drawable.ic_person
-        )
+        try {
+            Glide.with(this)
+                .load(uri)
+                .circleCrop()
+                .placeholder(R.drawable.ic_person)
+                .error(R.drawable.ic_person)
+                .into(binding.profileImageView)
+        } catch (e: Exception) {
+            android.util.Log.e("ProfileEditFragment", "Error loading profile image", e)
+            binding.profileImageView.setImageResource(R.drawable.ic_person)
+        }
     }
 
     private fun loadCurrentProfilePicture(user: User) {

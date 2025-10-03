@@ -1,6 +1,7 @@
 package com.bntsoft.toastmasters.data.repository
 
 import com.bntsoft.toastmasters.data.model.NotificationData
+import com.bntsoft.toastmasters.data.model.UserDeserializer
 import com.bntsoft.toastmasters.data.remote.FirestoreService
 import com.bntsoft.toastmasters.domain.model.User
 import com.bntsoft.toastmasters.domain.repository.MemberRepository
@@ -28,7 +29,7 @@ class MemberRepositoryImpl @Inject constructor(
     override fun getPendingApprovals(): Flow<List<User>> {
         return firestoreService.getPendingApprovals().map { documents ->
             documents.mapNotNull { doc ->
-                doc.toObject(User::class.java)?.copy(id = doc.id)
+                UserDeserializer.fromDocument(doc)
             }
         }
     }
@@ -146,7 +147,7 @@ class MemberRepositoryImpl @Inject constructor(
             val pendingUsers = firestoreService.getPendingApprovals()
                 .map { documents ->
                     documents.mapNotNull { doc ->
-                        doc.toObject(User::class.java)?.copy(id = doc.id)
+                        UserDeserializer.fromDocument(doc)
                     }
                 }
                 .catch { e ->
@@ -157,7 +158,7 @@ class MemberRepositoryImpl @Inject constructor(
             val approvedUsers = firestoreService.getApprovedMembers()
                 .map { documents ->
                     documents.mapNotNull { doc ->
-                        doc.toObject(User::class.java)?.copy(id = doc.id)
+                        UserDeserializer.fromDocument(doc)
                     }
                 }
                 .catch { e ->
@@ -177,7 +178,7 @@ class MemberRepositoryImpl @Inject constructor(
             firestoreService.getApprovedMembers()
                 .map { documents ->
                     documents.mapNotNull { doc ->
-                        doc.toObject(User::class.java)?.copy(id = doc.id)
+                        UserDeserializer.fromDocument(doc)
                     }
                 }
                 .catch { e ->
@@ -193,25 +194,15 @@ class MemberRepositoryImpl @Inject constructor(
     override fun getMentors(): Flow<List<User>> {
         return firestoreService.getMentors().map { documents ->
             documents.mapNotNull { doc ->
-                doc.toObject(User::class.java)?.copy(id = doc.id)
+                UserDeserializer.fromDocument(doc)
             }
         }
     }
-
     override suspend fun getMemberById(userId: String): User? {
         return try {
             val userDoc = firestoreService.getUserDocument(userId).get().await()
             if (userDoc.exists()) {
-                val user = userDoc.toObject(User::class.java)?.copy(id = userId)
-                // Ensure role is properly set from vpEducation field if needed
-                user?.let { u ->
-                    val vpEducation = userDoc.getBoolean("vpEducation") ?: false
-                    if (vpEducation && u.role != com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION) {
-                        u.copy(role = com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION)
-                    } else {
-                        u
-                    }
-                }
+                UserDeserializer.fromDocument(userDoc)
             } else {
                 null
             }
@@ -225,18 +216,9 @@ class MemberRepositoryImpl @Inject constructor(
         return try {
             val querySnapshot = firestoreService.getUserByEmail(email)
             val firstDoc = querySnapshot.documents.firstOrNull() ?: return null
-
-            val user = firstDoc.toObject(User::class.java)?.copy(id = firstDoc.id) ?: return null
-
-            // Ensure role is properly set from vpEducation field if needed
-            val vpEducation = firstDoc.getBoolean("vpEducation") ?: false
-            if (vpEducation && user.role != com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION) {
-                user.copy(role = com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION)
-            } else {
-                user
-            }
+            UserDeserializer.fromDocument(firstDoc)
         } catch (e: Exception) {
-            Log.e("MemberRepository", "Error in getMemberById", e)
+            Log.e("MemberRepository", "Error in getMemberByEmail", e)
             null
         }
     }
@@ -245,18 +227,9 @@ class MemberRepositoryImpl @Inject constructor(
         return try {
             val querySnapshot = firestoreService.getUserByPhone(phoneNumber)
             val firstDoc = querySnapshot.documents.firstOrNull() ?: return null
-
-            val user = firstDoc.toObject(User::class.java)?.copy(id = firstDoc.id) ?: return null
-
-            // Ensure role is properly set from vpEducation field if needed
-            val vpEducation = firstDoc.getBoolean("vpEducation") ?: false
-            if (vpEducation && user.role != com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION) {
-                user.copy(role = com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION)
-            } else {
-                user
-            }
+            UserDeserializer.fromDocument(firstDoc)
         } catch (e: Exception) {
-            Log.e("MemberRepository", "Error in getMemberById", e)
+            Log.e("MemberRepository", "Error in getMemberByPhone", e)
             null
         }
     }
@@ -265,16 +238,7 @@ class MemberRepositoryImpl @Inject constructor(
         return firestoreService.observeUser(userId)
             .map { document ->
                 if (document.exists()) {
-                    val user = document.toObject(User::class.java)?.copy(id = document.id)
-                    // Ensure role is properly set from vpEducation field if needed
-                    user?.let { u ->
-                        val vpEducation = document.getBoolean("vpEducation") ?: false
-                        if (vpEducation && u.role != com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION) {
-                            u.copy(role = com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION)
-                        } else {
-                            u
-                        }
-                    }
+                    UserDeserializer.fromDocument(document)
                 } else {
                     null
                 }
