@@ -7,8 +7,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
+import com.bntsoft.toastmasters.domain.model.User as DomainUser
+import com.bntsoft.toastmasters.data.model.User as DataUser
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
+import com.bntsoft.toastmasters.domain.repository.GuestRepository
 import com.bntsoft.toastmasters.utils.Result
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +24,7 @@ import javax.inject.Inject
 class MemberRoleAssignViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val meetingRepository: MeetingRepository,
+    private val guestRepository: GuestRepository,
     private val savedStateHandle: SavedStateHandle,
     private val firestore: FirebaseFirestore
 ) : ViewModel() {
@@ -72,10 +76,24 @@ class MemberRoleAssignViewModel @Inject constructor(
                     "[loadRoleAssignments] Starting for meeting: $meetingId"
                 )
                 val availableMembers = userRepository.getAvailableMembers(meetingId)
-                _availableMembers.value = availableMembers.map { it.id to it.name }
+                val availableGuests = guestRepository.getGuestsForMeeting(meetingId)
+
+                // Debug guest data
+                availableGuests.forEach { guest ->
+                    Log.d("MemberRoleAssignVM", "Guest data - ID: ${guest.id}, Name: '${guest.name}'")
+                }
+                
+                // Combine members and guests
+                val allAvailableUsers = availableMembers.map { it.id to it.name } +
+                        availableGuests.map { guest ->
+                            val guestName = if (guest.name.isBlank()) "Guest (No Name)" else guest.name
+                            guest.id to "Guest: $guestName"
+                        }
+
+                _availableMembers.value = allAvailableUsers
                 Log.d(
                     "MemberRoleAssignVM",
-                    "[loadRoleAssignments] Found ${availableMembers.size} available members"
+                    "[loadRoleAssignments] Found ${availableMembers.size} available members and ${availableGuests.size} guests"
                 )
 
                 // Load assignable roles first
@@ -92,89 +110,25 @@ class MemberRoleAssignViewModel @Inject constructor(
                 // Load speaker to evaluators mapping
                 val speakerEvaluatorsMap = loadSpeakerEvaluators(meetingId)
                 Log.d("MemberRoleAssignVM", "Speaker to evaluators mapping: $speakerEvaluatorsMap")
-                
+
                 Log.d("MemberRoleAssignVM", "Loaded evaluator assignments: $speakerEvaluatorsMap")
 
-                // Create role assignments for available members
-                val assignments = availableMembers.map { member ->
-                    // Get preferred roles for this member
-                    val preferredRoles = try {
-                        meetingRepository.getPreferredRoles(meetingId, member.id).also { roles ->
-                            Log.d(
-                                "MemberRoleAssignVM",
-                                "Found ${roles.size} preferred roles for member: ${member.name}"
-                            )
-                        }
-                    } catch (e: Exception) {
-                        Log.e(
-                            "MemberRoleAssignVM",
-                            "Error getting preferred roles for ${member.name}: ${e.message}"
-                        )
-                        emptyList<String>()
-                    }
-
-                    // Get assigned roles for this member if any
-                    val selectedRoles = try {
-                        Log.d(
-                            "MemberRoleAssignVM",
-                            "[loadRoleAssignments] Checking assigned roles for member: ${member.name} (${member.id})"
-                        )
-                        val roles = meetingRepository.getAssignedRoles(meetingId, member.id)
-                        Log.d(
-                            "MemberRoleAssignVM",
-                            "[loadRoleAssignments] Assigned roles for ${member.name}: $roles"
-                        )
-                        roles.toMutableList()
-                    } catch (e: Exception) {
-                        Log.e(
-                            "MemberRoleAssignVM",
-                            "Error getting assigned roles for ${member.name}: ${e.message}"
-                        )
-                        mutableListOf<String>()
-                    }
-
-                    // The primary assigned role can be the first in the list, or empty if none are assigned
-                    val assignedRole = selectedRoles.firstOrNull() ?: ""
-
-                    // Set isEditable based on whether there are any assigned roles
-                    val isEditable = selectedRoles.isEmpty()
-
-                    // Calculate assigned role counts for this member's roles
-                    val assignedRoleCounts = selectedRoles.groupingBy { it }.eachCount()
-                    
-                    // Get evaluator IDs for this speaker if they are a speaker
-                    val evaluatorIds = if (selectedRoles.any { it.startsWith("Speaker") }) {
-                        speakerEvaluatorsMap[member.id] ?: emptyList()
-                    } else {
-                        emptyList()
-                    }
-                    
-                    Log.d(
-                        "MemberRoleAssignVM",
-                        "[loadRoleAssignments] Evaluators for speaker ${member.name}: $evaluatorIds"
+                // Create role assignments for available members and guests
+                val memberAssignments = availableMembers.map { member ->
+                    createRoleAssignmentForMember(
+                        member,
+                        meetingId,
+                        roles,
+                        allAssignedRoles,
+                        speakerEvaluatorsMap
                     )
-
-                    val roleItem = RoleAssignmentItem(
-                        userId = member.id,
-                        memberName = member.name,
-                        preferredRoles = preferredRoles,
-                        recentRoles = emptyList(),
-                        assignableRoles = roles.keys.toList(),
-                        selectedRoles = selectedRoles,
-                        assignedRole = assignedRole,
-                        isEditable = isEditable,
-                        roleCounts = roles,
-                        assignedRoleCounts = assignedRoleCounts,
-                        allAssignedRoles = allAssignedRoles,
-                        evaluatorIds = evaluatorIds
-                    )
-                    Log.d(
-                        "MemberRoleAssignVM",
-                        "[loadRoleAssignments] Created RoleAssignmentItem for ${member.name}: " +
-                                "assignedRole=$assignedRole, selectedRoles=$selectedRoles, isEditable=$isEditable, evaluatorIds=$evaluatorIds"
-                    )
-                    roleItem
                 }
+
+                val guestAssignments = availableGuests.map { guest ->
+                    createRoleAssignmentForGuest(guest, meetingId, roles, allAssignedRoles)
+                }
+
+                val assignments = memberAssignments + guestAssignments
 
                 _roleAssignments.value = assignments
 
@@ -454,7 +408,8 @@ class MemberRoleAssignViewModel @Inject constructor(
             snapshot.associate { doc ->
                 val userId = doc.id
                 val roles = doc.get("roles") as? List<*> ?: emptyList<String>()
-                val evaluatorIds = (doc.get("evaluatorIds") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                val evaluatorIds =
+                    (doc.get("evaluatorIds") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
                 // Only include if this user has a speaker role
                 val hasSpeakerRole = roles.any { it.toString().startsWith("Speaker") }
@@ -474,12 +429,14 @@ class MemberRoleAssignViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Main) {
             try {
                 val currentAssignments = _roleAssignments.value ?: emptyList()
-                val speakerAssignment = currentAssignments.find { it.userId == speakerId } ?: return@launch
-                
+                val speakerAssignment =
+                    currentAssignments.find { it.userId == speakerId } ?: return@launch
+
                 // Check if this is a removal request
                 val isRemoval = evaluatorId.endsWith(":remove")
-                val actualEvaluatorId = if (isRemoval) evaluatorId.removeSuffix(":remove") else evaluatorId
-                
+                val actualEvaluatorId =
+                    if (isRemoval) evaluatorId.removeSuffix(":remove") else evaluatorId
+
                 // Update the speaker's evaluator list
                 val updatedEvaluatorIds = if (isRemoval) {
                     speakerAssignment.evaluatorIds.filter { it != actualEvaluatorId }
@@ -490,30 +447,31 @@ class MemberRoleAssignViewModel @Inject constructor(
                     }
                     speakerAssignment.evaluatorIds + actualEvaluatorId
                 }
-                
+
                 // Find the evaluator's name
-                val evaluatorName = availableMembers.value?.find { it.first == actualEvaluatorId }?.second
+                val evaluatorName =
+                    availableMembers.value?.find { it.first == actualEvaluatorId }?.second
                 if (evaluatorName == null && !isRemoval) {
                     val error = "Evaluator not found in available members. ID: $actualEvaluatorId"
                     Log.e("MemberRoleAssignVM", error)
                     _errorMessage.value = error
                     return@launch
                 }
-                
+
                 Log.d(
                     "MemberRoleAssignVM",
-                    if (isRemoval) 
+                    if (isRemoval)
                         "Removing evaluator: $evaluatorName (ID: $actualEvaluatorId) from speaker: $speakerId"
-                    else 
+                    else
                         "Assigning evaluator: $evaluatorName (ID: $actualEvaluatorId) to speaker: $speakerId"
                 )
-                
+
                 // First, update the local state immediately for better UX
                 val updatedAssignments = currentAssignments.map { assignment ->
                     when {
-                        assignment.userId == speakerId -> 
+                        assignment.userId == speakerId ->
                             assignment.copy(evaluatorIds = updatedEvaluatorIds)
-                        
+
                         !isRemoval && assignment.userId == actualEvaluatorId -> {
                             // Add evaluator role if not already present
                             if (!assignment.selectedRoles.any { it.startsWith("Evaluator") }) {
@@ -521,10 +479,11 @@ class MemberRoleAssignViewModel @Inject constructor(
                                 val nextNumber = (currentAssignments
                                     .flatMap { it.selectedRoles }
                                     .mapNotNull { role ->
-                                        """Evaluator (\d+)""".toRegex().find(role)?.groupValues?.get(1)?.toInt()
+                                        """Evaluator (\d+)""".toRegex()
+                                            .find(role)?.groupValues?.get(1)?.toInt()
                                     }
                                     .maxOrNull() ?: 0) + 1
-                                
+
                                 val evaluatorRole = "Evaluator $nextNumber"
                                 assignment.copy(
                                     selectedRoles = (assignment.selectedRoles + evaluatorRole).toMutableList(),
@@ -535,15 +494,15 @@ class MemberRoleAssignViewModel @Inject constructor(
                                 assignment
                             }
                         }
-                        
+
                         else -> assignment
                     }
                 }
-                
+
                 // Update the UI immediately
                 _roleAssignments.value = updatedAssignments
                 _evaluatorAssigned.value = speakerId to actualEvaluatorId
-                
+
                 // Then update Firestore
                 when (val result = meetingRepository.updateSpeakerEvaluators(
                     meetingId = meetingId,
@@ -556,21 +515,23 @@ class MemberRoleAssignViewModel @Inject constructor(
                             "Successfully updated speaker evaluators in Firestore"
                         )
                     }
-                    
+
                     is Result.Error -> {
                         // Revert the local state if the Firestore update fails
                         _roleAssignments.value = currentAssignments
-                        val error = "Failed to ${if (isRemoval) "remove" else "assign"} evaluator: ${result.exception?.message ?: "Unknown error"}"
+                        val error =
+                            "Failed to ${if (isRemoval) "remove" else "assign"} evaluator: ${result.exception?.message ?: "Unknown error"}"
                         Log.e("MemberRoleAssignVM", error, result.exception)
                         _errorMessage.value = error
                     }
-                    
+
                     is Result.Loading -> {
                         // Loading state handled by UI if needed
                     }
                 }
             } catch (e: Exception) {
-                val error = "Error ${if (evaluatorId.endsWith(":remove")) "removing" else "assigning"} evaluator: ${e.message}"
+                val error =
+                    "Error ${if (evaluatorId.endsWith(":remove")) "removing" else "assigning"} evaluator: ${e.message}"
                 Log.e("MemberRoleAssignVM", error, e)
                 _errorMessage.value = error
             }
@@ -622,6 +583,108 @@ class MemberRoleAssignViewModel @Inject constructor(
                 _recentRoles.postValue(emptyMap())
             }
         }
+    }
+
+    private suspend fun createRoleAssignmentForMember(
+        member: DataUser,
+        meetingId: String,
+        roles: Map<String, Int>,
+        allAssignedRoles: Map<String, List<String>>,
+        speakerEvaluatorsMap: Map<String, List<String>>
+    ): RoleAssignmentItem {
+        // Get preferred roles for this member
+        val preferredRoles = try {
+            meetingRepository.getPreferredRoles(meetingId, member.id).also { roles ->
+                Log.d(
+                    "MemberRoleAssignVM",
+                    "Found ${roles.size} preferred roles for member: ${member.name}"
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(
+                "MemberRoleAssignVM",
+                "Error getting preferred roles for ${member.name}: ${e.message}"
+            )
+            emptyList<String>()
+        }
+
+        // Get assigned roles for this member if any
+        val selectedRoles = try {
+            val roles = meetingRepository.getAssignedRoles(meetingId, member.id)
+            Log.d("MemberRoleAssignVM", "Assigned roles for ${member.name}: $roles")
+            roles.toMutableList()
+        } catch (e: Exception) {
+            Log.e(
+                "MemberRoleAssignVM",
+                "Error getting assigned roles for ${member.name}: ${e.message}"
+            )
+            mutableListOf<String>()
+        }
+
+        val assignedRole = selectedRoles.firstOrNull() ?: ""
+        val isEditable = selectedRoles.isEmpty()
+        val assignedRoleCounts = selectedRoles.groupingBy { it }.eachCount()
+
+        // Get evaluator IDs for this speaker if they are a speaker
+        val evaluatorIds = if (selectedRoles.any { it.startsWith("Speaker") }) {
+            speakerEvaluatorsMap[member.id] ?: emptyList()
+        } else {
+            emptyList()
+        }
+
+        return RoleAssignmentItem(
+            userId = member.id,
+            memberName = member.name,
+            preferredRoles = preferredRoles,
+            recentRoles = emptyList(),
+            assignableRoles = roles.keys.toList(),
+            selectedRoles = selectedRoles,
+            assignedRole = assignedRole,
+            isEditable = isEditable,
+            roleCounts = roles,
+            assignedRoleCounts = assignedRoleCounts,
+            allAssignedRoles = allAssignedRoles,
+            evaluatorIds = evaluatorIds
+        )
+    }
+
+    private suspend fun createRoleAssignmentForGuest(
+        guest: com.bntsoft.toastmasters.domain.model.Guest,
+        meetingId: String,
+        roles: Map<String, Int>,
+        allAssignedRoles: Map<String, List<String>>
+    ): RoleAssignmentItem {
+        // Get assigned roles for this guest if any
+        val selectedRoles = try {
+            val roles = meetingRepository.getAssignedRoles(meetingId, guest.id)
+            Log.d("MemberRoleAssignVM", "Assigned roles for guest ${guest.name}: $roles")
+            roles.toMutableList()
+        } catch (e: Exception) {
+            Log.e(
+                "MemberRoleAssignVM",
+                "Error getting assigned roles for guest ${guest.name}: ${e.message}"
+            )
+            mutableListOf<String>()
+        }
+
+        val assignedRole = selectedRoles.firstOrNull() ?: ""
+        val isEditable = selectedRoles.isEmpty()
+        val assignedRoleCounts = selectedRoles.groupingBy { it }.eachCount()
+
+        return RoleAssignmentItem(
+            userId = guest.id,
+            memberName = "Guest: ${guest.name}",
+            preferredRoles = emptyList(), // Guests don't have preferred roles
+            recentRoles = emptyList(), // Guests don't have recent roles
+            assignableRoles = roles.keys.toList(),
+            selectedRoles = selectedRoles,
+            assignedRole = assignedRole,
+            isEditable = isEditable,
+            roleCounts = roles,
+            assignedRoleCounts = assignedRoleCounts,
+            allAssignedRoles = allAssignedRoles,
+            evaluatorIds = emptyList() // Guests don't have evaluators
+        )
     }
 
     data class RoleDisplayItem(

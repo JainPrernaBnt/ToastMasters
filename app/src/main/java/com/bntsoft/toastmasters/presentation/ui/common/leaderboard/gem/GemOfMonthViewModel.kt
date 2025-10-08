@@ -1,4 +1,4 @@
-package com.bntsoft.toastmasters.presentation.ui.common.leaderboard
+package com.bntsoft.toastmasters.presentation.ui.common.leaderboard.gem
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

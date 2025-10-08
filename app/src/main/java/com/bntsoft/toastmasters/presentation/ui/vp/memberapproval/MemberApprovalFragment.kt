@@ -55,7 +55,7 @@ class MemberApprovalFragment : Fragment() {
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
         // Hide activity menu items for this screen
-        menu.findItem(R.id.action_reports)?.isVisible = false
+//        menu.findItem(R.id.action_reports)?.isVisible = false
         menu.findItem(R.id.action_settings)?.isVisible = false
         menu.findItem(R.id.action_notifications)?.isVisible = false
     }

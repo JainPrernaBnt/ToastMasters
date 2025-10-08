@@ -27,6 +27,9 @@ import com.bntsoft.toastmasters.databinding.FragmentCreateMeetingBinding
 import com.bntsoft.toastmasters.databinding.ItemMeetingFormBinding
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.uistates.CreateMeetingState
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
+import com.bntsoft.toastmasters.domain.model.Guest
+import com.bntsoft.toastmasters.domain.repository.GuestRepository
+import javax.inject.Inject
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -47,6 +50,9 @@ import java.util.Locale
 class CreateMeetingFragment : Fragment() {
 
     private val viewModel: MeetingsViewModel by viewModels()
+    
+    @Inject
+    lateinit var guestRepository: GuestRepository
 
     private var _binding: FragmentCreateMeetingBinding? = null
     private val binding get() = _binding!!
@@ -294,6 +300,7 @@ class CreateMeetingFragment : Fragment() {
             }
 
             setupFormListeners(formBinding)
+            setupGuestButton(formBinding)
         }
 
         // Scroll to the bottom
@@ -779,6 +786,9 @@ class CreateMeetingFragment : Fragment() {
                         state.formData.meetingId = state.meeting.id
                         Log.d("CreateMeeting", "Meeting created with ID: ${state.meeting.id}")
 
+                        // Handle guest availability after meeting creation
+                        handleGuestAvailability(state.formData, state.meeting)
+
                         val tmodId = state.formData.selectedTmodId
                         val tmodName = state.formData.selectedTmodName
 
@@ -931,12 +941,15 @@ class CreateMeetingFragment : Fragment() {
             val endLocalDateTime =
                 LocalDateTime.ofInstant(finalEndCalendar.toInstant(), ZoneId.systemDefault())
 
-            // Extract roles and their counts from chips
+            // Extract roles and their counts from chips (exclude guest chips)
             val roleCounts = mutableMapOf<String, Int>()
             formData.binding.roleChipGroup.children.forEach { view ->
                 val chip = view as? Chip ?: return@forEach
                 val role = chip.tag?.toString() ?: return@forEach
-                roleCounts[role] = roleCounts.getOrDefault(role, 0) + 1
+                // Skip guest chips - they shouldn't be counted as roles
+                if (!role.startsWith("guest_")) {
+                    roleCounts[role] = roleCounts.getOrDefault(role, 0) + 1
+                }
             }
 
             // Convert LocalDateTime to Date for the data model
@@ -1033,6 +1046,139 @@ class CreateMeetingFragment : Fragment() {
             Log.e("CreateMeeting", "Error in saveTmodAssignment", e)
             com.google.android.gms.tasks.Tasks.forException(e)
         }
+    }
+
+    private fun handleGuestAvailability(formData: MeetingFormData, meeting: com.bntsoft.toastmasters.domain.model.Meeting) {
+        lifecycleScope.launch {
+            Log.d("CreateMeeting", "handleGuestAvailability called for meeting: ${meeting.id}")
+            var guestCount = 0
+            
+            formData.binding.roleChipGroup.children.forEach { view ->
+                val chip = view as? Chip ?: return@forEach
+                val tag = chip.tag?.toString() ?: return@forEach
+                
+                if (tag.startsWith("guest_")) {
+                    val guestId = tag.removePrefix("guest_")
+                    guestCount++
+                    Log.d("CreateMeeting", "Adding guest $guestId to meeting ${meeting.id}")
+                    
+                    try {
+                        val result = guestRepository.addGuestToMeeting(meeting.id, guestId)
+                        if (result is com.bntsoft.toastmasters.utils.Resource.Success) {
+                            Log.d("CreateMeeting", "Successfully added guest $guestId to meeting availability")
+                        } else {
+                            Log.e("CreateMeeting", "Failed to add guest $guestId: ${result}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("CreateMeeting", "Error adding guest $guestId to meeting: ${e.message}", e)
+                    }
+                }
+            }
+            
+            Log.d("CreateMeeting", "Processed $guestCount guests for meeting ${meeting.id}")
+        }
+    }
+
+    private fun setupGuestButton(binding: ItemMeetingFormBinding) {
+        binding.addGuestButton.setOnClickListener {
+            showGuestSelectionDialog(binding)
+        }
+    }
+
+    private fun showGuestSelectionDialog(binding: ItemMeetingFormBinding) {
+        lifecycleScope.launch {
+            val guests = guestRepository.getAllGuests()
+            val guestNames = guests.map { it.name }.toMutableList()
+            guestNames.add(0, "+ Add new guest")
+
+            val dialogView = layoutInflater.inflate(R.layout.dialog_guest_selection, null)
+            val dropdown = dialogView.findViewById<MaterialAutoCompleteTextView>(R.id.guestDropdown)
+            
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, guestNames)
+            dropdown.setAdapter(adapter)
+            dropdown.keyListener = null
+
+            val dialog = MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Select Guest")
+                .setView(dialogView)
+                .setPositiveButton("Add") { _, _ ->
+                    val selectedItem = dropdown.text.toString()
+                    if (selectedItem == "+ Add new guest") {
+                        showAddNewGuestDialog(binding)
+                    } else {
+                        val selectedGuest = guests.find { it.name == selectedItem }
+                        selectedGuest?.let { guest ->
+                            addGuestChip(binding, guest)
+                        }
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .create()
+
+            dropdown.setOnItemClickListener { _, _, position, _ ->
+                if (position == 0) {
+                    dialog.dismiss()
+                    showAddNewGuestDialog(binding)
+                }
+            }
+
+            dialog.show()
+        }
+    }
+
+    private fun showAddNewGuestDialog(binding: ItemMeetingFormBinding) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_guest, null)
+        val nameInput = dialogView.findViewById<TextInputEditText>(R.id.guestNameInput)
+        val emailInput = dialogView.findViewById<TextInputEditText>(R.id.guestEmailInput)
+        val contactInput = dialogView.findViewById<TextInputEditText>(R.id.guestContactInput)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Add New Guest")
+            .setView(dialogView)
+            .setPositiveButton("Add") { _, _ ->
+                val name = nameInput.text.toString().trim()
+                val email = emailInput.text.toString().trim()
+                val contact = contactInput.text.toString().trim()
+
+                if (name.isNotEmpty() && email.isNotEmpty() && contact.isNotEmpty()) {
+                    val guest = Guest(
+                        name = name,
+                        email = email,
+                        contact = contact
+                    )
+                    
+                    lifecycleScope.launch {
+                        val result = guestRepository.createGuest(guest)
+                        if (result is com.bntsoft.toastmasters.utils.Resource.Success) {
+                            result.data?.let { addGuestChip(binding, it) }
+                            Toast.makeText(requireContext(), "Guest added successfully", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(requireContext(), "Failed to add guest", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.show()
+    }
+
+    private fun addGuestChip(binding: ItemMeetingFormBinding, guest: Guest) {
+        val chip = Chip(requireContext()).apply {
+            text = "Guest: ${guest.name}"
+            isCloseIconVisible = true
+            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+            chipBackgroundColor = requireContext().getColorStateList(R.color.chip_background)
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+            tag = "guest_${guest.id}"
+            setOnCloseIconClickListener {
+                binding.roleChipGroup.removeView(this)
+            }
+        }
+        binding.roleChipGroup.addView(chip)
     }
 
     override fun onDestroyView() {

@@ -112,14 +112,21 @@ class MemberRoleAssignAdapter :
                 val currentMembers = this@MemberRoleAssignAdapter.currentList
                 val allMembers = this@MemberRoleAssignAdapter.availableMembers
 
+                // Only show actual members in evaluator dropdown (no guests)
+                val membersOnly = allMembers.filter { member ->
+                    !member.second.startsWith("Guest:") && !member.first.startsWith("guest_")
+                }
+
                 // Get all members who are already evaluators (for highlighting)
                 val evaluators = currentMembers
                     .filter { assignment ->
                         assignment.selectedRoles.any { it.startsWith("Evaluator") } &&
-                                assignment.userId != item.userId // Exclude current speaker
+                                assignment.userId != item.userId && // Exclude current speaker
+                                !assignment.memberName.startsWith("Guest:") && // Exclude guests
+                                !assignment.userId.startsWith("guest_") // Exclude guest IDs
                     }
                     .mapNotNull { assignment ->
-                        allMembers.find { it.first == assignment.userId }
+                        membersOnly.find { it.first == assignment.userId }
                     }
 
                 // Get members who have "Evaluator" in their preferred roles
@@ -127,19 +134,20 @@ class MemberRoleAssignAdapter :
                     .filter { assignment ->
                         assignment.preferredRoles.any { it.equals("Evaluator", ignoreCase = true) } &&
                                 assignment.userId != item.userId && // Exclude current speaker
+                                !assignment.memberName.startsWith("Guest:") && // Exclude guests
+                                !assignment.userId.startsWith("guest_") && // Exclude guest IDs
                                 !evaluators.any { it.first == assignment.userId } // Don't duplicate evaluators
                     }
                     .mapNotNull { assignment ->
-                        allMembers.find { it.first == assignment.userId }
+                        membersOnly.find { it.first == assignment.userId }
                     }
 
-                // Get all other available members (excluding current speaker and already listed members)
-                val otherMembers = allMembers.filter { member ->
+                // Get all other available members (excluding current speaker, guests, and already listed members)
+                val otherMembers = membersOnly.filter { member ->
                     member.first != item.userId && // Don't allow self-evaluation
                             !evaluators.any { it.first == member.first } &&
                             !preferredEvaluators.any { it.first == member.first }
                 }
-
                 // Combine all members in priority order: evaluators > preferred evaluators > other members
                 val allMembersInOrder = evaluators + preferredEvaluators + otherMembers
 
@@ -313,25 +321,36 @@ class MemberRoleAssignAdapter :
             this.currentRoles = roles
             this.availableMembers = availableMembers
 
-            // Filter out current member from available members
-            val otherMembers = availableMembers.filter { it.first != item.userId }
+            // Only show actual members in backup dropdown (no guests, no current user)
+            val otherMembers = availableMembers.filter { 
+                it.first != item.userId && !it.second.startsWith("Guest:") && !it.first.startsWith("guest_")
+            }
 
             binding.apply {
                 tvMemberName.text = item.memberName
                 
-                // Update recent roles
-                recentRoles[item.userId]?.let { roles ->
-                    if (roles.isNotEmpty()) {
-                        tvRecentRolesLabel.visibility = View.VISIBLE
-                        rvRecentRoles.visibility = View.VISIBLE
-                        recentRolesAdapter.updateRoles(roles)
-                    } else {
+                // Check if this is a guest
+                val isGuest = item.memberName.startsWith("Guest:") || item.userId.startsWith("guest_")
+                
+                // Hide recent roles for guests
+                if (isGuest) {
+                    tvRecentRolesLabel.visibility = View.GONE
+                    rvRecentRoles.visibility = View.GONE
+                } else {
+                    // Update recent roles for members only
+                    recentRoles[item.userId]?.let { roles ->
+                        if (roles.isNotEmpty()) {
+                            tvRecentRolesLabel.visibility = View.VISIBLE
+                            rvRecentRoles.visibility = View.VISIBLE
+                            recentRolesAdapter.updateRoles(roles)
+                        } else {
+                            tvRecentRolesLabel.visibility = View.GONE
+                            rvRecentRoles.visibility = View.GONE
+                        }
+                    } ?: run {
                         tvRecentRolesLabel.visibility = View.GONE
                         rvRecentRoles.visibility = View.GONE
                     }
-                } ?: run {
-                    tvRecentRolesLabel.visibility = View.GONE
-                    rvRecentRoles.visibility = View.GONE
                 }
 
                 // Handle evaluator selection UI
@@ -364,40 +383,48 @@ class MemberRoleAssignAdapter :
                         }
                     }
                 }
-                // Set up preferred roles chips
+                // Set up preferred roles chips - hide for guests
                 chipGroupPreferredRoles.removeAllViews()
+                
+                if (isGuest) {
+                    tvPreferredRolesLabel.visibility = View.GONE
+                    chipGroupPreferredRoles.visibility = View.GONE
+                } else {
+                    tvPreferredRolesLabel.visibility = View.VISIBLE
+                    chipGroupPreferredRoles.visibility = View.VISIBLE
+                    
+                    // Show only unique base role names from preferred roles
+                    val uniqueBaseRoles = item.preferredRoles.map {
+                        it.split(" (")[0] // Get base role name
+                    }.distinct()
 
-                // Show only unique base role names from preferred roles
-                val uniqueBaseRoles = item.preferredRoles.map {
-                    it.split(" (")[0] // Get base role name
-                }.distinct()
+                    uniqueBaseRoles.forEach { baseRole ->
+                        val chip = createChip(
+                            text = baseRole,
+                            isCloseable = false,
+                            isEnabled = true
+                        )
+                        val context = binding.root.context
+                        val (bgColor, textColor) = when (baseRole.lowercase()) {
+                            "toastmaster of the day" -> R.color.toastmaster_bg to R.color.toastmaster_text
+                            "speaker" -> R.color.speaker_bg to R.color.speaker_text
+                            "evaluator" -> R.color.evaluator_bg to R.color.evaluator_text
+                            "timer" -> R.color.timer_bg to R.color.timer_text
+                            "ah-counter" -> R.color.ah_counter_bg to R.color.ah_counter_text
+                            "grammarian" -> R.color.grammarian_bg to R.color.grammarian_text
+                            "sergeant-at-arms" -> R.color.sergeant_bg to R.color.sergeant_text
+                            "presiding officer" -> R.color.presiding_bg to R.color.presiding_text
+                            "table topics master" -> R.color.ttm_bg to R.color.ttm_text
+                            "table topics speaker" -> R.color.tts_bg to R.color.tts_text
+                            "quiz master" -> R.color.quiz_master_bg to R.color.quiz_master_text
+                            else -> R.color.default_role_bg to R.color.default_role_text
+                        }
 
-                uniqueBaseRoles.forEach { baseRole ->
-                    val chip = createChip(
-                        text = baseRole,
-                        isCloseable = false,
-                        isEnabled = true
-                    )
-                    val context = binding.root.context
-                    val (bgColor, textColor) = when (baseRole.lowercase()) {
-                        "toastmaster of the day" -> R.color.toastmaster_bg to R.color.toastmaster_text
-                        "speaker" -> R.color.speaker_bg to R.color.speaker_text
-                        "evaluator" -> R.color.evaluator_bg to R.color.evaluator_text
-                        "timer" -> R.color.timer_bg to R.color.timer_text
-                        "ah-counter" -> R.color.ah_counter_bg to R.color.ah_counter_text
-                        "grammarian" -> R.color.grammarian_bg to R.color.grammarian_text
-                        "sergeant-at-arms" -> R.color.sergeant_bg to R.color.sergeant_text
-                        "presiding officer" -> R.color.presiding_bg to R.color.presiding_text
-                        "table topics master" -> R.color.ttm_bg to R.color.ttm_text
-                        "table topics speaker" -> R.color.tts_bg to R.color.tts_text
-                        "quiz master" -> R.color.quiz_master_bg to R.color.quiz_master_text
-                        else -> R.color.default_role_bg to R.color.default_role_text
+                        chip.setChipBackgroundColorResource(bgColor)
+                        chip.setTextColor(context.getColor(textColor))
+
+                        chipGroupPreferredRoles.addView(chip)
                     }
-
-                    chip.setChipBackgroundColorResource(bgColor)
-                    chip.setTextColor(context.getColor(textColor))
-
-                    chipGroupPreferredRoles.addView(chip)
                 }
 
                 // Set up selected roles chips
@@ -487,45 +514,52 @@ class MemberRoleAssignAdapter :
                 actvRole.hint =
                     if (availableRoles.isEmpty()) "All roles assigned" else "Select a role"
 
-                // Set up backup member AutoCompleteTextView
-                val memberAdapter = ArrayAdapter(
-                    binding.root.context,
-                    android.R.layout.simple_dropdown_item_1line,
-                    otherMembers.map { it.second } // Show member names
-                )
-                actvBackupMember.setAdapter(memberAdapter)
-                actvBackupMember.isEnabled = item.isEditable
-
-                // Set current backup member if exists
-                if (item.backupMemberId.isNotBlank()) {
-                    cbAssignBackup.isChecked = true
-                    tilBackupMember.visibility = View.VISIBLE
-                    actvBackupMember.setText(item.backupMemberName, false)
-                } else {
-                    cbAssignBackup.isChecked = false
+                // Set up backup member AutoCompleteTextView - hide for guests
+                if (isGuest) {
+                    cbAssignBackup.visibility = View.GONE
                     tilBackupMember.visibility = View.GONE
-                }
-
-                // Toggle backup member visibility
-                tilBackupMember.visibility = if (cbAssignBackup.isChecked) View.VISIBLE else View.GONE
-
-                cbAssignBackup.setOnCheckedChangeListener { _, isChecked ->
-                    tilBackupMember.visibility = if (isChecked) View.VISIBLE else View.GONE
-                    if (!isChecked) {
-                        onBackupMemberSelected?.invoke(item.userId, "")
-                        actvBackupMember.setText("", false)
-                    }
-                }
-
-                // Only set up click listener if editable
-                if (item.isEditable) {
-                    actvBackupMember.setOnItemClickListener { _, _, position, _ ->
-                        val selectedMember = otherMembers[position]
-                        onBackupMemberSelected?.invoke(item.userId, selectedMember.first)
-                        onEvaluatorSelected?.invoke(item.userId, selectedMember.first)
-                    }
                 } else {
-                    actvBackupMember.setOnItemClickListener(null)
+                    cbAssignBackup.visibility = View.VISIBLE
+                    
+                    val memberAdapter = ArrayAdapter(
+                        binding.root.context,
+                        android.R.layout.simple_dropdown_item_1line,
+                        otherMembers.map { it.second } // Show member names
+                    )
+                    actvBackupMember.setAdapter(memberAdapter)
+                    actvBackupMember.isEnabled = item.isEditable
+
+                    // Set current backup member if exists
+                    if (item.backupMemberId.isNotBlank()) {
+                        cbAssignBackup.isChecked = true
+                        tilBackupMember.visibility = View.VISIBLE
+                        actvBackupMember.setText(item.backupMemberName, false)
+                    } else {
+                        cbAssignBackup.isChecked = false
+                        tilBackupMember.visibility = View.GONE
+                    }
+
+                    // Toggle backup member visibility
+                    tilBackupMember.visibility = if (cbAssignBackup.isChecked) View.VISIBLE else View.GONE
+
+                    cbAssignBackup.setOnCheckedChangeListener { _, isChecked ->
+                        tilBackupMember.visibility = if (isChecked) View.VISIBLE else View.GONE
+                        if (!isChecked) {
+                            onBackupMemberSelected?.invoke(item.userId, "")
+                            actvBackupMember.setText("", false)
+                        }
+                    }
+
+                    // Only set up click listener if editable
+                    if (item.isEditable) {
+                        actvBackupMember.setOnItemClickListener { _, _, position, _ ->
+                            val selectedMember = otherMembers[position]
+                            onBackupMemberSelected?.invoke(item.userId, selectedMember.first)
+                            onEvaluatorSelected?.invoke(item.userId, selectedMember.first)
+                        }
+                    } else {
+                        actvBackupMember.setOnItemClickListener(null)
+                    }
                 }
 
                 // Set up edit/cancel button

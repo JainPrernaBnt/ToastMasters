@@ -7,11 +7,11 @@
         android:icon="@drawable/ic_notification"
         android:title="@string/notification"
         app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/action_reports"
-        android:icon="@drawable/ic_assessment"
-        android:title="@string/title_reports"
-        app:showAsAction="ifRoom" />
+<!--    <item-->
+<!--        android:id="@+id/action_reports"-->
+<!--        android:icon="@drawable/ic_assessment"-->
+<!--        android:title="@string/title_reports"-->
+<!--        app:showAsAction="ifRoom" />-->
 
     <item
         android:id="@+id/action_settings"

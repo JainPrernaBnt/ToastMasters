@@ -68,6 +68,8 @@ class MemberActivity : BaseActivity() {
                 // Hide bottom navigation for specific fragments
                 val shouldHideBottomNav = when (destination.id) {
                     R.id.agendaTableFragment -> true
+                    R.id.externalClubActivityFragment -> true
+                    R.id.addExternalActivityFragment -> true
                     else -> false
                 } || destination.label.toString().contains("Agenda", ignoreCase = true)
 

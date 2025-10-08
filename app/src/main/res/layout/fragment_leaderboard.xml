@@ -40,8 +40,7 @@
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="6dp"
-                app:cardBackgroundColor="@color/primary_light">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -49,13 +48,6 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:padding="20dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_star"
-                        app:tint="@color/primary"
-                        android:layout_marginEnd="16dp"/>
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -101,7 +93,7 @@
                 android:focusable="true"
                 android:foreground="?android:attr/selectableItemBackground"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="6dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -109,13 +101,6 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:padding="20dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_recent"
-                        app:tint="@color/primary"
-                        android:layout_marginEnd="16dp"/>
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -161,7 +146,7 @@
                 android:layout_marginBottom="20dp"
                 android:foreground="?android:attr/selectableItemBackground"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="6dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -169,13 +154,6 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:padding="20dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/ic_history"
-                        app:tint="@color/primary"
-                        android:layout_marginEnd="16dp"/>
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -196,6 +174,59 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Browse all previous meeting winners"
+                            android:textSize="14sp"
+                            android:textColor="@color/gray_600"/>
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_arrow_forward"
+                        app:tint="@color/primary"
+                        android:layout_marginStart="12dp"/>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/externalClubActivityCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="20dp"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="External Club Activity"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:layout_marginBottom="4dp"/>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Share your experiences from other clubs "
                             android:textSize="14sp"
                             android:textColor="@color/gray_600"/>
 

@@ -57,6 +57,10 @@ class LeaderboardFragment : Fragment() {
         binding.pastMeetingsCard.setOnClickListener {
             navigateToPastMeetings()
         }
+        
+        binding.externalClubActivityCard.setOnClickListener {
+            navigateToExternalClubActivity()
+        }
     }
 
     private fun navigateToGemOfMonth() {
@@ -69,6 +73,10 @@ class LeaderboardFragment : Fragment() {
 
     private fun navigateToPastMeetings() {
         findNavController().navigate(R.id.action_leaderboardFragment_to_pastMeetingsFragment)
+    }
+
+    private fun navigateToExternalClubActivity() {
+        findNavController().navigate(R.id.action_leaderboardFragment_to_externalClubActivityFragment)
     }
 
     override fun onDestroyView() {

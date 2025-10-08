@@ -84,6 +84,9 @@
         <action
             android:id="@+id/action_leaderboardFragment_to_gemOfMonthFragment"
             app:destination="@id/gemOfMonthFragment" />
+        <action
+            android:id="@+id/action_leaderboardFragment_to_externalClubActivityFragment"
+            app:destination="@+id/externalClubActivityFragment" />
     </fragment>
 
     <fragment
@@ -105,10 +108,10 @@
         android:id="@+id/reportsFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.vp.reports.ReportsFragment"
         android:label="Reports"
-        tools:layout="@layout/fragment_reports" >
+        tools:layout="@layout/fragment_reports">
         <action
             android:id="@+id/action_reportsFragment_to_reportsDataFragment"
-            app:destination="@id/reportsDataFragment" >
+            app:destination="@id/reportsDataFragment">
             <argument
                 android:name="report_id"
                 app:argType="string" />
@@ -213,7 +216,7 @@
             app:argType="string" />
         <action
             android:id="@+id/action_agendaTableFragment_to_createAgendaFragment"
-            app:destination="@id/createAgendaFragment" >
+            app:destination="@id/createAgendaFragment">
 
         </action>
     </fragment>
@@ -241,7 +244,7 @@
     </fragment>
     <fragment
         android:id="@+id/gemOfMonthFragment"
-        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.GemOfMonthFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.gem.GemOfMonthFragment"
         android:label="Gem of the Month"
         tools:layout="@layout/fragment_gem_of_month">
         <action
@@ -275,4 +278,23 @@
         android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.ProfileEditFragment"
         android:label="Edit Profile"
         tools:layout="@layout/fragment_profile_edit" />
+    <fragment
+        android:id="@+id/addExternalActivityFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.external.AddExternalActivityFragment"
+        android:label="AddExternalActivityFragment">
+        <action
+            android:id="@+id/action_addExternalActivityFragment_to_externalClubActivityFragment2"
+            app:destination="@id/externalClubActivityFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/externalClubActivityFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.external.ExternalClubActivityFragment"
+        android:label="ExternalClubActivityFragment">
+        <action
+            android:id="@+id/action_externalClubActivityFragment_to_addExternalActivityFragment"
+            app:destination="@id/addExternalActivityFragment" />
+        <action
+            android:id="@+id/action_externalClubActivityFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
+    </fragment>
 </navigation>

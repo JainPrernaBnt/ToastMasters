@@ -69,17 +69,11 @@
             android:id="@+id/action_leaderboardFragment_to_pastMeetingsFragment"
             app:destination="@id/pastMeetingsFragment" />
         <action
-        android:id="@+id/action_leaderboardFragment_to_gemOfMonthFragment"
-        app:destination="@id/gemOfMonthFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/meetings_role"
-        android:name="com.bntsoft.toastmasters.presentation.ui.members.dashboard.MeetingsRoleFragment"
-        android:label="Meetings Role"
-        tools:layout="@layout/fragment_meetings_role">
+            android:id="@+id/action_leaderboardFragment_to_gemOfMonthFragment"
+            app:destination="@id/gemOfMonthFragment" />
         <action
-            android:id="@+id/action_meetings_role_to_navigation_dashboard"
-            app:destination="@id/navigation_dashboard" />
+            android:id="@+id/action_leaderboardFragment_to_externalClubActivityFragment"
+            app:destination="@+id/externalClubActivityFragment"/>
     </fragment>
 
     <fragment
@@ -118,6 +112,16 @@
     </fragment>
 
     <fragment
+        android:id="@+id/meetings_role"
+        android:name="com.bntsoft.toastmasters.presentation.ui.members.dashboard.MeetingsRoleFragment"
+        android:label="Meetings Role"
+        tools:layout="@layout/fragment_meetings_role">
+        <action
+            android:id="@+id/action_meetings_role_to_navigation_dashboard"
+            app:destination="@id/navigation_dashboard" />
+    </fragment>
+
+    <fragment
         android:id="@+id/pastMeetingsFragment"
         android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.PastMeetingsFragment"
         android:label="PastMeetingsFragment"
@@ -137,7 +141,7 @@
     </fragment>
     <fragment
         android:id="@+id/gemOfMonthFragment"
-        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.GemOfMonthFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.gem.GemOfMonthFragment"
         android:label="Gem of the Month"
         tools:layout="@layout/fragment_gem_of_month">
         <action
@@ -149,4 +153,25 @@
         android:name="com.bntsoft.toastmasters.presentation.ui.common.settings.ProfileEditFragment"
         android:label="Edit Profile"
         tools:layout="@layout/fragment_profile_edit" />
+    <fragment
+        android:id="@+id/addExternalActivityFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.external.AddExternalActivityFragment"
+        android:label="AddExternalActivityFragment"
+        tools:layout="@layout/fragment_add_external_activity">
+        <action
+            android:id="@+id/action_addExternalActivityFragment_to_externalClubActivityFragment"
+            app:destination="@id/externalClubActivityFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/externalClubActivityFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.leaderboard.external.ExternalClubActivityFragment"
+        android:label="ExternalClubActivityFragment"
+        tools:layout="@layout/fragment_external_club_activity">
+        <action
+            android:id="@+id/action_externalClubActivityFragment_to_addExternalActivityFragment"
+            app:destination="@id/addExternalActivityFragment" />
+        <action
+            android:id="@+id/action_externalClubActivityFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
+    </fragment>
 </navigation>

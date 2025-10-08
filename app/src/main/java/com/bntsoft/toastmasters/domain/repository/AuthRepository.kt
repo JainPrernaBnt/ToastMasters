@@ -13,15 +13,6 @@ interface AuthRepository {
 
     suspend fun getCurrentUser(): User?
 
-    /**
-     * Logs out the current user and clears all user data from the app.
-     * This includes:
-     * - Signing out from Firebase Auth
-     * - Clearing user data from SharedPreferences
-     * - Resetting login state
-     * 
-     * @throws Exception if there's an error during logout
-     */
     @Throws(Exception::class)
     suspend fun logout()
 

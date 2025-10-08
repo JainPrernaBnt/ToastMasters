@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header Section with Profile and Basic Info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="12dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp">
+
+                <ImageView
+                    android:id="@+id/ivMemberProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/primary_light"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_person" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvMemberName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:text="John Doe"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="John Doe" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:src="@drawable/ic_calendar"
+                        app:tint="@color/primary" />
+
+                    <TextView
+                        android:id="@+id/tvDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Oct 5, 2024"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        tools:text="Oct 5, 2024" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipRole"
+                    android:layout_width="wrap_content"
+                    android:layout_height="52dp"
+                    android:text="Speaker"
+                    android:textColor="@android:color/white"
+                    android:textSize="11sp"
+                    app:chipBackgroundColor="@color/primary"
+                    app:chipCornerRadius="14dp"
+                    app:chipEndPadding="8dp"
+                    app:chipMinHeight="28dp"
+                    app:chipStartPadding="8dp"
+                    tools:text="Speaker" />
+
+                <LinearLayout
+                    android:id="@+id/actionButtonsLayout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <ImageButton
+                        android:id="@+id/btnEdit"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Edit Activity"
+                        android:src="@drawable/ic_edit"
+                        app:tint="@color/primary" />
+
+                    <ImageButton
+                        android:id="@+id/btnDelete"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Delete Activity"
+                        android:src="@drawable/ic_delete"
+                        app:tint="@color/error" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Club Information Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_business"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:id="@+id/tvClubName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Bandra Toastmasters Club"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="Bandra Toastmasters Club" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/locationLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal"
+                android:visibility="visible">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_location_on"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:id="@+id/tvLocation"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Mumbai"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="Mumbai" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/notesLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_note"
+                    app:tint="@color/primary" />
+
+                <TextView
+                    android:id="@+id/tvNotes"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:lineSpacingExtra="2dp"
+                    android:text="Delivered Speech #4 in Pathways Level 2"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="Delivered Speech #4 in Pathways Level 2" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

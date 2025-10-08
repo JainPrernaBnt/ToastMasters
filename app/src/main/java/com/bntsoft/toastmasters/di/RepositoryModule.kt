@@ -12,6 +12,8 @@ import com.bntsoft.toastmasters.data.repository.MeetingAgendaRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.AssignedRoleRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.UserRepositoryImpl
 import com.bntsoft.toastmasters.data.repository.ProfileRepositoryImpl
+import com.bntsoft.toastmasters.data.repository.GuestRepositoryImpl
+import com.bntsoft.toastmasters.data.repository.ExternalClubActivityRepositoryImpl
 import com.bntsoft.toastmasters.domain.repository.AbbreviationRepository
 import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
 import com.bntsoft.toastmasters.domain.repository.AuthRepository
@@ -24,6 +26,8 @@ import com.bntsoft.toastmasters.domain.repository.MemberResponseRepository
 import com.bntsoft.toastmasters.domain.repository.NotificationRepository
 import com.bntsoft.toastmasters.domain.repository.UserRepository
 import com.bntsoft.toastmasters.domain.repository.ProfileRepository
+import com.bntsoft.toastmasters.domain.repository.GuestRepository
+import com.bntsoft.toastmasters.domain.repository.ExternalClubActivityRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -105,4 +109,16 @@ abstract class RepositoryModule {
     abstract fun bindProfileRepository(
         profileRepositoryImpl: ProfileRepositoryImpl
     ): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGuestRepository(
+        guestRepositoryImpl: GuestRepositoryImpl
+    ): GuestRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindExternalClubActivityRepository(
+        externalClubActivityRepositoryImpl: ExternalClubActivityRepositoryImpl
+    ): ExternalClubActivityRepository
 }

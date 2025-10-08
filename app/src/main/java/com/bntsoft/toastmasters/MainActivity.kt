@@ -109,13 +109,13 @@ class MainActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_reports -> {
-                // Navigate to reports
-                if (navController.currentDestination?.id != R.id.reportsFragment) {
-                    navController.navigate(R.id.reportsFragment)
-                }
-                true
-            }
+//            R.id.action_reports -> {
+//                // Navigate to reports
+//                if (navController.currentDestination?.id != R.id.reportsFragment) {
+//                    navController.navigate(R.id.reportsFragment)
+//                }
+//                true
+//            }
 
             R.id.action_settings -> {
                 // Navigate to settings

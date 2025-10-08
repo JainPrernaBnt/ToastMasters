@@ -3,6 +3,7 @@ package com.bntsoft.toastmasters.presentation.ui.vp.meetings
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,8 +29,12 @@ import android.widget.ArrayAdapter
 import androidx.fragment.app.activityViewModels
 import com.bntsoft.toastmasters.presentation.ui.vp.meetings.viewmodel.MeetingsViewModel
 import com.google.android.material.snackbar.Snackbar
+import com.bntsoft.toastmasters.domain.model.Guest
+import com.bntsoft.toastmasters.domain.repository.GuestRepository
+import javax.inject.Inject
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -50,6 +55,9 @@ class EditMeetingFragment : Fragment() {
     private var meetingId: String = 0.toString()
     private var meeting: Meeting? = null
     private var currentOfficers = mutableMapOf<String, String>()
+    
+    @Inject
+    lateinit var guestRepository: GuestRepository
 
     // No separate list; we'll render chips directly and compute counts on save
 
@@ -123,8 +131,8 @@ class EditMeetingFragment : Fragment() {
             }
         }
 
-        // Add role button via manual text -> count dialog -> chips
-        binding.btnAddRole.setOnClickListener {
+        // Save role button via manual text -> count dialog -> chips
+        binding.saveRoleButton.setOnClickListener {
             val role = binding.roleEditText.text?.toString()?.trim().orEmpty()
             if (role.isEmpty()) {
                 binding.roleInputLayout.error = getString(R.string.error_required)
@@ -134,14 +142,19 @@ class EditMeetingFragment : Fragment() {
             showRoleCountDialog(role)
             binding.roleEditText.setText("")
             // Hide manual input after adding
-            binding.roleInputLayout.visibility = View.GONE
-            binding.btnAddRole.visibility = View.GONE
+            binding.manualRoleLayout.visibility = View.GONE
+        }
+
+        // Add guest button
+        binding.addGuestButton.setOnClickListener {
+            showGuestSelectionDialog()
         }
     }
 
     private fun setupRoleManagement() {
         // Populate dropdown with preferred roles
-        val roles = resources.getStringArray(R.array.Preferred_roles).toList()
+        val roles = resources.getStringArray(R.array.Preferred_roles).toMutableList()
+        roles.add(0, "+ Add new role")
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
@@ -156,8 +169,7 @@ class EditMeetingFragment : Fragment() {
             val selectedRole = adapter.getItem(position) ?: return@setOnItemClickListener
             if (position == 0) {
                 // "+ Add new role" selected: show manual input
-                binding.roleInputLayout.visibility = View.VISIBLE
-                binding.btnAddRole.visibility = View.VISIBLE
+                binding.manualRoleLayout.visibility = View.VISIBLE
                 binding.roleEditText.requestFocus()
                 dropdown.setText("", false)
             } else {
@@ -172,8 +184,7 @@ class EditMeetingFragment : Fragment() {
         binding.roleDropdownLayout.isFocusableInTouchMode = false
 
         // Hide manual input initially
-        binding.roleInputLayout.visibility = View.GONE
-        binding.btnAddRole.visibility = View.GONE
+        binding.manualRoleLayout.visibility = View.GONE
     }
 
     private fun showRoleCountDialog(role: String) {
@@ -286,6 +297,9 @@ class EditMeetingFragment : Fragment() {
             
             // Update current officers
             currentOfficers.clear()
+            
+            // Load existing guests for this meeting
+            loadExistingGuests()
         }
     }
 
@@ -369,12 +383,15 @@ class EditMeetingFragment : Fragment() {
                 binding.endTimeInputLayout.error = null
             }
 
-            // Build roleCounts from chips
+            // Build roleCounts from chips (exclude guest chips)
             val roleCounts = mutableMapOf<String, Int>()
             binding.roleChipGroup.children.forEach { view ->
                 val chip = view as Chip
                 val role = chip.tag?.toString() ?: return@forEach
-                roleCounts[role] = (roleCounts[role] ?: 0) + 1
+                // Skip guest chips - they shouldn't be counted as roles
+                if (!role.startsWith("guest_")) {
+                    roleCounts[role] = (roleCounts[role] ?: 0) + 1
+                }
             }
 
             val updated = Meeting(
@@ -485,6 +502,118 @@ class EditMeetingFragment : Fragment() {
         (activity as? VpMainActivity)?.showBottomNavigation()
     }
     
+    private fun loadExistingGuests() {
+        lifecycleScope.launch {
+            Log.d("EditMeeting", "Loading existing guests for meeting: $meetingId")
+            val guests = guestRepository.getGuestsForMeeting(meetingId)
+            Log.d("EditMeeting", "Found ${guests.size} guests for meeting: $meetingId")
+            guests.forEach { guest ->
+                Log.d("EditMeeting", "Adding guest chip: ${guest.name} (${guest.id})")
+                addGuestChip(guest)
+            }
+        }
+    }
+
+    private fun showGuestSelectionDialog() {
+        lifecycleScope.launch {
+            val guests = guestRepository.getAllGuests()
+            val guestNames = guests.map { it.name }.toMutableList()
+            guestNames.add(0, "+ Add new guest")
+
+            val dialogView = layoutInflater.inflate(R.layout.dialog_guest_selection, null)
+            val dropdown = dialogView.findViewById<MaterialAutoCompleteTextView>(R.id.guestDropdown)
+            
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, guestNames)
+            dropdown.setAdapter(adapter)
+            dropdown.keyListener = null
+
+            val dialog = MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Select Guest")
+                .setView(dialogView)
+                .setPositiveButton("Add") { _, _ ->
+                    val selectedItem = dropdown.text.toString()
+                    if (selectedItem == "+ Add new guest") {
+                        showAddNewGuestDialog()
+                    } else {
+                        val selectedGuest = guests.find { it.name == selectedItem }
+                        selectedGuest?.let { guest ->
+                            addGuestChip(guest)
+                            lifecycleScope.launch {
+                                guestRepository.addGuestToMeeting(meetingId, guest.id)
+                            }
+                        }
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .create()
+
+            dropdown.setOnItemClickListener { _, _, position, _ ->
+                if (position == 0) {
+                    dialog.dismiss()
+                    showAddNewGuestDialog()
+                }
+            }
+
+            dialog.show()
+        }
+    }
+
+    private fun showAddNewGuestDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_add_guest, null)
+        val nameInput = dialogView.findViewById<TextInputEditText>(R.id.guestNameInput)
+        val emailInput = dialogView.findViewById<TextInputEditText>(R.id.guestEmailInput)
+        val contactInput = dialogView.findViewById<TextInputEditText>(R.id.guestContactInput)
+
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Add New Guest")
+            .setView(dialogView)
+            .setPositiveButton("Add") { _, _ ->
+                val name = nameInput.text.toString().trim()
+                val email = emailInput.text.toString().trim()
+                val contact = contactInput.text.toString().trim()
+
+                if (name.isNotEmpty() && email.isNotEmpty() && contact.isNotEmpty()) {
+                    val guest = Guest(
+                        name = name,
+                        email = email,
+                        contact = contact
+                    )
+                    
+                    lifecycleScope.launch {
+                        val result = guestRepository.createGuest(guest)
+                        if (result is com.bntsoft.toastmasters.utils.Resource.Success) {
+                            result.data?.let { addGuestChip(it) }
+                            result.data?.let { guestRepository.addGuestToMeeting(meetingId, it.id) }
+                            showSuccess("Guest added successfully")
+                        } else {
+                            showError("Failed to add guest")
+                        }
+                    }
+                } else {
+                    showError("Please fill all fields")
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        dialog.show()
+    }
+
+    private fun addGuestChip(guest: Guest) {
+        val chip = Chip(requireContext()).apply {
+            text = "Guest: ${guest.name}"
+            isCloseIconVisible = true
+            tag = "guest_${guest.id}"
+            setOnCloseIconClickListener {
+                binding.roleChipGroup.removeView(this)
+                lifecycleScope.launch {
+                    guestRepository.removeGuestFromMeeting(meetingId, guest.id)
+                }
+            }
+        }
+        binding.roleChipGroup.addView(chip)
+    }
+
     override fun onDestroyView() {
         // Show bottom navigation when view is destroyed
         (activity as? VpMainActivity)?.showBottomNavigation()

@@ -284,6 +284,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/save"
+                android:textColor="@color/primary"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
@@ -320,6 +321,24 @@
                 tools:visibility="visible" />
 
         </com.google.android.material.chip.ChipGroup>
+
+        <!-- Add Guest Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/addGuestButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Add Guest"
+            android:textColor="@color/primary"
+            app:icon="@drawable/ic_person_add"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconSize="20dp"
+            app:iconTint="@color/primary"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="1dp"
+            app:cornerRadius="12dp" />
 
     </LinearLayout>
 

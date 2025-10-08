@@ -22,40 +22,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Header Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="@color/surface_container"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/outline"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <com.google.android.material.textview.MaterialTextView
-                        style="@style/TextAppearance.Material3.HeadlineSmall"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/schedule_new_meeting"
-                        android:textColor="@color/on_surface" />
-
-                    <com.google.android.material.textview.MaterialTextView
-                        style="@style/TextAppearance.Material3.BodyMedium"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/schedule_meeting_description"
-                        android:textColor="@color/on_surface_variant" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
             <!-- Meeting Forms Container -->
             <LinearLayout
                 android:id="@+id/meetingFormsContainer"
@@ -64,7 +30,6 @@
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:orientation="vertical" />
-
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/addAnotherMeetingButton"

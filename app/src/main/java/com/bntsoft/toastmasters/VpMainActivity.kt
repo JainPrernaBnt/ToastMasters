@@ -94,6 +94,8 @@ class VpMainActivity : BaseActivity() {
                     R.id.agendaTableFragment -> true
                     R.id.editMeetingFragment -> true
                     R.id.memberRoleAssignFragment -> true
+                    R.id.externalClubActivityFragment -> true
+                    R.id.addExternalActivityFragment -> true
                     else -> false
                 } || destination.label.toString().contains("Agenda", ignoreCase = true)
 
@@ -119,15 +121,15 @@ class VpMainActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.action_reports -> {
-                val navHostFragment = supportFragmentManager
-                    .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-                val navController = navHostFragment.navController
-                navController.navigate(R.id.reportsFragment)
-                val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
-                bottomNav.visibility = View.GONE
-                true
-            }
+//            R.id.action_reports -> {
+//                val navHostFragment = supportFragmentManager
+//                    .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+//                val navController = navHostFragment.navController
+//                navController.navigate(R.id.reportsFragment)
+//                val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav_view)
+//                bottomNav.visibility = View.GONE
+//                true
+//            }
 
             R.id.action_settings -> {
                 val navHostFragment = supportFragmentManager

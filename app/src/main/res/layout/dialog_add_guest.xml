@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <com.google.android.material.textview.MaterialTextView
+        style="@style/TextAppearance.Material3.HeadlineSmall"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Add New Guest"
+        android:textColor="@color/primary" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/guestNameLayout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:hint="Guest Name"
+        app:startIconDrawable="@drawable/ic_person"
+        app:startIconTint="@color/primary">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/guestNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/guestEmailLayout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:hint="Email"
+        app:startIconDrawable="@drawable/ic_email"
+        app:startIconTint="@color/primary">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/guestEmailInput"
+            android:layout_width="match_parent"
+            android:inputType="textEmailAddress|textNoSuggestions"
+            android:maxLines="1"
+            android:layout_height="wrap_content" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/guestContactLayout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Contact Number"
+        app:startIconDrawable="@drawable/ic_phone"
+        app:startIconTint="@color/primary">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/guestContactInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:digits="0123456789"
+            android:maxLength="10"
+            android:inputType="phone" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>
