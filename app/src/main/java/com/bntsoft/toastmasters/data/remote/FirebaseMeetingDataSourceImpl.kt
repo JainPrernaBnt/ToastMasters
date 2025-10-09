@@ -1000,4 +1000,27 @@ class FirebaseMeetingDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateMeetingAgendaStatus(
+        meetingId: String, 
+        agendaStatus: com.bntsoft.toastmasters.domain.model.AgendaStatus
+    ): Result<Unit> {
+        return try {
+            firestore.collection(MEETINGS_COLLECTION)
+                .document(meetingId)
+                .update(
+                    mapOf(
+                        "agendaStatus" to agendaStatus.name,
+                        "updatedAt" to FieldValue.serverTimestamp()
+                    )
+                )
+                .await()
+            
+            Log.d("FirebaseMeetingDataSource", "Successfully updated agenda status for meeting $meetingId to $agendaStatus")
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseMeetingDataSource", "Failed to update agenda status for meeting $meetingId", e)
+            Result.Error(e)
+        }
+    }
+
 }

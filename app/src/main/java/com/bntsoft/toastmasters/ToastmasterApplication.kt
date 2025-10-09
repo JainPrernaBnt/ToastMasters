@@ -7,7 +7,9 @@ import android.content.Context
 import android.os.Build
 import com.bntsoft.toastmasters.service.ToastMastersMessagingService
 import com.bntsoft.toastmasters.utils.FcmTokenManager
+import com.bntsoft.toastmasters.utils.PreferenceManager
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.BuildConfig
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.HiltAndroidApp
@@ -23,6 +25,9 @@ class ToastmasterApplication : Application() {
 
     @Inject
     lateinit var fcmTokenManager: FcmTokenManager
+    
+    @Inject
+    lateinit var preferenceManager: PreferenceManager
 
     override fun onCreate() {
         super.onCreate()
@@ -38,6 +43,31 @@ class ToastmasterApplication : Application() {
 
         // Initialize FCM token
         initializeFcmToken()
+        
+        // Setup Firebase Auth persistence
+        setupAuthStatePersistence()
+    }
+    
+    private fun setupAuthStatePersistence() {
+        val auth = FirebaseAuth.getInstance()
+        
+        // Add auth state listener to sync with preferences
+        auth.addAuthStateListener { firebaseAuth ->
+            val firebaseUser = firebaseAuth.currentUser
+            val isLoggedInPrefs = preferenceManager.isLoggedIn
+            
+            Log.d("ToastmasterApp", "Auth state changed - Firebase user: ${firebaseUser != null}, Prefs logged in: $isLoggedInPrefs")
+            
+            // Only clear preferences if Firebase user is null AND we have a logged in state
+            // This prevents clearing preferences during normal app startup
+            if (firebaseUser == null && isLoggedInPrefs) {
+                Log.d("ToastmasterApp", "No Firebase user but preferences indicate logged in - clearing preferences")
+                preferenceManager.clearUserData()
+            }
+            
+            // Don't automatically sign out Firebase user if preferences are cleared
+            // Let the BaseActivity handle this to avoid race conditions
+        }
     }
 
     private fun createNotificationChannels() {

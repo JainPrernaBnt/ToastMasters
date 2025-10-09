@@ -121,6 +121,16 @@ class GemOfMonthFragment : Fragment() {
 
     private fun updateUI(uiState: GemOfMonthUiState) {
         android.util.Log.d("GemOfMonthFragment", "UI State - isVpEducation: ${uiState.isVpEducation}, canEdit: ${uiState.canEdit}, showAllMembers: ${uiState.showAllMembers}, isLoading: ${uiState.isLoading}, hasData: ${uiState.hasData}")
+        android.util.Log.d("GemOfMonthFragment", "UI State - selectedGems: ${uiState.selectedGems.size}, selectedGem: ${uiState.selectedGem?.user?.name}")
+        android.util.Log.d("GemOfMonthFragment", "UI State - memberDataList: ${uiState.memberDataList.size} members")
+        
+        // Log external activities for each member
+        uiState.memberDataList.forEach { member ->
+            android.util.Log.d("GemOfMonthFragment", "Member ${member.user.name}: ${member.externalActivities.size} external activities")
+            member.externalActivities.forEach { activity ->
+                android.util.Log.d("GemOfMonthFragment", "  - ${activity.rolePlayed} at ${activity.clubName} on ${activity.meetingDate}")
+            }
+        }
         
         // Hide member count chip and sort row for regular members
         binding.memberCountChip.visibility = if (uiState.isVpEducation) View.VISIBLE else View.GONE

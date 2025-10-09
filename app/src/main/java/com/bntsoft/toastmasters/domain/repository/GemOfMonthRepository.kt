@@ -46,4 +46,11 @@ interface GemOfMonthRepository {
         year: Int,
         month: Int
     ): com.bntsoft.toastmasters.data.model.GemOfTheMonth?
+    
+    suspend fun getExternalActivitiesForMember(
+        userId: String,
+        year: Int,
+        month: Int
+    ): List<GemMemberData.ExternalActivity>
+
 }

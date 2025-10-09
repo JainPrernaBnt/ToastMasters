@@ -11,10 +11,13 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import com.bntsoft.toastmasters.databinding.ActivityMainBinding
 import com.bntsoft.toastmasters.domain.models.UserRole
 import com.bntsoft.toastmasters.utils.NotificationPermissionManager
@@ -27,9 +30,6 @@ import javax.inject.Inject
 class MainActivity : BaseActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
-    @Inject
-    lateinit var preferenceManager: PreferenceManager
 
     @Inject
     lateinit var notificationPermissionManager: NotificationPermissionManager
@@ -73,28 +73,113 @@ class MainActivity : BaseActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        // Setup bottom navigation
         bottomNav = binding.bottomNavView
 
         // Setup action bar with nav controller
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        if (preferenceManager.isLoggedIn) {
-            val role = preferenceManager.getUserRole() ?: UserRole.MEMBER
-            // Navigate to the appropriate activity based on role
-            val intent = if (role == UserRole.VP_EDUCATION) {
-                android.content.Intent(this, VpMainActivity::class.java)
-            } else {
-                android.content.Intent(this, MemberActivity::class.java)
-            }
-            startActivity(intent)
-            finish()
-        } else {
-            setupAuthNavigation()
-        }
+        checkAuthenticationState()
 
         // Setup navigation listener
         setupNavigationListener()
+    }
+
+    private fun checkAuthenticationState() {
+        val firebaseUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        val isLoggedInPrefs = preferenceManager.isLoggedIn
+        val userRole = preferenceManager.getUserRole()
+        val userId = preferenceManager.userId
+        val userEmail = preferenceManager.userEmail
+
+        Log.d("MainActivity", "Auth check - Firebase user: ${firebaseUser != null} (${firebaseUser?.uid}), Prefs logged in: $isLoggedInPrefs, Role: $userRole, UserId: $userId, Email: $userEmail")
+
+        when {
+            // Both Firebase and preferences indicate user is logged in
+            firebaseUser != null && isLoggedInPrefs && userRole != null -> {
+                Log.d("MainActivity", "User is authenticated, navigating to role-based activity")
+                navigateToRoleBasedActivity(userRole)
+            }
+            
+            // Firebase user exists but preferences are incomplete - try to restore from Firebase
+            firebaseUser != null && (!isLoggedInPrefs || userRole == null) -> {
+                Log.d("MainActivity", "Firebase user exists but preferences incomplete - attempting to restore user data")
+                restoreUserDataFromFirebase(firebaseUser)
+            }
+            
+            // Preferences indicate logged in but no Firebase user (shouldn't happen normally)
+            firebaseUser == null && isLoggedInPrefs -> {
+                Log.d("MainActivity", "Preferences indicate logged in but no Firebase user - clearing preferences")
+                preferenceManager.clearUserData()
+                setupAuthNavigation()
+            }
+            
+            // Neither Firebase nor preferences indicate logged in
+            else -> {
+                Log.d("MainActivity", "User not authenticated, showing login")
+                setupAuthNavigation()
+            }
+        }
+    }
+    
+    private fun restoreUserDataFromFirebase(firebaseUser: com.google.firebase.auth.FirebaseUser) {
+        // Try to restore user data from Firebase
+        lifecycleScope.launch {
+            try {
+                val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                val userDoc = firestore.collection("users").document(firebaseUser.uid).get().await()
+                
+                if (userDoc.exists()) {
+                    val isVpEducation = userDoc.getBoolean("isVpEducation") ?: false
+                    val isApproved = userDoc.getBoolean("isApproved") ?: false
+                    val userName = userDoc.getString("name") ?: ""
+                    val userEmail = userDoc.getString("email") ?: firebaseUser.email ?: ""
+                    
+                    // Determine user role
+                    val role = if (isVpEducation) {
+                        com.bntsoft.toastmasters.domain.models.UserRole.VP_EDUCATION
+                    } else {
+                        com.bntsoft.toastmasters.domain.models.UserRole.MEMBER
+                    }
+                    
+                    // Check if user is approved (or is VP Education)
+                    if (isVpEducation || isApproved) {
+                        Log.d("MainActivity", "Restored user data from Firebase - Role: $role, Approved: $isApproved")
+                        
+                        // Restore preferences
+                        preferenceManager.userId = firebaseUser.uid
+                        preferenceManager.userEmail = userEmail
+                        preferenceManager.userName = userName
+                        preferenceManager.saveUserRole(role)
+                        preferenceManager.isLoggedIn = true
+                        
+                        // Navigate to appropriate activity
+                        navigateToRoleBasedActivity(role)
+                    } else {
+                        Log.d("MainActivity", "User not approved, signing out")
+                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                        setupAuthNavigation()
+                    }
+                } else {
+                    Log.d("MainActivity", "User document not found in Firestore, signing out")
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                    setupAuthNavigation()
+                }
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error restoring user data from Firebase", e)
+                com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                setupAuthNavigation()
+            }
+        }
+    }
+
+    private fun navigateToRoleBasedActivity(role: UserRole) {
+        val intent = if (role == UserRole.VP_EDUCATION) {
+            android.content.Intent(this, VpMainActivity::class.java)
+        } else {
+            android.content.Intent(this, MemberActivity::class.java)
+        }
+        startActivity(intent)
+        finish()
     }
 
     // Only show status bar menu for VP Education users

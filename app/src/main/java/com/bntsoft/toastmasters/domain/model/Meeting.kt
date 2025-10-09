@@ -24,6 +24,7 @@ data class Meeting(
     val availability: MeetingAvailability? = null,
     val isEditMode: Boolean = false,
     val status: MeetingStatus = MeetingStatus.NOT_COMPLETED,
+    val agendaStatus: AgendaStatus = AgendaStatus.DRAFT,
 
 ): Parcelable {
     // For backward compatibility

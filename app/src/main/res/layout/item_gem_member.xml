@@ -65,6 +65,14 @@
                         android:textSize="14sp"
                         tools:text="Active Member" />
 
+                    <CheckBox
+                        android:id="@+id/checkboxSelection"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:visibility="gone"
+                        android:buttonTint="@color/primary" />
+
                     <ImageView
                         android:id="@+id/previousGemIcon"
                         android:layout_width="20dp"
@@ -323,6 +331,36 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/externalActivitiesSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="External Club Activities"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <LinearLayout
+                android:id="@+id/externalActivitiesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- External activities will be added dynamically -->
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/gemHistorySection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -336,7 +374,7 @@
                 android:layout_height="wrap_content"
                 android:text="Previous Gem Selections"
                 android:textColor="@color/on_surface_variant"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
 

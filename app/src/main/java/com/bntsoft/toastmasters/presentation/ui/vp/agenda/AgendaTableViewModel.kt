@@ -128,4 +128,17 @@ class AgendaTableViewModel @Inject constructor(
             Resource.Error(e.message ?: "Failed to publish agenda")
         }
     }
+
+    suspend fun updateAgendaStatus(meetingId: String, status: AgendaStatus): Resource<Unit> {
+        return try {
+            val result = agendaRepository.updateAgendaStatus(meetingId, status)
+            when (result) {
+                is Resource.Success -> Resource.Success(Unit)
+                is Resource.Error -> Resource.Error(result.message ?: "Failed to update agenda status")
+                is Resource.Loading -> Resource.Loading()
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to update agenda status")
+        }
+    }
 }

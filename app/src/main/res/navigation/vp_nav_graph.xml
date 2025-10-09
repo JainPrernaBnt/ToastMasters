@@ -190,8 +190,8 @@
         <action
             android:id="@+id/action_createAgendaFragment_to_agendaTableFragment"
             app:destination="@id/agendaTableFragment"
-            app:popUpTo="@id/createAgendaFragment"
-            app:popUpToInclusive="false">
+            app:popUpTo="@id/agendaTableFragment"
+            app:popUpToInclusive="true">
             <argument
                 android:name="meetingId"
                 android:defaultValue="@null"
@@ -202,7 +202,7 @@
             android:id="@+id/action_createAgendaFragment_to_memberRoleAssignFragment"
             app:destination="@id/memberRoleAssignFragment"
             app:popUpTo="@id/memberRoleAssignFragment"
-            app:popUpToInclusive="false" />
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment

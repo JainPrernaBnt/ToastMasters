@@ -463,4 +463,21 @@ class MeetingRepositoryImpl @Inject constructor(
             emptyMap()
         }
     }
+
+    override suspend fun updateMeetingAgendaStatus(
+        meetingId: String, 
+        agendaStatus: com.bntsoft.toastmasters.domain.model.AgendaStatus
+    ): Resource<Unit> {
+        return try {
+            val result = firebaseDataSource.updateMeetingAgendaStatus(meetingId, agendaStatus)
+            when (result) {
+                is Result.Success -> Resource.Success(Unit)
+                is Result.Error -> Resource.Error("Failed to update agenda status: ${result.exception.message}")
+                Result.Loading -> Resource.Error("Unexpected loading state while updating agenda status")
+            }
+        } catch (e: Exception) {
+            Log.e("MeetingRepository", "Error updating agenda status for meeting $meetingId", e)
+            Resource.Error(e.message ?: "Failed to update agenda status")
+        }
+    }
 }

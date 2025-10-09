@@ -3,6 +3,7 @@ package com.bntsoft.toastmasters.presentation.ui.common.leaderboard.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -17,7 +18,7 @@ class GemMemberAdapter(
 ) : ListAdapter<GemMemberData, GemMemberAdapter.GemMemberViewHolder>(GemMemberDiffCallback()) {
     
     private var selectedGemId: String? = null
-    
+
     fun setSelectedGem(selectedGem: GemMemberData?) {
         val oldSelectedId = selectedGemId
         selectedGemId = selectedGem?.user?.id
@@ -95,6 +96,7 @@ class GemMemberAdapter(
                 setupRecentRoles(memberData.roleData.recentRoles)
                 setupAwards(memberData.awards)
                 setupGemHistory(memberData.gemHistory)
+                setupExternalActivities(memberData.externalActivities)
                 
                 previousGemIcon.visibility = if (memberData.gemHistory.isNotEmpty()) {
                     View.VISIBLE
@@ -142,6 +144,10 @@ class GemMemberAdapter(
                     }
                 }
                 
+                if (changes.contains("external")) {
+                    setupExternalActivities(memberData.externalActivities)
+                }
+                
                 updateSelectionState(isSelected)
             }
         }
@@ -156,6 +162,50 @@ class GemMemberAdapter(
                 } else {
                     root.setBackgroundResource(R.drawable.bg_card)
                     memberName.setTextColor(root.context.getColor(R.color.on_surface))
+                }
+
+            }
+        }
+        
+        private fun setupExternalActivities(externalActivities: List<GemMemberData.ExternalActivity>) {
+            with(binding) {
+                android.util.Log.d("GemMemberAdapter", "Setting up external activities: ${externalActivities.size} activities")
+                
+                if (externalActivities.isEmpty()) {
+                    android.util.Log.d("GemMemberAdapter", "No external activities, hiding section")
+                    externalActivitiesSection.visibility = View.GONE
+                    return
+                }
+                
+                android.util.Log.d("GemMemberAdapter", "Showing external activities section")
+                externalActivitiesSection.visibility = View.VISIBLE
+                externalActivitiesContainer.removeAllViews()
+                
+                externalActivities.forEach { activity ->
+                    android.util.Log.d("GemMemberAdapter", "Adding external activity: ${activity.rolePlayed} at ${activity.clubName} on ${activity.meetingDate}")
+                    
+                    val activityView = LayoutInflater.from(root.context).inflate(
+                        android.R.layout.simple_list_item_2, 
+                        externalActivitiesContainer, 
+                        false
+                    )
+                    
+                    val titleView = activityView.findViewById<TextView>(android.R.id.text1)
+                    val subtitleView = activityView.findViewById<TextView>(android.R.id.text2)
+                    
+                    titleView.text = "${activity.rolePlayed} at ${activity.clubName}"
+                    titleView.textSize = 14f
+                    titleView.setTextColor(root.context.getColor(R.color.on_surface))
+                    
+                    val locationText = if (activity.clubLocation != null) " • ${activity.clubLocation}" else ""
+                    subtitleView.text = "${activity.meetingDate}$locationText"
+                    subtitleView.textSize = 12f
+                    subtitleView.setTextColor(root.context.getColor(R.color.on_surface_variant))
+                    
+                    // Add some padding
+                    activityView.setPadding(0, 4, 0, 4)
+                    
+                    externalActivitiesContainer.addView(activityView)
                 }
             }
         }
@@ -262,9 +312,13 @@ class GemMemberAdapter(
                     oldItem.roleData.speakerCount == newItem.roleData.speakerCount &&
                     oldItem.roleData.evaluatorCount == newItem.roleData.evaluatorCount &&
                     oldItem.roleData.otherRolesCount == newItem.roleData.otherRolesCount &&
-                    oldItem.roleData.recentRoles == newItem.roleData.recentRoles &&
+                    oldItem.roleData.recentRoles.size == newItem.roleData.recentRoles.size &&
+                    oldItem.roleData.recentRoles.containsAll(newItem.roleData.recentRoles) &&
                     oldItem.awards.size == newItem.awards.size &&
-                    oldItem.gemHistory == newItem.gemHistory
+                    oldItem.gemHistory.size == newItem.gemHistory.size &&
+                    oldItem.gemHistory.containsAll(newItem.gemHistory) &&
+                    oldItem.externalActivities.size == newItem.externalActivities.size &&
+                    oldItem.externalActivities.containsAll(newItem.externalActivities)
         }
         
         override fun getChangePayload(oldItem: GemMemberData, newItem: GemMemberData): Any? {
@@ -280,11 +334,14 @@ class GemMemberAdapter(
             if (oldItem.roleData != newItem.roleData) {
                 changes.add("roles")
             }
-            if (oldItem.awards != newItem.awards) {
+            if (oldItem.awards.size != newItem.awards.size || !oldItem.awards.containsAll(newItem.awards)) {
                 changes.add("awards")
             }
-            if (oldItem.gemHistory != newItem.gemHistory) {
+            if (oldItem.gemHistory.size != newItem.gemHistory.size || !oldItem.gemHistory.containsAll(newItem.gemHistory)) {
                 changes.add("history")
+            }
+            if (oldItem.externalActivities.size != newItem.externalActivities.size || !oldItem.externalActivities.containsAll(newItem.externalActivities)) {
+                changes.add("external")
             }
             
             return if (changes.isNotEmpty()) changes else null

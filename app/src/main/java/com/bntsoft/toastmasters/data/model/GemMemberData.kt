@@ -8,6 +8,7 @@ data class GemMemberData(
     val roleData: RoleData,
     val awards: List<Award>,
     val gemHistory: List<String>,
+    val externalActivities: List<ExternalActivity>,
     val performanceScore: Int
 ) {
     data class AttendanceData(
@@ -45,6 +46,15 @@ data class GemMemberData(
             get() = category.displayName
     }
     
+    data class ExternalActivity(
+        val id: String,
+        val clubName: String,
+        val clubLocation: String?,
+        val meetingDate: String,
+        val rolePlayed: String,
+        val notes: String?
+    )
+    
     val isEligible: Boolean
-        get() = attendanceData.attendedMeetings > 0
+        get() = attendanceData.attendedMeetings > 0 || externalActivities.isNotEmpty()
 }

@@ -3,6 +3,7 @@ package com.bntsoft.toastmasters.domain.repository
 import com.bntsoft.toastmasters.data.model.SpeakerDetails
 import com.bntsoft.toastmasters.data.model.GrammarianDetails
 import com.bntsoft.toastmasters.data.model.MemberRole
+import com.bntsoft.toastmasters.domain.model.AgendaStatus
 import com.bntsoft.toastmasters.domain.model.Meeting
 import com.bntsoft.toastmasters.domain.model.MeetingWithCounts
 import com.bntsoft.toastmasters.domain.model.RoleAssignmentItem
@@ -53,4 +54,7 @@ interface MeetingRepository {
     suspend fun getRoleAssignmentsForMeetings(
         meetingIds: List<String>
     ): Map<String, Map<String, List<String>>>
+    
+    // Agenda status management
+    suspend fun updateMeetingAgendaStatus(meetingId: String, agendaStatus: AgendaStatus): Resource<Unit>
 }

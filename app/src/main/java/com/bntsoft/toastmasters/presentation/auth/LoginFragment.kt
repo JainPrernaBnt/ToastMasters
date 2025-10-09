@@ -156,6 +156,7 @@ class LoginFragment : Fragment() {
                             preferenceManager.userEmail = user.email
                             preferenceManager.userName = user.name
                             preferenceManager.saveUserRole(state.userRole)
+                            preferenceManager.isLoggedIn = true // Set login flag
 
                             // Start monitoring session changes
                             monitorSessionChanges(user.id)
@@ -371,8 +372,9 @@ class LoginFragment : Fragment() {
 
     private fun navigateToLogin() {
         try {
-            // Clear user data
+            // Clear user data and Firebase auth
             preferenceManager.clearUserData()
+            Firebase.auth.signOut()
 
             // Only navigate if we're still attached to an activity
             if (isAdded) {

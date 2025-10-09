@@ -68,7 +68,7 @@ class GemOfMonthRepositoryImpl @Inject constructor(
                 val memberDataList = domainUsers.chunked(batchSize).flatMap { userBatch ->
                     userBatch.map { domainUser ->
                         async {
-                            processMemberData(domainUser, meetingIds)
+                            processMemberData(domainUser, meetingIds, year, month)
                         }
                     }.awaitAll()
                 }.filter { it.isEligible }
@@ -93,7 +93,9 @@ class GemOfMonthRepositoryImpl @Inject constructor(
     
     private suspend fun processMemberData(
         domainUser: User,
-        meetingIds: List<String>
+        meetingIds: List<String>,
+        year: Int,
+        month: Int
     ): GemMemberData = coroutineScope {
         // Convert domain User to data User
         val dataUser = com.bntsoft.toastmasters.data.model.User(
@@ -130,20 +132,30 @@ class GemOfMonthRepositoryImpl @Inject constructor(
         val awards = awardsDeferred.await()
         val gemHistory = gemHistoryDeferred.await()
 
+        // Get external activities for the specified year and month
+        Log.d("GemOfMonthRepository", "Fetching external activities for ${domainUser.name} (${domainUser.id}) for $year-$month")
+        val externalActivities = getExternalActivitiesForMember(domainUser.id, year, month)
+        Log.d("GemOfMonthRepository", "User ${domainUser.name} (${domainUser.id}) has ${externalActivities.size} external activities")
+
         val performanceScore = calculatePerformanceScore(
             attendanceData,
             roleData,
             awards
         )
 
-        GemMemberData(
+        val memberData = GemMemberData(
             user = dataUser,
             attendanceData = attendanceData,
             roleData = roleData,
             awards = awards,
             gemHistory = gemHistory,
+            externalActivities = externalActivities,
             performanceScore = performanceScore
         )
+        
+        Log.d("GemOfMonthRepository", "User ${domainUser.name} eligibility: attendedMeetings=${attendanceData.attendedMeetings}, externalActivities=${externalActivities.size}, isEligible=${memberData.isEligible}")
+        
+        memberData
     }
 
     override suspend fun getMeetingsForMonth(
@@ -614,6 +626,109 @@ class GemOfMonthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("GemOfMonthRepository", "Error getting gem of the month for $year-$month", e)
             null
+        }
+    }
+
+    override suspend fun getExternalActivitiesForMember(
+        userId: String,
+        year: Int,
+        month: Int
+    ): List<GemMemberData.ExternalActivity> {
+        return try {
+            Log.d("GemOfMonthRepository", "Getting external activities for user $userId in $year-$month")
+
+            // First, let's check if there are ANY external activities in the database
+            val allActivitiesSnapshot = firestore.collection("externalClubActivity")
+                .limit(10)
+                .get()
+                .await()
+
+            Log.d("GemOfMonthRepository", "Total external activities in database: ${allActivitiesSnapshot.size()}")
+            allActivitiesSnapshot.documents.forEach { doc ->
+                val userId_doc = doc.getString("userId")
+                val clubName = doc.getString("clubName")
+                val meetingDate = doc.getDate("meetingDate")
+                val userName = doc.getString("userName")
+                Log.d("GemOfMonthRepository", "Sample external activity: doc=${doc.id}, userId=$userId_doc, userName=$userName, clubName=$clubName, meetingDate=$meetingDate")
+            }
+            
+            // Also check what userId we're looking for
+            Log.d("GemOfMonthRepository", "Looking for external activities for userId: $userId")
+
+            // Create date range for the month
+            val calendar = Calendar.getInstance()
+            calendar.set(year, month - 1, 1, 0, 0, 0) // month is 0-based in Calendar
+            val startOfMonth = calendar.time
+
+            calendar.add(Calendar.MONTH, 1)
+            val startOfNextMonth = calendar.time
+
+            Log.d("GemOfMonthRepository", "Date range for external activities: $startOfMonth to $startOfNextMonth")
+
+            // First check if there are ANY activities for this user (without date filter)
+            val userActivitiesSnapshot = firestore.collection("externalClubActivity")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+            
+            Log.d("GemOfMonthRepository", "Found ${userActivitiesSnapshot.size()} total activities for user $userId (any date)")
+            userActivitiesSnapshot.documents.forEach { doc ->
+                val meetingDate = doc.getDate("meetingDate")
+                val clubName = doc.getString("clubName")
+                Log.d("GemOfMonthRepository", "  - User activity: clubName=$clubName, meetingDate=$meetingDate")
+            }
+
+            val snapshot = firestore.collection("externalClubActivity")
+                .whereEqualTo("userId", userId)
+                .whereGreaterThanOrEqualTo("meetingDate", startOfMonth)
+                .whereLessThan("meetingDate", startOfNextMonth)
+                .orderBy("meetingDate")
+                .get()
+                .await()
+
+            Log.d("GemOfMonthRepository", "Found ${snapshot.size()} external activities for user $userId in date range")
+
+            val activities = snapshot.documents.mapNotNull { doc ->
+                try {
+                    val id = doc.getString("id") ?: doc.id
+                    val clubName = doc.getString("clubName") ?: ""
+                    val clubLocation = doc.getString("clubLocation")
+                    val meetingDate = doc.getDate("meetingDate")
+                    val rolePlayed = doc.getString("rolePlayed") ?: ""
+                    val notes = doc.getString("notes")
+
+                    Log.d("GemOfMonthRepository", "Processing external activity: id=$id, clubName=$clubName, meetingDate=$meetingDate, rolePlayed=$rolePlayed")
+
+                    if (meetingDate != null) {
+                        val activity = GemMemberData.ExternalActivity(
+                            id = id,
+                            clubName = clubName,
+                            clubLocation = clubLocation,
+                            meetingDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(meetingDate),
+                            rolePlayed = rolePlayed,
+                            notes = notes
+                        )
+                        Log.d("GemOfMonthRepository", "Created external activity: $activity")
+                        activity
+                    } else {
+                        Log.w("GemOfMonthRepository", "External activity has null meetingDate, skipping")
+                        null
+                    }
+                } catch (e: Exception) {
+                    Log.e("GemOfMonthRepository", "Error parsing external activity document ${doc.id}", e)
+                    null
+                }
+            }
+
+            Log.d("GemOfMonthRepository", "Final external activities for user $userId: ${activities.size} activities")
+            activities.forEach { activity ->
+                Log.d("GemOfMonthRepository", "  - ${activity.rolePlayed} at ${activity.clubName} on ${activity.meetingDate}")
+            }
+            
+            activities
+        } catch (e: Exception) {
+            Log.e("GemOfMonthRepository", "Error getting external activities for user $userId", e)
+            emptyList()
         }
     }
 }

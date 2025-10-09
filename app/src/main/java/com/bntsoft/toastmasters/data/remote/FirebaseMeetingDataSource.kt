@@ -63,4 +63,6 @@ interface FirebaseMeetingDataSource {
     suspend fun getUserDisplayName(userId: String): String?
 
     suspend fun updateMeetingRoleCounts(meetingId: String, roleCounts: Map<String, Int>)
+    
+    suspend fun updateMeetingAgendaStatus(meetingId: String, agendaStatus: com.bntsoft.toastmasters.domain.model.AgendaStatus): Result<Unit>
 }

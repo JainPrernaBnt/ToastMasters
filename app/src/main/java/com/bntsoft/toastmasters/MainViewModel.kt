@@ -24,7 +24,7 @@ class MainViewModel @Inject constructor(
 
     private fun loadUserRole() {
         viewModelScope.launch {
-            _userRole.value = UserRole.VP_EDUCATION
+            _userRole.value = preferenceManager.getUserRole()
         }
     }
 

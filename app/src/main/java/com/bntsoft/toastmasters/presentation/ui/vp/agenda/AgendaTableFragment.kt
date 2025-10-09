@@ -56,6 +56,7 @@ class AgendaTableFragment : Fragment() {
     private var meetingStartTime: String? = null
     private var isVpEducation: Boolean = false
     private var isAgendaPublished: Boolean = false
+    private var isStatusCheckInProgress: Boolean = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -96,18 +97,26 @@ class AgendaTableFragment : Fragment() {
     }
 
     private fun checkUserRoleAndAgendaStatus() {
+        // Prevent multiple concurrent calls
+        if (isStatusCheckInProgress) {
+            Log.d("AgendaTableFragment", "Status check already in progress, skipping")
+            return
+        }
+        
+        isStatusCheckInProgress = true
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                Log.d("AgendaTableFragment", "Starting status check for meetingId: $meetingId")
+                
                 // Check if user is VP Education
                 isVpEducation = userManager.isVpEducation()
                 Log.d("AgendaTableFragment", "User is VP Education: $isVpEducation")
 
-                // Check agenda status
+                // Check agenda status from meeting - force fresh fetch
                 val meeting = meetingRepository.getMeetingById(meetingId)
-                // For now, we'll assume agenda is published if meeting exists
-                // In a real implementation, you'd check the agenda status from the database
-                isAgendaPublished = meeting != null
-                Log.d("AgendaTableFragment", "Agenda is published: $isAgendaPublished")
+                val currentAgendaStatus = meeting?.agendaStatus
+                isAgendaPublished = currentAgendaStatus == AgendaStatus.FINALIZED
+                Log.d("AgendaTableFragment", "Meeting agenda status: $currentAgendaStatus, isAgendaPublished: $isAgendaPublished")
 
                 // Apply role-based UI visibility
                 applyRoleBasedVisibility()
@@ -126,23 +135,40 @@ class AgendaTableFragment : Fragment() {
                 isVpEducation = false
                 isAgendaPublished = false
                 applyRoleBasedVisibility()
+            } finally {
+                isStatusCheckInProgress = false
             }
         }
     }
 
     private fun applyRoleBasedVisibility() {
+        Log.d("AgendaTableFragment", "applyRoleBasedVisibility: isVpEducation=$isVpEducation, isAgendaPublished=$isAgendaPublished")
+        
         if (isVpEducation) {
-            // VP Education: Show all UI elements
+            // VP Education: Show publish/edit button
             binding.publishAgendaButton.visibility = View.VISIBLE
-            binding.fabAddItem.visibility = View.VISIBLE
+            
+            if (isAgendaPublished) {
+                // Agenda is published - show edit button and hide editing controls
+                binding.publishAgendaButton.text = "Edit Agenda"
+                binding.fabAddItem.visibility = View.GONE
+                Log.d("AgendaTableFragment", "UI set to PUBLISHED state - Edit Agenda button shown, FAB hidden")
+            } else {
+                // Agenda is draft - show publish button and editing controls
+                binding.publishAgendaButton.text = "Publish Agenda to Members"
+                binding.fabAddItem.visibility = View.VISIBLE
+                Log.d("AgendaTableFragment", "UI set to DRAFT state - Publish button shown, FAB visible")
+            }
         } else {
             // Member: Hide editing UI elements
             binding.publishAgendaButton.visibility = View.GONE
             binding.fabAddItem.visibility = View.GONE
         }
 
-        // Update adapter with user role
-        agendaAdapter.updateUserRole(isVpEducation)
+        // Update adapter with user role and publish status (only if adapter is initialized)
+        if (::agendaAdapter.isInitialized) {
+            agendaAdapter.updateUserRole(isVpEducation && !isAgendaPublished)
+        }
     }
 
     private fun loadMeetingStartTime() {
@@ -642,6 +668,18 @@ class AgendaTableFragment : Fragment() {
     }
 
     private fun publishAgenda() {
+        // Show confirmation dialog before publishing
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Publish Agenda")
+            .setMessage("Do you want to publish the agenda to members? Once published, editing will be restricted.")
+            .setPositiveButton("Publish") { _, _ ->
+                performPublishAgenda()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performPublishAgenda() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 showMessage("Publishing agenda...")
@@ -652,8 +690,7 @@ class AgendaTableFragment : Fragment() {
                         isAgendaPublished = true
                         showMessage("Agenda published successfully! Members can now view it.")
                         // Update UI to reflect published state
-                        binding.publishAgendaButton.text = "Agenda Published"
-                        binding.publishAgendaButton.isEnabled = false
+                        applyRoleBasedVisibility()
                     }
 
                     is Resource.Error -> {
@@ -666,6 +703,46 @@ class AgendaTableFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 showMessage("Error publishing agenda: ${e.message}")
+            }
+        }
+    }
+
+    private fun editAgenda() {
+        // Show confirmation dialog before enabling edit mode
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Edit Agenda")
+            .setMessage("Do you want to edit the published agenda? This will make it a draft again.")
+            .setPositiveButton("Edit") { _, _ ->
+                performEditAgenda()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performEditAgenda() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                showMessage("Enabling edit mode...")
+                // Update agenda status back to DRAFT
+                val result = viewModel.updateAgendaStatus(meetingId, AgendaStatus.DRAFT)
+                when (result) {
+                    is Resource.Success -> {
+                        isAgendaPublished = false
+                        showMessage("Agenda is now in edit mode.")
+                        // Update UI to reflect draft state
+                        applyRoleBasedVisibility()
+                    }
+
+                    is Resource.Error -> {
+                        showMessage("Failed to enable edit mode: ${result.message}")
+                    }
+
+                    is Resource.Loading -> {
+                        showMessage("Enabling edit mode...")
+                    }
+                }
+            } catch (e: Exception) {
+                showMessage("Error enabling edit mode: ${e.message}")
             }
         }
     }
@@ -760,10 +837,14 @@ class AgendaTableFragment : Fragment() {
 // Removed onStartDrag as it's now handled by the adapter
 
     private fun setupClickListeners() {
-        // Publish button click listener (only for VP Education)
+        // Publish/Edit button click listener (only for VP Education)
         binding.publishAgendaButton.setOnClickListener {
             if (isVpEducation) {
-                publishAgenda()
+                if (isAgendaPublished) {
+                    editAgenda()
+                } else {
+                    publishAgenda()
+                }
             }
         }
 
@@ -860,6 +941,13 @@ class AgendaTableFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("AgendaTableFragment", "onResume() called - refreshing agenda status")
+        // Refresh agenda status when fragment resumes to handle navigation back scenarios
+        checkUserRoleAndAgendaStatus()
     }
 
     override fun onDestroyView() {

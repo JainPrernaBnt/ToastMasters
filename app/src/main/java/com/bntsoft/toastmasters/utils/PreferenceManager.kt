@@ -61,8 +61,15 @@ class PreferenceManager @Inject constructor(
         set(value) = prefs.edit { putString(KEY_PENDING_TOKEN_UPDATE, value) }
 
     var isLoggedIn: Boolean
-        get() = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-        set(value) = prefs.edit { putBoolean(KEY_IS_LOGGED_IN, value) }
+        get() {
+            val value = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+            android.util.Log.d("PreferenceManager", "isLoggedIn getter called - returning: $value")
+            return value
+        }
+        set(value) {
+            android.util.Log.d("PreferenceManager", "isLoggedIn setter called - setting to: $value")
+            prefs.edit { putBoolean(KEY_IS_LOGGED_IN, value) }
+        }
 
     fun saveUserRole(role: UserRole) {
         prefs.edit { putString(KEY_USER_ROLE, role.name) }
@@ -80,7 +87,8 @@ class PreferenceManager @Inject constructor(
     }
 
     fun clearUserData() {
-       clearAll()
+        android.util.Log.d("PreferenceManager", "Clearing user data")
+        clearAll()
     }
 
     var deviceId: String?
@@ -88,11 +96,13 @@ class PreferenceManager @Inject constructor(
         set(value) = prefs.edit { putString(KEY_DEVICE_ID, value) }
 
     fun clearAll() {
+        android.util.Log.d("PreferenceManager", "clearAll() called - before clear: isLoggedIn=${isLoggedIn}, userId=${userId}")
         val deviceId = prefs.getString(KEY_DEVICE_ID, null)
         prefs.edit().clear().apply()
         // Preserve the device ID across logouts
         if (deviceId != null) {
             prefs.edit { putString(KEY_DEVICE_ID, deviceId) }
         }
+        android.util.Log.d("PreferenceManager", "clearAll() completed - after clear: isLoggedIn=${isLoggedIn}, userId=${userId}")
     }
 }
