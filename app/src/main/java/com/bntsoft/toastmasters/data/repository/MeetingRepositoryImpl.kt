@@ -159,15 +159,18 @@ class MeetingRepositoryImpl @Inject constructor(
                     val responses = memberResponseRepository.getResponsesForMeeting(meeting.id)
                         .first()
 
-                    // Count responses by status
+                    // Filter out guests (those with empty userId) and count only members
+                    val memberResponses = responses.filter { it.userId.isNotEmpty() }
+
+                    // Count responses by status for members only
                     val availableCount =
-                        responses.count { it.availability == MemberResponse.AvailabilityStatus.AVAILABLE }
+                        memberResponses.count { it.availability == MemberResponse.AvailabilityStatus.AVAILABLE }
                     val notAvailableCount =
-                        responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE }
+                        memberResponses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_AVAILABLE }
                     val notConfirmedCount =
-                        responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED }
+                        memberResponses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_CONFIRMED }
                     val notResponded =
-                        responses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED }
+                        memberResponses.count { it.availability == MemberResponse.AvailabilityStatus.NOT_RESPONDED }
                     MeetingWithCounts(
                         meeting = meeting,
                         availableCount = availableCount,

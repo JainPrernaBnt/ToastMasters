@@ -10,34 +10,48 @@ import com.bntsoft.toastmasters.databinding.ItemNotAvailableMemberBinding
 import com.bntsoft.toastmasters.databinding.ItemNotConfirmedMemberBinding
 import com.bntsoft.toastmasters.databinding.ItemNotRespondedMemberBinding
 import com.bntsoft.toastmasters.domain.model.User
-import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.MemberResponseUiModel
+import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.ParticipantResponseUiModel
 
 abstract class BaseMemberResponseAdapter<T : RecyclerView.ViewHolder> :
-    ListAdapter<MemberResponseUiModel, T>(MemberResponseDiffCallback()) {
+    ListAdapter<ParticipantResponseUiModel, T>(ParticipantResponseDiffCallback()) {
 
-    protected var onMemberClicked: ((User) -> Unit)? = null
+    protected var onParticipantClicked: ((ParticipantResponseUiModel) -> Unit)? = null
 
     fun setOnMemberClickListener(listener: (User) -> Unit) {
-        onMemberClicked = listener
+        onParticipantClicked = { participant ->
+            participant.user?.let { listener(it) }
+        }
     }
 
-    class MemberResponseDiffCallback : DiffUtil.ItemCallback<MemberResponseUiModel>() {
+    class ParticipantResponseDiffCallback : DiffUtil.ItemCallback<ParticipantResponseUiModel>() {
         override fun areItemsTheSame(
-            oldItem: MemberResponseUiModel,
-            newItem: MemberResponseUiModel
-        ): Boolean = oldItem.user.id == newItem.user.id
+            oldItem: ParticipantResponseUiModel,
+            newItem: ParticipantResponseUiModel
+        ): Boolean {
+            return if (oldItem.isGuest && newItem.isGuest) {
+                oldItem.guest?.id == newItem.guest?.id
+            } else if (!oldItem.isGuest && !newItem.isGuest) {
+                oldItem.user?.id == newItem.user?.id
+            } else {
+                false
+            }
+        }
 
         override fun areContentsTheSame(
-            oldItem: MemberResponseUiModel,
-            newItem: MemberResponseUiModel
+            oldItem: ParticipantResponseUiModel,
+            newItem: ParticipantResponseUiModel
         ): Boolean = oldItem == newItem
     }
 
     protected fun bindCommonViews(
         binding: ItemAvailableMemberBinding,
-        item: MemberResponseUiModel
+        item: ParticipantResponseUiModel
     ) {
-        binding.tvMemberName.text = item.user.name
+        binding.tvMemberName.text = if (item.isGuest) {
+            "${item.name} (Guest)"
+        } else {
+            item.name
+        }
 
         // Clear any existing chips
         binding.chipGroupPreferredRoles.removeAllViews()
@@ -88,29 +102,45 @@ abstract class BaseMemberResponseAdapter<T : RecyclerView.ViewHolder> :
 
     protected fun bindCommonViews(
         binding: ItemNotAvailableMemberBinding,
-        item: MemberResponseUiModel
+        item: ParticipantResponseUiModel
     ) {
-        binding.tvMemberName.text = item.user.name
+        binding.tvMemberName.text = if (item.isGuest) {
+            "${item.name} (Guest)"
+        } else {
+            item.name
+        }
     }
 
     protected fun bindCommonViews(
         binding: ItemNotConfirmedMemberBinding,
-        item: MemberResponseUiModel
+        item: ParticipantResponseUiModel
     ) {
-        binding.tvMemberName.text = item.user.name
+        binding.tvMemberName.text = if (item.isGuest) {
+            "${item.name} (Guest)"
+        } else {
+            item.name
+        }
     }
 
     protected fun bindCommonViews(
         binding: ItemNotRespondedMemberBinding,
-        item: MemberResponseUiModel
+        item: ParticipantResponseUiModel
     ) {
-        binding.tvMemberName.text = item.user.name
+        binding.tvMemberName.text = if (item.isGuest) {
+            "${item.name} (Guest)"
+        } else {
+            item.name
+        }
     }
 
     protected fun bindCommonViews(
         binding: ItemBackoutBinding,
-        item: MemberResponseUiModel
+        item: ParticipantResponseUiModel
     ) {
-        binding.tvMemberName.text = item.user.name
+        binding.tvMemberName.text = if (item.isGuest) {
+            "${item.name} (Guest)"
+        } else {
+            item.name
+        }
     }
 }

@@ -287,8 +287,18 @@ class AgendaAdapter(
                         // Set activity name
                         tvActivity.text = item.activity ?: ""
 
-                        // Set presenter name if available
-                        tvPresenter.setText(item.presenterName ?: "")
+                        // Set presenter name if available, and add "TM" prefix if missing
+                        val presenterName = item.presenterName?.trim() ?: ""
+                        if (presenterName.isNotEmpty()) {
+                            val displayName = if (presenterName.startsWith("TM ", ignoreCase = true)) {
+                                presenterName
+                            } else {
+                                "TM $presenterName"
+                            }
+                            tvPresenter.text = displayName
+                        } else {
+                            tvPresenter.text = ""
+                        }
 
                         // Set time indicators if available
                         item.greenTime?.let {

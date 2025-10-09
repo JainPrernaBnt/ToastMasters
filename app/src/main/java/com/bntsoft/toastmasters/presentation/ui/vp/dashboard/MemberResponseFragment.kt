@@ -147,28 +147,28 @@ class MemberResponseFragment : Fragment() {
 
         // Log first few items in each list for debugging
         state.availableMembers.take(3).forEachIndexed { index, item ->
-            Log.d("MemberResponseFrag", "Available[$index]: ${item.user.name} (${item.user.id})")
+            Log.d("MemberResponseFrag", "Available[$index]: ${item.name} (${if (item.isGuest) "Guest" else "Member"})")
         }
         state.notAvailableMembers.take(3).forEachIndexed { index, item ->
             Log.d(
                 "MemberResponseFrag",
-                "Not Available[$index]: ${item.user.name} (${item.user.id})"
+                "Not Available[$index]: ${item.name} (${if (item.isGuest) "Guest" else "Member"})"
             )
         }
         state.notConfirmedMembers.take(3).forEachIndexed { index, item ->
             Log.d(
                 "MemberResponseFrag",
-                "Not Confirmed[$index]: ${item.user.name} (${item.user.id})"
+                "Not Confirmed[$index]: ${item.name} (${if (item.isGuest) "Guest" else "Member"})"
             )
         }
         state.notRespondedMembers.take(3).forEachIndexed { index, item ->
             Log.d(
                 "MemberResponseFrag",
-                "Not Responded[$index]: ${item.user.name} (${item.user.id})"
+                "Not Responded[$index]: ${item.name} (${if (item.isGuest) "Guest" else "Member"})"
             )
         }
         state.backoutMembers.take(3).forEachIndexed { index, item ->
-            Log.d("MemberResponseFrag", "Backout[$index]: ${item.user.name} (${item.user.id})")
+            Log.d("MemberResponseFrag", "Backout[$index]: ${item.name} (${if (item.isGuest) "Guest" else "Member"})")
         }
 
         // Update all member lists

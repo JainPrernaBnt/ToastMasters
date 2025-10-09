@@ -4,6 +4,7 @@ data class MemberResponseDto(
     val id: String = "",
     val meetingId: String = "",
     val memberId: String = "",
+    val userId: String = "",
     val availability: String = "",
     val preferredRoles: List<String> = emptyList(),
     val notes: String = "",

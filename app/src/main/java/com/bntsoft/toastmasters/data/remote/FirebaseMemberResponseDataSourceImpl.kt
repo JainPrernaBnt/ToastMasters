@@ -37,11 +37,13 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
 
             if (doc.exists()) {
                 val status = doc.getString(FIELD_AVAILABILITY) ?: return null
+                val userId = doc.getString("userId") ?: ""
                 val preferredRoles = doc.get("preferredRoles") as? List<*>
                 MemberResponseDto(
                     id = "${meetingId}_$memberId",
                     meetingId = meetingId,
                     memberId = memberId,
+                    userId = userId,
                     availability = status,
                     preferredRoles = preferredRoles?.filterIsInstance<String>() ?: emptyList(),
                     lastUpdated = doc.getLong(FIELD_LAST_UPDATED) ?: System.currentTimeMillis()
@@ -66,11 +68,13 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
             querySnapshot.documents.mapNotNull { doc ->
                 val status = doc.getString(FIELD_AVAILABILITY) ?: return@mapNotNull null
                 val memberId = doc.id
+                val userId = doc.getString("userId") ?: ""
                 val preferredRoles = doc.get("preferredRoles") as? List<*>
                 MemberResponseDto(
                     id = "${meetingId}_$memberId",
                     meetingId = meetingId,
                     memberId = memberId,
+                    userId = userId,
                     availability = status,
                     preferredRoles = preferredRoles?.filterIsInstance<String>() ?: emptyList(),
                     lastUpdated = doc.getLong(FIELD_LAST_UPDATED) ?: System.currentTimeMillis()
@@ -178,11 +182,13 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                 val response = if (snapshot != null && snapshot.exists()) {
                     val status =
                         snapshot.getString(FIELD_AVAILABILITY) ?: return@addSnapshotListener
+                    val userId = snapshot.getString("userId") ?: ""
                     val preferredRoles = snapshot.get("preferredRoles") as? List<*>
                     MemberResponseDto(
                         id = "${meetingId}_$memberId",
                         meetingId = meetingId,
                         memberId = memberId,
+                        userId = userId,
                         availability = status,
                         preferredRoles = preferredRoles?.filterIsInstance<String>() ?: emptyList(),
                         lastUpdated = snapshot.getLong(FIELD_LAST_UPDATED)
@@ -224,11 +230,13 @@ class FirebaseMemberResponseDataSourceImpl @Inject constructor() :
                     val responses = snapshot?.documents?.mapNotNull { doc ->
                         val status = doc.getString(FIELD_AVAILABILITY) ?: return@mapNotNull null
                         val memberId = doc.id
+                        val userId = doc.getString("userId") ?: ""
                         val preferredRoles = doc.get("preferredRoles") as? List<*>
                         MemberResponseDto(
                             id = "${meetingId}_$memberId",
                             meetingId = meetingId,
                             memberId = memberId,
+                            userId = userId,
                             availability = status,
                             preferredRoles = preferredRoles?.filterIsInstance<String>()
                                 ?: emptyList(),

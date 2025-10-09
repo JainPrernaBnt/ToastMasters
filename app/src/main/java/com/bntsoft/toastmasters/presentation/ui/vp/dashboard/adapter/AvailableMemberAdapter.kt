@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.databinding.ItemAvailableMemberBinding
-import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.MemberResponseUiModel
+import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.ParticipantResponseUiModel
 
 class AvailableMemberAdapter :
     BaseMemberResponseAdapter<AvailableMemberAdapter.AvailableMemberViewHolder>() {
@@ -26,11 +26,11 @@ class AvailableMemberAdapter :
         private val binding: ItemAvailableMemberBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: MemberResponseUiModel) {
+        fun bind(item: ParticipantResponseUiModel) {
             bindCommonViews(binding, item)
 
             itemView.setOnClickListener {
-                onMemberClicked?.invoke(item.user)
+                onParticipantClicked?.invoke(item)
             }
         }
     }

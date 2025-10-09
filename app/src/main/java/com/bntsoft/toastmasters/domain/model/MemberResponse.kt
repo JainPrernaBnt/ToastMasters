@@ -4,6 +4,7 @@ data class MemberResponse(
     val id: String = "",
     val meetingId: String,
     val memberId: String,
+    val userId: String = "",
     val availability: AvailabilityStatus,
     val preferredRoles: List<String>,
     val notes: String = "",

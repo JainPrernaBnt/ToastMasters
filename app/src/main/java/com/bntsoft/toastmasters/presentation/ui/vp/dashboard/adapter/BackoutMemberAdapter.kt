@@ -1,6 +1,6 @@
 package com.bntsoft.toastmasters.presentation.ui.vp.dashboard.adapter
 
-import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.MemberResponseUiModel
+import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.ParticipantResponseUiModel
 
 class BackoutMemberAdapter: BaseMemberResponseAdapter<BackoutMemberAdapter.BackoutMemberViewHolder>() {
 
@@ -24,11 +24,11 @@ class BackoutMemberAdapter: BaseMemberResponseAdapter<BackoutMemberAdapter.Backo
         private val binding: com.bntsoft.toastmasters.databinding.ItemBackoutBinding
     ) : androidx.recyclerview.widget.RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: MemberResponseUiModel) {
+        fun bind(item: ParticipantResponseUiModel) {
             bindCommonViews(binding, item)
 
             itemView.setOnClickListener {
-                onMemberClicked?.invoke(item.user)
+                onParticipantClicked?.invoke(item)
             }
         }
     }

@@ -106,7 +106,8 @@ class ExternalClubActivityFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.activities.collect { activities ->
-                adapter.submitList(activities)
+                val sortedList = activities.sortedByDescending { it.meetingDate }
+                adapter.submitList(sortedList)
             }
         }
     }

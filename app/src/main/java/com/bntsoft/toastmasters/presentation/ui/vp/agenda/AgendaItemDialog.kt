@@ -10,19 +10,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.dto.AgendaItemDto
 import com.bntsoft.toastmasters.domain.repository.AssignedRoleRepository
+import com.bntsoft.toastmasters.domain.repository.MeetingAgendaRepository
 import com.bntsoft.toastmasters.domain.repository.MeetingRepository
 import com.bntsoft.toastmasters.databinding.DialogAddEditAgendaBinding
 import com.bntsoft.toastmasters.utils.Resource
+import com.bntsoft.toastmasters.utils.Result
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -40,6 +43,9 @@ class AgendaItemDialog : DialogFragment() {
     
     @Inject
     lateinit var meetingRepository: MeetingRepository
+
+    @Inject
+    lateinit var meetingAgendaRepository: MeetingAgendaRepository
 
     private var _binding: DialogAddEditAgendaBinding? = null
     private val binding get() = _binding!!
@@ -70,6 +76,18 @@ class AgendaItemDialog : DialogFragment() {
                 }
                 onSaveClickListener = onSave
             }
+        }
+    }
+
+    private suspend fun fetchClubOfficers(): Map<String, String> {
+        return try {
+            when (val result = withContext(Dispatchers.IO) { meetingAgendaRepository.getClubOfficers() }) {
+                is Result.Success -> result.data
+                else -> emptyMap()
+            }
+        } catch (e: Exception) {
+            Log.e("AgendaItemDialog", "Error fetching club officers", e)
+            emptyMap()
         }
     }
 
@@ -192,6 +210,7 @@ class AgendaItemDialog : DialogFragment() {
         // Load presenters from repository
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                val officersMap = fetchClubOfficers()
                 assignedRoleRepository.getAssignedRoles(meetingId).collect { result ->
                     when (result) {
                         is Resource.Success -> {
@@ -203,6 +222,17 @@ class AgendaItemDialog : DialogFragment() {
                                     if (!presenters.contains(displayText)) {
                                         presenters.add(displayText)
                                         presenterMap[displayText] = assignedRole.memberName
+                                    }
+                                }
+                            }
+                            officersMap.forEach { (position, name) ->
+                                val trimmedName = name.trim()
+                                val trimmedPosition = position.trim()
+                                if (trimmedName.isNotEmpty() && trimmedPosition.isNotEmpty()) {
+                                    val displayText = "$trimmedName - $trimmedPosition"
+                                    if (!presenters.contains(displayText)) {
+                                        presenters.add(displayText)
+                                        presenterMap[displayText] = trimmedName
                                     }
                                 }
                             }
@@ -269,24 +299,24 @@ class AgendaItemDialog : DialogFragment() {
         }
 
         // Validate that all three times are filled
-        if (greenTime <= 0 || yellowTime <= 0 || redTime <= 0) {
+        if (redTime <= 0) {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.error)
-                .setMessage("Please fill Green, Yellow, and Red times.")
+                .setMessage("Please fill Red time.")
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
             return false
         }
 
-        // Ensure they are all different
-        if (greenTime == yellowTime || yellowTime == redTime || greenTime == redTime) {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.error)
-                .setMessage("Green, Yellow, and Red times must be different.")
-                .setPositiveButton(android.R.string.ok, null)
-                .show()
-            return false
-        }
+//        // Ensure they are all different
+//        if (greenTime == yellowTime || yellowTime == redTime || greenTime == redTime) {
+//            MaterialAlertDialogBuilder(requireContext())
+//                .setTitle(R.string.error)
+//                .setMessage("Green, Yellow, and Red times must be different.")
+//                .setPositiveButton(android.R.string.ok, null)
+//                .show()
+//            return false
+//        }
 
         return isValid
     }

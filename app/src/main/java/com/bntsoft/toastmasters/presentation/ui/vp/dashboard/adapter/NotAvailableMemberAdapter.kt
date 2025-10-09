@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bntsoft.toastmasters.databinding.ItemNotAvailableMemberBinding
-import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.MemberResponseUiModel
+import com.bntsoft.toastmasters.presentation.ui.vp.dashboard.ParticipantResponseUiModel
 
 class NotAvailableMemberAdapter :
     BaseMemberResponseAdapter<NotAvailableMemberAdapter.NotAvailableMemberViewHolder>() {
@@ -29,11 +29,11 @@ class NotAvailableMemberAdapter :
         private val binding: ItemNotAvailableMemberBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: MemberResponseUiModel) {
+        fun bind(item: ParticipantResponseUiModel) {
             bindCommonViews(binding, item)
 
             itemView.setOnClickListener {
-                onMemberClicked?.invoke(item.user)
+                onParticipantClicked?.invoke(item)
             }
         }
     }
