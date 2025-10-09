@@ -235,6 +235,15 @@
             android:layout_marginTop="16dp"
             android:visibility="gone" />
 
+        <!-- Speaker Assignment Display -->
+        <include
+            android:id="@+id/speakerAssignmentDisplay"
+            layout="@layout/speaker_assignment_display"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/cbAssignBackup"
             android:layout_width="match_parent"

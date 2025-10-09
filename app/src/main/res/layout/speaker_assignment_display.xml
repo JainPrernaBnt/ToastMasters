@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:paddingBottom="8dp">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvSpeakerPrompt"
+        android:layout_width="match_parent"
+        style="@style/TextAppearance.MaterialComponents.Caption"
+        android:layout_height="wrap_content"
+        android:textSize="16.90sp"
+        android:textColor="@color/grey_600"
+        android:text="Evaluating speaker"
+        android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupSpeakers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:chipSpacing="8dp"
+        app:singleLine="false"
+        app:singleSelection="false" />
+
+</LinearLayout>

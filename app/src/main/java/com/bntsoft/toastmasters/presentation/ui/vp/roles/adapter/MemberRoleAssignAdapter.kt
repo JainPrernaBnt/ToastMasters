@@ -89,6 +89,7 @@ class MemberRoleAssignAdapter :
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private val evaluatorBinding = binding.evaluatorPrompt
+        private val speakerAssignmentBinding = binding.speakerAssignmentDisplay
         private val recentRolesAdapter = RecentRolesAdapter(emptyList())
 
         init {
@@ -240,11 +241,45 @@ class MemberRoleAssignAdapter :
             }
         }
 
+        private fun setupSpeakerAssignmentDisplay(item: RoleAssignmentItem) {
+            speakerAssignmentBinding.apply {
+                // Clear existing speaker chips
+                chipGroupSpeakers.removeAllViews()
+                
+                // Get the current list of members with their roles
+                val currentMembers = this@MemberRoleAssignAdapter.currentList
+                
+                // Find speakers that this evaluator is assigned to evaluate
+                val speakersToEvaluate = currentMembers.filter { member ->
+                    member.selectedRoles.any { it.startsWith("Speaker") } &&
+                    member.evaluatorIds.contains(item.userId)
+                }
+                
+                // Add speaker chips
+                speakersToEvaluate.forEach { speaker ->
+                    val chip = createChip(
+                        text = speaker.memberName,
+                        isCloseable = false,
+                        isEnabled = true
+                    )
+                    
+                    // Style the chip
+                    try {
+                        chip.setChipBackgroundColorResource(R.color.speaker_bg)
+                        chip.setTextColor(speakerAssignmentBinding.root.context.getColor(R.color.speaker_text))
+                    } catch (e: Exception) {
+                        Log.e("SpeakerAssignment", "Error styling speaker chip", e)
+                    }
+                    
+                    chipGroupSpeakers.addView(chip)
+                }
+            }
+        }
+        
         private var currentItem: RoleAssignmentItem? = null
         private var currentRoles: List<MemberRoleAssignViewModel.RoleDisplayItem> = emptyList()
         private var availableMembers: List<Pair<String, String>> = emptyList()
         private var isSettingChecked = false
-
         private fun addRoleToChipGroup(
             binding: ItemMemberRoleAssignmentBinding,
             role: String,
@@ -357,6 +392,10 @@ class MemberRoleAssignAdapter :
                 val isSpeaker = item.selectedRoles.any { it.startsWith("Speaker") }
                 evaluatorPrompt.root.visibility = if (isSpeaker) View.VISIBLE else View.GONE
                 
+                // Handle speaker assignment display UI for evaluators
+                val isEvaluator = item.selectedRoles.any { it.startsWith("Evaluator") }
+                speakerAssignmentDisplay.root.visibility = if (isEvaluator) View.VISIBLE else View.GONE
+                
                 // Always setup evaluator selection to refresh the list
                 if (isSpeaker) {
                     setupEvaluatorSelection(item, onEvaluatorSelected)
@@ -383,6 +422,12 @@ class MemberRoleAssignAdapter :
                         }
                     }
                 }
+                
+                // Setup speaker assignment display for evaluators
+                if (isEvaluator) {
+                    setupSpeakerAssignmentDisplay(item)
+                }
+                
                 // Set up preferred roles chips - hide for guests
                 chipGroupPreferredRoles.removeAllViews()
                 
