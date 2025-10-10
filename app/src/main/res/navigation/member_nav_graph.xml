@@ -53,6 +53,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_profileEditFragment"
             app:destination="@id/profileEditFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_clubMembersViewOnlyFragment"
+            app:destination="@id/clubMembersViewOnlyFragment" />
     </fragment>
     <fragment
         android:id="@+id/navigation_leaderboard"
@@ -174,4 +177,9 @@
             android:id="@+id/action_externalClubActivityFragment_to_leaderboardFragment"
             app:destination="@id/leaderboardFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/clubMembersViewOnlyFragment"
+        android:name="com.bntsoft.toastmasters.presentation.ui.common.clubmembers.ClubMembersViewOnlyFragment"
+        android:label="Club Members"
+        tools:layout="@layout/fragment_club_members_view_only" />
 </navigation>

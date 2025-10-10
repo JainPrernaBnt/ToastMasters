@@ -213,7 +213,13 @@ class SettingsFragment : Fragment() {
     private fun navigateToClubMembers() {
         try {
             val navController = requireActivity().findNavController(R.id.nav_host_fragment)
-            navController.navigate(R.id.action_settingsFragment_to_clubMembersFragment)
+            val currentUser = viewModel.uiState.value.user
+            
+            if (currentUser?.role?.name == "VP_EDUCATION") {
+                navController.navigate(R.id.action_settingsFragment_to_clubMembersFragment)
+            } else {
+                navController.navigate(R.id.action_settingsFragment_to_clubMembersViewOnlyFragment)
+            }
         } catch (e: Exception) {
             showError("Navigation failed: ${e.message}")
         }

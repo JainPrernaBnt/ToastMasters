@@ -8,6 +8,7 @@
     <string name="edit_member">Edit Member</string>
     <string name="no_members_found">No Members Found</string>
     <string name="no_members_found_description">There are no club members to display at the moment.</string>
+    <string name="club_members_info">View your club members and their contact information</string>
     <string name="personal_information">Personal Information</string>
     <string name="toastmasters_information">Toastmasters Information</string>
     <string name="full_name">Full Name</string>

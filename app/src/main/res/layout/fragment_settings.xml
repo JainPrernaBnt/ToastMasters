@@ -287,7 +287,7 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Club Management Section (VP_EDUCATION only) -->
+                <!-- Club Management Section (All Users) -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/clubManagementSection"
                     android:layout_width="match_parent"
@@ -299,7 +299,7 @@
                     app:cardElevation="0dp"
                     app:strokeColor="@color/outline_variant"
                     app:strokeWidth="1dp"
-                    app:visibleIf="@{user != null &amp;&amp; user.role.name == `VP_EDUCATION`}">
+                    app:visibleIf="@{user != null}">
 
                     <LinearLayout
                         android:layout_width="match_parent"

@@ -17,6 +17,7 @@ import androidx.navigation.fragment.findNavController
 import com.bntsoft.toastmasters.R
 import com.bntsoft.toastmasters.data.model.AbbreviationItem
 import com.bntsoft.toastmasters.databinding.FragmentCreateAgendaBinding
+import com.bntsoft.toastmasters.domain.model.AgendaStatus
 import com.bntsoft.toastmasters.domain.model.MeetingAgenda
 import com.bntsoft.toastmasters.presentation.ui.vp.agenda.front.viewmodel.CreateAgendaViewModel
 import com.bntsoft.toastmasters.utils.Result
@@ -511,6 +512,9 @@ class CreateAgendaFragment : Fragment() {
                         // Update UI with meeting data
                         state.agenda?.let { agenda ->
                             updateUi(agenda)
+                            
+                            // Update agenda items button text based on agenda status
+                            updateAgendaItemsButton(agenda.agendaStatus)
 
                             // Load abbreviations if not already loaded
                             if (abbreviationAdapter.itemCount == 0) {
@@ -1124,6 +1128,30 @@ class CreateAgendaFragment : Fragment() {
             .setMessage(message)
             .setPositiveButton(getString(R.string.ok), null)
             .show()
+    }
+    
+    private fun updateAgendaItemsButton(agendaStatus: AgendaStatus) {
+        Log.d("CreateAgendaFragment", "Updating agenda items button for status: $agendaStatus")
+        
+        when (agendaStatus) {
+            AgendaStatus.FINALIZED -> {
+                // Agenda is published - show "View Agenda" text
+                binding.agendaItemsButton.text = "View Agenda"
+                Log.d("CreateAgendaFragment", "Agenda is finalized - showing 'View Agenda'")
+            }
+            AgendaStatus.DRAFT -> {
+                // Agenda is draft - show "Agenda Items" text
+                binding.agendaItemsButton.text = "Agenda Items"
+                Log.d("CreateAgendaFragment", "Agenda is draft - showing 'Agenda Items'")
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("CreateAgendaFragment", "onResume() called - refreshing meeting data")
+        // Refresh meeting data when fragment resumes to handle navigation back scenarios
+        viewModel.loadMeeting(meetingId)
     }
 
     override fun onDestroyView() {

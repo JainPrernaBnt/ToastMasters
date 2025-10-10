@@ -106,8 +106,6 @@ class AgendaTableFragment : Fragment() {
         isStatusCheckInProgress = true
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                Log.d("AgendaTableFragment", "Starting status check for meetingId: $meetingId")
-                
                 // Check if user is VP Education
                 isVpEducation = userManager.isVpEducation()
                 Log.d("AgendaTableFragment", "User is VP Education: $isVpEducation")
@@ -115,17 +113,12 @@ class AgendaTableFragment : Fragment() {
                 // Check agenda status from meeting - force fresh fetch
                 val meeting = meetingRepository.getMeetingById(meetingId)
                 val currentAgendaStatus = meeting?.agendaStatus
+                // If agendaStatus is null or not FINALIZED, treat as draft (editable)
                 isAgendaPublished = currentAgendaStatus == AgendaStatus.FINALIZED
                 Log.d("AgendaTableFragment", "Meeting agenda status: $currentAgendaStatus, isAgendaPublished: $isAgendaPublished")
 
                 // Apply role-based UI visibility
                 applyRoleBasedVisibility()
-
-                // Members can view in read-only mode even if not published
-                if (!isVpEducation && !isAgendaPublished) {
-                    showMessage("Agenda is in draft. Viewing read-only.")
-                }
-
             } catch (e: Exception) {
                 Log.e(
                     "AgendaTableFragment",
@@ -409,7 +402,7 @@ class AgendaTableFragment : Fragment() {
         agendaAdapter = AgendaAdapter(
             onItemClick = { item ->
                 Log.d("AgendaTableFragment", "Item clicked: ${item.activity}")
-                if (isVpEducation) {
+                if (isVpEducation && !isAgendaPublished) {
                     showEditDialog(item)
                 }
             },
@@ -452,12 +445,12 @@ class AgendaTableFragment : Fragment() {
             },
             isVpEducation = isVpEducation,
             onTimeRowClick = { item ->
-                if (isVpEducation) {
+                if (isVpEducation && !isAgendaPublished) {
                     showEditTimeBreakDialog(item)
                 }
             },
             onSessionRowClick = { item ->
-                if (isVpEducation) {
+                if (isVpEducation && !isAgendaPublished) {
                     showEditSessionDialog(item)
                 }
             }
@@ -499,7 +492,8 @@ class AgendaTableFragment : Fragment() {
                 viewHolder: RecyclerView.ViewHolder
             ): Int {
                 val position = viewHolder.adapterPosition
-                val dragFlags = if (agendaAdapter.canDrag(position)) {
+                // Disable drag if agenda is published or user is not VP Education
+                val dragFlags = if (agendaAdapter.canDrag(position) && isVpEducation && !isAgendaPublished) {
                     ItemTouchHelper.UP or ItemTouchHelper.DOWN
                 } else 0
                 return makeMovementFlags(dragFlags, 0)
@@ -556,8 +550,8 @@ class AgendaTableFragment : Fragment() {
             }
 
             override fun isLongPressDragEnabled(): Boolean {
-                // Enable long press drag
-                return true
+                // Enable long press drag only if VP Education and agenda not published
+                return isVpEducation && !isAgendaPublished
             }
 
             override fun isItemViewSwipeEnabled(): Boolean {
@@ -691,6 +685,9 @@ class AgendaTableFragment : Fragment() {
                         showMessage("Agenda published successfully! Members can now view it.")
                         // Update UI to reflect published state
                         applyRoleBasedVisibility()
+                        // Refresh the ItemTouchHelper to disable drag and drop
+                        itemTouchHelper.attachToRecyclerView(null)
+                        itemTouchHelper.attachToRecyclerView(binding.agendaRecyclerView)
                     }
 
                     is Resource.Error -> {
@@ -731,6 +728,9 @@ class AgendaTableFragment : Fragment() {
                         showMessage("Agenda is now in edit mode.")
                         // Update UI to reflect draft state
                         applyRoleBasedVisibility()
+                        // Refresh the ItemTouchHelper to enable drag and drop
+                        itemTouchHelper.attachToRecyclerView(null)
+                        itemTouchHelper.attachToRecyclerView(binding.agendaRecyclerView)
                     }
 
                     is Resource.Error -> {
